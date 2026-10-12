@@ -126,14 +126,16 @@ function StudentDetail() {
                   <InfoRow label={t('students.detail.shift')} value={s.shiftName} />
                   <InfoRow label={t('students.detail.homeroom')} value={s.homeroomName ?? '—'} />
                 </div>
-                <div className={psychologist ? 'hidden' : 'divide-y'}>
-                  <InfoRow label={t('students.fields.gender')} value={t(`enums.gender.${s.gender}`)} />
-                  <InfoRow
-                    label={t('students.fields.birthDate')}
-                    value={`${formatDate(s.birthDate, 'dd.MM.yyyy')} · ${t('students.age', { age: ageOf(s.birthDate) })}`}
-                  />
-                  <InfoRow label={t('students.fields.device')} value={<DeviceIcon device={s.device} />} />
-                </div>
+                {!psychologist && (
+                  <div className="divide-y">
+                    <InfoRow label={t('students.fields.gender')} value={t(`enums.gender.${s.gender}`)} />
+                    <InfoRow
+                      label={t('students.fields.birthDate')}
+                      value={`${formatDate(s.birthDate, 'dd.MM.yyyy')} · ${t('students.age', { age: ageOf(s.birthDate) })}`}
+                    />
+                    <InfoRow label={t('students.fields.device')} value={<DeviceIcon device={s.device} />} />
+                  </div>
+                )}
               </div>
             </SectionCard>
             {!psychologist && <GuardiansCard studentId={s.id} guardians={s.guardians} />}

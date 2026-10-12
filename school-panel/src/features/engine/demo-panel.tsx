@@ -5,18 +5,19 @@ import { Clock, HeartPulse, LogOut, Receipt, RotateCcw, Sparkles } from 'lucide-
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { useCan } from '@/auth/use-session';
+import { useCan, useSession } from '@/auth/use-session';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { api } from '@/data/api';
-import type { DemoTrigger } from '@/data/mock/services/demo';
+import { availableTriggers, type DemoTrigger } from '@/data/mock/services/demo';
 import { useI18n } from '@/i18n';
 
 /** Taqdimot uchun yashirin panel: Ctrl + Shift + D. */
 export function DemoPanel() {
   const { t } = useI18n();
   const can = useCan();
+  const session = useSession();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -38,12 +39,13 @@ export function DemoPanel() {
     toast.info(t('demo.triggered'));
   };
 
+  const allowed = session ? availableTriggers(session.role) : [];
   const triggers: Array<{ kind: DemoTrigger; label: string; icon: typeof Clock }> = [
-    { kind: 'LATE', label: t('demo.triggerLate'), icon: Clock },
-    { kind: 'EARLY_EXIT', label: t('demo.triggerEarlyExit'), icon: LogOut },
-    { kind: 'CARE_URGENT', label: t('demo.triggerCareUrgent'), icon: HeartPulse },
-    { kind: 'VERIFICATION', label: t('demo.triggerVerification'), icon: Receipt },
-  ];
+    { kind: 'LATE' as const, label: t('demo.triggerLate'), icon: Clock },
+    { kind: 'EARLY_EXIT' as const, label: t('demo.triggerEarlyExit'), icon: LogOut },
+    { kind: 'CARE_URGENT' as const, label: t('demo.triggerCareUrgent'), icon: HeartPulse },
+    { kind: 'VERIFICATION' as const, label: t('demo.triggerVerification'), icon: Receipt },
+  ].filter((x) => allowed.includes(x.kind));
 
   return (
     <>

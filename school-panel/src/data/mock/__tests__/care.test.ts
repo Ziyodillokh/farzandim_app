@@ -5,6 +5,7 @@ import { CARE_BREAKDOWNS } from '@/data/schemas/care';
 import { CARE_MIN_GROUP } from '@/lib/k-anon';
 import { getTables, transact } from '../db';
 import { careService } from '../services/care';
+import { activeSurveyId, shrinkClass } from './care-fixtures';
 import { freshDb, loginAs } from './helpers';
 
 /** Obyektdagi barcha kalitlar (chuqur). */
@@ -18,24 +19,6 @@ function deepKeys(value: unknown, out: Set<string> = new Set()): Set<string> {
     }
   }
   return out;
-}
-
-function activeSurveyId(): string {
-  const survey = getTables().careSurveys.find((s) => s.status === 'ACTIVE');
-  if (!survey) throw new Error('no active survey');
-  return survey.id;
-}
-
-/** Sinf javoblarini `keep` tagacha qisqartirish (k-anonimlikni sinash uchun). */
-function shrinkClass(surveyId: string, classId: string, keep: number): void {
-  transact((t) => {
-    let left = keep;
-    t.careResponses = t.careResponses.filter((r) => {
-      if (r.surveyId !== surveyId || r.classId !== classId) return true;
-      left -= 1;
-      return left >= 0;
-    });
-  });
 }
 
 describe('Bola ovozi — ruxsatlar', () => {
@@ -146,10 +129,10 @@ describe('Bola ovozi — murojaatlar va protokol', () => {
     expect(updated.protocolActivated).toBe(true);
     expect(updated.notes.at(-1)?.text).toMatch(/direktor/);
     const entry = getTables().audit.at(-1);
-    expect(entry).toMatchObject({ module: 'CARE', action: 'care.protocol.activate', entityId: target!.id });
+    // Audit jurnalini direktor/admin ham ko'radi: ID, holat va tafsilot yo'q.
+    expect(entry).toMatchObject({ module: 'CARE', action: 'care.protocol.activate', entityId: null, before: null, after: null });
     const json = JSON.stringify(entry);
-    expect(json.includes(target!.studentId)).toBe(false);
-    expect(json.includes(target!.message)).toBe(false);
+    for (const secret of [target!.id, target!.studentId, target!.message, target!.classId]) expect(json.includes(secret)).toBe(false);
     await expect(careService.activateProtocol(target!.id)).rejects.toMatchObject({ code: 'CONFLICT' });
   });
 
@@ -165,7 +148,14 @@ describe('Bola ovozi — murojaatlar va protokol', () => {
     const scheduled = await careService.scheduleMeeting(request!.id, '2026-10-14T12:30');
     expect(scheduled.status).toBe('SCHEDULED');
     expect(scheduled.meetingAt).toBe('2026-10-14T12:30:00');
+    await careService.updateRequestStatus(request!.id, 'IN_PROGRESS');
     const noted = await careService.addRequestNote(request!.id, 'Suhbat rejasi tuzildi');
+    const careRows = getTables().audit.filter((a) => a.module === 'CARE').slice(-3);
+    expect(careRows.map((a) => a.action)).toEqual(['care.request.meeting', 'care.request.status', 'care.request.note']);
+    for (const row of careRows) {
+      expect(row).toMatchObject({ entityId: null, before: null, after: null });
+      expect(row.summary.includes(request!.id)).toBe(false);
+    }
     expect(noted.notes.at(-1)?.text).toBe('Suhbat rejasi tuzildi');
     await expect(careService.addRequestNote(request!.id, '  ')).rejects.toMatchObject({ code: 'VALIDATION' });
   });

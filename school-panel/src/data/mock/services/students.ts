@@ -20,11 +20,13 @@ import {
 } from '@/data/schemas/students';
 import { parseOrThrow } from '@/data/schemas/validate';
 import { hashString } from '@/lib/rng';
-import { clockToday } from '../clock';
-import { allowedClassIds, assertCan, assertClassInScope, currentActor, inScope, latency, newId, writeAudit } from '../context';
+import { clockNow, clockToday } from '../clock';
+import { type Actor, allowedClassIds, assertCan, assertClassInScope, currentActor, inScope, latency, newId, writeAudit } from '../context';
+import { toLocalIso } from '../calendar';
 import { getTables, transact } from '../db';
-import { buildIndexes, studentFullName, studentName } from '../lookups';
+import { buildIndexes, compareClasses, studentFullName, studentName } from '../lookups';
 import { runListQuery } from '../query';
+import type { Tables } from '../tables';
 import { resolveRecord } from './attendance';
 
 export type StudentRow = Student & {
@@ -98,10 +100,73 @@ function newStudentCode(existing: Set<string>, seed: string): string {
  * davomat ma'lumotlari servisdan umuman chiqmaydi (TZ: faqat ism va sinf).
  */
 function redact(row: StudentRow): StudentRow {
-  return { ...row, guardianIds: [], guardianNames: [], linkStatus: 'NOT_INVITED', device: 'NONE', deviceStatus: 'NO_PHONE', todayStatus: null };
+  return {
+    ...row,
+    birthDate: '',
+    guardianIds: [],
+    guardianNames: [],
+    linkStatus: 'NOT_INVITED',
+    device: 'NONE',
+    deviceStatus: 'NO_PHONE',
+    todayStatus: null,
+  };
+}
+
+type GuardianRow = Guardian & { children: Array<{ id: string; name: string; className: string }> };
+type GuardianFilter = ListQuery & { linkStatus?: ParentLinkStatus; classId?: string };
+
+/**
+ * Doiradagi ota-onalar: sinf rahbari faqat o'z sinfidagi farzandi bor ota-onani
+ * va faqat o'z sinfidagi farzandlarini ko'radi (boshqa sinfdagi aka-uka yashirin).
+ */
+function guardianRows(actor: Actor, filter: GuardianFilter): GuardianRow[] {
+  assertCan(actor, 'guardians.link');
+  if (filter.classId) assertClassInScope(actor, filter.classId);
+  const t = getTables();
+  const idx = buildIndexes(t);
+  const allowed = allowedClassIds(actor);
+  const childrenOf = new Map<string, Array<{ id: string; name: string; className: string; classId: string }>>();
+  for (const s of t.students) {
+    if (s.archived || (allowed && !allowed.includes(s.classId))) continue;
+    for (const gid of s.guardianIds) {
+      const list = childrenOf.get(gid) ?? [];
+      list.push({ id: s.id, name: studentName(s), className: idx.classes.get(s.classId)?.name ?? '', classId: s.classId });
+      childrenOf.set(gid, list);
+    }
+  }
+  return t.guardians
+    .map((g) => ({ ...g, children: childrenOf.get(g.id) ?? [] }))
+    .filter((g) => g.children.length > 0)
+    .filter((g) => !filter.linkStatus || g.linkStatus === filter.linkStatus)
+    .filter((g) => !filter.classId || g.children.some((c) => c.classId === filter.classId))
+    .map(({ children, ...g }) => ({ ...g, children: children.map(({ classId: _c, ...c }) => (void _c, c)) }));
+}
+
+/**
+ * Sinf almashganda bugungi va ochiq yozuvlar yangi sinfga o'tadi (doira tekshiruvi
+ * shu nusxalarni o'qiydi). O'tgan kunlar tarixi eski sinfda qoladi.
+ */
+function moveOpenItems(t: Tables, studentId: string, classId: string): void {
+  const today = clockToday();
+  const nowMs = clockNow().getTime();
+  for (const r of t.attendance) if (r.studentId === studentId && r.date >= today) r.classId = classId;
+  for (const e of t.attendanceEvents) if (e.studentId === studentId && Date.parse(e.at) >= Date.parse(`${today}T00:00:00`)) e.classId = classId;
+  for (const x of t.earlyExits) if (x.studentId === studentId && (x.status === 'PENDING' || x.date >= today)) x.classId = classId;
+  for (const x of t.exceptions) if (x.studentId === studentId && !x.revokedAt && Date.parse(x.until) > nowMs) x.classId = classId;
+  for (const c of t.careRequests) if (c.studentId === studentId && c.status !== 'RESOLVED') c.classId = classId;
 }
 
 export const studentsService = {
+  /** Filtr va formalar uchun doiradagi sinflar (faqat id va nom) — `students.view` yetarli. */
+  async classOptions(): Promise<Array<{ id: string; name: string }>> {
+    await latency(30, 80);
+    const actor = currentActor();
+    assertCan(actor, 'students.view');
+    return inScope(actor, getTables().classes.map((c) => ({ ...c, classId: c.id })))
+      .sort(compareClasses)
+      .map((c) => ({ id: c.id, name: c.name }));
+  },
+
   async list(filter: StudentFilter = {}): Promise<Paginated<StudentRow>> {
     await latency(80, 180);
     const actor = currentActor();
@@ -202,8 +267,10 @@ export const studentsService = {
       const index = t.students.findIndex((s) => s.id === id);
       const before = t.students[index];
       if (!before) throw new ServiceError('NOT_FOUND', id);
+      if (!t.classes.some((c) => c.id === data.classId)) throw new ServiceError('VALIDATION', 'classId');
       const next: Student = { ...before, ...data };
       t.students[index] = next;
+      if (before.classId !== next.classId) moveOpenItems(t, id, next.classId);
       const device = t.devices.find((d) => d.studentId === id);
       if (device && before.device !== next.device) device.status = next.device === 'NONE' ? 'NO_PHONE' : 'NO_PERMISSION';
       writeAudit(t, actor, 'STUDENTS', 'student.update', `${studentName(next)} ma'lumotlari yangilandi`, id, before, next);
@@ -260,31 +327,9 @@ export const studentsService = {
 };
 
 export const guardiansService = {
-  async list(filter: ListQuery & { linkStatus?: ParentLinkStatus; classId?: string } = {}): Promise<
-    Paginated<Guardian & { children: Array<{ id: string; name: string; className: string }> }>
-  > {
+  async list(filter: GuardianFilter = {}): Promise<Paginated<GuardianRow>> {
     await latency(80, 180);
-    const actor = currentActor();
-    assertCan(actor, 'students.view');
-    if (actor.role === 'PSYCHOLOGIST') throw new ServiceError('FORBIDDEN', 'guardians');
-    const t = getTables();
-    const idx = buildIndexes(t);
-    const allowed = allowedClassIds(actor);
-    const childrenOf = new Map<string, Array<{ id: string; name: string; className: string; classId: string }>>();
-    for (const s of t.students) {
-      if (s.archived) continue;
-      for (const gid of s.guardianIds) {
-        const list = childrenOf.get(gid) ?? [];
-        list.push({ id: s.id, name: studentName(s), className: idx.classes.get(s.classId)?.name ?? '', classId: s.classId });
-        childrenOf.set(gid, list);
-      }
-    }
-    const rows = t.guardians
-      .map((g) => ({ ...g, children: childrenOf.get(g.id) ?? [] }))
-      .filter((g) => g.children.length > 0)
-      .filter((g) => !allowed || g.children.some((c) => allowed.includes(c.classId)))
-      .filter((g) => !filter.linkStatus || g.linkStatus === filter.linkStatus)
-      .filter((g) => !filter.classId || g.children.some((c) => c.classId === filter.classId));
+    const rows = guardianRows(currentActor(), filter);
     return runListQuery(rows, filter, {
       searchText: (g) => `${g.fullName} ${g.phone} ${g.children.map((c) => `${c.name} ${c.className}`).join(' ')}`,
       sorters: { name: (g) => g.fullName, status: (g) => g.linkStatus },
@@ -292,12 +337,12 @@ export const guardiansService = {
     });
   },
 
-  /** Statistika: ulanganlar ulushi (bosh sahifa va ota-onalar sahifasi). */
+  /** Statistika: ulanganlar ulushi — sahifalashsiz, to'g'ridan-to'g'ri hisob. */
   async stats(): Promise<Record<ParentLinkStatus, number> & { total: number }> {
-    const page = await guardiansService.list({ limit: 500 });
-    const all = page.pagination.totalPages > 1 ? await guardiansService.list({ limit: 5000 }) : page;
-    const counts = { LINKED: 0, INVITED: 0, NOT_INVITED: 0, total: all.pagination.total };
-    for (const g of all.items) counts[g.linkStatus] += 1;
+    await latency(60, 120);
+    const rows = guardianRows(currentActor(), {});
+    const counts = { LINKED: 0, INVITED: 0, NOT_INVITED: 0, total: rows.length };
+    for (const g of rows) counts[g.linkStatus] += 1;
     return counts;
   },
 
@@ -315,7 +360,7 @@ export const guardiansService = {
       const code = Array.from({ length: 6 }, (_, i) => alphabet[(hashString(`${guardianId}${Date.now()}${i}`) >>> 3) % alphabet.length]).join('');
       guardian.linkStatus = 'INVITED';
       guardian.inviteCode = code;
-      guardian.inviteExpiresAt = new Date(Date.now() + 7 * 86_400_000).toISOString();
+      guardian.inviteExpiresAt = toLocalIso(new Date(clockNow().getTime() + 7 * 86_400_000));
       writeAudit(t, actor, 'GUARDIANS', 'guardian.invite', `${guardian.fullName}ga Parvoz taklifi yuborildi (SMS)`, guardianId);
       return guardian;
     });
@@ -331,7 +376,7 @@ export const guardiansService = {
       if (!guardian) throw new ServiceError('NOT_FOUND', guardianId);
       assertGuardianInScope(t, actor, guardianId);
       guardian.linkStatus = 'LINKED';
-      guardian.linkedAt = new Date().toISOString();
+      guardian.linkedAt = toLocalIso(clockNow());
       guardian.inviteCode = null;
       guardian.inviteExpiresAt = null;
       writeAudit(t, actor, 'GUARDIANS', 'guardian.linked', `${guardian.fullName} Parvoz Parents'ga ulandi`, guardianId);

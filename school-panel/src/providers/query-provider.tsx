@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 
+import { getSession, subscribeSession } from '@/auth/session';
+import { bindClockSync } from '@/data/mock/clock';
 import { bindCrossTabSync, onStorageFull, subscribe } from '@/data/mock/db';
 import { useI18n } from '@/i18n';
 
@@ -25,6 +27,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     bindCrossTabSync();
+    bindClockSync();
     onStorageFull(() => toast.warning(t('errors.storageFull')));
     // Simulyator va boshqa tab tez-tez yozadi — yangilashni birlashtiramiz.
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -35,8 +38,16 @@ export function QueryProvider({ children }: { children: ReactNode }) {
         void client.invalidateQueries();
       }, 800);
     });
+    // Foydalanuvchi almashganda keshni tozalaymiz — oldingi rol ma'lumoti bir lahza ham ko'rinmasin.
+    let staffId = getSession()?.staffId ?? null;
+    const unsubscribeSession = subscribeSession(() => {
+      const next = getSession()?.staffId ?? null;
+      if (next !== staffId) client.clear();
+      staffId = next;
+    });
     return () => {
       unsubscribe();
+      unsubscribeSession();
       if (timer) clearTimeout(timer);
     };
   }, [client, t]);

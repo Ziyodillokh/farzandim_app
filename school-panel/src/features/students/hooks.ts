@@ -34,7 +34,7 @@ export function useStudentMonth(id: string | null, month: string) {
 }
 
 export function useClassOptions() {
-  return useQuery({ queryKey: ['classes', 'options'], queryFn: () => api.classes.list(), staleTime: 60_000 });
+  return useQuery({ queryKey: ['students', 'class-options'], queryFn: () => api.students.classOptions(), staleTime: 60_000 });
 }
 
 /** O'quvchi o'zgarishlari — barcha bog'liq ro'yxatlarni yangilaydi va toast ko'rsatadi. */

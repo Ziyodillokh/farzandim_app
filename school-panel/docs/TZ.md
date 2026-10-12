@@ -195,8 +195,9 @@ AuditLog. Vaqt — `HH:MM`, hafta kunlari — ISO 1–7, sanalar — ISO 8601 (b
 
 - **Mock ma'lumot:** ~22 sinf, ~570 o'quvchi, ~45 xodim, ota-onalar; har safar bir xil (deterministik).
 - **Saqlash:** brauzer xotirasi; sahifa yangilansa ham saqlanadi; "Demo ma'lumotlarni tiklash".
-- **Demo soati:** kechqurun yoki dam olish kunida ham "ertalab 07:45" ssenariysi (1×/10×/60× tezlik)
-  — kirishlar jonli oqimda paydo bo'ladi. Yashirin demo panel: **Ctrl + Shift + D** (kechikish, erta
+- **Demo soati:** ish kuni 07:00–18:00 da haqiqiy vaqt; kechqurun yoki dam olish kunida birinchi
+  ochilishda avtomatik "ertalab 07:45" ssenariysi (10×; 1×/10×/60× tanlanadi, soat vidjetida
+  "Ertalabni qayta boshlash") — kirishlar jonli oqimda paydo bo'ladi. Yashirin demo panel: **Ctrl + Shift + D** (kechikish, erta
   ketish, shoshilinch murojaat, tekshiruv so'rovi).
 - **Ikki tab sinxron:** kiosk bir tabda, panel boshqasida — belgilangan kirish darhol taxtada.
 

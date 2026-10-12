@@ -32,3 +32,31 @@ test('kiosk: navbatchi shaxsiy kod bilan belgilaydi, noma\'lum kod rad etiladi',
   await expect(result).toContainText('Kod topilmadi');
   expect(errors).toEqual([]);
 });
+
+test('kiosk orqali kirish ikkinchi tabdagi sinf ro\'yxatida darhol ko\'rinadi', async ({ context, page }) => {
+  await login(page, 'navbatchi', 'Navbatchi2026');
+  // 07:00 — hali hech kim kelmagan, o'quvchi "kutilmoqda".
+  const student = await page.evaluate((clock) => {
+    localStorage.setItem('parvoz-school:clock', JSON.stringify({ ...clock, scenarioStartMinute: 7 * 60, epoch: 11, realStartedAt: Date.now() }));
+    const raw = localStorage.getItem('parvoz-school:db:v1');
+    const db = raw ? (JSON.parse(raw) as { tables: { students: Array<{ studentCode: string; classId: string; archived: boolean; lastName: string; firstName: string }> } }) : null;
+    const s = db?.tables.students.find((x) => !x.archived && x.classId === 'cls-9a');
+    return s ? { code: s.studentCode, name: `${s.lastName} ${s.firstName}` } : null;
+  }, SCENARIO);
+  expect(student).not.toBeNull();
+  if (!student) return;
+
+  const board = await context.newPage();
+  await board.goto(url('/attendance/class?id=cls-9a'));
+  const row = board.getByRole('row').filter({ hasText: student.name });
+  await expect(row).toBeVisible();
+  // Ustunlar: №, o'quvchi, holat, kirish, … (oxirida "Keldi" tugmasi ham bor — faqat holat katagi).
+  const status = row.getByRole('cell').nth(2);
+  await expect(status).not.toContainText('Keldi');
+
+  await page.goto(url('/kiosk'));
+  await page.getByLabel('P-1234').fill(student.code.slice(2));
+  await expect(page.getByRole('alertdialog')).toContainText('Xush kelibsiz');
+  await expect(status).toContainText('Keldi', { timeout: 5_000 });
+  await expect(row.getByRole('cell').nth(3)).toContainText(/\d{2}:\d{2}/);
+});

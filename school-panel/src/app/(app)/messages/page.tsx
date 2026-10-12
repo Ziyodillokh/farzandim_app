@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, MessagesSquare, PenSquare } from 'lucide-react';
+import { MessagesSquare, PenSquare } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -17,6 +17,7 @@ import type { AnnouncementFilter } from '@/data/mock/services/comms';
 import { AnnouncementCard } from '@/features/messages/components/announcement-card';
 import { AnnouncementSheet } from '@/features/messages/components/announcement-sheet';
 import { useAnnouncements } from '@/features/messages/hooks';
+import { SimplePager } from '@/features/messages/components/simple-pager';
 import { useI18n } from '@/i18n';
 
 const TABS = ['ALL', 'SENT', 'SCHEDULED', 'DRAFT'] as const;
@@ -31,7 +32,6 @@ export default function MessagesPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const list = useAnnouncements(filter);
   const tab: Tab = filter.status ?? 'ALL';
-  const pagination = list.data?.pagination;
 
   const newButton = canSend && (
     <Button asChild>
@@ -89,28 +89,7 @@ export default function MessagesPage() {
         </div>
       )}
 
-      {pagination && pagination.totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-between gap-3 text-sm no-print">
-          <span className="text-muted-foreground">
-            {t('common.showing', {
-              from: formatNumber((pagination.page - 1) * pagination.limit + 1),
-              to: formatNumber(Math.min(pagination.page * pagination.limit, pagination.total)),
-              total: formatNumber(pagination.total),
-            })}
-          </span>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon-sm" disabled={pagination.page <= 1} onClick={() => setFilter((f) => ({ ...f, page: pagination.page - 1 }))} aria-label={t('common.back')}>
-              <ChevronLeft />
-            </Button>
-            <span className="min-w-[56px] text-center tabular-nums">
-              {pagination.page} / {pagination.totalPages}
-            </span>
-            <Button variant="outline" size="icon-sm" disabled={pagination.page >= pagination.totalPages} onClick={() => setFilter((f) => ({ ...f, page: pagination.page + 1 }))} aria-label={t('common.next')}>
-              <ChevronRight />
-            </Button>
-          </div>
-        </div>
-      )}
+      <SimplePager pagination={list.data?.pagination} onPageChange={(page) => setFilter((f) => ({ ...f, page }))} />
 
       <AnnouncementSheet id={openId} onOpenChange={(open) => !open && setOpenId(null)} />
     </>

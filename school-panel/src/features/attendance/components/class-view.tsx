@@ -81,13 +81,15 @@ export function ClassView() {
   const mode: RosterMode =
     !data?.schoolDay ? 'view' : !date && can('attendance.mark') ? 'mark' : date && can('attendance.correct') ? 'correct' : 'view';
 
+  // Mavjud holatni o'zgartirish — tuzatish huquqi (servis ham tekshiradi).
+  const canChange = can('attendance.correct');
   const markNow = mark.mutate; // TanStack: `mutate` barqaror — jadval ustunlari qayta qurilmaydi
   const onMark = useCallback(
     (row: RosterRow, to: AttendanceStatus) => {
       if (!row.record) markNow({ studentId: row.studentId, status: to });
-      else if (row.record.status !== to) setChange({ row, to });
+      else if (canChange && row.record.status !== to) setChange({ row, to });
     },
-    [markNow],
+    [markNow, canChange],
   );
   const onCorrect = useCallback((row: RosterRow) => setCorrecting(row), []);
 
@@ -155,7 +157,7 @@ export function ClassView() {
           <Toolbar>
             <SearchInput value={search} onChange={setSearch} placeholder={t('attendance.classPage.searchPlaceholder')} />
           </Toolbar>
-          <ClassRoster rows={rows} loading={query.isLoading} mode={mode} busy={mark.isPending} onMark={onMark} onCorrect={onCorrect} />
+          <ClassRoster rows={rows} loading={query.isLoading} mode={mode} busy={mark.isPending} canChange={canChange} onMark={onMark} onCorrect={onCorrect} />
         </>
       )}
 

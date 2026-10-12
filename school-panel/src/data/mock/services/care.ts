@@ -41,6 +41,17 @@ export type CareRequestDetail = Omit<CareRequestRow, 'notes'> & { notes: CareNot
 export type CareRequestFilter = { status?: CareRequestStatus; urgency?: CareUrgency; search?: string };
 export type CareRequestList = { items: CareRequestRow[]; counts: Record<CareRequestStatus, number> };
 
+/**
+ * Murojaatlar bo'yicha audit — direktor/admin ham audit jurnalini ko'radi, shuning uchun
+ * yozuvda murojaat ID'si, oldin/keyin holati, son yoki tafsilot YO'Q (entityId: null).
+ */
+const REQUEST_AUDIT = {
+  status: 'Bola ovozi: murojaat holati yangilandi',
+  note: 'Bola ovozi: ichki eslatma qo\'shildi',
+  meeting: 'Bola ovozi: suhbat vaqti belgilandi',
+  protocol: 'Bola ovozi: himoya protokoli ishga tushirildi',
+} as const;
+
 function requireIndividual(): Actor {
   const actor = currentActor();
   assertCan(actor, 'care.individual');
@@ -147,9 +158,8 @@ export const careService = {
     const data = parseOrThrow(careStatusSchema, { status });
     return mutateRequest(id, (t, request, actor) => {
       if (data.status === 'SCHEDULED' && !request.meetingAt) throw new ServiceError('VALIDATION', 'meetingAt: errors.form.required');
-      const before = request.status;
       request.status = data.status;
-      writeAudit(t, actor, 'CARE', 'care.request.status', 'Murojaat holati o\'zgartirildi', id, { status: before }, { status: data.status });
+      writeAudit(t, actor, 'CARE', 'care.request.status', REQUEST_AUDIT.status);
     });
   },
 
@@ -158,7 +168,7 @@ export const careService = {
     const data = parseOrThrow(careNoteSchema, { text });
     return mutateRequest(id, (t, request, actor) => {
       request.notes = [...request.notes, { at: localStamp(clockNow()), byStaffId: actor.staffId, text: data.text }];
-      writeAudit(t, actor, 'CARE', 'care.request.note', 'Murojaatga ichki eslatma qo\'shildi', id);
+      writeAudit(t, actor, 'CARE', 'care.request.note', REQUEST_AUDIT.note);
     });
   },
 
@@ -168,7 +178,7 @@ export const careService = {
     return mutateRequest(id, (t, request, actor) => {
       request.meetingAt = localStamp(new Date(data.meetingAt));
       if (request.status !== 'RESOLVED') request.status = 'SCHEDULED';
-      writeAudit(t, actor, 'CARE', 'care.request.meeting', 'Murojaat bo\'yicha suhbat vaqti belgilandi', id);
+      writeAudit(t, actor, 'CARE', 'care.request.meeting', REQUEST_AUDIT.meeting);
     });
   },
 
@@ -195,7 +205,7 @@ export const careService = {
           text: `Himoya protokoli ishga tushirildi. Xabardor qilindi: ${who}. Murojaat matni va bolaning ismi ularga berilmadi; shikoyat qilingan shaxsga hech narsa yuborilmadi.`,
         },
       ];
-      writeAudit(t, actor, 'CARE', 'care.protocol.activate', 'Shoshilinch murojaat: himoya protokoli ishga tushirildi (direktor va navbatchi xabardor qilindi)', id);
+      writeAudit(t, actor, 'CARE', 'care.protocol.activate', REQUEST_AUDIT.protocol);
     });
   },
 

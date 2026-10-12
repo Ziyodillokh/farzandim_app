@@ -11,6 +11,8 @@ import { ParvozLogo } from '@/components/layout/parvoz-logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toLocalIso } from '@/data/mock/calendar';
+import { clockNow } from '@/data/mock/clock';
 import { transact } from '@/data/mock/db';
 import { useSchool } from '@/features/school/hooks';
 import { useI18n, type Locale } from '@/i18n';
@@ -46,7 +48,7 @@ export default function LoginPage() {
         const staff = tables.staff.find((s) => s.id === account.staffId);
         tables.audit.push({
           id: `aud-login-${Date.now()}`,
-          at: new Date().toISOString(),
+          at: toLocalIso(clockNow()),
           actorId: account.staffId,
           actorName: staff?.fullName ?? account.username,
           module: 'AUTH',

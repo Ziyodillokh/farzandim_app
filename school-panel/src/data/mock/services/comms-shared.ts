@@ -26,6 +26,23 @@ export function nowLocalIso(): string {
   return localIso(clockNow());
 }
 
+/**
+ * Vaqt belgisi → ms. Seed va `normalizeLocal` mahalliy "…T08:00:00", ba'zi kod esa
+ * UTC "…Z" yozadi — shuning uchun HECH QACHON satr sifatida solishtirilmaydi.
+ * Bo'sh yoki noto'g'ri qiymat → NaN.
+ */
+export function timeOf(value: string | null | undefined): number {
+  return value ? Date.parse(value) : Number.NaN;
+}
+
+/** Saralash: kichik vaqt oldin; NaN (vaqtsiz) — oxirida. */
+export function compareTime(a: string | null | undefined, b: string | null | undefined): number {
+  const x = timeOf(a);
+  const y = timeOf(b);
+  if (Number.isNaN(x) || Number.isNaN(y)) return Number.isNaN(x) ? (Number.isNaN(y) ? 0 : 1) : -1;
+  return x - y;
+}
+
 /** "2026-10-14T08:00" → "2026-10-14T08:00:00". */
 export function normalizeLocal(value: string): string {
   return value.length === 16 ? `${value}:00` : value;

@@ -1,9 +1,10 @@
-import { ROLES, type RoleDefinition } from '@/auth/permissions';
+import { type Permission, roleHas, ROLES, type RoleDefinition } from '@/auth/permissions';
 import type { AuditLog, AuditModule, ListQuery, Paginated, RoleKey, Staff } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
 import { CLASS_SCOPED_ROLES, staffFormSchema, type StaffInput } from '@/data/schemas/staff';
 import { parseOrThrow } from '@/data/schemas/validate';
-import { assertCan, currentActor, latency, newId, writeAudit } from '../context';
+import { toIsoDate } from '../calendar';
+import { type Actor, assertCan, currentActor, latency, newId, writeAudit } from '../context';
 import { getTables, transact } from '../db';
 import { buildIndexes } from '../lookups';
 import { runListQuery } from '../query';
@@ -15,7 +16,38 @@ export type StaffSummary = { total: number; active: number; inactive: number; de
 
 export type AuditFilter = ListQuery & { module?: AuditModule; actorId?: string; from?: string; to?: string };
 
+export type StaffOption = { id: string; fullName: string; role: RoleKey };
+
 const EXPORT_PAGE_LIMIT = 500;
+const OPTIONS_PERMISSIONS: readonly Permission[] = ['staff.view', 'classes.manage'];
+
+function assertCanAny(actor: Actor, permissions: readonly Permission[]): void {
+  if (!permissions.some((p) => roleHas(actor.role, p))) throw new ServiceError('FORBIDDEN', permissions.join('|'));
+}
+
+/** Yozuv vaqti (ms). Eski UTC (`…Z`) va yangi mahalliy formatlar aralash bo'lishi mumkin. */
+function auditTime(entry: AuditLog): number {
+  const ms = Date.parse(entry.at);
+  return Number.isNaN(ms) ? 0 : ms;
+}
+
+/** Yozuvning MAHALLIY kalendar sanasi — sana filtrlari uchun. */
+function auditLocalDate(entry: AuditLog): string {
+  return toIsoDate(new Date(auditTime(entry)));
+}
+
+/**
+ * Bola ovozi (CARE) yozuvlari faqat shaxsiy murojaatlarga ruxsati bor rolga
+ * ko'rinadi — direktor/admin audit orqali ham ko'rmaydi.
+ */
+function inDateRange(date: string, from?: string, to?: string): boolean {
+  return (!from || date >= from) && (!to || date <= to);
+}
+
+function visibleAudit(actor: Actor): AuditLog[] {
+  const all = getTables().audit;
+  return roleHas(actor.role, 'care.individual') ? all : all.filter((a) => a.module !== 'CARE');
+}
 
 /** Sinf doirasi faqat sinf rahbari va o'qituvchida; boshqa rollarda sinflar tozalanadi. */
 function normalizeClassIds(t: Tables, role: RoleKey, classIds: readonly string[]): string[] {
@@ -61,10 +93,13 @@ export const staffService = {
     });
   },
 
-  /** Ro'yxat tanlovlari uchun (sinf rahbari tanlash va h.k.). */
-  async options(role?: RoleKey): Promise<Array<{ id: string; fullName: string; role: RoleKey }>> {
+  /**
+   * Ro'yxat tanlovlari (sinf rahbari tanlash va h.k.) — faqat id, ism va rol.
+   * Xodimlar katalogi faqat xodimlarni ko'ruvchi yoki sinflarni boshqaruvchiga.
+   */
+  async options(role?: RoleKey): Promise<StaffOption[]> {
     const actor = currentActor();
-    assertCan(actor, 'classes.view');
+    assertCanAny(actor, OPTIONS_PERMISSIONS);
     return getTables()
       .staff.filter((s) => s.active && (!role || s.role === role))
       .map((s) => ({ id: s.id, fullName: s.fullName, role: s.role }))
@@ -152,14 +187,13 @@ export const auditService = {
     await latency(80, 160);
     const actor = currentActor();
     assertCan(actor, 'audit.view');
-    const rows = getTables()
-      .audit.filter((a) => !filter.module || a.module === filter.module)
+    const rows = visibleAudit(actor)
+      .filter((a) => !filter.module || a.module === filter.module)
       .filter((a) => !filter.actorId || a.actorId === filter.actorId)
-      .filter((a) => !filter.from || a.at.slice(0, 10) >= filter.from)
-      .filter((a) => !filter.to || a.at.slice(0, 10) <= filter.to);
+      .filter((a) => (!filter.from && !filter.to) || inDateRange(auditLocalDate(a), filter.from, filter.to));
     return runListQuery(rows, { sortBy: 'at', sortDir: 'desc', ...filter }, {
       searchText: (a) => `${a.actorName} ${a.summary} ${a.action}`,
-      sorters: { at: (a) => a.at, actor: (a) => a.actorName, module: (a) => a.module },
+      sorters: { at: auditTime, actor: (a) => a.actorName, module: (a) => a.module },
       defaultSort: 'at',
     });
   },
@@ -178,7 +212,7 @@ export const auditService = {
     const actor = currentActor();
     assertCan(actor, 'audit.view');
     const seen = new Map<string, string>();
-    for (const a of getTables().audit) seen.set(a.actorId, a.actorName);
+    for (const a of visibleAudit(actor)) seen.set(a.actorId, a.actorName);
     return [...seen.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, 'uz'));
   },
 };

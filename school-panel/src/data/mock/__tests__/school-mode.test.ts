@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import type { SchoolModeException } from '@/data/contracts';
 import { smMsg } from '@/data/schemas/school-mode';
-import { getTables } from '../db';
+import { getTables, transact } from '../db';
 import { classModeState } from '../school-mode-state';
 import { schoolModeService as sm } from '../services/school-mode';
+import { exceptionStatus } from '../services/school-mode-model';
 import { freshDb, loginAs } from './helpers';
 
 /** Demo vaqti (helpers): 2026-10-12, dushanba, 10:00 — 1-smena, 3-dars. */
@@ -183,5 +185,63 @@ describe('School Mode: holat va audit', () => {
     const actions = getTables().audit.slice(before).map((a) => a.action);
     expect(actions).toEqual(['policy.update', 'policy.update', 'policy.appAdd', 'policy.appRemove']);
     expect(getTables().audit.slice(before).every((a) => a.module === 'SCHOOL_MODE')).toBe(true);
+  });
+});
+
+describe('School Mode: regressiyalar (kod tekshiruvi)', () => {
+  beforeEach(() => {
+    freshDb();
+    loginAs('ADMIN');
+  });
+
+  const base = { studentId: 's', classId: 'c', reason: 'Sabab', byStaffId: 'stf-admin', revokedAt: null };
+  const local = (h: number, m: number) => new Date(2026, 9, 12, h, m);
+
+  function seedException(extra: Pick<SchoolModeException, 'id' | 'studentId' | 'classId' | 'from' | 'until'>): void {
+    transact((t) => {
+      t.exceptions = [...t.exceptions, { ...base, ...extra }];
+    });
+  }
+
+  it('butun maktab bo\'yicha favqulodda o\'chirishni sinf so\'rovi toraytira olmaydi', async () => {
+    await sm.activateEmergency({ scope: 'SCHOOL', reason: 'Evakuatsiya' });
+    const audits = getTables().audit.length;
+    await expect(sm.activateEmergency({ scope: 'CLASS', classIds: ['cls-9a'], reason: 'Ekskursiya' })).rejects.toMatchObject({
+      code: 'CONFLICT',
+      message: expect.stringContaining(smMsg.emergencySchoolActive),
+    });
+    expect(getTables().emergency).toMatchObject({ active: true, scope: 'SCHOOL', reason: 'Evakuatsiya' });
+    expect(stateOf('cls-9b').kind).toBe('EMERGENCY_OFF');
+    expect(getTables().audit.length).toBe(audits);
+  });
+
+  it('exceptionStatus `from`ni hisobga oladi va mahalliy/UTC vaqtni Date.parse bilan solishtiradi', () => {
+    const now = local(10, 0).getTime();
+    expect(exceptionStatus({ ...base, id: 'a', from: '2026-10-12T11:40:00', until: '2026-10-12T12:25:00' }, now)).toBe('SCHEDULED');
+    expect(exceptionStatus({ ...base, id: 'b', from: local(9, 0).toISOString(), until: local(10, 30).toISOString() }, now)).toBe('ACTIVE');
+    expect(exceptionStatus({ ...base, id: 'c', from: '2026-10-12T07:30:00', until: local(9, 59).toISOString() }, now)).toBe('EXPIRED');
+    expect(exceptionStatus({ ...base, id: 'd', from: '2026-10-12T11:40:00', until: '2026-10-12T12:25:00', revokedAt: local(9, 0).toISOString() }, now)).toBe('REVOKED');
+  });
+
+  it('kelajakdagi istisno hozir faol emas: ro\'yxat, sinf soni va qurilma belgisi', async () => {
+    const studentId = studentOf('cls-9a', 4);
+    seedException({ id: 'exc-future', studentId, classId: 'cls-9a', from: '2026-10-12T11:40:00', until: '2026-10-12T12:25:00' });
+    expect((await sm.exceptions({ status: 'ACTIVE' })).items.some((e) => e.id === 'exc-future')).toBe(false);
+    const scheduled = await sm.exceptions({ status: 'SCHEDULED' });
+    expect(scheduled.items.map((e) => e.id)).toContain('exc-future');
+    expect(scheduled.counts.SCHEDULED).toBeGreaterThanOrEqual(1);
+    expect((await sm.overview()).classes.find((c) => c.classId === 'cls-9a')?.activeExceptions).toBe(0);
+    const device = (await sm.devices({ classId: 'cls-9a', limit: 500 })).items.find((d) => d.studentId === studentId);
+    expect(device?.hasException).toBe(false);
+  });
+
+  it('rejalashtirilgan istisno bilan ustma-ust tushgan yangisi rad etiladi; oldingisi beriladi; bekor qilish mumkin', async () => {
+    const studentId = studentOf('cls-9a', 5);
+    seedException({ id: 'exc-later', studentId, classId: 'cls-9a', from: '2026-10-12T11:40:00', until: '2026-10-12T12:25:00' });
+    await expect(sm.createException({ studentId, until: '12:00', reason: 'Ustma-ust' })).rejects.toMatchObject({ code: 'CONFLICT' });
+    const before = await sm.createException({ studentId, until: '11:00', reason: 'Oldin' });
+    expect(exceptionStatus(before, local(10, 0).getTime())).toBe('ACTIVE');
+    const revoked = await sm.revokeException('exc-later');
+    expect(revoked.revokedAt).not.toBeNull();
   });
 });

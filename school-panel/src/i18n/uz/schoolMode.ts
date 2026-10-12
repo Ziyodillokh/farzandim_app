@@ -169,7 +169,7 @@ export const schoolMode = {
     subtitle: 'O\'quvchiga dars vaqtida telefondan foydalanishga vaqtincha ruxsat — sabab va kim bergani jurnalga yoziladi',
     add: 'Istisno berish',
     searchPlaceholder: 'O\'quvchi, sinf yoki sabab…',
-    tabs: { ACTIVE: 'Faol', EXPIRED: 'Muddati tugagan', REVOKED: 'Bekor qilingan' },
+    tabs: { ACTIVE: 'Faol', SCHEDULED: 'Rejalashtirilgan', EXPIRED: 'Muddati tugagan', REVOKED: 'Bekor qilingan' },
     columns: { student: 'O\'quvchi', class: 'Sinf', period: 'Muddat', reason: 'Sabab', issuedBy: 'Kim bergan' },
     revoke: 'Bekor qilish',
     revokeTitle: 'Istisnoni bekor qilasizmi?',
@@ -179,6 +179,7 @@ export const schoolMode = {
     revokedAt: 'Bekor qilingan: {time}',
     empty: {
       ACTIVE: 'Hozir faol istisnolar yo\'q',
+      SCHEDULED: 'Rejalashtirilgan istisnolar yo\'q',
       EXPIRED: 'Muddati tugagan istisnolar yo\'q',
       REVOKED: 'Bekor qilingan istisnolar yo\'q',
     },
@@ -224,7 +225,8 @@ export const schoolMode = {
     edgeLesson: 'Jadval dars bilan boshlanib, dars bilan tugashi kerak',
     untilPast: 'Muddat kamida 5 daqiqadan keyin tugashi kerak',
     untilTooFar: 'Istisno faqat shu kun oxirigacha beriladi',
-    alreadyActive: 'Bu o\'quvchida faol istisno bor',
+    alreadyActive: 'Bu o\'quvchida shu vaqtga to\'g\'ri keladigan istisno bor',
+    emergencySchoolActive: 'Butun maktab bo\'yicha favqulodda o\'chirish allaqachon faol. Avval cheklovni qayta yoqing',
     appExists: 'Bu ilova ro\'yxatda bor',
   },
 };

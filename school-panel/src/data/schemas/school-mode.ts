@@ -13,6 +13,7 @@ export const smMsg = {
   untilPast: 'schoolMode.validation.untilPast',
   untilTooFar: 'schoolMode.validation.untilTooFar',
   alreadyActive: 'schoolMode.validation.alreadyActive',
+  emergencySchoolActive: 'schoolMode.validation.emergencySchoolActive',
   appExists: 'schoolMode.validation.appExists',
 } as const;
 

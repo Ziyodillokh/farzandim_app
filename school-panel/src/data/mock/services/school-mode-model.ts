@@ -81,7 +81,8 @@ export type DeviceFilter = ListQuery & { classId?: string; status?: DeviceModeSt
 
 export type ShiftRow = Shift & { classes: Array<{ id: string; name: string }>; studentCount: number; lessonCount: number; phase: BellPhase };
 
-export type ExceptionStatus = 'ACTIVE' | 'EXPIRED' | 'REVOKED';
+/** SCHEDULED — hali boshlanmagan (from > hozir); faol hisoblanmaydi. */
+export type ExceptionStatus = 'ACTIVE' | 'SCHEDULED' | 'EXPIRED' | 'REVOKED';
 export type ExceptionRow = SchoolModeException & { studentName: string; className: string; byName: string; status: ExceptionStatus };
 export type ExceptionFilter = { status?: ExceptionStatus | 'ALL'; search?: string };
 export type ExceptionList = { items: ExceptionRow[]; counts: Record<ExceptionStatus, number> };
@@ -104,9 +105,22 @@ export function viewer(): Actor {
   return actor;
 }
 
+/**
+ * Istisno holati. Vaqtlar faqat `Date.parse` bilan solishtiriladi: seed mahalliy
+ * "YYYY-MM-DDTHH:MM:SS", yangi yozuvlar esa UTC "…Z" ko'rinishida saqlanadi.
+ */
 export function exceptionStatus(e: SchoolModeException, nowMs: number): ExceptionStatus {
   if (e.revokedAt) return 'REVOKED';
-  return Date.parse(e.until) <= nowMs ? 'EXPIRED' : 'ACTIVE';
+  const untilMs = Date.parse(e.until);
+  if (!Number.isFinite(untilMs) || untilMs <= nowMs) return 'EXPIRED';
+  const fromMs = Date.parse(e.from);
+  return Number.isFinite(fromMs) && fromMs > nowMs ? 'SCHEDULED' : 'ACTIVE';
+}
+
+/** [fromMs, untilMs) oralig'iga to'g'ri keladigan, bekor qilinmagan istisno bormi. */
+export function overlapsException(e: SchoolModeException, fromMs: number, untilMs: number): boolean {
+  if (e.revokedAt) return false;
+  return Date.parse(e.from) < untilMs && Date.parse(e.until) > fromMs;
 }
 
 /** Smena qo'ng'iroq jadvali bo'yicha hozirgi bosqich (siyosat va favqulodda holatsiz). */

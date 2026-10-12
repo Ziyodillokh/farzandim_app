@@ -1,12 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { PERMISSIONS } from '@/auth/permissions';
-import { auditShape, diffValues } from '@/features/audit/diff';
 import { getTables } from '../db';
 import { classesService } from '../services/classes';
 import { demoService } from '../services/demo';
 import { schoolService } from '../services/school';
-import { auditService, staffService } from '../services/staff';
+import { staffService } from '../services/staff';
 import { guardiansService } from '../services/students';
 import { freshDb, loginAs } from './helpers';
 
@@ -188,31 +187,6 @@ describe('xodimlar', () => {
   });
 });
 
-describe('audit jurnali', () => {
-  beforeEach(freshDb);
-
-  it('modul, xodim va sana bo\'yicha filtr; eksport hammasini qaytaradi', async () => {
-    loginAs('DIRECTOR');
-    await classesService.create({ grade: 4, letter: 'V', shiftId: 'shf-2' });
-    const byModule = await auditService.list({ module: 'CLASSES' });
-    expect(byModule.items.every((a) => a.module === 'CLASSES')).toBe(true);
-    expect(byModule.items[0]?.action).toBe('class.create');
-    const byActor = await auditService.list({ actorId: 'stf-homeroom-7a', limit: 100 });
-    expect(byActor.items.length).toBeGreaterThan(0);
-    expect(byActor.items.every((a) => a.actorId === 'stf-homeroom-7a')).toBe(true);
-    const future = await auditService.list({ from: '2999-01-01' });
-    expect(future.pagination.total).toBe(0);
-    const all = await auditService.exportRows({});
-    expect(all.length).toBe(getTables().audit.length);
-    expect((await auditService.actors()).length).toBeGreaterThan(1);
-  });
-
-  it('sinf rahbari audit jurnalini ko\'rmaydi', async () => {
-    loginAs('HOMEROOM');
-    await expect(auditService.list()).rejects.toMatchObject({ code: 'FORBIDDEN' });
-  });
-});
-
 describe('sozlamalar', () => {
   beforeEach(freshDb);
 
@@ -249,27 +223,18 @@ describe('sozlamalar', () => {
   });
 });
 
-describe('audit farqi (oldin/keyin)', () => {
-  it('o\'zgargan, qo\'shilgan va o\'zgarmagan maydonlarni ajratadi', () => {
-    const rows = diffValues({ name: '7-A', room: '207', meta: { a: 1 } }, { name: '7-A', room: '208', meta: { a: 2 }, extra: true });
-    const byField = Object.fromEntries(rows.map((r) => [r.field, r.kind]));
-    expect(byField).toEqual({ name: 'same', room: 'changed', 'meta.a': 'changed', extra: 'added' });
-  });
+describe('xodimlar tanlovi (options)', () => {
+  beforeEach(freshDb);
 
-  it('yaratish/o\'chirish/tafsilotsiz yozuvni aniqlaydi', () => {
-    expect(auditShape(null, { a: 1 })).toBe('create');
-    expect(auditShape({ a: 1 }, null)).toBe('delete');
-    expect(auditShape({ a: 1 }, { a: 2 })).toBe('update');
-    expect(auditShape(null, null)).toBe('none');
-    expect(diffValues({ a: 1 }, null)).toEqual([{ field: 'a', before: 1, after: undefined, kind: 'removed' }]);
-    expect(diffValues(null, 'x')).toEqual([{ field: 'value', before: undefined, after: 'x', kind: 'added' }]);
-  });
-
-  it('haqiqiy servis yozuvi o\'qiladigan farq beradi', async () => {
-    freshDb();
-    loginAs('DIRECTOR');
-    await staffService.setActive('stf-t-2', false);
-    const entry = getTables().audit.at(-1);
-    expect(diffValues(entry?.before, entry?.after)).toEqual([{ field: 'active', before: true, after: false, kind: 'changed' }]);
+  it('faqat id, ism va rol qaytaradi; sinf rahbari va psixologga yopiq', async () => {
+    loginAs('ADMIN');
+    const options = await staffService.options('HOMEROOM');
+    expect(options.length).toBeGreaterThan(10);
+    expect(Object.keys(options[0] ?? {}).sort()).toEqual(['fullName', 'id', 'role']);
+    expect(options.every((o) => o.role === 'HOMEROOM')).toBe(true);
+    loginAs('HOMEROOM');
+    await expect(staffService.options()).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    loginAs('PSYCHOLOGIST');
+    await expect(staffService.options()).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
 });

@@ -8,7 +8,7 @@ import { type Actor, assertCan, currentActor, latency, newId, writeAudit } from 
 import { getTables, transact } from '../db';
 import { paginate } from '../query';
 import type { Tables } from '../tables';
-import { assertAudienceAllowed, audienceNames, localIso, normalizeLocal, reachOf } from './comms-shared';
+import { assertAudienceAllowed, audienceNames, compareTime, localIso, normalizeLocal, reachOf, timeOf } from './comms-shared';
 
 export type ReminderWhen = 'UPCOMING' | 'PAST';
 export type ReminderRow = Reminder & {
@@ -19,24 +19,42 @@ export type ReminderRow = Reminder & {
   recipients: number;
 };
 export type ReminderFilter = ListQuery & { when?: ReminderWhen; kind?: ReminderKind };
-export type ReminderList = Paginated<ReminderRow> & { counts: Record<ReminderWhen, number> };
+/** Butun ro'yxat bo'yicha (filtr va sahifalashsiz) ko'rsatkichlar. */
+export type ReminderStats = { upcoming: number; repeating: number; paused: number; nextAt: string | null };
+export type ReminderList = Paginated<ReminderRow> & { counts: Record<ReminderWhen, number>; stats: ReminderStats };
 
 const MAX_REPEAT_STEPS = 600;
 
-function step(date: Date, repeat: Reminder['repeat']): Date {
-  const next = new Date(date);
-  if (repeat === 'WEEKLY') next.setDate(next.getDate() + 7);
-  else next.setMonth(next.getMonth() + 1);
+/**
+ * Boshlang'ich vaqtdan `n` qadam keyin. Oylik — oyning o'sha kuni, oy qisqa bo'lsa
+ * oxirgi kuni (31-yanvar → 28-fevral → 31-mart; 3-martga "siljimaydi").
+ */
+export function occurrenceAt(anchor: Date, repeat: Exclude<Reminder['repeat'], 'NONE'>, n: number): Date {
+  const next = new Date(anchor);
+  if (repeat === 'WEEKLY') {
+    next.setDate(next.getDate() + 7 * n);
+    return next;
+  }
+  const day = anchor.getDate();
+  next.setDate(1);
+  next.setMonth(next.getMonth() + n);
+  const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+  next.setDate(Math.min(day, lastDay));
   return next;
 }
 
 /** Keyingi yuborilish: bir martalik o'tgan bo'lsa — null. */
 export function nextOccurrence(r: Pick<Reminder, 'sendAt' | 'repeat'>, now: Date): Date | null {
-  let at = new Date(r.sendAt);
-  if (at > now) return at;
+  const anchorMs = timeOf(r.sendAt);
+  if (Number.isNaN(anchorMs)) return null;
+  const anchor = new Date(anchorMs);
+  if (anchorMs > now.getTime()) return anchor;
   if (r.repeat === 'NONE') return null;
-  for (let i = 0; i < MAX_REPEAT_STEPS && at <= now; i++) at = step(at, r.repeat);
-  return at > now ? at : null;
+  for (let n = 1; n <= MAX_REPEAT_STEPS; n++) {
+    const at = occurrenceAt(anchor, r.repeat, n);
+    if (at.getTime() > now.getTime()) return at;
+  }
+  return null;
 }
 
 function toRow(t: Tables, r: Reminder, now: Date): ReminderRow {
@@ -53,8 +71,8 @@ function toRow(t: Tables, r: Reminder, now: Date): ReminderRow {
 /** Yaqin → uzoq (kelgusi), yangi → eski (o'tgan). */
 export function reminderRows(t: Tables, now: Date): ReminderRow[] {
   const rows = t.reminders.map((r) => toRow(t, r, now));
-  const upcoming = rows.filter((r) => !r.isPast).sort((a, b) => (a.nextAt ?? '').localeCompare(b.nextAt ?? ''));
-  const past = rows.filter((r) => r.isPast).sort((a, b) => b.sendAt.localeCompare(a.sendAt));
+  const upcoming = rows.filter((r) => !r.isPast).sort((a, b) => compareTime(a.nextAt, b.nextAt));
+  const past = rows.filter((r) => r.isPast).sort((a, b) => compareTime(b.sendAt, a.sendAt));
   return [...upcoming, ...past];
 }
 
@@ -65,7 +83,7 @@ function parseInput(actor: Actor, t: Tables, input: ReminderInput): Omit<Reminde
 }
 
 function assertFuture(sendAt: string): void {
-  if (new Date(sendAt) <= clockNow()) throw new ServiceError('VALIDATION', 'sendAt: errors.form.invalidDate');
+  if (!(timeOf(sendAt) > clockNow().getTime())) throw new ServiceError('VALIDATION', 'sendAt: errors.form.invalidDate');
 }
 
 function find(t: Tables, id: string): { index: number; current: Reminder } {
@@ -81,14 +99,21 @@ export const remindersService = {
     const actor = currentActor();
     assertCan(actor, 'reminders.manage');
     const rows = reminderRows(getTables(), clockNow());
-    const counts = { UPCOMING: rows.filter((r) => !r.isPast).length, PAST: rows.filter((r) => r.isPast).length };
+    const upcoming = rows.filter((r) => !r.isPast);
+    const counts = { UPCOMING: upcoming.length, PAST: rows.length - upcoming.length };
+    const stats: ReminderStats = {
+      upcoming: upcoming.length,
+      repeating: rows.filter((r) => r.repeat !== 'NONE').length,
+      paused: upcoming.filter((r) => !r.active).length,
+      nextAt: upcoming.find((r) => r.active)?.nextAt ?? null,
+    };
     const filtered = rows.filter(
       (r) =>
         (!filter.when || (filter.when === 'PAST') === r.isPast) &&
         (!filter.kind || r.kind === filter.kind) &&
         (!filter.search || matchesSearch(`${r.title} ${r.body} ${r.audienceNames.join(' ')}`, filter.search)),
     );
-    return { ...paginate(filtered, filter.page, filter.limit ?? 50), counts };
+    return { ...paginate(filtered, filter.page, filter.limit ?? 20), counts, stats };
   },
 
   async create(input: ReminderInput): Promise<Reminder> {
@@ -112,7 +137,7 @@ export const remindersService = {
     return transact((t) => {
       const { index, current } = find(t, id);
       const data = parseInput(actor, t, input);
-      if (data.sendAt !== current.sendAt) assertFuture(data.sendAt);
+      if (timeOf(data.sendAt) !== timeOf(current.sendAt)) assertFuture(data.sendAt);
       const next: Reminder = { ...current, ...data };
       t.reminders[index] = next;
       writeAudit(t, actor, 'REMINDERS', 'reminder.update', `"${next.title}" eslatmasi tahrirlandi`, id, current, next);

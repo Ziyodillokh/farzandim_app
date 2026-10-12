@@ -10,15 +10,16 @@ import type {
   SchoolClass,
   Student,
 } from '@/data/contracts';
+import { roleHas } from '@/auth/permissions';
 import { ServiceError } from '@/data/contracts';
 import { correctionSchema, earlyExitInputSchema, type CorrectionInput, type EarlyExitInput } from '@/data/schemas/attendance';
 import { parseOrThrow } from '@/data/schemas/validate';
 import { hashString } from '@/lib/rng';
 import { hhmmToMinutes, minutesToHhmm, percent } from '@/lib/utils';
 import { planDay, recordFromPlan } from '../attendance-plan';
-import { addDays, dateRange, isSchoolDay } from '../calendar';
+import { addDays, dateRange, isSchoolDay, toIsoDate } from '../calendar';
 import { clockMinute, clockNow, clockToday } from '../clock';
-import { assertCan, assertClassInScope, currentActor, inScope, latency, newId, writeAudit } from '../context';
+import { type Actor, assertCan, assertClassInScope, currentActor, inScope, latency, newId, writeAudit } from '../context';
 import { getTables, transact } from '../db';
 import { buildIndexes, compareClasses, compareClassesByShiftNow, studentName } from '../lookups';
 import type { Tables } from '../tables';
@@ -60,7 +61,22 @@ export type KioskStats = { date: IsoDate; expected: number; arrived: number; lat
  * noto'g'ri tartib beradi, shuning uchun vaqt belgisi solishtiriladi.
  */
 function byAtDesc(a: { at: string }, b: { at: string }): number {
-  return Date.parse(b.at) - Date.parse(a.at);
+  return newestFirst(a.at, b.at);
+}
+
+/** Ikki vaqt belgisini solishtirish (eng yangisi birinchi) — har doim `Date.parse`, satr emas. */
+function newestFirst(a: string, b: string): number {
+  return Date.parse(b) - Date.parse(a);
+}
+
+/** Vaqt belgisining mahalliy sanasi (mahalliy va UTC formatlar uchun bir xil). */
+function localDateOf(stamp: string): IsoDate {
+  return toIsoDate(new Date(Date.parse(stamp)));
+}
+
+/** Tarix ruxsati bo'lmasa (navbatchi) — faqat bugungi yozuvlar. */
+function todayOnly(actor: Actor): boolean {
+  return !roleHas(actor.role, 'attendance.history');
 }
 
 function toFeedItems(tables: Tables, events: readonly AttendanceEvent[]): FeedItem[] {
@@ -241,6 +257,8 @@ export const attendanceService = {
       const time = minutesToHhmm(Math.floor(clockMinute()));
       if (existing) {
         if (existing.status === status) return existing;
+        // Mavjud holatni o'zgartirish — tuzatish: alohida ruxsat (navbatchida yo'q).
+        assertCan(actor, 'attendance.correct');
         if (!reason.trim()) throw new ServiceError('VALIDATION', 'reason');
         existing.corrections.push({ at: clockNow().toISOString(), byStaffId: actor.staffId, from: existing.status, to: status, reason: reason.trim() });
         existing.status = status;
@@ -314,7 +332,7 @@ export const attendanceService = {
         });
       }
     }
-    return out.sort((a, b) => b.correction.at.localeCompare(a.correction.at));
+    return out.sort((a, b) => newestFirst(a.correction.at, b.correction.at));
   },
 
   // ─── Kirish nuqtasi (kiosk) ─────────────────────────────────────
@@ -416,9 +434,11 @@ export const attendanceService = {
     assertCan(actor, 'attendance.view');
     const tables = getTables();
     const idx = buildIndexes(tables);
+    const today = clockToday();
+    const onlyToday = todayOnly(actor);
     return inScope(actor, tables.earlyExits)
-      .filter((e) => !status || e.status === status)
-      .sort((a, b) => b.requestedAt.localeCompare(a.requestedAt))
+      .filter((e) => (!status || e.status === status) && (!onlyToday || e.date === today))
+      .sort((a, b) => newestFirst(a.requestedAt, b.requestedAt))
       .map((e) => {
         const s = idx.students.get(e.studentId);
         return {
@@ -499,8 +519,10 @@ export const attendanceService = {
     const idx = buildIndexes(tables);
     const guardians = new Map(tables.guardians.map((g) => [g.id, g]));
     const allowed = new Set(inScope(actor, tables.students.map((s) => ({ ...s, classId: s.classId }))).map((s) => s.id));
+    const today = clockToday();
+    const onlyToday = todayOnly(actor);
     return tables.parentNotifications
-      .filter((n) => allowed.has(n.studentId))
+      .filter((n) => allowed.has(n.studentId) && (!onlyToday || localDateOf(n.at) === today))
       .sort(byAtDesc)
       .slice(0, limit)
       .map((n) => {
@@ -552,6 +574,7 @@ export const attendanceService = {
     await latency(80, 160);
     const actor = currentActor();
     assertCan(actor, 'attendance.view');
+    assertCan(actor, 'attendance.history');
     const tables = getTables();
     const today = clockToday();
     const storedByKey = new Map(tables.attendance.map((r) => [r.id, r]));
@@ -576,6 +599,7 @@ export const attendanceService = {
     await latency(60, 140);
     const actor = currentActor();
     assertCan(actor, 'attendance.view');
+    assertCan(actor, 'attendance.history');
     const tables = getTables();
     const student = tables.students.find((s) => s.id === studentId);
     if (!student) throw new ServiceError('NOT_FOUND', studentId);

@@ -3,6 +3,8 @@ import { type Permission, roleHas, ROLES, type Scope } from '@/auth/permissions'
 import type { AuditLog, AuditModule, RoleKey } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
 import { sleep } from '@/lib/utils';
+import { toLocalIso } from './calendar';
+import { clockNow } from './clock';
 import { getTables } from './db';
 import type { Tables } from './tables';
 
@@ -60,7 +62,8 @@ export function writeAudit(
 ): void {
   const entry: AuditLog = {
     id: newId('aud'),
-    at: new Date().toISOString(),
+    // Demo soati bo'yicha (ssenariyda panel ko'rsatayotgan vaqt bilan mos), mahalliy format.
+    at: toLocalIso(clockNow()),
     actorId: actor.staffId,
     actorName: actor.name,
     module,

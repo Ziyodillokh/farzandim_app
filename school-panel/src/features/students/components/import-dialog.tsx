@@ -10,6 +10,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { api } from '@/data/api';
 import { useI18n } from '@/i18n';
 import { downloadCsv, parseCsv } from '@/lib/csv';
+import { errorKey } from '@/lib/errors';
+
+/** Birinchi qator sarlavhami (shablondagi "Familiya" / "Фамилия" / "Last name")? */
+const HEADER_RE = /^(familiya|фамилия|last ?name)$/i;
 
 const TEMPLATE_ROWS = [
   ['Karimov', 'Aziz', 'Akmal o\'g\'li', '7-A', 'M', '2013-05-14', 'Karimova Malika', '+998 90 123 45 67'],
@@ -26,8 +30,13 @@ export function ImportDialog({ open, onOpenChange }: { open: boolean; onOpenChan
   const onFile = async (file: File | undefined) => {
     if (!file) return;
     setFileName(file.name);
-    const parsed = parseCsv(await file.text());
-    setRows(parsed.slice(1));
+    try {
+      const parsed = parseCsv(await file.text());
+      setRows(HEADER_RE.test(parsed[0]?.[0]?.trim() ?? '') ? parsed.slice(1) : parsed);
+    } catch (error) {
+      setRows(null);
+      toast.error(t(errorKey(error)));
+    }
   };
 
   const run = async () => {
@@ -40,6 +49,8 @@ export function ImportDialog({ open, onOpenChange }: { open: boolean; onOpenChan
       onOpenChange(false);
       setRows(null);
       setFileName('');
+    } catch (error) {
+      toast.error(t(errorKey(error)));
     } finally {
       setRunning(false);
     }

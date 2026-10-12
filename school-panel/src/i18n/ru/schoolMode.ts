@@ -176,7 +176,7 @@ export const schoolMode: DeepString<typeof uz> = {
     subtitle: 'Временное разрешение пользоваться телефоном на уроке — причина и автор записываются в журнал',
     add: 'Выдать исключение',
     searchPlaceholder: 'Ученик, класс или причина…',
-    tabs: { ACTIVE: 'Активные', EXPIRED: 'Истекшие', REVOKED: 'Отменённые' },
+    tabs: { ACTIVE: 'Активные', SCHEDULED: 'Запланированные', EXPIRED: 'Истекшие', REVOKED: 'Отменённые' },
     columns: { student: 'Ученик', class: 'Класс', period: 'Срок', reason: 'Причина', issuedBy: 'Кто выдал' },
     revoke: 'Отменить',
     revokeTitle: 'Отменить исключение?',
@@ -186,6 +186,7 @@ export const schoolMode: DeepString<typeof uz> = {
     revokedAt: 'Отменено: {time}',
     empty: {
       ACTIVE: 'Сейчас активных исключений нет',
+      SCHEDULED: 'Запланированных исключений нет',
       EXPIRED: 'Истекших исключений нет',
       REVOKED: 'Отменённых исключений нет',
     },
@@ -231,7 +232,8 @@ export const schoolMode: DeepString<typeof uz> = {
     edgeLesson: 'Расписание должно начинаться и заканчиваться уроком',
     untilPast: 'Срок должен заканчиваться не раньше чем через 5 минут',
     untilTooFar: 'Исключение выдаётся только до конца текущего дня',
-    alreadyActive: 'У этого ученика уже есть активное исключение',
+    alreadyActive: 'У этого ученика уже есть исключение на это время',
+    emergencySchoolActive: 'Экстренное отключение для всей школы уже действует. Сначала включите ограничение снова',
     appExists: 'Это приложение уже есть в списке',
   },
 };

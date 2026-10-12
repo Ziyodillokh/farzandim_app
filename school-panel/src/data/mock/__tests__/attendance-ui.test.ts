@@ -151,3 +151,112 @@ describe('davomat UI: erta ketish va hisobot', () => {
     await expect(attendanceService.monthReport('2026-10', 'cls-8b')).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
 });
+
+/** Mahalliy vaqt satri (seed/simulyator formati, "Z"siz). */
+function localStamp(date: string, hhmm: string): string {
+  return `${date}T${hhmm}:00`;
+}
+
+/** UTC satri (kiosk/xodim yozuvlari formati). */
+function utcStamp(date: string, hhmm: string): string {
+  const [y, m, d] = date.split('-').map(Number);
+  const [h, min] = hhmm.split(':').map(Number);
+  return new Date(y ?? 2026, (m ?? 1) - 1, d ?? 1, h ?? 0, min ?? 0).toISOString();
+}
+
+function addEarlyExit(id: string, date: string, requestedAt: string): void {
+  const student = getTables().students.find((s) => s.classId === 'cls-7a');
+  if (!student) throw new Error('seed: cls-7a');
+  transact((t) => {
+    t.earlyExits.push({
+      id,
+      studentId: student.id,
+      classId: student.classId,
+      date,
+      time: '12:00',
+      reason: 'Test',
+      pickupBy: 'Onasi',
+      status: 'APPROVED',
+      requestedAt,
+      decidedByStaffId: null,
+      decidedAt: null,
+    });
+  });
+}
+
+describe('ruxsatlar: navbatchi (review #1, #2)', () => {
+  beforeEach(freshDb);
+
+  it('navbatchi kutilayotganni belgilaydi, lekin mavjud holatni o\'zgartira olmaydi', async () => {
+    loginAs('DUTY');
+    const student = secondShiftStudent();
+    await expect(attendanceService.mark(student.id, 'PRESENT')).resolves.toMatchObject({ status: 'PRESENT' });
+    await expect(attendanceService.mark(student.id, 'ABSENT', 'Xato belgilandi')).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await expect(attendanceService.mark(student.id, 'PRESENT')).resolves.toMatchObject({ status: 'PRESENT' });
+  });
+
+  it('navbatchi tarixni o\'qiy olmaydi: studentMonth va trend', async () => {
+    loginAs('DUTY');
+    const student = secondShiftStudent();
+    await expect(attendanceService.studentMonth(student.id, '2026-09')).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await expect(attendanceService.trend(60)).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    loginAs('ADMIN');
+    await expect(attendanceService.studentMonth(student.id, '2026-09')).resolves.toBeInstanceOf(Array);
+    await expect(attendanceService.trend(14)).resolves.toBeInstanceOf(Array);
+  });
+
+  it('navbatchi erta ketishlarning faqat bugungisini ko\'radi', async () => {
+    addEarlyExit('exit-old', '2026-10-09', localStamp('2026-10-09', '08:00'));
+    addEarlyExit('exit-today', TODAY, localStamp(TODAY, '08:00'));
+    loginAs('DUTY');
+    const duty = await attendanceService.earlyExits();
+    expect(duty.some((e) => e.id === 'exit-today')).toBe(true);
+    expect(duty.every((e) => e.date === TODAY)).toBe(true);
+    loginAs('ADMIN');
+    const admin = await attendanceService.earlyExits();
+    expect(admin.some((e) => e.id === 'exit-old')).toBe(true);
+  });
+
+  it('navbatchi ota-onaga xabarlarning faqat bugungisini ko\'radi', async () => {
+    const student = secondShiftStudent();
+    transact((t) => {
+      t.parentNotifications.push(
+        { id: 'ntf-old', at: localStamp('2026-10-09', '08:00'), studentId: student.id, guardianId: student.guardianIds[0] ?? 'g', kind: 'ARRIVED', delivered: true },
+        { id: 'ntf-today', at: utcStamp(TODAY, '08:00'), studentId: student.id, guardianId: student.guardianIds[0] ?? 'g', kind: 'ARRIVED', delivered: true },
+      );
+    });
+    loginAs('DUTY');
+    const duty = await attendanceService.notifications(500);
+    expect(duty.map((n) => n.id)).toContain('ntf-today');
+    expect(duty.map((n) => n.id)).not.toContain('ntf-old');
+    loginAs('ADMIN');
+    expect((await attendanceService.notifications(500)).map((n) => n.id)).toContain('ntf-old');
+  });
+});
+
+describe('vaqt belgilari: aralash format (review #3)', () => {
+  beforeEach(freshDb);
+
+  it('erta ketishlar mahalliy va UTC vaqt bo\'yicha to\'g\'ri tartiblanadi', async () => {
+    addEarlyExit('exit-local-0900', TODAY, localStamp(TODAY, '09:00'));
+    addEarlyExit('exit-utc-1030', TODAY, utcStamp(TODAY, '10:30'));
+    loginAs('ADMIN');
+    const list = (await attendanceService.earlyExits()).filter((e) => e.id.startsWith('exit-local') || e.id.startsWith('exit-utc'));
+    expect(list.map((e) => e.id)).toEqual(['exit-utc-1030', 'exit-local-0900']);
+  });
+
+  it('tuzatishlar mahalliy va UTC vaqt bo\'yicha to\'g\'ri tartiblanadi', async () => {
+    loginAs('ADMIN');
+    const [a, b] = getTables().students.filter((s) => s.classId === 'cls-7a');
+    if (!a || !b) throw new Error('seed');
+    transact((t) => {
+      const base = { date: '2026-10-09', classId: 'cls-7a', status: 'EXCUSED' as const, inAt: null, outAt: null, source: 'MANUAL' as const, parentNotified: false };
+      t.attendance.push(
+        { ...base, id: `2026-10-09:${a.id}`, studentId: a.id, corrections: [{ at: localStamp(TODAY, '09:00'), byStaffId: 'x', from: 'ABSENT', to: 'EXCUSED', reason: 'local' }] },
+        { ...base, id: `2026-10-09:${b.id}`, studentId: b.id, corrections: [{ at: utcStamp(TODAY, '10:30'), byStaffId: 'x', from: 'ABSENT', to: 'EXCUSED', reason: 'utc' }] },
+      );
+    });
+    const list = (await attendanceService.corrections()).filter((c) => c.correction.reason === 'local' || c.correction.reason === 'utc');
+    expect(list.map((c) => c.correction.reason)).toEqual(['utc', 'local']);
+  });
+});

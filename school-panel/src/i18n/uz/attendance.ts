@@ -89,6 +89,8 @@ export const attendance = {
     correctedBadge: 'Tuzatilgan',
     lastCorrection: '{from} → {to}: {reason}',
     readOnly: 'Faqat ko\'rish',
+    locked: 'Belgilangan',
+    lockedHint: 'Belgilangan holatni o\'zgartirish uchun tuzatish huquqi kerak',
     pastHint: 'O\'tgan kun — holat faqat tuzatish orqali, sabab bilan o\'zgartiriladi.',
     printMeta: 'Sana: {date} · Smena: {shift} · Chop etildi: {printed}',
     exportFile: 'davomat-{className}-{date}',

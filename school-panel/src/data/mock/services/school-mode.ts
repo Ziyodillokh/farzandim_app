@@ -26,6 +26,7 @@ import {
   deviceStatusOf,
   exceptionStatus,
   numberPeriods,
+  overlapsException,
   requirePolicy,
   resolveUntil,
   statusMap,
@@ -165,7 +166,8 @@ const schoolModeWrites = {
       assertClassInScope(actor, student.classId);
       const until = resolveUntil(data.until, now);
       assertUntilWindow(until, now);
-      if (t.exceptions.some((e) => e.studentId === student.id && exceptionStatus(e, now.getTime()) === 'ACTIVE')) {
+      // Faol yoki rejalashtirilgan istisno bilan ustma-ust tushmasin.
+      if (t.exceptions.some((e) => e.studentId === student.id && overlapsException(e, now.getTime(), until.getTime()))) {
         throw new ServiceError('CONFLICT', `studentId: ${smMsg.alreadyActive}`);
       }
       const exception: SchoolModeException = {
@@ -193,7 +195,8 @@ const schoolModeWrites = {
       const before = t.exceptions.find((e) => e.id === id);
       if (!before) throw new ServiceError('NOT_FOUND', id);
       assertClassInScope(actor, before.classId);
-      if (exceptionStatus(before, now.getTime()) !== 'ACTIVE') throw new ServiceError('CONFLICT', id);
+      const status = exceptionStatus(before, now.getTime());
+      if (status !== 'ACTIVE' && status !== 'SCHEDULED') throw new ServiceError('CONFLICT', id);
       const next = { ...before, revokedAt: now.toISOString() };
       t.exceptions = t.exceptions.map((e) => (e.id === id ? next : e));
       const student = t.students.find((s) => s.id === before.studentId);
@@ -210,6 +213,8 @@ const schoolModeWrites = {
     const data = parseOrThrow(emergencyInputSchema, input);
     return transact((t) => {
       const before = t.emergency;
+      // Butun maktab bo'yicha o'chirish faol — uni sinf so'rovi bilan toraytirib (yoki jimgina qayta yozib) bo'lmaydi.
+      if (before.active && before.scope === 'SCHOOL') throw new ServiceError('CONFLICT', `scope: ${smMsg.emergencySchoolActive}`);
       const requested = data.scope === 'SCHOOL' ? [] : [...new Set(data.classIds)];
       if (requested.some((id) => !t.classes.some((c) => c.id === id))) throw new ServiceError('VALIDATION', 'classIds');
       // Sinf bo'yicha o'chirish faol bo'lsa — yangi sinflar qo'shiladi.

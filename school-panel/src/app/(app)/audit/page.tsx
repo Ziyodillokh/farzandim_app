@@ -4,6 +4,7 @@ import { ChevronRight, FilterX } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { useCan } from '@/auth/use-session';
 import { DataTable, type Column, type SortState } from '@/components/common/data-table';
 import { ErrorState } from '@/components/common/error-state';
 import { ExportMenu } from '@/components/common/export-menu';
@@ -25,12 +26,16 @@ import { errorKey } from '@/lib/errors';
 import { initials } from '@/lib/utils';
 
 const MODULES = Object.keys(enums.auditModule) as AuditModule[];
+/** Bola ovozi yozuvlari faqat `care.individual` huquqi bilan (servis ham yashiradi). */
+const CARE_MODULE: AuditModule = 'CARE';
 const INITIAL: AuditFilter = { page: 1, limit: 25, sortBy: 'at', sortDir: 'desc' };
 
 export default function AuditPage() {
   const { t, formatDate } = useI18n();
   const [filter, setFilter] = useState<AuditFilter>(INITIAL);
   const [selected, setSelected] = useState<AuditLog | null>(null);
+  const can = useCan();
+  const modules = useMemo(() => (can('care.individual') ? MODULES : MODULES.filter((m) => m !== CARE_MODULE)), [can]);
   const log = useAuditLog(filter);
   const actors = useAuditActors();
 
@@ -107,7 +112,7 @@ export default function AuditPage() {
         <FilterSelect
           value={filter.module}
           onChange={(v) => update({ module: v as AuditModule | undefined })}
-          options={MODULES.map((m) => ({ value: m, label: t(`enums.auditModule.${m}`) }))}
+          options={modules.map((m) => ({ value: m, label: t(`enums.auditModule.${m}`) }))}
           allLabel={`${t('audit.filters.module')}: ${t('common.all')}`}
         />
         <FilterSelect

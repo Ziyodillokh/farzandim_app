@@ -104,7 +104,7 @@ export const schoolModeReads = {
         name: (r) => r.studentName,
         class: (r) => r.className,
         status: (r) => STATUS_RANK[r.status],
-        lastSeen: (r) => r.lastSeenAt,
+        lastSeen: (r) => (r.lastSeenAt ? Date.parse(r.lastSeenAt) : null),
       },
       defaultSort: 'status',
     });
@@ -155,11 +155,16 @@ export const schoolModeReads = {
     });
     const query = filter.search ?? '';
     const searched = query ? rows.filter((r) => matchesSearch(`${r.studentName} ${r.className} ${r.reason} ${r.byName}`, query)) : rows;
-    const counts: Record<ExceptionStatus, number> = { ACTIVE: 0, EXPIRED: 0, REVOKED: 0 };
+    const counts: Record<ExceptionStatus, number> = { ACTIVE: 0, SCHEDULED: 0, EXPIRED: 0, REVOKED: 0 };
     for (const r of searched) counts[r.status] += 1;
     const status = filter.status ?? 'ACTIVE';
     const items = status === 'ALL' ? searched : searched.filter((r) => r.status === status);
-    const sorted = status === 'ACTIVE' ? sortItems(items, (r) => Date.parse(r.until)) : sortItems(items, (r) => Date.parse(r.from), 'desc');
+    const sorted =
+      status === 'ACTIVE'
+        ? sortItems(items, (r) => Date.parse(r.until))
+        : status === 'SCHEDULED'
+          ? sortItems(items, (r) => Date.parse(r.from))
+          : sortItems(items, (r) => Date.parse(r.from), 'desc');
     return { items: sorted, counts };
   },
 };

@@ -8,7 +8,7 @@ import { getTables, transact } from '../db';
 import { paginate } from '../query';
 import type { Tables } from '../tables';
 import { applyShift } from './comms-payments';
-import { type ChildRef, childrenByGuardian, nowLocalIso, staffName } from './comms-shared';
+import { type ChildRef, childrenByGuardian, compareTime, nowLocalIso, staffName } from './comms-shared';
 
 /** Ota-ona "eslatmada xato bor" desa — maktab tekshirib javob beradi (TZ 4.5). */
 export type VerificationRow = VerificationRequest & {
@@ -67,7 +67,7 @@ export const verificationsService = {
     const rows = toRows(t)
       .filter((r) => !filter.status || r.status === filter.status)
       .filter((r) => !filter.search || matchesSearch(`${r.guardianName} ${r.phone} ${r.message} ${r.children.map((c) => c.name).join(' ')}`, filter.search))
-      .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || compareTime(b.createdAt, a.createdAt));
     return { ...paginate(rows, filter.page, filter.limit ?? 20), counts: verificationCounts(t) };
   },
 

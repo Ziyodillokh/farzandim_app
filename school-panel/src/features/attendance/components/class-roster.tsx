@@ -1,6 +1,6 @@
 'use client';
 
-import { History, PencilLine } from 'lucide-react';
+import { History, Lock, PencilLine } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { DataTable, type Column } from '@/components/common/data-table';
@@ -17,6 +17,22 @@ import { QuickMark } from './quick-mark';
 import { SourceTag } from './source-tag';
 
 export type RosterRow = StudentDayRow & { no: number };
+
+/** Belgilangan holat — o'zgartirish huquqi yo'q (navbatchi): faqat qulf belgisi. */
+function LockedMark() {
+  const { t } = useI18n();
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex cursor-help items-center gap-1.5 text-xs text-muted-foreground">
+          <Lock className="h-3.5 w-3.5" />
+          {t('attendance.classPage.locked')}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs">{t('attendance.classPage.lockedHint')}</TooltipContent>
+    </Tooltip>
+  );
+}
 export type RosterMode = 'mark' | 'correct' | 'view';
 
 function CorrectedBadge({ row }: { row: RosterRow }) {
@@ -48,6 +64,7 @@ export function ClassRoster({
   loading,
   mode,
   busy,
+  canChange,
   onMark,
   onCorrect,
 }: {
@@ -55,6 +72,8 @@ export function ClassRoster({
   loading?: boolean;
   mode: RosterMode;
   busy?: boolean;
+  /** Mavjud holatni o'zgartirish (tuzatish) huquqi. Yo'q bo'lsa faqat kutilayotganlar belgilanadi. */
+  canChange: boolean;
   onMark: (row: RosterRow, status: AttendanceStatus) => void;
   onCorrect: (row: RosterRow) => void;
 }) {
@@ -107,7 +126,11 @@ export function ClassRoster({
       className: 'no-print text-right',
       cell: (r) =>
         mode === 'mark' ? (
-          <QuickMark current={r.record?.status ?? null} disabled={busy} onSelect={(status) => onMark(r, status)} />
+          r.record && !canChange ? (
+            <LockedMark />
+          ) : (
+            <QuickMark current={r.record?.status ?? null} disabled={busy} onSelect={(status) => onMark(r, status)} />
+          )
         ) : (
           <Button variant="outline" size="sm" disabled={!r.record} onClick={() => onCorrect(r)}>
             <PencilLine />
@@ -116,7 +139,7 @@ export function ClassRoster({
         ),
     };
     return [...base, actions];
-  }, [t, mode, busy, onMark, onCorrect]);
+  }, [t, mode, busy, canChange, onMark, onCorrect]);
 
   return <DataTable columns={columns} rows={rows} rowKey={(r) => r.studentId} loading={loading} skeletonRows={10} />;
 }

@@ -8,6 +8,15 @@ export function toIsoDate(date: Date): IsoDate {
   return `${y}-${m}-${d}`;
 }
 
+/**
+ * Mahalliy vaqt "YYYY-MM-DDTHH:MM:SS" (UTC'siz) — seed bilan bir xil format.
+ * Vaqtlarni solishtirishda doim `Date.parse` ishlatiladi (eski yozuvlarda `…Z` ham bor).
+ */
+export function toLocalIso(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${toIsoDate(date)}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
 /** "YYYY-MM-DD" → mahalliy yarim tun. */
 export function fromIsoDate(value: IsoDate): Date {
   const [y, m, d] = value.split('-').map(Number);

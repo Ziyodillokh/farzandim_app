@@ -17,10 +17,12 @@ import {
   audienceNames,
   audienceTouchesScope,
   canSendTo,
+  compareTime,
   normalizeLocal,
   nowLocalIso,
   reachOf,
   staffName,
+  timeOf,
 } from './comms-shared';
 
 export type AnnouncementRow = Announcement & { authorName: string; audienceNames: string[]; canManage: boolean };
@@ -43,7 +45,9 @@ export function sendStats(t: Tables, a: Pick<Announcement, 'id' | 'audience'>): 
 
 function liveRead(a: Announcement, now: Date): number {
   if (a.status !== 'SENT' || !a.sentAt) return a.stats.read;
-  const minutes = Math.max(0, (now.getTime() - new Date(a.sentAt).getTime()) / 60_000);
+  const sentMs = timeOf(a.sentAt);
+  if (Number.isNaN(sentMs)) return a.stats.read;
+  const minutes = Math.max(0, (now.getTime() - sentMs) / 60_000);
   const cap = Math.round(a.stats.delivered * (0.58 + unitHash(a.id, 'read') * 0.32));
   const grown = Math.round(cap * (1 - Math.exp(-minutes / READ_TAU_MINUTES)));
   return Math.min(a.stats.delivered, Math.max(a.stats.read, grown));
@@ -51,7 +55,7 @@ function liveRead(a: Announcement, now: Date): number {
 
 /** Vaqti kelgan rejalashtirilgan xabar — yuborilgan deb ko'rsatiladi; "o'qildi" vaqt bilan o'sadi. */
 export function effective(t: Tables, a: Announcement, now: Date): Announcement {
-  if (a.status === 'SCHEDULED' && a.scheduledAt && new Date(a.scheduledAt) <= now) {
+  if (a.status === 'SCHEDULED' && timeOf(a.scheduledAt) <= now.getTime()) {
     const sent: Announcement = { ...a, status: 'SENT', sentAt: a.scheduledAt, stats: sendStats(t, a) };
     return { ...sent, stats: { ...sent.stats, read: liveRead(sent, now) } };
   }
@@ -85,8 +89,8 @@ export function visibleAnnouncements(actor: Actor, t: Tables, now: Date): Announ
     .sort((x, y) => {
       const byStatus = STATUS_ORDER[x.a.status] - STATUS_ORDER[y.a.status];
       if (byStatus) return byStatus;
-      if (x.a.status === 'SCHEDULED') return (x.a.scheduledAt ?? '').localeCompare(y.a.scheduledAt ?? '');
-      if (x.a.status === 'SENT') return new Date(y.a.sentAt ?? 0).getTime() - new Date(x.a.sentAt ?? 0).getTime();
+      if (x.a.status === 'SCHEDULED') return compareTime(x.a.scheduledAt, y.a.scheduledAt);
+      if (x.a.status === 'SENT') return compareTime(y.a.sentAt, x.a.sentAt);
       return y.index - x.index;
     })
     .map(({ a }) => toRow(actor, t, a));
@@ -107,7 +111,7 @@ function editable(actor: Actor, t: Tables, id: string): { index: number; current
 function parseSchedule(value: string | null | undefined): string | null {
   if (!value) return null;
   const at = normalizeLocal(parseOrThrow(localDateTimeSchema, value));
-  if (new Date(at) <= clockNow()) throw new ServiceError('VALIDATION', 'scheduledAt: errors.form.invalidDate');
+  if (!(timeOf(at) > clockNow().getTime())) throw new ServiceError('VALIDATION', 'scheduledAt: errors.form.invalidDate');
   return at;
 }
 

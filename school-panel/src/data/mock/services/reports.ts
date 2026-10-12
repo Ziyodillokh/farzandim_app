@@ -3,7 +3,7 @@ import type { AgeGroup, IsoDate, IsoWeekday } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
 import { maskSmallCount } from '@/lib/k-anon';
 import { percent } from '@/lib/utils';
-import { addDays, dateRange, isoWeekday, isSchoolDay } from '../calendar';
+import { addDays, dateRange, isoWeekday, isSchoolDay, toIsoDate, toLocalIso } from '../calendar';
 import { clockNow, clockToday } from '../clock';
 import { assertCan, currentActor, latency } from '../context';
 import { getTables } from '../db';
@@ -119,8 +119,11 @@ function parentsSection(tables: Tables): MonthlyReport['parents'] {
   return { linkedStudents, totalStudents: active.length, rate: percent(linkedStudents, active.length), byClass };
 }
 
+/** Vaqt belgisi berilgan oyga tegishlimi — mahalliy sana bo'yicha (UTC `…Z` yozuvlar ham to'g'ri). */
 function inMonth(iso: string | null, month: string): boolean {
-  return Boolean(iso && iso.slice(0, 7) === month);
+  if (!iso) return false;
+  const ms = Date.parse(iso);
+  return Number.isFinite(ms) && toIsoDate(new Date(ms)).slice(0, 7) === month;
 }
 
 /** Oyning oxirgi so'rovnomasi bo'yicha /care bilan bir xil k-anonim natija; qatnashish — oy bo'yicha. */
@@ -184,7 +187,8 @@ export const reportsService = {
     const until = last < yesterday ? last : yesterday;
     const days = until >= first ? dateRange(first, until) : [];
     const anyShiftDay = (d: IsoDate) => tables.shifts.some((s) => isSchoolDay(d, s, tables.holidays));
-    const nowIso = clockNow().toISOString();
+    const now = clockNow();
+    const nowMs = now.getTime();
 
     const devices = { applied: 0, noPermission: 0, noPhone: 0, offline: 0 };
     for (const d of tables.devices) {
@@ -207,7 +211,7 @@ export const reportsService = {
       month,
       until: days.length ? until : null,
       schoolDays: days.filter(anyShiftDay).length,
-      generatedAt: nowIso,
+      generatedAt: toLocalIso(now),
       generatedBy: actor.name,
       attendance: can('attendance.history') ? attendanceSection(tables, days, today) : null,
       parents: can('students.view') ? parentsSection(tables) : null,
@@ -226,7 +230,7 @@ export const reportsService = {
             read,
             deliveryRate: percent(delivered, recipients),
             readRate: percent(read, recipients),
-            reminders: tables.reminders.filter((r) => inMonth(r.sendAt, month) && r.sendAt <= nowIso).length,
+            reminders: tables.reminders.filter((r) => inMonth(r.sendAt, month) && Date.parse(r.sendAt) <= nowMs).length,
           }
         : null,
       care: can('care.aggregate') ? careSection(tables, month, today) : null,

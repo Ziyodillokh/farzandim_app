@@ -11,7 +11,8 @@ import type { Tables } from '../tables';
 import { attendedRate, resolveRecord, type DayCounts } from './attendance';
 import { computeCareAggregate, defaultSurvey } from './care-aggregate';
 import { nextOccurrence } from './comms-reminders';
-import { localIso } from './comms-shared';
+import { audienceTouchesScope, localIso } from './comms-shared';
+import { exceptionStatus } from './school-mode-model';
 
 export type DashboardAlertKind = 'EMERGENCY' | 'EARLY_EXIT' | 'VERIFICATION' | 'CARE_URGENT' | 'CARE_NEW' | 'ABSENT' | 'NO_PERMISSION';
 export type DashboardAlert = { kind: DashboardAlertKind; count: number; href: string; tone: 'destructive' | 'warning' | 'info' };
@@ -164,7 +165,7 @@ export const dashboardService = {
     const tables = getTables();
     const today = clockToday();
     const minute = clockMinute();
-    const nowIso = clockNow().toISOString();
+    const nowMs = clockNow().getTime();
     const allowed = allowedClassIds(actor);
     const classIds = new Set(tables.classes.filter((c) => !allowed || allowed.includes(c.id)).map((c) => c.id));
     const students = tables.students.filter((s) => !s.archived && classIds.has(s.classId));
@@ -187,7 +188,7 @@ export const dashboardService = {
         activeClasses: states.filter((s) => s.kind === 'LESSON' || s.kind === 'BREAK').length,
         emergency: tables.emergency.active,
         devices,
-        activeExceptions: inScope(actor, tables.exceptions).filter((e) => !e.revokedAt && e.from <= nowIso && e.until > nowIso).length,
+        activeExceptions: inScope(actor, tables.exceptions).filter((e) => exceptionStatus(e, nowMs) === 'ACTIVE').length,
       };
     }
 
@@ -220,7 +221,7 @@ export const dashboardService = {
     const upcoming = can('messages.view')
       ? tables.reminders
           .filter((r) => r.active)
-          .filter((r) => r.audience.kind !== 'CLASSES' || !allowed || r.audience.classIds.some((c) => allowed.includes(c)))
+          .filter((r) => audienceTouchesScope(actor, tables, r.audience))
           .map((r) => ({ r, next: nextOccurrence(r, now) }))
           .filter((x): x is { r: (typeof tables.reminders)[number]; next: Date } => x.next !== null)
           .sort((a, b) => a.next.getTime() - b.next.getTime())

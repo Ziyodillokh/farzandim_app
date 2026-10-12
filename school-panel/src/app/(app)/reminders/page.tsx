@@ -2,7 +2,7 @@
 
 import { BellRing, CirclePause, Inbox, Plus, Repeat } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { useCan } from '@/auth/use-session';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { ReminderKind } from '@/data/contracts';
 import type { ReminderFilter, ReminderRow, ReminderWhen } from '@/data/mock/services/comms';
+import { SimplePager } from '@/features/messages/components/simple-pager';
 import { REMINDER_KINDS } from '@/features/reminders/components/kind-icon';
 import { ReminderCard } from '@/features/reminders/components/reminder-card';
 import { ReminderFormDialog } from '@/features/reminders/components/reminder-form-dialog';
@@ -27,26 +28,18 @@ const WHEN: readonly ReminderWhen[] = ['UPCOMING', 'PAST'];
 export default function RemindersPage() {
   const { t, formatDate, formatNumber } = useI18n();
   const can = useCan();
-  const [filter, setFilter] = useState<ReminderFilter>({ when: 'UPCOMING', limit: 100 });
+  const [filter, setFilter] = useState<ReminderFilter>({ when: 'UPCOMING', page: 1, limit: 20 });
   const [editing, setEditing] = useState<ReminderRow | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [deleting, setDeleting] = useState<ReminderRow | null>(null);
   const list = useReminders(filter);
-  const all = useReminders({ limit: 500 });
   const verifications = useVerifications({ status: 'OPEN', limit: 1 }, can('payments.manage'));
   const toggle = useToggleReminder();
   const remove = useRemoveReminder();
 
-  const stats = useMemo(() => {
-    const items = all.data?.items ?? [];
-    const upcoming = items.filter((r) => !r.isPast);
-    return {
-      upcoming: upcoming.length,
-      next: upcoming.find((r) => r.active)?.nextAt ?? null,
-      repeating: items.filter((r) => r.repeat !== 'NONE').length,
-      paused: upcoming.filter((r) => !r.active).length,
-    };
-  }, [all.data]);
+  // Ko'rsatkichlar servisda butun ro'yxat bo'yicha hisoblanadi (filtr/sahifalashdan qat'i nazar).
+  const stats = list.data?.stats;
+  const statsLoading = list.isLoading && !list.data;
 
   const openCreate = () => {
     setEditing(null);
@@ -71,12 +64,12 @@ export default function RemindersPage() {
         <StatCard
           icon={<BellRing />}
           label={t('reminders.stats.upcoming')}
-          value={formatNumber(stats.upcoming)}
-          hint={stats.next ? t('reminders.stats.nextHint', { date: formatDate(stats.next, 'd MMMM, HH:mm') }) : undefined}
-          loading={all.isLoading}
+          value={formatNumber(stats?.upcoming ?? 0)}
+          hint={stats?.nextAt ? t('reminders.stats.nextHint', { date: formatDate(stats.nextAt, 'd MMMM, HH:mm') }) : undefined}
+          loading={statsLoading}
         />
-        <StatCard icon={<Repeat />} tone="info" label={t('reminders.stats.repeating')} value={formatNumber(stats.repeating)} loading={all.isLoading} />
-        <StatCard icon={<CirclePause />} tone="muted" label={t('reminders.stats.paused')} value={formatNumber(stats.paused)} loading={all.isLoading} />
+        <StatCard icon={<Repeat />} tone="info" label={t('reminders.stats.repeating')} value={formatNumber(stats?.repeating ?? 0)} loading={statsLoading} />
+        <StatCard icon={<CirclePause />} tone="muted" label={t('reminders.stats.paused')} value={formatNumber(stats?.paused ?? 0)} loading={statsLoading} />
         {can('payments.manage') && (
           <Link href="/reminders/verifications" className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <StatCard
@@ -93,7 +86,7 @@ export default function RemindersPage() {
       </div>
 
       <Toolbar className="justify-between">
-        <Tabs value={when} onValueChange={(v) => setFilter((f) => ({ ...f, when: v as ReminderWhen }))}>
+        <Tabs value={when} onValueChange={(v) => setFilter((f) => ({ ...f, page: 1, when: v as ReminderWhen }))}>
           <TabsList>
             {WHEN.map((w) => (
               <TabsTrigger key={w} value={w}>
@@ -104,10 +97,10 @@ export default function RemindersPage() {
           </TabsList>
         </Tabs>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-          <SearchInput value={filter.search ?? ''} onChange={(search) => setFilter((f) => ({ ...f, search }))} placeholder={t('reminders.searchPlaceholder')} />
+          <SearchInput value={filter.search ?? ''} onChange={(search) => setFilter((f) => ({ ...f, page: 1, search }))} placeholder={t('reminders.searchPlaceholder')} />
           <FilterSelect
             value={filter.kind}
-            onChange={(kind) => setFilter((f) => ({ ...f, kind: kind as ReminderKind | undefined }))}
+            onChange={(kind) => setFilter((f) => ({ ...f, page: 1, kind: kind as ReminderKind | undefined }))}
             options={REMINDER_KINDS.map((k) => ({ value: k, label: t(`enums.reminderKind.${k}`) }))}
             allLabel={`${t('reminders.form.kind')}: ${t('common.all')}`}
             className="sm:w-56"
@@ -150,6 +143,8 @@ export default function RemindersPage() {
           ))}
         </div>
       )}
+
+      <SimplePager pagination={list.data?.pagination} onPageChange={(page) => setFilter((f) => ({ ...f, page }))} />
 
       <ReminderFormDialog open={formOpen} onOpenChange={setFormOpen} reminder={editing} />
       <ConfirmDialog

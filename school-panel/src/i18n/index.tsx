@@ -1,9 +1,10 @@
 'use client';
 
-import { format as formatDateFns, formatDistanceToNowStrict } from 'date-fns';
+import { format as formatDateFns, formatDistanceStrict } from 'date-fns';
 import { ru as ruLocale, uz as uzLocale } from 'date-fns/locale';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
+import { clockNow } from '@/data/mock/clock';
 import { readPref, writePref } from '@/lib/prefs';
 import {
   DEFAULT_LOCALE,
@@ -67,7 +68,13 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       tc: (key, count, vars) => translatePlural(locale, key, count, vars),
       formatDate: (date, pattern) => formatDateFns(toDate(date), pattern, { locale: dateLocale }),
       formatNumber: (n, options) => new Intl.NumberFormat(INTL_LOCALES[locale], options).format(n),
-      formatRelative: (date) => formatDistanceToNowStrict(toDate(date), { addSuffix: true, locale: dateLocale }),
+      // Demo soatiga nisbatan; o'tgan hodisa ssenariy vaqtidan "keyin" bo'lsa — "hozirgina".
+      formatRelative: (date) => {
+        const now = clockNow();
+        const at = toDate(date);
+        if (at >= now) return translate(locale, 'common.justNow');
+        return formatDistanceStrict(at, now, { addSuffix: true, locale: dateLocale });
+      },
     };
   }, [locale, setLocale]);
 

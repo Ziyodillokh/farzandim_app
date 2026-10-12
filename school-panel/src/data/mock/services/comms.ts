@@ -8,14 +8,14 @@ import { getTables } from '../db';
 import { announcementsService, type AnnouncementRow, visibleAnnouncements } from './comms-announcements';
 import { paymentStats, paymentsService, type PaymentStats } from './comms-payments';
 import { reminderRows, type ReminderRow, remindersService } from './comms-reminders';
-import { assertAudienceAllowed, type AudienceReach, reachOf } from './comms-shared';
+import { assertAudienceAllowed, type AudienceReach, reachOf, timeOf } from './comms-shared';
 import { MESSAGE_TEMPLATES, type MessageTemplate } from './comms-templates';
 import { verificationCounts, verificationsService } from './comms-verifications';
 
 export type { AnnouncementCounts, AnnouncementDetail, AnnouncementFilter, AnnouncementList, AnnouncementRow, SendOptions } from './comms-announcements';
 export type { PaymentFilter, PaymentFilterKind, PaymentHistoryEntry, PaymentRow, PaymentStats } from './comms-payments';
 export { addMonthsIso } from './comms-payments';
-export type { ReminderFilter, ReminderList, ReminderRow, ReminderWhen } from './comms-reminders';
+export type { ReminderFilter, ReminderList, ReminderRow, ReminderStats, ReminderWhen } from './comms-reminders';
 export type { AudienceReach, ChildRef } from './comms-shared';
 export type { MessageTemplate, TemplateId } from './comms-templates';
 export type { VerificationCounts, VerificationFilter, VerificationList, VerificationRow } from './comms-verifications';
@@ -71,7 +71,7 @@ export const commsService = {
     const sent = rows.filter((r) => r.status === 'SENT');
     return {
       scheduled: rows.filter((r) => r.status === 'SCHEDULED').length,
-      sentLast7Days: sent.filter((r) => r.sentAt && now.getTime() - new Date(r.sentAt).getTime() <= WEEK_MS).length,
+      sentLast7Days: sent.filter((r) => now.getTime() - timeOf(r.sentAt) <= WEEK_MS).length,
       lastSent: sent[0] ?? null,
       upcomingReminders: roleHas(actor.role, 'reminders.manage')
         ? reminderRows(t, now)

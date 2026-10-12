@@ -150,6 +150,23 @@ export function restartMorning(holidays: readonly IsoDate[] = []): void {
   });
 }
 
+/**
+ * Boshqa tab (kiosk) soatni o'zgartirsa ("ertalabni qayta boshlash", tezlik) —
+ * shu tab ham o'sha holatga o'tadi, aks holda eski epoch bilan kunni qayta tozalardi.
+ */
+let clockSyncBound = false;
+export function bindClockSync(): void {
+  if (clockSyncBound || typeof window === 'undefined') return;
+  clockSyncBound = true;
+  window.addEventListener('storage', (event) => {
+    if (event.key !== `parvoz-school:${PREF_KEY}`) return;
+    const saved = readPref<ClockState>(PREF_KEY);
+    if (!saved || (saved.mode !== 'REAL' && saved.mode !== 'SCENARIO')) return;
+    state = { ...defaultState(), ...saved };
+    for (const l of listeners) l();
+  });
+}
+
 export function subscribeClock(listener: Listener): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);

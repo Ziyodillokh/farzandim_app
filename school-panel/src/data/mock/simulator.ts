@@ -106,9 +106,14 @@ export function simulate(tables: Tables, date: IsoDate, minute: number, epoch = 
   return events;
 }
 
-/** Yangi kun / ssenariy qayta boshlandi: tuzatilmagan kundalik yozuvlar tozalanadi. */
+/**
+ * Yangi kun / ssenariy qayta boshlandi: shu kun qaytadan o'ynaladi. Boshqa
+ * kunlarning qo'lda (xodim, kiosk) yoki tuzatish bilan saqlangan yozuvlari
+ * qoladi; avtomatik (rejadan) yozuvlar tashlanadi — tarix rejadan qayta hisoblanadi.
+ */
 function resetDay(tables: Tables, date: IsoDate, simKey: string): void {
-  tables.attendance = tables.attendance.filter((r) => r.corrections.length > 0 && r.date !== date);
+  const isManual = (r: AttendanceRecord) => r.corrections.length > 0 || r.source === 'MANUAL' || r.source === 'KIOSK';
+  tables.attendance = tables.attendance.filter((r) => r.date !== date && isManual(r));
   // Jonli oqim faqat joriy kunniki.
   tables.attendanceEvents = [];
   tables.parentNotifications = tables.parentNotifications.filter((n) => !n.at.startsWith(date));

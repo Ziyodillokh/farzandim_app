@@ -18,7 +18,9 @@ import { SafetyCallout } from '@/features/school-mode/components/safety-callout'
 import { useRevokeException, useSmExceptions } from '@/features/school-mode/hooks';
 import { useI18n } from '@/i18n';
 
-const TABS: readonly ExceptionStatus[] = ['ACTIVE', 'EXPIRED', 'REVOKED'];
+const TABS: readonly ExceptionStatus[] = ['ACTIVE', 'SCHEDULED', 'EXPIRED', 'REVOKED'];
+/** Faol va hali boshlanmagan istisnolarni bekor qilish mumkin. */
+const REVOCABLE: ReadonlySet<ExceptionStatus> = new Set(['ACTIVE', 'SCHEDULED']);
 
 export default function SchoolModeExceptionsPage() {
   const { t, formatDate } = useI18n();
@@ -60,7 +62,7 @@ export default function SchoolModeExceptionsPage() {
       header: <span className="sr-only">{t('common.actions')}</span>,
       className: 'text-right',
       cell: (r) =>
-        r.status === 'ACTIVE' ? (
+        REVOCABLE.has(r.status) ? (
           <Can perm="schoolMode.exception">
             <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setRevoking(r)}>
               <ShieldOff />
@@ -89,7 +91,7 @@ export default function SchoolModeExceptionsPage() {
       />
 
       <Toolbar className="justify-between">
-        <Tabs value={status} onValueChange={(v) => setStatus(v as ExceptionStatus)}>
+        <Tabs value={status} onValueChange={(v) => setStatus(v as ExceptionStatus)} className="max-w-full overflow-x-auto">
           <TabsList>
             {TABS.map((s) => (
               <TabsTrigger key={s} value={s}>

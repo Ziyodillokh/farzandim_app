@@ -6,118 +6,152 @@ import type {
   CareSurvey,
   CareTopic,
   IsoDate,
+  SchoolClass,
 } from '@/data/contracts';
 import { AGE_GROUPS, CARE_TOPICS, type CareBreakdown } from '@/data/schemas/care';
-import { applyKAnonymity, CARE_MIN_GROUP, maskSmallCount, type MaskedGroup } from '@/lib/k-anon';
+import { CARE_MIN_GROUP, maskSmallCount } from '@/lib/k-anon';
 import { percent } from '@/lib/utils';
 import { addDays, toIsoDate, weekStart } from '../calendar';
 import { compareClasses } from '../lookups';
 import { ageGroupOf } from '../seed/care';
 import type { Tables } from '../tables';
+import { type Atom, buildAtoms, type ClassCell, isUnionOfAtoms } from './care-suppression';
 
 /**
- * Bola ovozi — umumlashgan natija (direktor, admin, psixolog).
+ * Bola ovozi — umumlashgan natija (direktor, admin, psixolog; dashboard va hisobotlar ham).
  *
  * Maxfiylik qoidalari:
- * - FAQAT `careResponses` jadvalidan hisoblanadi; natijada studentId, matn yoki
- *   alohida javob yo'q — faqat guruh sonlari va 0..100 ko'rsatkichlar.
- * - Respondentlari K (5) dan kam guruh yashiriladi; bitta guruh yashirilsa —
- *   ayirish orqali topib bo'lmasligi uchun keyingi eng kichik guruh ham.
- *   Yashirilgan guruhlar yig'indisi ham K dan kam bo'lsa — yana bittasi.
+ * - FAQAT `careResponses` jadvalidan hisoblanadi; natijada studentId, matn yoki alohida
+ *   javob yo'q — faqat guruh sonlari va 0..100 ko'rsatkichlar.
+ * - Yashirish barcha kesimlar (maktab / yosh guruhi / parallel / sinf) uchun umumiy
+ *   atomlar asosida — bir kesimni boshqasidan ayirib yashirin guruhni topib bo'lmaydi
+ *   (isbot: `care-suppression.ts`).
+ * - Mavzu ko'rsatkichi faqat shu mavzuga kamida K ta DISTINCT respondent javob bergan
+ *   va guruh shu mavzu atomlarining to'liq birlashmasi bo'lsa chiqariladi (maktab
+ *   o'rtachasi uchun ham).
  * - Yashirilgan guruhning respondentlar soni ham ko'rsatilmaydi (0).
  */
 
 type TopicScores = Partial<Record<CareTopic, number>>;
-type Bucket = { key: string; label: string; responses: CareResponse[] };
+type TopicStat = { score: number; respondents: number };
+type Bucket = { key: string; label: string; classIds: ReadonlySet<string>; responses: CareResponse[] };
+type Plan = { any: Atom[]; byTopic: ReadonlyMap<CareTopic, Atom[]> };
+type Questions = ReadonlyMap<string, CareQuestion>;
 
 const TREND_SURVEYS = 4;
 
-/** Javoblar → mavzu ko'rsatkichlari. 1..5 → 0..100; teskari savollar aylantiriladi (yuqori = yaxshi). */
-export function topicScores(responses: readonly CareResponse[], questions: ReadonlyMap<string, CareQuestion>): TopicScores {
-  const sums = new Map<CareTopic, { sum: number; n: number }>();
+/** Javobning yaroqli bo'lgan savollari bo'yicha mavzular. */
+function answeredTopics(response: CareResponse, questions: Questions): Set<CareTopic> {
+  const topics = new Set<CareTopic>();
+  for (const [questionId, raw] of Object.entries(response.answers)) {
+    const question = questions.get(questionId);
+    if (question && Number.isFinite(raw) && raw >= 1 && raw <= 5) topics.add(question.topic);
+  }
+  return topics;
+}
+
+function distinctRespondents(responses: readonly CareResponse[]): number {
+  return new Set(responses.map((r) => r.studentId)).size;
+}
+
+/** Mavzu bo'yicha: 1..5 → 0..100 (teskari savollar aylantiriladi) va distinct respondentlar soni. */
+function topicStats(responses: readonly CareResponse[], questions: Questions): Map<CareTopic, TopicStat> {
+  const acc = new Map<CareTopic, { sum: number; answers: number; people: Set<string> }>();
   for (const response of responses) {
     for (const [questionId, raw] of Object.entries(response.answers)) {
       const question = questions.get(questionId);
       if (!question || !Number.isFinite(raw) || raw < 1 || raw > 5) continue;
-      const good = question.reverse ? 6 - raw : raw;
-      const acc = sums.get(question.topic) ?? { sum: 0, n: 0 };
-      sums.set(question.topic, { sum: acc.sum + good, n: acc.n + 1 });
+      const entry = acc.get(question.topic) ?? { sum: 0, answers: 0, people: new Set<string>() };
+      entry.people.add(response.studentId);
+      acc.set(question.topic, { sum: entry.sum + (question.reverse ? 6 - raw : raw), answers: entry.answers + 1, people: entry.people });
     }
   }
-  const out: TopicScores = {};
-  for (const topic of CARE_TOPICS) {
-    const acc = sums.get(topic);
-    if (acc && acc.n > 0) out[topic] = Math.round(((acc.sum / acc.n - 1) / 4) * 100);
-  }
-  return out;
+  return new Map(
+    [...acc].map(([topic, e]) => [topic, { score: Math.round(((e.sum / e.answers - 1) / 4) * 100), respondents: e.people.size }]),
+  );
 }
 
-function buckets(tables: Tables, survey: CareSurvey, breakdown: CareBreakdown, responses: CareResponse[]): Bucket[] {
-  const targetClasses = tables.classes
-    .filter((c) => survey.ageGroups.includes(ageGroupOf(c.grade)))
-    .sort(compareClasses);
+/** Mavzu ko'rsatkichlari — faqat ≥ K distinct respondent javob bergan mavzular. */
+export function topicScores(responses: readonly CareResponse[], questions: Questions, k: number = CARE_MIN_GROUP): TopicScores {
+  const stats = topicStats(responses, questions);
+  return Object.fromEntries(
+    CARE_TOPICS.flatMap((topic) => {
+      const stat = stats.get(topic);
+      return stat && stat.respondents >= k ? [[topic, stat.score]] : [];
+    }),
+  ) as TopicScores;
+}
+
+function targetClasses(tables: Tables, survey: CareSurvey): SchoolClass[] {
+  return tables.classes.filter((c) => survey.ageGroups.includes(ageGroupOf(c.grade))).sort(compareClasses);
+}
+
+/** Yashirish rejasi: umumiy atomlar (respondentlar) va har mavzu uchun alohida atomlar. */
+function suppressionPlan(classes: readonly SchoolClass[], responses: readonly CareResponse[], questions: Questions): Plan {
+  const perClass = new Map<string, CareResponse[]>();
+  for (const r of responses) perClass.set(r.classId, [...(perClass.get(r.classId) ?? []), r]);
+  const cells = (count: (items: readonly CareResponse[]) => number): ClassCell[] =>
+    classes.map((c) => ({ classId: c.id, grade: c.grade, ageGroup: ageGroupOf(c.grade), n: count(perClass.get(c.id) ?? []) }));
+  const forTopic = (topic: CareTopic) => (items: readonly CareResponse[]) =>
+    distinctRespondents(items.filter((r) => answeredTopics(r, questions).has(topic)));
+  return {
+    any: buildAtoms(cells(distinctRespondents)),
+    byTopic: new Map(CARE_TOPICS.map((topic) => [topic, buildAtoms(cells(forTopic(topic)))])),
+  };
+}
+
+function buckets(classes: readonly SchoolClass[], survey: CareSurvey, breakdown: CareBreakdown, responses: CareResponse[]): Bucket[] {
+  const make = (key: string, label: string, members: readonly SchoolClass[]): Bucket => {
+    const classIds = new Set(members.map((c) => c.id));
+    return { key, label, classIds, responses: responses.filter((r) => classIds.has(r.classId)) };
+  };
   switch (breakdown) {
     case 'SCHOOL':
-      return [{ key: 'SCHOOL', label: tables.school.shortName, responses }];
+      return [make('SCHOOL', 'SCHOOL', classes)];
     case 'AGE_GROUP':
-      return AGE_GROUPS.filter((g) => survey.ageGroups.includes(g)).map((g) => ({
-        key: g,
-        label: g,
-        responses: responses.filter((r) => ageGroupOf(r.grade) === g),
-      }));
+      return AGE_GROUPS.filter((g) => survey.ageGroups.includes(g)).map((g) => make(g, g, classes.filter((c) => ageGroupOf(c.grade) === g)));
     case 'GRADE':
-      return [...new Set(targetClasses.map((c) => c.grade))].map((grade) => ({
-        key: String(grade),
-        label: String(grade),
-        responses: responses.filter((r) => r.grade === grade),
-      }));
+      return [...new Set(classes.map((c) => c.grade))].map((grade) => make(String(grade), String(grade), classes.filter((c) => c.grade === grade)));
     case 'CLASS':
-      return targetClasses.map((c) => ({ key: c.id, label: c.name, responses: responses.filter((r) => r.classId === c.id) }));
+      return classes.map((c) => make(c.id, c.name, [c]));
   }
 }
 
-/** Qo'shimcha yashirish: yashirin guruhlar yig'indisi ham K dan kam bo'lmasin. */
-function complementarySuppression<T>(groups: MaskedGroup<T>[]): MaskedGroup<T>[] {
-  let current = groups;
-  for (;;) {
-    const hiddenTotal = current.filter((g) => g.hidden).reduce((sum, g) => sum + g.respondents, 0);
-    if (hiddenTotal === 0 || hiddenTotal >= CARE_MIN_GROUP) return current;
-    const smallest = current
-      .map((g, index) => ({ g, index }))
-      .filter(({ g }) => !g.hidden)
-      .sort((a, b) => a.g.respondents - b.g.respondents)[0];
-    if (!smallest) return current;
-    current = current.map((g, i) => (i === smallest.index ? { ...g, hidden: true } : g));
+function publishGroup(bucket: Bucket, plan: Plan, questions: Questions): CareAggregateGroup {
+  const respondents = distinctRespondents(bucket.responses);
+  if (respondents < CARE_MIN_GROUP || !isUnionOfAtoms(bucket.classIds, plan.any)) {
+    return { key: bucket.key, label: bucket.label, respondents: 0, hidden: true, topicScores: null };
   }
+  const stats = topicStats(bucket.responses, questions);
+  const scores = Object.fromEntries(
+    CARE_TOPICS.flatMap((topic) => {
+      const stat = stats.get(topic);
+      const safe = stat && stat.respondents >= CARE_MIN_GROUP && isUnionOfAtoms(bucket.classIds, plan.byTopic.get(topic) ?? []);
+      return safe ? [[topic, stat.score]] : [];
+    }),
+  ) as TopicScores;
+  return { key: bucket.key, label: bucket.label, respondents, hidden: false, topicScores: scores };
 }
 
-/** Guruhlar → k-anonim natija. Bo'sh guruhlar (0 respondent) yashirin, lekin ikkilamchi yashirishga ta'sir qilmaydi. */
-function maskGroups(list: Bucket[], questions: ReadonlyMap<string, CareQuestion>): CareAggregateGroup[] {
-  const nonEmpty = list.filter((b) => b.responses.length > 0);
-  const masked = complementarySuppression(
-    applyKAnonymity(nonEmpty.map((b) => ({ key: b.key, label: b.label, respondents: b.responses.length, value: b.responses }))),
-  );
-  const byKey = new Map(masked.map((m) => [m.key, m]));
-  return list.map((bucket) => {
-    const m = byKey.get(bucket.key);
-    if (!m || m.hidden) return { key: bucket.key, label: bucket.label, respondents: 0, hidden: true, topicScores: null };
-    return { key: m.key, label: m.label, respondents: m.respondents, hidden: false, topicScores: topicScores(m.value, questions) };
-  });
+function surveyResponses(tables: Tables, survey: CareSurvey, classes: readonly SchoolClass[]): CareResponse[] {
+  const ids = new Set(classes.map((c) => c.id));
+  return tables.careResponses.filter((r) => r.surveyId === survey.id && ids.has(r.classId));
 }
 
-function weeklyTrend(tables: Tables, survey: CareSurvey, questions: ReadonlyMap<string, CareQuestion>): CareAggregate['weeklyTrend'] {
+/** Oxirgi 4 so'rovnoma — faqat maktab darajasi, k ≥ 5 bo'lgan haftalar. */
+function weeklyTrend(tables: Tables, survey: CareSurvey, questions: Questions): CareAggregate['weeklyTrend'] {
   return tables.careSurveys
     .filter((s) => s.status !== 'DRAFT' && s.weekStart <= survey.weekStart)
     .sort((a, b) => a.weekStart.localeCompare(b.weekStart))
     .slice(-TREND_SURVEYS)
-    .map((s) => {
-      const responses = tables.careResponses.filter((r) => r.surveyId === s.id);
+    .flatMap((s) => {
+      const responses = surveyResponses(tables, s, targetClasses(tables, s));
+      const respondents = distinctRespondents(responses);
       const scores = topicScores(responses, questions);
       const values = Object.values(scores);
-      const fallback = values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : 0;
-      return { weekStart: s.weekStart, respondents: responses.length, wellbeing: scores.WELLBEING ?? fallback };
-    })
-    .filter((point) => point.respondents >= CARE_MIN_GROUP);
+      const wellbeing = scores.WELLBEING ?? (values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : null);
+      return respondents >= CARE_MIN_GROUP && wellbeing !== null ? [{ weekStart: s.weekStart, respondents, wellbeing }] : [];
+    });
 }
 
 function requestsThisWeek(tables: Tables, today: IsoDate): string {
@@ -137,15 +171,17 @@ export function defaultSurvey(surveys: readonly CareSurvey[]): CareSurvey | unde
 
 export function computeCareAggregate(tables: Tables, survey: CareSurvey, breakdown: CareBreakdown, today: IsoDate): CareAggregate {
   const questions = new Map(tables.careQuestions.map((q) => [q.id, q]));
-  const responses = tables.careResponses.filter((r) => r.surveyId === survey.id);
-  const respondents = responses.length;
+  const classes = targetClasses(tables, survey);
+  const responses = surveyResponses(tables, survey, classes);
+  const respondents = distinctRespondents(responses);
+  const plan = suppressionPlan(classes, responses, questions);
   return {
     surveyId: survey.id,
     invited: survey.invited,
     respondents,
     participationRate: percent(respondents, survey.invited),
     overall: respondents >= CARE_MIN_GROUP ? topicScores(responses, questions) : {},
-    groups: maskGroups(buckets(tables, survey, breakdown, responses), questions),
+    groups: buckets(classes, survey, breakdown, responses).map((b) => publishGroup(b, plan, questions)),
     weeklyTrend: weeklyTrend(tables, survey, questions),
     requestsThisWeek: requestsThisWeek(tables, today),
   };

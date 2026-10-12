@@ -8,11 +8,12 @@ import {
   type PaymentShiftInput,
 } from '@/data/schemas/comms';
 import { parseOrThrow } from '@/data/schemas/validate';
+import { matchesSearch } from '@/lib/normalize-search';
 import { addDays, fromIsoDate, toIsoDate } from '../calendar';
 import { clockToday } from '../clock';
 import { type Actor, assertCan, currentActor, latency, writeAudit } from '../context';
 import { getTables, transact } from '../db';
-import { runListQuery } from '../query';
+import { paginate, sortItems } from '../query';
 import type { Tables } from '../tables';
 import { type ChildRef, childrenByGuardian, nowLocalIso, staffName } from './comms-shared';
 
@@ -47,6 +48,7 @@ export function addMonthsIso(iso: IsoDate, months: number): IsoDate {
   return toIsoDate(date);
 }
 
+/** `nextDate` — sana ("YYYY-MM-DD", vaqtsiz, qat'iy uzunlik), shuning uchun satr solishtirish to'g'ri. */
 function isDueSoon(p: PaymentReminder, today: IsoDate): boolean {
   return !p.paused && p.nextDate >= today && p.nextDate <= addDays(today, DUE_SOON_DAYS);
 }
@@ -116,6 +118,23 @@ export function applyShift(t: Tables, actor: Actor, id: string, nextDate: IsoDat
   return payment;
 }
 
+const SORTERS: Record<string, (r: PaymentRow) => string | number> = {
+  name: (r) => r.guardianName,
+  nextDate: (r) => r.nextDate,
+  prepaid: (r) => r.prepaidMonths,
+};
+
+/** Filtr → qidiruv → saralash (sahifalashsiz). Ruxsat chaqiruvchida tekshiriladi. */
+function queryRows(filter: PaymentFilter): PaymentRow[] {
+  const rows = paymentRows(getTables(), clockToday()).filter((r) => matchesFilter(r, filter.filter));
+  const search = filter.search ?? '';
+  const searched = search
+    ? rows.filter((r) => matchesSearch(`${r.guardianName} ${r.phone} ${r.children.map((c) => `${c.name} ${c.className}`).join(' ')}`, search))
+    : rows;
+  const sorter = (filter.sortBy && SORTERS[filter.sortBy]) || SORTERS.nextDate!;
+  return sortItems(searched, sorter, filter.sortDir ?? 'asc');
+}
+
 async function setPaused(id: string, paused: boolean, input: { note: string }): Promise<PaymentReminder> {
   await latency();
   const actor = currentActor();
@@ -134,14 +153,8 @@ async function setPaused(id: string, paused: boolean, input: { note: string }): 
 export const paymentsService = {
   async list(filter: PaymentFilter = {}): Promise<Paginated<PaymentRow>> {
     await latency(80, 180);
-    const actor = currentActor();
-    assertCan(actor, 'payments.manage');
-    const rows = paymentRows(getTables(), clockToday()).filter((r) => matchesFilter(r, filter.filter));
-    return runListQuery(rows, filter, {
-      searchText: (r) => `${r.guardianName} ${r.phone} ${r.children.map((c) => `${c.name} ${c.className}`).join(' ')}`,
-      sorters: { name: (r) => r.guardianName, nextDate: (r) => r.nextDate, prepaid: (r) => r.prepaidMonths },
-      defaultSort: 'nextDate',
-    });
+    assertCan(currentActor(), 'payments.manage');
+    return paginate(queryRows(filter), filter.page, filter.limit);
   },
 
   async stats(): Promise<PaymentStats> {
@@ -150,10 +163,11 @@ export const paymentsService = {
     return paymentStats(getTables(), clockToday());
   },
 
-  /** CSV uchun — filtr bo'yicha barcha qatorlar. */
+  /** CSV uchun — filtr bo'yicha BARCHA qatorlar (sahifalashsiz; `paginate` 500 bilan cheklaydi). */
   async exportRows(filter: PaymentFilter = {}): Promise<PaymentRow[]> {
-    const page = await paymentsService.list({ ...filter, page: 1, limit: 5000 });
-    return page.items;
+    await latency(80, 180);
+    assertCan(currentActor(), 'payments.manage');
+    return queryRows(filter);
   },
 
   async shift(id: string, input: PaymentShiftInput): Promise<PaymentReminder> {

@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
+import { Inbox } from 'lucide-react';
 import { useState } from 'react';
 
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
@@ -8,7 +8,6 @@ import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
 import { SearchInput, Toolbar } from '@/components/common/toolbar';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { VerificationStatus } from '@/data/contracts';
@@ -17,6 +16,7 @@ import { FinanceCallout } from '@/features/reminders/components/finance-callout'
 import { VerificationAnswerDialog } from '@/features/reminders/components/verification-answer-dialog';
 import { VerificationCard } from '@/features/reminders/components/verification-card';
 import { useCloseVerification, useVerifications } from '@/features/reminders/hooks';
+import { SimplePager } from '@/features/messages/components/simple-pager';
 import { useI18n } from '@/i18n';
 
 const TABS = ['OPEN', 'ANSWERED', 'CLOSED', 'ALL'] as const;
@@ -30,7 +30,6 @@ export default function VerificationsPage() {
   const list = useVerifications(filter);
   const close = useCloseVerification();
   const tab: Tab = filter.status ?? 'ALL';
-  const pagination = list.data?.pagination;
   const tabLabel = (key: Tab) => (key === 'ALL' ? t('reminders.verifications.all') : t(`enums.verificationStatus.${key}`));
 
   return (
@@ -77,19 +76,7 @@ export default function VerificationsPage() {
         </div>
       )}
 
-      {pagination && pagination.totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-end gap-2 text-sm no-print">
-          <Button variant="outline" size="icon-sm" disabled={pagination.page <= 1} onClick={() => setFilter((f) => ({ ...f, page: pagination.page - 1 }))} aria-label={t('common.back')}>
-            <ChevronLeft />
-          </Button>
-          <span className="min-w-[56px] text-center tabular-nums">
-            {pagination.page} / {pagination.totalPages}
-          </span>
-          <Button variant="outline" size="icon-sm" disabled={pagination.page >= pagination.totalPages} onClick={() => setFilter((f) => ({ ...f, page: pagination.page + 1 }))} aria-label={t('common.next')}>
-            <ChevronRight />
-          </Button>
-        </div>
-      )}
+      <SimplePager pagination={list.data?.pagination} onPageChange={(page) => setFilter((f) => ({ ...f, page }))} />
 
       <VerificationAnswerDialog request={answering} onOpenChange={(open) => !open && setAnswering(null)} />
       <ConfirmDialog

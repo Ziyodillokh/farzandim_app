@@ -30,12 +30,17 @@ export function encodeBrand(brand: Brand): string {
 }
 
 export function decodeBrand(hash: string): Brand | null {
+  // Juda uzun havola — e'tiborsiz (logo 60 KB gacha, matnlar qisqa).
+  if (hash.length > MAX_LOGO_IN_LINK * 2) return null;
   const match = new RegExp(`[#&]${PARAM}=([^&]+)`).exec(hash);
   if (!match?.[1]) return null;
   try {
     const raw = JSON.parse(fromBase64Url(match[1])) as { n?: unknown; s?: unknown; c?: unknown; l?: unknown };
     if (typeof raw.n !== 'string' || raw.n.trim().length === 0 || raw.n.length > 100) return null;
-    const logo = typeof raw.l === 'string' && /^data:image\/(png|jpeg|webp|svg\+xml);base64,/.test(raw.l) ? raw.l : null;
+    const logo =
+      typeof raw.l === 'string' && raw.l.length <= MAX_LOGO_IN_LINK && /^data:image\/(png|jpeg|webp|svg\+xml);base64,[A-Za-z0-9+/=]+$/.test(raw.l)
+        ? raw.l
+        : null;
     return {
       name: raw.n.trim(),
       shortName: typeof raw.s === 'string' && raw.s.trim() ? raw.s.trim().slice(0, 12) : raw.n.trim().slice(0, 3).toUpperCase(),

@@ -92,6 +92,8 @@ export const attendance: DeepString<typeof uz> = {
     correctedBadge: 'Исправлено',
     lastCorrection: '{from} → {to}: {reason}',
     readOnly: 'Только просмотр',
+    locked: 'Отмечен',
+    lockedHint: 'Чтобы изменить отмеченный статус, нужно право на исправление',
     pastHint: 'Прошедший день — статус меняется только через исправление с указанием причины.',
     printMeta: 'Дата: {date} · Смена: {shift} · Напечатано: {printed}',
     exportFile: 'poseshchaemost-{className}-{date}',
