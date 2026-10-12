@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Parvoz School — dizayn tokenlari.
+ * Asos: admin-web tokenlari. Brend: Parvoz ilovalari ko'ki #216BFF (logo gradienti
+ * #508AFF → #305399), yon panel — saytdagi to'q ko'k (#060B16).
+ */
+
+@layer base {
+  :root {
+    --background: 220 33% 98%;           /* #F7F9FC */
+    --foreground: 224 32% 12%;           /* #151C2C */
+    --card: 0 0% 100%;
+    --card-foreground: 224 32% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 32% 12%;
+
+    --primary: 221 100% 56%;             /* #216BFF */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 222 52% 40%;         /* #305399 */
+    --primary-soft: 221 100% 96%;        /* #EBF2FF */
+
+    --secondary: 220 20% 95%;
+    --secondary-foreground: 224 25% 20%;
+    --muted: 220 20% 95%;
+    --muted-foreground: 222 12% 42%;
+    --accent: 221 90% 96%;
+    --accent-foreground: 224 25% 16%;
+
+    --destructive: 0 74% 54%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 62% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 36 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 220 18% 90%;
+    --input: 220 18% 88%;
+    --ring: 221 100% 56%;
+
+    --sidebar: 222 58% 6%;               /* #060B16 */
+    --sidebar-foreground: 220 30% 92%;
+    --sidebar-muted: 220 15% 62%;
+    --sidebar-accent: 221 60% 16%;
+    --sidebar-border: 222 35% 13%;
+
+    --chart-1: 221 100% 56%;
+    --chart-2: 152 62% 42%;
+    --chart-3: 36 92% 52%;
+    --chart-4: 0 74% 58%;
+    --chart-5: 265 70% 60%;
+
+    --radius: 0.85rem;
+  }
+
+  .dark {
+    --background: 224 40% 5%;
+    --foreground: 220 30% 96%;
+    --card: 224 35% 8%;
+    --card-foreground: 220 30% 96%;
+    --popover: 224 35% 9%;
+    --popover-foreground: 220 30% 96%;
+
+    --primary: 221 100% 62%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 222 60% 52%;
+    --primary-soft: 221 55% 15%;
+
+    --secondary: 224 25% 13%;
+    --secondary-foreground: 220 30% 92%;
+    --muted: 224 25% 13%;
+    --muted-foreground: 220 14% 66%;
+    --accent: 221 40% 15%;
+    --accent-foreground: 220 30% 94%;
+
+    --destructive: 0 70% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 55% 48%;
+    --success-foreground: 224 40% 5%;
+    --warning: 36 90% 56%;
+    --warning-foreground: 224 40% 5%;
+    --info: 199 85% 58%;
+    --info-foreground: 224 40% 5%;
+
+    --border: 224 25% 15%;
+    --input: 224 25% 17%;
+    --ring: 221 100% 62%;
+
+    --sidebar: 224 50% 4%;
+    --sidebar-foreground: 220 30% 92%;
+    --sidebar-muted: 220 14% 58%;
+    --sidebar-accent: 221 50% 14%;
+    --sidebar-border: 224 35% 11%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'rlig' 1, 'calt' 1, 'cv11' 1;
+    text-rendering: optimizeLegibility;
+  }
+  html { @apply scroll-smooth; }
+  ::selection { @apply bg-primary/20 text-foreground; }
+  :focus-visible { @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background; }
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 10px;
+  border: 2px solid hsl(var(--background));
+}
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+
+.bg-hero-gradient {
+  background:
+    radial-gradient(circle at 18% 12%, hsl(var(--primary) / 0.22), transparent 45%),
+    radial-gradient(circle at 85% 85%, hsl(var(--primary-glow) / 0.25), transparent 50%),
+    hsl(222 58% 6%);
+}
+
+.bg-mesh-gradient {
+  background-image:
+    radial-gradient(at 0% 0%, hsl(var(--primary) / 0.07) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, hsl(var(--primary-glow) / 0.05) 0px, transparent 50%);
+}
+
+.card-glow { transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s; }
+.card-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.15), 0 14px 32px -10px hsl(var(--primary) / 0.22);
+}
+
+.shimmer {
+  background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--muted-foreground) / 0.08) 50%, hsl(var(--muted)) 100%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* Chop etish: faqat asosiy kontent, toza oq sahifa */
+@media print {
+  @page { margin: 14mm; }
+  html, body { background: #fff !important; color: #000 !important; }
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  .print-break { break-before: page; }
+}
+.print-only { display: none; }

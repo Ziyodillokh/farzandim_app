@@ -1,0 +1,133 @@
+'use client';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useRef } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+
+import { ROLES } from '@/auth/permissions';
+import { FormField } from '@/components/common/form-field';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { RoleKey } from '@/data/contracts';
+import type { StaffRow } from '@/data/mock/services/staff';
+import { CLASS_SCOPED_ROLES, staffFormSchema, type StaffInput } from '@/data/schemas/staff';
+import { useI18n } from '@/i18n';
+import { useCreateStaff, useUpdateStaff } from '../hooks';
+import { ClassMultiSelect } from './class-multi-select';
+
+type FormValues = { fullName: string; position: string; role: RoleKey; phone: string; email: string; classIds: string[] };
+
+const EMPTY: FormValues = { fullName: '', position: '', role: 'TEACHER', phone: '+998 ', email: '', classIds: [] };
+const ROLE_KEYS = Object.keys(ROLES) as RoleKey[];
+
+function isClassScoped(role: RoleKey): boolean {
+  return (CLASS_SCOPED_ROLES as readonly RoleKey[]).includes(role);
+}
+
+export function StaffFormDialog({ open, onOpenChange, row }: { open: boolean; onOpenChange: (open: boolean) => void; row?: StaffRow }) {
+  const { t } = useI18n();
+  const create = useCreateStaff();
+  const update = useUpdateStaff();
+  const form = useForm<FormValues>({ resolver: zodResolver(staffFormSchema), defaultValues: EMPTY });
+  const roleLocked = Boolean(row?.username);
+
+  // Faqat ochilganda to'ldiriladi — fon yangilanishlari kiritilgan matnni o'chirmasin.
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (open && !wasOpen.current) {
+      form.reset(
+        row
+          ? { fullName: row.fullName, position: row.position, role: row.role, phone: row.phone, email: row.email, classIds: row.classIds }
+          : EMPTY,
+      );
+    }
+    wasOpen.current = open;
+  }, [open, row, form]);
+
+  const role = form.watch('role');
+
+  const submit = form.handleSubmit(async (values) => {
+    const input: StaffInput = { ...values, classIds: isClassScoped(values.role) ? values.classIds : [] };
+    try {
+      if (row) await update.mutateAsync({ id: row.id, input });
+      else await create.mutateAsync({ ...input, active: true });
+      onOpenChange(false);
+    } catch {
+      // toast — hooks ichida
+    }
+  });
+
+  const { errors } = form.formState;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>{row ? t('staff.editTitle') : t('staff.createTitle')}</DialogTitle>
+          <DialogDescription>{t(`staff.roles.desc.${role}`)}</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={submit} className="grid gap-4" noValidate>
+          <FormField label={t('staff.form.fullName')} htmlFor="staff-name" error={errors.fullName}>
+            <Input id="staff-name" placeholder={t('staff.form.fullNamePlaceholder')} {...form.register('fullName')} />
+          </FormField>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField label={t('staff.form.position')} htmlFor="staff-position" error={errors.position}>
+              <Input id="staff-position" placeholder={t('staff.form.positionPlaceholder')} {...form.register('position')} />
+            </FormField>
+            <FormField label={t('staff.form.role')} error={errors.role} hint={roleLocked ? t('staff.form.roleLocked') : undefined}>
+              <Controller
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange} disabled={roleLocked}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ROLE_KEYS.map((r) => (
+                        <SelectItem key={r} value={r}>
+                          {t(`enums.role.${r}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </FormField>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField label={t('staff.form.phone')} htmlFor="staff-phone" error={errors.phone} hint="+998 90 123 45 67">
+              <Input id="staff-phone" inputMode="tel" {...form.register('phone')} />
+            </FormField>
+            <FormField label={t('staff.form.email')} htmlFor="staff-email" error={errors.email} optional>
+              <Input id="staff-email" type="email" {...form.register('email')} />
+            </FormField>
+          </div>
+          {isClassScoped(role) && (
+            <FormField
+              label={t('staff.form.classes')}
+              error={errors.classIds}
+              hint={role === 'HOMEROOM' ? t('staff.form.classesHomeroom') : t('staff.form.classesTeacher')}
+            >
+              <Controller
+                control={form.control}
+                name="classIds"
+                render={({ field }) => <ClassMultiSelect value={field.value} onChange={field.onChange} invalid={Boolean(errors.classIds)} />}
+              />
+            </FormField>
+          )}
+          <DialogFooter className="mt-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" loading={create.isPending || update.isPending}>
+              {t('common.save')}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

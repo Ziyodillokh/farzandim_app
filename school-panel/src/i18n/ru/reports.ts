@@ -1,0 +1,61 @@
+import type { DeepString } from '../types';
+import type { reports as uz } from '../uz/reports';
+
+export const reports: DeepString<typeof uz> = {
+  title: 'Отчёты',
+  subtitle: 'Посещаемость, School Mode, коммуникации и забота',
+  month: 'Месяц',
+  printPdf: 'PDF / печать',
+  period: '{from} — {to} · учебных дней: {days}',
+  periodEmpty: 'В этом месяце ещё нет завершённых учебных дней',
+  generated: 'Сформирован: {date} · {name}',
+  printTitle: 'Ежемесячный отчёт',
+  kpi: {
+    attendance: 'Средняя посещаемость',
+    late: 'Опоздания',
+    absent: 'Пропуски без причины',
+    parents: 'Родители в Parvoz',
+  },
+  attendance: {
+    title: 'Посещаемость по классам',
+    weekday: 'По дням недели',
+    columns: { class: 'Класс', students: 'Учеников', rate: 'Посещаемость', late: 'Опоздания', absent: 'Пропуски', excused: 'Уважит.' },
+  },
+  parents: { title: 'Подключение родителей', columns: { class: 'Класс', linked: 'Подключено', total: 'Всего', rate: 'Доля' } },
+  schoolMode: {
+    title: 'School Mode',
+    applied: 'Устройств с применением',
+    noPermission: 'Нет разрешения',
+    noPhone: 'Ученики без телефона',
+    offline: 'Офлайн',
+    exceptions: 'Исключений за месяц',
+    changes: 'Изменений настроек',
+  },
+  messages: {
+    title: 'Сообщения и напоминания',
+    announcements: 'Отправлено объявлений',
+    recipients: 'Получателей',
+    delivery: 'Доставлено',
+    read: 'Прочитано',
+    reminders: 'Автонапоминаний',
+  },
+  care: {
+    title: 'Голос ребёнка — обобщённо',
+    note: 'Без персональных данных. Группы менее 5 респондентов (и соседняя группа, по которой их можно вычислить) скрыты.',
+    surveys: 'Опросов',
+    participation: 'Участие',
+    wellbeing: 'Индекс самочувствия',
+    requests: 'Обращений',
+    group: 'Возрастная группа',
+    respondents: 'Респондентов',
+    hidden: 'скрыто',
+  },
+  learning: {
+    title: 'Growth Learning',
+    active: 'Активных учеников в неделю',
+    tasks: 'Выполнено заданий',
+    score: 'Средний результат',
+    assignments: 'Выдано заданий',
+  },
+  csv: { filename: 'poseshchaemost-{month}' },
+};
