@@ -85,6 +85,9 @@ void main() {
       return {
         'authorization': 'approved',
         'blocking': false,
+        'apps': 2,
+        'categories': 1,
+        'webDomains': 0,
         'scheduleErrors': <String>[],
       };
     });
@@ -148,6 +151,31 @@ void main() {
   group('virtual "iPhone: tanlangan ilovalar" elementi', () {
     const selection = IosShieldPolicy.selectionPackage;
 
+    test('nomda holat ko\'rinadi (faqat sonlar)', () {
+      ScreenTimeStatus status(String auth, {int apps = 0}) =>
+          ScreenTimeStatus.fromMap({'authorization': auth, 'apps': apps});
+
+      expect(
+        IosRestrictionsSyncService.selectionAppName('uz', status('denied')),
+        "iPhone: tanlangan ilovalar · himoya o'chiq",
+      );
+      expect(
+        IosRestrictionsSyncService.selectionAppName('uz', status('approved')),
+        'iPhone: tanlangan ilovalar · hali tanlanmagan',
+      );
+      expect(
+        IosRestrictionsSyncService.selectionAppName(
+          'en',
+          status('approved', apps: 3),
+        ),
+        'iPhone: selected apps · 3 apps',
+      );
+      expect(
+        IosRestrictionsSyncService.selectionAppName(null),
+        'iPhone: tanlangan ilovalar',
+      );
+    });
+
     test('ota-ona ro\'yxatiga bola tilida bir marta yuboriladi', () async {
       await startAndSync();
       await service.sync();
@@ -157,7 +185,8 @@ void main() {
           'apps': [
             {
               'packageName': selection,
-              'appName': 'iPhone: выбранные приложения',
+              'appName':
+                  'iPhone: выбранные приложения · приложений: 2, категорий: 1',
               'isSystem': false,
             },
           ],

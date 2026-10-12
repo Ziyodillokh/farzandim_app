@@ -18,7 +18,7 @@
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/core/auth/token_storage.dart';
@@ -87,6 +87,7 @@ class IosRestrictionsSyncService implements RestrictionsSync {
   final bool _shouldPublishSelection;
   final DateTime Function() _clock;
   Timer? _timer;
+  AppLifecycleListener? _lifecycle;
   String? _childId;
 
   /// Native'ga oxirgi berilgan grant oxiri; `null` — grant yo'q (yoki hali
@@ -138,6 +139,9 @@ class IosRestrictionsSyncService implements RestrictionsSync {
     _timer?.cancel();
     unawaited(sync());
     _timer = Timer.periodic(syncInterval, (_) => unawaited(sync()));
+    // Fondan qaytganda darhol — iOS fonda taymer/WS'ni to'xtatgan bo'lishi
+    // mumkin, ota-ona o'zgarishi 60 s kutmasin.
+    _lifecycle ??= AppLifecycleListener(onResume: () => unawaited(sync()));
   }
 
   @override
@@ -214,7 +218,13 @@ class IosRestrictionsSyncService implements RestrictionsSync {
     String childId,
     String? languageCode,
   ) async {
-    final name = selectionAppName(languageCode);
+    ScreenTimeStatus? status;
+    try {
+      status = await _channel.status();
+    } catch (e) {
+      debugPrint('IosRestrictionsSync: holat o\'qilmadi: $e');
+    }
+    final name = selectionAppName(languageCode, status);
     final now = _clock();
     final publishedAt = _selectionPublishedAt;
     final isFresh =
@@ -240,14 +250,56 @@ class IosRestrictionsSyncService implements RestrictionsSync {
     }
   }
 
-  /// Ota-ona ilovasida ko'rinadigan nom (bola ilovasi tilida).
+  /// Ota-ona ilovasida ko'rinadigan nom (bola ilovasi tilida) + holat:
+  /// himoya o'chiqmi, nechta ilova/toifa/sayt tanlangan. Faqat sonlar —
+  /// qaysi ilovalar ekani telefondan chiqmaydi (Apple sharti).
   @visibleForTesting
-  static String selectionAppName(String? languageCode) =>
-      switch (languageCode) {
-        'ru' => 'iPhone: выбранные приложения',
-        'en' => 'iPhone: selected apps',
-        _ => 'iPhone: tanlangan ilovalar',
-      };
+  static String selectionAppName(
+    String? languageCode, [
+    ScreenTimeStatus? status,
+  ]) {
+    final texts = switch (languageCode) {
+      'ru' => _ruTexts,
+      'en' => _enTexts,
+      _ => _uzTexts,
+    };
+    final detail = switch (status) {
+      null => null,
+      ScreenTimeStatus(isAuthorized: false) => texts.off,
+      ScreenTimeStatus(hasSelection: false) => texts.empty,
+      final s => [
+        if (s.apps > 0) texts.apps(s.apps),
+        if (s.categories > 0) texts.categories(s.categories),
+        if (s.webDomains > 0) texts.sites(s.webDomains),
+      ].join(', '),
+    };
+    return detail == null ? texts.title : '${texts.title} · $detail';
+  }
+
+  static final _uzTexts = (
+    title: 'iPhone: tanlangan ilovalar',
+    off: "himoya o'chiq",
+    empty: 'hali tanlanmagan',
+    apps: (int n) => '$n ta ilova',
+    categories: (int n) => '$n ta toifa',
+    sites: (int n) => '$n ta sayt',
+  );
+  static final _ruTexts = (
+    title: 'iPhone: выбранные приложения',
+    off: 'защита выключена',
+    empty: 'ничего не выбрано',
+    apps: (int n) => 'приложений: $n',
+    categories: (int n) => 'категорий: $n',
+    sites: (int n) => 'сайтов: $n',
+  );
+  static final _enTexts = (
+    title: 'iPhone: selected apps',
+    off: 'protection off',
+    empty: 'nothing selected',
+    apps: (int n) => '$n apps',
+    categories: (int n) => '$n categories',
+    sites: (int n) => '$n websites',
+  );
 
   /// Ota-ona tasdiqlagan qo'shimcha vaqt → native. So'rov yiqilsa holat
   /// o'zgarmaydi; o'zgarmagan grant qayta yuborilmaydi.
@@ -291,5 +343,7 @@ class IosRestrictionsSyncService implements RestrictionsSync {
   void dispose() {
     _timer?.cancel();
     _timer = null;
+    _lifecycle?.dispose();
+    _lifecycle = null;
   }
 }

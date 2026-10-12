@@ -27,6 +27,7 @@ import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/device_info/data/models/child_device_info.dart';
+import 'package:farzandim_child/features/screen_time/data/screen_time_channel.dart';
 
 class DeviceInfoService {
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
@@ -37,6 +38,14 @@ class DeviceInfoService {
   Timer? _updateTimer;
   Dio? _dio;
   String? _childId;
+
+  /// iOS Ekran vaqti ruxsati — backend'ga oxirgi yuborilgan qiymat. Faqat
+  /// o'zgarganda yuboriladi (o'chirilsa ota-onaga ogohlantirish ketadi).
+  bool? _sentScreenTimePermission;
+
+  /// Backend `screenTimePermission` maydonini bilmaydi (eski versiya, 400) —
+  /// shu sessiyada qayta urinilmaydi.
+  bool _isScreenTimeFieldRejected = false;
 
   /// Heartbeat oralig'i — har 20 sek (batareya/zaryadlanish deyarli real-time
   /// yangilanishi uchun). Ota-ona ekranida ham 10s'da bir qayta o'qiladi.
@@ -107,6 +116,32 @@ class DeviceInfoService {
     } catch (e) {
       // ignore: avoid_print
       print('DeviceInfo heartbeat xato: $e');
+    }
+    await _sendScreenTimePermission(dio, childId);
+  }
+
+  /// iOS: Family Controls ruxsati holati ALOHIDA so'rovda — backend hali bu
+  /// maydonni bilmasa (forbidNonWhitelisted → 400) asosiy heartbeat yiqilmasin
+  /// (aks holda ota-onaga soxta "aloqa uzildi" ketardi).
+  Future<void> _sendScreenTimePermission(Dio dio, String childId) async {
+    if (!PlatformCapabilities.isIOS || _isScreenTimeFieldRejected) return;
+    final bool isAuthorized;
+    try {
+      isAuthorized = (await const ScreenTimeChannel().status()).isAuthorized;
+    } catch (_) {
+      return;
+    }
+    if (isAuthorized == _sentScreenTimePermission) return;
+    try {
+      await dio.post<void>(
+        '/children/$childId/device-info',
+        data: {'screenTimePermission': isAuthorized},
+      );
+      _sentScreenTimePermission = isAuthorized;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 400) _isScreenTimeFieldRejected = true;
+      // ignore: avoid_print
+      print('DeviceInfo screenTimePermission xato: ${e.response?.statusCode}');
     }
   }
 
