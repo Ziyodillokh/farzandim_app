@@ -1,0 +1,139 @@
+import type { IsoDate } from '@/data/contracts';
+import { readPref, writePref } from '@/lib/prefs';
+import { addDays, isoWeekday, toIsoDate } from './calendar';
+
+/**
+ * Demo soati. REAL — haqiqiy vaqt. SCENARIO — tanlangan o'quv kuni 07:45 dan
+ * boshlab 1×/10×/60× tezlikda "o'tadi" (kechqurun ham ertalabki kirishlar
+ * jonli ko'rinsin). Holat brauzerda eslab qolinadi.
+ */
+export type ClockMode = 'REAL' | 'SCENARIO';
+export type ClockSpeed = 1 | 10 | 60;
+export const CLOCK_SPEEDS: readonly ClockSpeed[] = [1, 10, 60];
+export const SCENARIO_START_MINUTE = 7 * 60 + 45;
+const SCENARIO_END_MINUTE = 19 * 60;
+
+type ClockState = {
+  mode: ClockMode;
+  speed: ClockSpeed;
+  scenarioDate: IsoDate;
+  scenarioStartMinute: number;
+  realStartedAt: number;
+  /** Har "ertalabni qaytadan boshlash" — simulyator shu kunni tozalaydi. */
+  epoch: number;
+};
+
+const PREF_KEY = 'clock';
+type Listener = () => void;
+const listeners = new Set<Listener>();
+let state: ClockState | null = null;
+
+/** Eng yaqin o'tgan (yoki bugungi) dushanba–juma kuni. */
+function lastWeekday(today: IsoDate, holidays: readonly IsoDate[]): IsoDate {
+  let d = today;
+  for (let i = 0; i < 14; i++) {
+    if (isoWeekday(d) <= 5 && !holidays.includes(d)) return d;
+    d = addDays(d, -1);
+  }
+  return today;
+}
+
+function defaultState(): ClockState {
+  return {
+    mode: 'REAL',
+    speed: 10,
+    scenarioDate: toIsoDate(new Date()),
+    scenarioStartMinute: SCENARIO_START_MINUTE,
+    realStartedAt: Date.now(),
+    epoch: 0,
+  };
+}
+
+function load(): ClockState {
+  if (state) return state;
+  const saved = readPref<ClockState>(PREF_KEY);
+  state = saved && (saved.mode === 'REAL' || saved.mode === 'SCENARIO') ? { ...defaultState(), ...saved } : defaultState();
+  return state;
+}
+
+function save(next: ClockState): void {
+  state = next;
+  writePref(PREF_KEY, next);
+  for (const l of listeners) l();
+}
+
+function scenarioMinute(s: ClockState): number {
+  const elapsed = ((Date.now() - s.realStartedAt) / 60000) * s.speed;
+  return Math.min(SCENARIO_END_MINUTE, s.scenarioStartMinute + elapsed);
+}
+
+/** Demo vaqti (SCENARIO'da virtual). */
+export function clockNow(): Date {
+  const s = load();
+  if (s.mode === 'REAL') return new Date();
+  const [y, m, d] = s.scenarioDate.split('-').map(Number);
+  const minute = scenarioMinute(s);
+  return new Date(y ?? 2026, (m ?? 1) - 1, d ?? 1, Math.floor(minute / 60), Math.floor(minute % 60), Math.floor((minute % 1) * 60));
+}
+
+export function clockToday(): IsoDate {
+  return toIsoDate(clockNow());
+}
+
+/** Kun boshidan daqiqa (kasr bilan). */
+export function clockMinute(): number {
+  const n = clockNow();
+  return n.getHours() * 60 + n.getMinutes() + n.getSeconds() / 60;
+}
+
+export function getClockState(): Readonly<ClockState> {
+  return load();
+}
+
+export function setClockMode(mode: ClockMode, holidays: readonly IsoDate[] = []): void {
+  const s = load();
+  if (mode === s.mode) return;
+  if (mode === 'SCENARIO') {
+    save({
+      ...s,
+      mode,
+      scenarioDate: lastWeekday(toIsoDate(new Date()), holidays),
+      scenarioStartMinute: SCENARIO_START_MINUTE,
+      realStartedAt: Date.now(),
+      epoch: s.epoch + 1,
+    });
+  } else {
+    save({ ...s, mode });
+  }
+}
+
+export function setClockSpeed(speed: ClockSpeed): void {
+  const s = load();
+  if (s.mode === 'SCENARIO') {
+    save({ ...s, speed, scenarioStartMinute: scenarioMinute(s), realStartedAt: Date.now() });
+  } else {
+    save({ ...s, speed });
+  }
+}
+
+export function restartMorning(holidays: readonly IsoDate[] = []): void {
+  const s = load();
+  save({
+    ...s,
+    mode: 'SCENARIO',
+    scenarioDate: s.mode === 'SCENARIO' ? s.scenarioDate : lastWeekday(toIsoDate(new Date()), holidays),
+    scenarioStartMinute: SCENARIO_START_MINUTE,
+    realStartedAt: Date.now(),
+    epoch: s.epoch + 1,
+  });
+}
+
+export function subscribeClock(listener: Listener): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+/** Faqat testlar uchun. */
+export function __setClockForTests(next: Partial<ClockState> | null): void {
+  state = next ? { ...defaultState(), ...next } : null;
+}
