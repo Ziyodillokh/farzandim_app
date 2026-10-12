@@ -3,6 +3,7 @@
  * keyin Parvoz backend'iga ulanganda shu fayl `http` servislarini qaytaradi
  * (`NEXT_PUBLIC_DATA_SOURCE=http`), UI kodi o'zgarmaydi.
  */
+import { assessmentsService } from './mock/services/assessments';
 import { attendanceService } from './mock/services/attendance';
 import { classesService } from './mock/services/classes';
 import { demoService } from './mock/services/demo';
@@ -13,7 +14,10 @@ import { guardiansService, studentsService } from './mock/services/students';
 import { careService } from './mock/services/care';
 import { commsService } from './mock/services/comms';
 import { dashboardService } from './mock/services/dashboard';
+import { developmentService } from './mock/services/development';
 import { learningService } from './mock/services/learning';
+import { notificationsService } from './mock/services/notifications';
+import { parentsService } from './mock/services/parents';
 import { profileService } from './mock/services/profile';
 import { reportsService } from './mock/services/reports';
 import { schoolModeService } from './mock/services/school-mode';
@@ -34,6 +38,10 @@ export const api = {
   reports: reportsService,
   dashboard: dashboardService,
   profile: profileService,
+  assessments: assessmentsService,
+  development: developmentService,
+  notifications: notificationsService,
+  parents: parentsService,
   demo: demoService,
 };
 

@@ -81,4 +81,10 @@ export const common = {
   classesCount: { one: '{count} sinf', few: '{count} sinf', many: '{count} sinf' },
   devicesCount: { one: '{count} qurilma', few: '{count} qurilma', many: '{count} qurilma' },
   minutesCount: { one: '{count} daqiqa', few: '{count} daqiqa', many: '{count} daqiqa' },
+  screening: {
+    title: 'Skrining, tashxis emas',
+    text: 'Natijalar o\'quvchini kuzatish va qo\'llab-quvvatlash uchun yo\'naltiruvchi ma\'lumot. Xulosa faqat psixolog suhbatidan keyin chiqariladi.',
+    notIq: 'IQ shkalasidagi kognitiv indeks (100 ± 15, demo me\'yorlar) — rasmiy IQ tashxisi emas; u faqat litsenziyalangan test bilan psixolog tomonidan aniqlanadi.',
+    demoNorms: 'Demo me\'yorlar',
+  },
 };

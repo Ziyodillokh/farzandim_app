@@ -14,6 +14,7 @@ export type AuditModule =
   | 'PAYMENTS'
   | 'CARE'
   | 'LEARNING'
+  | 'ASSESSMENTS'
   | 'SETTINGS';
 
 export type AuditLog = {
@@ -25,6 +26,8 @@ export type AuditLog = {
   action: string; // "student.create"
   entityId: Id | null;
   summary: string;
+  /** Tarjima uchun parametrlar (`audit.actions.<action>`), bo'lmasa `summary` ko'rsatiladi. */
+  params?: Record<string, string | number>;
   before: unknown;
   after: unknown;
 };

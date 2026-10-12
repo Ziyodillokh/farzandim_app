@@ -7,3 +7,6 @@ export * from './comms';
 export * from './care';
 export * from './learning';
 export * from './audit';
+export * from './assessments';
+export * from './notifications';
+export * from './development';

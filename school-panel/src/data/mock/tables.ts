@@ -24,11 +24,22 @@ import type {
   SchoolModePolicy,
   Shift,
   Staff,
+  StaffNotification,
   Student,
+  StudentNote,
+  TemplateId,
+  TemplateState,
+  PsychAssignment,
+  PsychHistoryConfig,
+  PsychResult,
+  PsychTest,
   VerificationRequest,
 } from '@/data/contracts';
 
-/** Mock bazadagi barcha jadvallar. Yangi jadval qo'shilsa — SCHEMA_VERSION oshiriladi. */
+/**
+ * Mock bazadagi barcha jadvallar. Yangi jadval qo'shilsa — `db.ts` dagi yumshoq
+ * migratsiya (MIGRATIONS) orqali (SCHEMA_VERSION oshirilsa foydalanuvchi ma'lumoti o'chadi).
+ */
 export type Tables = {
   school: School;
   shifts: Shift[];
@@ -58,6 +69,16 @@ export type Tables = {
   assignments: LearningAssignment[];
   activity: ClassActivity[];
   audit: AuditLog[];
+  /** Psixologik testlar: maktabning o'z / import qilingan testlari (shablonlar kodda). */
+  psychTests: PsychTest[];
+  psychTemplateState: Record<TemplateId, TemplateState>;
+  psychAssignments: PsychAssignment[];
+  /** Saqlangan natijalar (ilova, import, qo'lda). O'tgan choraklar `psychHistory` dan hisoblanadi. */
+  psychResults: PsychResult[];
+  psychHistory: PsychHistoryConfig;
+  /** Xodim bildirishnomalari (xavfsizlik signali, test yakunlandi) — max 200. */
+  notifications: StaffNotification[];
+  studentNotes: StudentNote[];
   /** Simulyator holati: qaysi sana va qaysi daqiqagacha qayta ishlangan. */
   sim: { date: string; processedUntilMinute: number };
 };

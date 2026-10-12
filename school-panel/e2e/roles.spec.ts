@@ -21,6 +21,7 @@ async function detailQueries(page: Page): Promise<Record<string, string>> {
     '/attendance/class': 'id=cls-7a',
     '/care/requests/view': 'id=care-1',
     '/reports/print': 'month=2026-09',
+    '/assessments/view': 'id=tpl-logic',
   };
 }
 

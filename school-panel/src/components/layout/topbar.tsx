@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { useI18n, type Locale } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { DemoButton } from '@/features/engine/demo-button';
+import { NotificationBell } from '@/features/notifications/components/notification-bell';
 import { ClockWidget } from './clock-widget';
 import { CommandPalette } from './command-palette';
 import { ParvozWordmark } from './parvoz-wordmark';
@@ -70,9 +72,8 @@ export function Topbar() {
           <kbd className="ml-auto hidden rounded-md bg-primary/[0.06] px-1.5 py-0.5 text-2xs font-semibold ring-1 ring-inset ring-border/60 dark:bg-white/[0.06] md:inline">{t('shell.searchShortcut')}</kbd>
         </button>
         <div className="ml-auto flex items-center gap-1.5">
-          <span className="hidden rounded-full border border-warning/30 bg-warning/10 px-2.5 py-1 text-2xs font-semibold text-warning 2xl:inline">
-            {t('common.demoBadge')}
-          </span>
+          <DemoButton />
+          <NotificationBell />
           <ClockWidget />
           <span className="hidden sm:block">
             <LanguageSwitch />

@@ -34,6 +34,8 @@ export const nav: DeepString<typeof uz> = {
   careOverview: 'Общие результаты',
   careRequests: 'Обращения',
   careSurveys: 'Опросы',
+  assessments: 'Психологические тесты',
+  development: 'Развитие',
   learning: 'Growth Learning',
   reports: 'Отчёты',
   staff: 'Сотрудники и роли',

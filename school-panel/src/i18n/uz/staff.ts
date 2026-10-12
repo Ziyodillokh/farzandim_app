@@ -86,6 +86,8 @@ export const staff = {
     care: 'Bola ovozi',
     learning: 'Growth Learning',
     reports: 'Hisobotlar',
+    assessments: 'Psixologik testlar',
+    development: 'Rivojlanish',
   },
   perm: {
     dashboard: { view: 'Bosh sahifani ko\'rish' },
@@ -120,5 +122,7 @@ export const staff = {
     },
     learning: { view: 'Growth Learning\'ni ko\'rish', assign: 'Material va test tayinlash' },
     reports: { view: 'Hisobotlar va eksport' },
+    assessments: { manage: 'Psixologik testlar: yaratish, tayinlash, natijalar' },
+    development: { view: 'Rivojlanish dashboardi (umumlashgan)', individual: 'O\'quvchining rivojlanish profili (ism bilan)' },
   },
 };

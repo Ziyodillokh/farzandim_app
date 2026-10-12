@@ -59,6 +59,8 @@ export function writeAudit(
   entityId: string | null = null,
   before: unknown = null,
   after: unknown = null,
+  /** Tarjima parametrlari: audit sahifasi `audit.actions.<action>` kalitini shular bilan render qiladi. */
+  params?: Record<string, string | number>,
 ): void {
   const entry: AuditLog = {
     id: newId('aud'),
@@ -70,6 +72,7 @@ export function writeAudit(
     action,
     entityId,
     summary,
+    ...(params ? { params } : {}),
     before,
     after,
   };

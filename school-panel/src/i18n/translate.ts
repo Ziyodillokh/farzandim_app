@@ -36,6 +36,11 @@ export function translate(locale: Locale, key: TKey | string, vars?: Vars): stri
   return typeof value === 'string' ? interpolate(value, vars) : key;
 }
 
+/** Kalit lug'atda bormi (masalan, audit amali uchun tarjima mavjudligini tekshirish). */
+export function hasKey(locale: Locale, key: string): boolean {
+  return typeof (lookup(locale, key) ?? lookup(DEFAULT_LOCALE, key)) === 'string';
+}
+
 const pluralRules: Record<Locale, Intl.PluralRules> = {
   uz: new Intl.PluralRules('uz'),
   ru: new Intl.PluralRules('ru'),

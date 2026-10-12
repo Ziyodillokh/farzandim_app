@@ -84,4 +84,10 @@ export const common: DeepString<typeof uz> = {
   classesCount: { one: '{count} класс', few: '{count} класса', many: '{count} классов' },
   devicesCount: { one: '{count} устройство', few: '{count} устройства', many: '{count} устройств' },
   minutesCount: { one: '{count} минута', few: '{count} минуты', many: '{count} минут' },
+  screening: {
+    title: 'Скрининг, а не диагноз',
+    text: 'Результаты — ориентир для наблюдения и поддержки ученика. Выводы делаются только после беседы с психологом.',
+    notIq: 'Когнитивный индекс по шкале IQ (100 ± 15, демо-нормы) — не официальный диагноз IQ; его определяет психолог лицензированным тестом.',
+    demoNorms: 'Демо-нормы',
+  },
 };

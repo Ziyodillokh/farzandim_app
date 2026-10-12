@@ -3,6 +3,7 @@ import {
   BarChart3,
   Bell,
   BookOpen,
+  Brain,
   CalendarClock,
   CalendarOff,
   ClipboardCheck,
@@ -22,6 +23,7 @@ import {
   ShieldCheck,
   ShieldOff,
   Smartphone,
+  Sprout,
   UserCog,
   Users,
   UsersRound,
@@ -58,6 +60,23 @@ export type RouteDef = {
 export const ROUTES: readonly RouteDef[] = [
   { path: '/dashboard', perm: 'dashboard.view', titleKey: 'nav.dashboard', icon: LayoutDashboard, group: 'main' },
 
+  { path: '/care', perm: 'care.aggregate', titleKey: 'nav.care', icon: HeartHandshake, group: 'wellbeing' },
+  { path: '/care', perm: 'care.aggregate', titleKey: 'nav.careOverview', icon: BarChart3, parent: '/care' },
+  { path: '/care/requests', perm: 'care.individual', titleKey: 'nav.careRequests', icon: MessageSquareHeart, parent: '/care' },
+  { path: '/care/requests/view', perm: 'care.individual', titleKey: 'nav.careRequests', icon: MessageSquareHeart, hidden: true },
+  { path: '/care/surveys', perm: 'care.surveys', titleKey: 'nav.careSurveys', icon: ListChecks, parent: '/care' },
+  { path: '/assessments', perm: 'assessments.manage', titleKey: 'nav.assessments', icon: Brain, group: 'wellbeing' },
+  { path: '/assessments/view', perm: 'assessments.manage', titleKey: 'nav.assessments', icon: Brain, hidden: true },
+  { path: '/development', perm: 'development.view', titleKey: 'nav.development', icon: Sprout, group: 'wellbeing' },
+  { path: '/learning', perm: 'learning.view', titleKey: 'nav.learning', icon: BookOpen, group: 'wellbeing' },
+
+  { path: '/reminders', perm: 'reminders.manage', titleKey: 'nav.reminders', icon: Bell, group: 'communication' },
+  { path: '/reminders', perm: 'reminders.manage', titleKey: 'nav.reminders', icon: Bell, parent: '/reminders' },
+  { path: '/reminders/payments', perm: 'payments.manage', titleKey: 'nav.payments', icon: Wallet, parent: '/reminders' },
+  { path: '/reminders/verifications', perm: 'payments.manage', titleKey: 'nav.verifications', icon: Receipt, parent: '/reminders' },
+  { path: '/messages', perm: 'messages.view', titleKey: 'nav.messages', icon: MessagesSquare, group: 'communication' },
+  { path: '/messages/new', perm: 'messages.view', titleKey: 'nav.messages', icon: MessagesSquare, hidden: true },
+
   { path: '/attendance', perm: 'attendance.view', titleKey: 'nav.attendance', icon: ClipboardCheck, group: 'school' },
   { path: '/attendance', perm: 'attendance.view', titleKey: 'nav.attendanceBoard', icon: ClipboardCheck, parent: '/attendance' },
   { path: '/attendance/feed', perm: 'attendance.view', titleKey: 'nav.attendanceFeed', icon: Radio, parent: '/attendance' },
@@ -80,20 +99,6 @@ export const ROUTES: readonly RouteDef[] = [
   { path: '/students/view', perm: 'students.view', titleKey: 'nav.students', icon: Users, hidden: true },
   { path: '/parents', perm: 'guardians.link', titleKey: 'nav.parents', icon: UsersRound, group: 'school' },
 
-  { path: '/messages', perm: 'messages.view', titleKey: 'nav.messages', icon: MessagesSquare, group: 'communication' },
-  { path: '/messages/new', perm: 'messages.view', titleKey: 'nav.messages', icon: MessagesSquare, hidden: true },
-  { path: '/reminders', perm: 'reminders.manage', titleKey: 'nav.reminders', icon: Bell, group: 'communication' },
-  { path: '/reminders', perm: 'reminders.manage', titleKey: 'nav.reminders', icon: Bell, parent: '/reminders' },
-  { path: '/reminders/payments', perm: 'payments.manage', titleKey: 'nav.payments', icon: Wallet, parent: '/reminders' },
-  { path: '/reminders/verifications', perm: 'payments.manage', titleKey: 'nav.verifications', icon: Receipt, parent: '/reminders' },
-
-  { path: '/care', perm: 'care.aggregate', titleKey: 'nav.care', icon: HeartHandshake, group: 'wellbeing' },
-  { path: '/care', perm: 'care.aggregate', titleKey: 'nav.careOverview', icon: BarChart3, parent: '/care' },
-  { path: '/care/requests', perm: 'care.individual', titleKey: 'nav.careRequests', icon: MessageSquareHeart, parent: '/care' },
-  { path: '/care/requests/view', perm: 'care.individual', titleKey: 'nav.careRequests', icon: MessageSquareHeart, hidden: true },
-  { path: '/care/surveys', perm: 'care.surveys', titleKey: 'nav.careSurveys', icon: ListChecks, parent: '/care' },
-  { path: '/learning', perm: 'learning.view', titleKey: 'nav.learning', icon: BookOpen, group: 'wellbeing' },
-
   { path: '/reports', perm: 'reports.view', titleKey: 'nav.reports', icon: FileCheck2, group: 'admin' },
   { path: '/reports/print', perm: 'reports.view', titleKey: 'nav.reports', icon: ClipboardList, hidden: true },
   { path: '/staff', perm: 'staff.view', titleKey: 'nav.staff', icon: UserCog, group: 'admin' },
@@ -101,7 +106,8 @@ export const ROUTES: readonly RouteDef[] = [
   { path: '/settings', perm: 'settings.manage', titleKey: 'nav.settings', icon: Settings, group: 'admin' },
 ];
 
-export const NAV_GROUP_ORDER: readonly NavGroup[] = ['main', 'school', 'communication', 'wellbeing', 'admin'];
+/** Tartib: Asosiy → Rivojlanish va g'amxo'rlik → Aloqa → Maktab → Boshqaruv. */
+export const NAV_GROUP_ORDER: readonly NavGroup[] = ['main', 'wellbeing', 'communication', 'school', 'admin'];
 
 /** Joriy yo'l uchun eng aniq mos keladigan marshrut (ruxsat tekshiruvi uchun). */
 export function findRoute(path: string): RouteDef | undefined {

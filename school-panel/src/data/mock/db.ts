@@ -1,6 +1,10 @@
 import { assignAllPortraits } from '@/lib/staff-avatar';
 import { PREF_PREFIX } from '@/lib/prefs';
+import { toIsoDate } from './calendar';
+import { clockNow } from './clock';
+import { buildPsychSeed } from './psych/seed';
 import { generateSeed } from './seed';
+import { buildNotifications } from './seed/notifications';
 import type { DbSnapshot, Tables } from './tables';
 
 /**
@@ -27,22 +31,59 @@ function hasStorage(): boolean {
   return typeof window !== 'undefined' && !memoryOnly;
 }
 
-function readStored(): DbSnapshot | null {
+function readRaw(): DbSnapshot | null {
   if (!hasStorage()) return null;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as DbSnapshot;
-    return parsed.schemaVersion === SCHEMA_VERSION ? withPortraits(parsed) : null;
+    return parsed.schemaVersion === SCHEMA_VERSION ? parsed : null;
   } catch {
     return null;
   }
 }
 
-/** Yumshoq migratsiya: portretlar qo'shilishidan oldingi saqlangan bazaga portret beriladi. */
+/** O'qish + yumshoq migratsiyalar (har `transact` da chaqiriladi — qadamlar arzon va idempotent). */
+function readStored(): DbSnapshot | null {
+  const raw = readRaw();
+  return raw ? migrate(raw) : null;
+}
+
+/**
+ * Yumshoq migratsiyalar: yangi jadval qo'shilganda eski foydalanuvchi ma'lumoti
+ * o'chmaydi. Har qadam o'zgarish bo'lmasa AYNAN o'sha obyektni qaytaradi.
+ */
+type Migration = (db: DbSnapshot) => DbSnapshot;
+
+/** Portretlar qo'shilishidan oldingi bazaga portret beriladi. */
 function withPortraits(db: DbSnapshot): DbSnapshot {
   if (db.tables.staff.every((s) => s.portrait)) return db;
   return { ...db, tables: { ...db.tables, staff: assignAllPortraits(db.tables.staff) } };
+}
+
+/** Psixologik testlar jadvallari (saqlangan sinf va o'quvchilardan). */
+function withAssessments(db: DbSnapshot): DbSnapshot {
+  if (db.tables.psychHistory) return db;
+  return { ...db, tables: { ...db.tables, ...buildPsychSeed(db.tables, db.baseDate, db.seed) } };
+}
+
+/** Bildirishnomalar va o'quvchi eslatmalari. */
+function withStaffTables(db: DbSnapshot): DbSnapshot {
+  if (db.tables.notifications && db.tables.studentNotes) return db;
+  return {
+    ...db,
+    tables: {
+      ...db.tables,
+      notifications: db.tables.notifications ?? buildNotifications(db.tables.careRequests),
+      studentNotes: db.tables.studentNotes ?? [],
+    },
+  };
+}
+
+const MIGRATIONS: readonly Migration[] = [withPortraits, withAssessments, withStaffTables];
+
+export function migrate(db: DbSnapshot): DbSnapshot {
+  return MIGRATIONS.reduce((current, step) => step(current), db);
 }
 
 function persist(next: DbSnapshot): void {
@@ -55,23 +96,28 @@ function persist(next: DbSnapshot): void {
   }
 }
 
-function createFresh(): DbSnapshot {
-  const now = new Date();
+/** Yangi demo baza — demo soati kuniga bog'langan (ssenariy kechqurun ham "bugun" ertalab). */
+export function createFreshSnapshot(anchor: Date = clockNow()): DbSnapshot {
   return {
     schemaVersion: SCHEMA_VERSION,
     seed: SEED,
-    generatedAt: now.toISOString(),
-    baseDate: now.toISOString().slice(0, 10),
-    tables: generateSeed(SEED, now),
+    generatedAt: new Date().toISOString(),
+    baseDate: toIsoDate(anchor),
+    tables: generateSeed(SEED, anchor),
   };
+}
+
+function createFresh(): DbSnapshot {
+  return createFreshSnapshot();
 }
 
 /** Joriy holat (birinchi chaqiruvda yuklanadi yoki yaratiladi). */
 export function getDb(): DbSnapshot {
   if (snapshot) return snapshot;
-  const stored = readStored();
-  if (stored) {
-    snapshot = stored;
+  const raw = readRaw();
+  if (raw) {
+    snapshot = migrate(raw);
+    if (snapshot !== raw) persist(snapshot);
   } else {
     snapshot = createFresh();
     persist(snapshot);
