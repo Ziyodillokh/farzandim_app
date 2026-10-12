@@ -9,7 +9,11 @@ const PERMISSION_LABELS: Record<string, string> = {
   notification: 'Bildirishnoma',
   background: 'Fon rejimi',
   accessibility: 'Maxsus imkoniyatlar',
+  screenTime: 'Ekran vaqti',
 };
+
+/** iOS Ekran vaqti o'chsa ilovalar cheklovi umuman ishlamaydi — aniq aytamiz. */
+const SCREEN_TIME_NOTE = " iPhone'da ilovalar cheklovi hozir ishlamayapti.";
 
 /** device-info heartbeat'idan keladigan ruxsat holatlari (har biri ixtiyoriy). */
 export interface IncomingPermissions {
@@ -17,6 +21,7 @@ export interface IncomingPermissions {
   notificationPermission?: boolean;
   backgroundAllowed?: boolean;
   accessibilityEnabled?: boolean;
+  screenTimePermission?: boolean;
 }
 
 /**
@@ -51,6 +56,7 @@ export class PermissionAlertService {
       notificationPermission: boolean | null;
       backgroundAllowed: boolean | null;
       accessibilityEnabled: boolean | null;
+      screenTimePermission: boolean | null;
     },
     next: IncomingPermissions,
   ): Promise<void> {
@@ -67,19 +73,26 @@ export class PermissionAlertService {
         was: prev.accessibilityEnabled,
         now: next.accessibilityEnabled,
       },
+      {
+        key: 'screenTime',
+        was: prev.screenTimePermission,
+        now: next.screenTimePermission,
+      },
     ];
 
     // Faqat true → false (o'chirildi). null (noma'lum) yoki false→* — e'tiborsiz.
-    const revoked = checks
+    const revokedKeys = checks
       .filter((c) => c.was === true && c.now === false)
-      .map((c) => PERMISSION_LABELS[c.key]);
+      .map((c) => c.key);
+    const revoked = revokedKeys.map((key) => PERMISSION_LABELS[key]);
 
     if (revoked.length === 0) return;
 
     const list = revoked.join(', ');
     const body =
       `Parvoz uchun "${list}" ruxsati o'chirildi — ilova to'liq ` +
-      'ishlamasligi mumkin.';
+      'ishlamasligi mumkin.' +
+      (revokedKeys.includes('screenTime') ? SCREEN_TIME_NOTE : '');
 
     try {
       await this.fcm.sendPushToUser(child.parentId, {

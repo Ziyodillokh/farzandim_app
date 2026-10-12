@@ -417,6 +417,9 @@ export class ChildrenService {
     if (dto.usagePermission !== undefined) {
       data.usagePermission = dto.usagePermission;
     }
+    if (dto.screenTimePermission !== undefined) {
+      data.screenTimePermission = dto.screenTimePermission;
+    }
     // Heartbeat kelgani — qurilma ulangan deb belgilaymiz.
     if (!child.isConnected) data.isConnected = true;
     // Qayta-online aniqlash (connectionLostNotifiedAt tozalash) va "aloqa
@@ -445,12 +448,14 @@ export class ChildrenService {
         notificationPermission: child.notificationPermission,
         backgroundAllowed: child.backgroundAllowed,
         accessibilityEnabled: child.accessibilityEnabled,
+        screenTimePermission: child.screenTimePermission,
       },
       {
         locationPermission: dto.locationPermission,
         notificationPermission: dto.notificationPermission,
         backgroundAllowed: dto.backgroundAllowed,
         accessibilityEnabled: dto.accessibilityEnabled,
+        screenTimePermission: dto.screenTimePermission,
       },
     );
 
