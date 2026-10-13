@@ -51,9 +51,10 @@ model User {
   receivedMessages VoiceMessage[] @relation("Receiver")
 
   // Sprint 4.4: yangi modullar
-  sentVideos            VideoMessage[] @relation("VideoSender")
-  receivedVideos        VideoMessage[] @relation("VideoReceiver")
-  photoRequestsAsParent PhotoRequest[] @relation("ParentPhotoRequests")
+  sentVideos             VideoMessage[]  @relation("VideoSender")
+  receivedVideos         VideoMessage[]  @relation("VideoReceiver")
+  photoRequestsAsParent  PhotoRequest[]  @relation("ParentPhotoRequests")
+  listenSessionsAsParent ListenSession[] @relation("ParentListenSessions")
 
   // Sprint 5.2 — admin monetization
   payments Payment[]
@@ -126,6 +127,9 @@ model Child {
   // ilova statistikasi shu ruxsatsiz yig'ilmaydi. Ota-onaga aniq sabab
   // ko'rsatish uchun ("ulanmagan" emas, "ruxsat yo'q").
   usagePermission        Boolean? @map("usage_permission")
+  // iOS: Family Controls (Ekran vaqti) ruxsati — ilovalar cheklovi shusiz
+  // ishlamaydi. Bola Sozlamalardan o'chirsa ota-onaga ogohlantirish ketadi.
+  screenTimePermission   Boolean? @map("screen_time_permission")
 
   // Qurilma siyosati — "Notanish manbalardan ilovalar" (Play'dan boshqa
   // manbadan o'rnatilgan ilovalarni bloklash). Ota-ona yoqadi/o'chiradi.
@@ -181,6 +185,7 @@ model Child {
   profile                ChildProfile?
   xpEvents               XpEvent[]
   photoRequests          PhotoRequest[]
+  listenSessions         ListenSession[]
   sosAlerts              SosAlert[]
   installedApps          InstalledApp[]
   appUsages              AppUsage[]
@@ -698,6 +703,45 @@ model PhotoRequest {
   @@index([childId, status])
   @@index([parentId, status])
   @@map("photo_requests")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// ListenSession — ota-ona bola atrofidagi ovozni JONLI eshitish sessiyasi.
+//
+// ⚠️ OVOZ HECH QAYERDA SAQLANMAYDI. Bu jadval faqat SESSIYA METADATASINI
+// (kim, qachon, qancha, kim tugatdi) yozadi — hisobdorlik uchun. Ovozning
+// O'ZI WebRTC orqali to'g'ridan-to'g'ri bola→ota-ona telefoniga o'tadi,
+// serverga tegmaydi va faylga yozilmaydi.
+//
+// Qonuniylik sharti (Google Play farzand-nazorati istisnosi): bola
+// qurilmasida "Ota-onangiz tinglamoqda" indikatori DOIM ko'rinadi va bola
+// istalgan payt to'xtata oladi. Bu YASHIRIN KUZATUV EMAS — ochiqligi uni
+// stalkerware'dan ajratadi.
+model ListenSession {
+  id        String              @id @default(uuid())
+  parentId  String              @map("parent_id")
+  childId   String              @map("child_id")
+  status    ListenSessionStatus @default(PENDING)
+  startedAt DateTime            @default(now()) @map("started_at")
+  endedAt   DateTime?           @map("ended_at")
+  // Kim tugatdi: 'parent' | 'child' | 'timeout' | 'disconnect'.
+  endedBy   String?             @map("ended_by")
+  // Bola qurilmasi shu vaqtgacha ulanmasa PENDING → EXPIRED.
+  expiresAt DateTime            @map("expires_at")
+
+  parent User  @relation("ParentListenSessions", fields: [parentId], references: [id], onDelete: Cascade)
+  child  Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([childId, status])
+  @@index([parentId, startedAt])
+  @@map("listen_sessions")
+}
+
+enum ListenSessionStatus {
+  PENDING // ota-ona boshladi, bola hali ulanmagan
+  ACTIVE // jonli eshitish davom etmoqda
+  ENDED // biror tomon to'xtatdi
+  EXPIRED // bola ulanmadi (offline/ilova yopiq)
 }
 
 enum PhotoRequestStatus {

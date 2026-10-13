@@ -45,6 +45,7 @@ import {
   resolveGeo,
 } from '../../common/helpers/geo-ip';
 import { tr } from '../../common/i18n/notification-i18n';
+import { isReviewFamilyCode } from '../../common/helpers/review-family-codes';
 
 // Session access request (2-qurilma limit) — 15 daqiqa amal qiladi.
 const SESSION_ACCESS_TTL_MS = 15 * 60 * 1000;
@@ -1388,44 +1389,16 @@ export class AuthService {
       throw new NotFoundException('Family code not found');
     }
 
-    // Google Play/App Store REVIEWER istisnosi: `PLAY_REVIEW_FAMILY_CODE`
-    // env'da ko'rsatilgan bitta maxsus profil uchun "bir bola = bir qurilma"
-    // bloki chetlab o'tiladi — reviewer istalgan qurilmadan, istalgan payt
-    // qayta ulanadi (eski qurilma sessiyalari QR-repair'dagi kabi xavfsiz
-    // bekor qilinadi, pastda). Sabab: Play rad xati "Login credentials are
-    // incorrect" (2026-08-10) — reviewer kod bilan bir marta ulangach,
-    // keyingi urinishlari 409 bilan qaytarilardi. Oddiy foydalanuvchi
-    // profillariga TA'SIR QILMAYDI (faqat env'dagi kodga teng bo'lsa).
-    const reviewCode = process.env.PLAY_REVIEW_FAMILY_CODE;
-    const isReviewProfile =
-      !!reviewCode && reviewCode.length >= 5 && dto.familyCode === reviewCode;
-
-    if (child.childUserId && isReviewProfile) {
-      const oldChildUserId = child.childUserId;
-      await this.prisma.userSession.updateMany({
-        where: { userId: oldChildUserId, revokedAt: null },
-        data: { revokedAt: new Date() },
-      });
-      await this.prisma.user
-        .update({
-          where: { id: oldChildUserId },
-          data: { isActive: false, tokenVersion: { increment: 1 } },
-        })
-        .catch(() => undefined);
-      await this.prisma.fcmToken
-        .deleteMany({ where: { userId: oldChildUserId } })
-        .catch(() => undefined);
-      await this.prisma.child.update({
-        where: { id: child.id },
-        data: { childUserId: null, isConnected: false, pairedAt: null },
-      });
-      child.childUserId = null;
-      await this.audit.log(
-        null,
-        'auth',
-        'PAIR',
-        child.id,
-        { action: 'REVIEW_PROFILE_REPAIR', childId: child.id },
+    // Google Play/App Store REVIEWER istisnosi: `PLAY_REVIEW_FAMILY_CODE` /
+    // `APP_REVIEW_FAMILY_CODES` env'dagi maxsus demo profillar uchun "bir
+    // bola = bir qurilma" bloki chetlab o'tiladi (pastda). Sabab: Play rad
+    // xati "Login credentials are incorrect" (2026-08-10) — reviewer kod
+    // bilan bir marta ulangach, keyingi urinishlari 409 bilan qaytarilardi.
+    // Oddiy foydalanuvchi profillariga TA'SIR QILMAYDI.
+    if (child.childUserId && isReviewFamilyCode(dto.familyCode)) {
+      return this.pairReviewProfile(
+        { ...child, childUserId: child.childUserId },
+        dto,
         reqMeta,
       );
     }
@@ -1460,7 +1433,82 @@ export class AuthService {
       });
     }
 
-    // Fresh pair: create User for child
+    return this.pairFreshChild(child, dto, reqMeta);
+  }
+
+  /**
+   * Demo (reviewer) profil allaqachon ulangan bo'lsa — MAVJUD bola
+   * foydalanuvchisi uchun yangi token beriladi, oldingi qurilma UZILMAYDI.
+   * Apple bir vaqtda iPhone va iPad'da sinaydi; avval ikkinchi qurilma
+   * birinchisini jimgina chiqarib yuborardi (App Store audit F7). Token'larda
+   * `sid` yo'q — refresh rotatsiyasi qurilmalar o'rtasida to'qnashmaydi.
+   * Eski foydalanuvchi o'chirilgan/faolsizlantirilgan bo'lsa — tozalab,
+   * yangi juftlash.
+   */
+  private async pairReviewProfile(
+    child: { id: string; name: string; childUserId: string },
+    dto: ChildPairDto,
+    reqMeta?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
+  ) {
+    const existing = await this.prisma.user.findUnique({
+      where: { id: child.childUserId },
+    });
+    if (existing?.isActive && existing.role === 'CHILD') {
+      const updatedChild = await this.markChildPaired(
+        child.id,
+        existing.id,
+        dto.deviceInfo,
+      );
+      await this.audit.log(
+        existing.id,
+        'auth',
+        'PAIR',
+        child.id,
+        { action: 'REVIEW_PROFILE_EXTRA_DEVICE', childId: child.id },
+        reqMeta,
+      );
+      return this.buildChildPairResponse(existing, updatedChild);
+    }
+
+    await this.revokeChildUser(child.childUserId);
+    await this.prisma.child.update({
+      where: { id: child.id },
+      data: { childUserId: null, isConnected: false, pairedAt: null },
+    });
+    await this.audit.log(
+      null,
+      'auth',
+      'PAIR',
+      child.id,
+      { action: 'REVIEW_PROFILE_REPAIR', childId: child.id },
+      reqMeta,
+    );
+    return this.pairFreshChild(child, dto, reqMeta);
+  }
+
+  /** Bola foydalanuvchisining barcha sessiya/token/push'larini bekor qiladi. */
+  private async revokeChildUser(childUserId: string): Promise<void> {
+    await this.prisma.userSession.updateMany({
+      where: { userId: childUserId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    await this.prisma.user
+      .update({
+        where: { id: childUserId },
+        data: { isActive: false, tokenVersion: { increment: 1 } },
+      })
+      .catch(() => undefined);
+    await this.prisma.fcmToken
+      .deleteMany({ where: { userId: childUserId } })
+      .catch(() => undefined);
+  }
+
+  /** Yangi CHILD foydalanuvchi yaratib, bola profiliga bog'laydi. */
+  private async pairFreshChild(
+    child: { id: string; name: string },
+    dto: ChildPairDto,
+    reqMeta?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
+  ) {
     const user = await this.prisma.user.create({
       data: {
         role: 'CHILD',
@@ -1468,11 +1516,33 @@ export class AuthService {
       },
     });
 
-    const deviceInfo = dto.deviceInfo;
-    const updatedChild = await this.prisma.child.update({
-      where: { id: child.id },
+    const updatedChild = await this.markChildPaired(
+      child.id,
+      user.id,
+      dto.deviceInfo,
+    );
+
+    await this.audit.log(
+      user.id,
+      'auth',
+      'PAIR',
+      user.id,
+      { childId: updatedChild.id, familyCode: dto.familyCode },
+      reqMeta,
+    );
+
+    return this.buildChildPairResponse(user, updatedChild);
+  }
+
+  private markChildPaired(
+    childId: string,
+    childUserId: string,
+    deviceInfo: ChildPairDto['deviceInfo'],
+  ) {
+    return this.prisma.child.update({
+      where: { id: childId },
       data: {
-        childUserId: user.id,
+        childUserId,
         isConnected: true,
         pairedAt: new Date(),
         ...(deviceInfo?.model && { deviceModel: deviceInfo.model }),
@@ -1484,27 +1554,35 @@ export class AuthService {
         }),
       },
     });
+  }
 
+  private buildChildPairResponse(
+    user: {
+      id: string;
+      name: string | null;
+      role: string;
+      tokenVersion: number;
+      avatarUrl: string | null;
+      telegramId: string | null;
+      language: string;
+    },
+    child: {
+      id: string;
+      parentId: string;
+      name: string;
+      age: number | null;
+      birthDate: Date | null;
+    },
+  ) {
     const payload: JwtPayload = {
       userId: user.id,
       role: user.role as 'PARENT' | 'CHILD',
       tokenVersion: user.tokenVersion,
     };
-    const accessToken = this.signAccessToken(payload);
-    const refreshToken = this.signRefreshToken(payload);
-
-    await this.audit.log(
-      user.id,
-      'auth',
-      'PAIR',
-      user.id,
-      { childId: updatedChild.id, familyCode: dto.familyCode },
-      reqMeta,
-    );
 
     return {
-      accessToken,
-      refreshToken,
+      accessToken: this.signAccessToken(payload),
+      refreshToken: this.signRefreshToken(payload),
       user: {
         id: user.id,
         name: user.name,
@@ -1514,13 +1592,13 @@ export class AuthService {
         language: user.language,
       },
       child: {
-        id: updatedChild.id,
-        parentId: updatedChild.parentId,
-        name: updatedChild.name,
-        age: updatedChild.age,
+        id: child.id,
+        parentId: child.parentId,
+        name: child.name,
+        age: child.age,
         // Sana-only `YYYY-MM-DD` — ilova soxta 01.01 yasamasligi uchun.
-        birthDate: updatedChild.birthDate
-          ? updatedChild.birthDate.toISOString().slice(0, 10)
+        birthDate: child.birthDate
+          ? child.birthDate.toISOString().slice(0, 10)
           : null,
       },
     };

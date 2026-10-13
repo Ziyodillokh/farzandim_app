@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
+import { FcmService } from '../../common/fcm/fcm.service';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
 
@@ -16,6 +17,7 @@ export class SchedulesService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly realtime: RealtimeGateway,
+    private readonly fcm: FcmService,
   ) {}
 
   async listByChild(userId: string, childId: string) {
@@ -68,6 +70,8 @@ export class SchedulesService {
 
     await this.audit.log(userId, 'schedule', 'CREATE', schedule.id, dto, request);
     this.realtime.emitToChild(childId, 'schedule:created', schedule);
+    // Fondagi/yopiq bola ilovasi (ayniqsa iOS) ham darhol sync qilsin.
+    void this.fcm.pushChildResync(child.childUserId);
 
     return schedule;
   }
@@ -122,6 +126,7 @@ export class SchedulesService {
 
     await this.audit.log(userId, 'schedule', 'UPDATE', id, dto, request);
     this.realtime.emitToChild(updated.childId, 'schedule:updated', updated);
+    void this.fcm.pushChildResync(schedule.child.childUserId);
 
     return updated;
   }
@@ -144,6 +149,7 @@ export class SchedulesService {
     await this.prisma.schedule.delete({ where: { id } });
     await this.audit.log(userId, 'schedule', 'DELETE', id, undefined, request);
     this.realtime.emitToChild(childIdForEmit, 'schedule:deleted', { id });
+    void this.fcm.pushChildResync(schedule.child.childUserId);
 
     return { ok: true };
   }

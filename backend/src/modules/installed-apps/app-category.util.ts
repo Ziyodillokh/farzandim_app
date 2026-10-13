@@ -119,6 +119,19 @@ const KEYWORDS: { needle: string; category: AppCategory }[] = [
   { needle: 'maktab', category: 'EDU' },
 ];
 
+/**
+ * iOS bola yuboradigan virtual "iPhone: tanlangan ilovalar" elementi —
+ * haqiqiy ilova emas (iPhone'da ota-ona tanlagan ilovalar to'plami). Unga
+ * kategoriya bloklari qo'llanmaydi va kategoriya sonlariga kirmaydi: "Boshqa"
+ * toifasini bloklash iPhone ilovalarini jimgina doimiy bloklab qo'ymasin.
+ */
+export const IOS_SELECTION_PACKAGE = 'uz.parvoz.growth.ios-selected-apps';
+
+/** Kategoriya bloklari/sonlari uchun hisobga olinadigan paketmi. */
+export function isCategorizable(packageName: string): boolean {
+  return packageName !== IOS_SELECTION_PACKAGE;
+}
+
 /** Paket nomidan kategoriya. Hech narsa mos kelmasa OTHER. */
 export function classifyPackage(packageName: string): AppCategory {
   const pkg = packageName.toLowerCase();

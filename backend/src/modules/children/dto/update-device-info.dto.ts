@@ -82,4 +82,12 @@ export class UpdateDeviceInfoDto {
   @IsOptional()
   @IsBoolean()
   usagePermission?: boolean;
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'iOS: Family Controls (Ekran vaqti) ruxsati berilganmi',
+  })
+  @IsOptional()
+  @IsBoolean()
+  screenTimePermission?: boolean;
 }

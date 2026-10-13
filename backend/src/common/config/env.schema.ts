@@ -54,12 +54,43 @@ const envSchema = z.object({
 
   // Google Play / App Store reviewer'i uchun maxsus oila kodi (ixtiyoriy).
   // Shu kodga ega bola profili uchun "bir bola = bir qurilma" bloki chetlab
-  // o'tiladi — reviewer istalgan qurilmadan qayta-qayta ulanadi
-  // (auth.service.ts childPair). Faqat bitta ataylab yaratilgan demo profil
-  // uchun ishlating, real foydalanuvchi kodini qo'ymang.
+  // o'tiladi — reviewer istalgan qurilmadan qayta-qayta ulanadi, oldingi
+  // qurilma UZILMAYDI (auth.service.ts childPair). Faqat ataylab yaratilgan
+  // demo profil(lar) uchun ishlating, real foydalanuvchi kodini qo'ymang.
+  // Vergul bilan bir nechta kod ham bo'ladi (helpers/review-family-codes.ts).
   PLAY_REVIEW_FAMILY_CODE: z.preprocess(
     (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
     z.string().min(5).optional(),
+  ),
+  // Har do'konga ALOHIDA demo kod (masalan Apple uchun bittasi, Google uchun
+  // boshqasi) — vergul bilan: "12345,67890". PLAY_REVIEW_FAMILY_CODE bilan
+  // birlashtiriladi. Bir do'kon tekshiruvchisi ikkinchisini uzib qo'ymasin.
+  // ⚠️ Ataylab qat'iy tekshirilmaydi: env xatosi BUTUN backendni yiqitardi
+  // (PLAY_REVIEW_PARENT_EMAIL 2026-08-24). 5 belgili bo'lmagan qiymatlar
+  // shunchaki e'tiborsiz qoldiriladi.
+  APP_REVIEW_FAMILY_CODES: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().optional(),
+  ),
+
+  // Fastify `trustProxy` (helpers/trust-proxy.ts). Bo'sh = 'loopback' —
+  // faqat shu serverdagi nginx'ga ishoniladi. 'true' QO'YMANG: X-Forwarded-For
+  // soxtalashtirilib rate-limit va IP allowlist chetlab o'tiladi.
+  TRUST_PROXY: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().optional(),
+  ),
+
+  // Bola rasmi proksisi (`GET /children/:id/avatar/image`) uchun ESKI
+  // ochiq (auth'siz) rejim. Standart — YOQIQ: chiqarilgan ilovalar rasmni
+  // token'siz yuklaydi, yopilsa hamma joyda rasmlar yo'qoladi. Reyting endi
+  // boshqa bolalar childId'sini bermaydi (enumeratsiya yopiq). Barcha
+  // ilovalar rasmni token/imzo bilan yuklaydigan bo'lgach 'false' qiling —
+  // shunda faqat oila token'i yoki imzolangan havola qabul qilinadi
+  // (App Store audit F17).
+  CHILD_AVATAR_PUBLIC_LEGACY: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.enum(['true', 'false']).optional(),
   ),
 
   // OTA-ONA ilovasi uchun reviewer akkaunti (ixtiyoriy). Shu email'li

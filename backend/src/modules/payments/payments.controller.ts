@@ -110,8 +110,9 @@ export class PaymentsController {
   // CheckoutThrottlerGuard req.user.userId'ni ko'radi, IP'ga tushmaydi).
   @Throttle({ checkout: { limit: 5, ttl: 600_000 } })
   // Simmetrik himoya: guard barcha nomli limitlarni tekshirgani uchun
-  // `childPair` (30/10daq) ham bu yo'lga qo'llanib qolardi — aloqasi yo'q.
-  @SkipThrottle({ childPair: true })
+  // `childPair`/`adminLogin` ham bu yo'lga qo'llanib qolardi — aloqasi yo'q
+  // (throttle.config.ts `skipIf` ham buni ta'minlaydi).
+  @SkipThrottle({ childPair: true, childPairCode: true, adminLogin: true })
   @UseGuards(ConsumerJwtAuthGuard, RolesGuard, CheckoutThrottlerGuard)
   @ApiOperation({ summary: 'Start payment checkout' })
   async checkout(

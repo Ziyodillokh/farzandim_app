@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { buildSignedChildAvatarUrl } from '../../common/helpers/child-avatar-signature';
 import {
   activeSubscriptionWhere,
   hasActiveSubscription,
@@ -49,6 +50,9 @@ export interface RowJson {
   avatarUrl: string | null;
 }
 
+// Admin ro'yxatidagi bola rasmi havolasi amal qilish muddati (6 soat).
+const ADMIN_CHILD_AVATAR_URL_TTL_SEC = 6 * 60 * 60;
+
 @Injectable()
 export class AdminUsersService {
   private readonly logger = new Logger(AdminUsersService.name);
@@ -60,11 +64,19 @@ export class AdminUsersService {
     private readonly audit: AdminAuditService,
   ) {}
 
-  // Bola fotosi @Public proxy orqali (signed MinIO URL brauzerga yetmaydi).
+  // Bola fotosi backend proxy orqali (signed MinIO URL brauzerga yetmaydi).
+  // Proxy endi auth'siz ochiq EMAS (App Store audit F17) — `<img>` header
+  // yubora olmagani uchun qisqa muddatli imzolangan havola beramiz.
   // PUBLIC_BASE_URL — deploy domeni (admin shu domenda ishlaydi).
   private childAvatarUrl(childId: string): string {
     const base = this.config.get('PUBLIC_BASE_URL', { infer: true });
-    return `${base}/api/children/${childId}/avatar/image`;
+    const secret = this.config.get('JWT_ACCESS_SECRET', { infer: true });
+    return buildSignedChildAvatarUrl(
+      base,
+      childId,
+      secret,
+      ADMIN_CHILD_AVATAR_URL_TTL_SEC,
+    );
   }
 
   private parentRow(u: {
