@@ -7,12 +7,13 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EnvConfig } from '../../../common/config/env.schema';
+import { getClientIp } from '../../../common/helpers/client-ip';
 
 /**
  * IP allowlist guard for payment webhook endpoints.
  * Uses PAYMENT_WEBHOOK_IPS env variable (comma-separated).
  * If empty, all IPs are allowed (signature verification still protects).
- * Real client IP extracted from X-Forwarded-For (behind Nginx).
+ * Real client IP = `request.ip` (trustProxy trusts only the local nginx).
  */
 @Injectable()
 export class WebhookIpGuard implements CanActivate {
@@ -30,11 +31,9 @@ export class WebhookIpGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     if (this.allowedIps.length === 0) return true;
 
-    const request = context.switchToHttp().getRequest();
-    const fwd = request.headers['x-forwarded-for'];
-    const clientIp =
-      (typeof fwd === 'string' ? fwd.split(',')[0]?.trim() : undefined) ??
-      request.ip;
+    // X-Forwarded-For'ni o'zimiz o'qimaymiz — chap qismi soxtalashtiriladi.
+    // `request.ip` faqat lokal nginx'ga ishonadi (main.ts trustProxy).
+    const clientIp = getClientIp(context.switchToHttp().getRequest());
 
     if (!this.allowedIps.includes(clientIp)) {
       this.logger.warn(

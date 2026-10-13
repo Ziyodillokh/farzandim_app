@@ -15,6 +15,7 @@ import { SmsService } from '../../common/sms/sms.service';
 import { MailService } from '../../common/mail/mail.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { BUCKETS, BucketName } from '../../common/storage/storage.constants';
+import { ChildDataPurgeService } from '../child-data-purge/child-data-purge.service';
 import {
   hashPassword,
   verifyPassword,
@@ -52,6 +53,7 @@ export class UsersService {
     private readonly sms: SmsService,
     private readonly mail: MailService,
     private readonly audit: AuditService,
+    private readonly childDataPurge: ChildDataPurgeService,
   ) {}
 
   /* ------------------------------------------------------------------ */
@@ -136,6 +138,13 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
+    // Bola qurilmasi akkaunti (oila kodi bilan avtomatik yaratilgan) —
+    // o'zining ma'lumotlari o'chadi, ota-onaning bola PROFILI esa qoladi va
+    // qayta ulash uchun bo'shatiladi (App Store 5.1.1(v), audit F15).
+    if (user.role === 'CHILD') {
+      return this.deleteChildAccount(userId, reqMeta);
+    }
+
     // Media (MinIO) kalitlarini DB o'chirishdan OLDIN yig'amiz — cascade delete
     // yozuvlarni yo'qotgach kalitlar topilmasdi. Keyin baytlarni o'chiramiz.
     const media = await this.collectUserMediaKeys(userId);
@@ -178,6 +187,30 @@ export class UsersService {
       reqMeta,
     );
 
+    return { ok: true, message: "Akkaunt o'chirildi" };
+  }
+
+  /**
+   * CHILD foydalanuvchi o'z akkauntini o'chiradi ("Uzish va ma'lumotlarimni
+   * o'chirish"). Batafsil: ChildDataPurgeService.deleteChildAccount.
+   */
+  private async deleteChildAccount(
+    userId: string,
+    reqMeta?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
+  ) {
+    const result = await this.childDataPurge.deleteChildAccount(userId);
+    await this.audit.log(
+      userId,
+      'user',
+      'DELETE',
+      userId,
+      {
+        role: 'CHILD',
+        childId: result.childId,
+        mediaObjects: result.mediaObjects,
+      },
+      reqMeta,
+    );
     return { ok: true, message: "Akkaunt o'chirildi" };
   }
 

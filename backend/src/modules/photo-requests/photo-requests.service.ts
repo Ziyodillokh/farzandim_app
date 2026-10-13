@@ -13,6 +13,7 @@ import { StorageService } from '../../common/storage/storage.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { BUCKETS } from '../../common/storage/storage.constants';
+import { stripImageMetadata } from '../../common/helpers/image-metadata';
 import { CreatePhotoRequestDto } from './dto/create-photo-request.dto';
 import { ListPhotoRequestsDto } from './dto/list-photo-requests.dto';
 
@@ -138,10 +139,11 @@ export class PhotoRequestsService {
     const ext = file.originalname?.split('.').pop() || 'jpg';
     const storagePath = `photo-requests/${photoRequest.childId}/${id}.${ext}`;
 
+    // EXIF/GPS (bola turgan joy koordinatasi) saqlanmasin — App Store audit F17.
     await this.storage.upload(
       BUCKETS.avatars,
       storagePath,
-      file.buffer,
+      stripImageMetadata(file.buffer),
       file.mimetype,
     );
 

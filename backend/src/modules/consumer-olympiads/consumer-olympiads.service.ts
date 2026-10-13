@@ -13,6 +13,10 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { GamificationService } from '../gamification/gamification.service';
 import { XpEventType } from '../gamification/dto/create-xp-event.dto';
 import { RANKING_REGION_ME } from './dto/ranking-query.dto';
+import {
+  maskChildName,
+  visibleChildId,
+} from '../../common/helpers/leaderboard-privacy';
 
 // Javob vaqti chegarasi grace (sekund) — answerQuestion VA submitAttempt
 // AYNI shu qiymatdan foydalanadi (ikki endpoint bir xil vaqt xulqi).
@@ -679,17 +683,21 @@ export class ConsumerOlympiadsService {
     });
     const childMap = new Map(childRows.map((c) => [c.id, c]));
 
+    // Boshqa bolalar uchun id (rasm proksisiga yo'l) berilmaydi va ism
+    // niqoblanadi — reyting begonalarga ko'rinadi (App Store audit F16/F17).
+    const ownIds = new Set([child.childId]);
     const items = grouped.map((g, i) => {
       const c = childMap.get(g.childId);
+      const isCurrentUser = g.childId === child.childId;
       return {
         position: i + 1,
-        childId: g.childId,
-        name: c?.name ?? '--',
+        childId: visibleChildId(g.childId, ownIds),
+        name: isCurrentUser ? (c?.name ?? '--') : maskChildName(c?.name),
         age: c?.age ?? null,
         region: c?.region ?? null,
         totalScore: g._sum.score ?? 0,
         attemptCount: g._count._all,
-        isCurrentUser: g.childId === child.childId,
+        isCurrentUser,
       };
     });
 

@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   Req,
   HttpCode,
   HttpStatus,
@@ -32,7 +33,11 @@ import { UpdateDeviceInfoDto } from './dto/update-device-info.dto';
 import { UpdateInterestsDto } from './dto/update-interests.dto';
 import { UpdateMyProfileDto } from './dto/update-my-profile.dto';
 import { CurrentUser, Roles, Public } from '../../common/decorators';
-import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
+import {
+  ConsumerJwtAuthGuard,
+  OptionalConsumerJwtGuard,
+  RolesGuard,
+} from '../../common/guards';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 
 /** @fastify/multipart yuklagan fayl (req.file()). */
@@ -353,13 +358,28 @@ export class ChildrenController {
   }
 
   // Avatar rasm proxy — telefon → backend → MinIO (signed URL reachability
-  // muammosini chetlaydi). @Public: rasm childId UUID orqali olinadi.
+  // muammosini chetlaydi). Rasm faqat oila a'zosi token'i (Bearer) yoki
+  // server bergan imzolangan havola (`?exp=&sig=`) bilan beriladi — avval
+  // @Public edi va childId bilgan har kim yuklab olardi (App Store audit F17).
+  // `@Public` faqat global JWT guard 401 bermasligi uchun; token ixtiyoriy
+  // o'qiladi (OptionalConsumerJwtGuard), qaror service'da.
   @Get(':id/avatar/image')
   @Public()
-  @Header('Cache-Control', 'public, max-age=3600')
-  @ApiOperation({ summary: 'Stream child avatar image (proxy)' })
-  async avatarImage(@Param('id') id: string): Promise<StreamableFile> {
-    const obj = await this.childrenService.getAvatarObject(id);
+  @UseGuards(OptionalConsumerJwtGuard)
+  @Header('Cache-Control', 'private, max-age=3600')
+  @ApiOperation({ summary: 'Stream child avatar image (proxy, family or signed URL)' })
+  async avatarImage(
+    @Param('id') id: string,
+    @Req() req: Request,
+    @Query('exp') exp?: string,
+    @Query('sig') sig?: string,
+  ): Promise<StreamableFile> {
+    const viewer = (req as unknown as { user?: JwtPayload }).user;
+    const obj = await this.childrenService.getAvatarObject(id, {
+      viewer,
+      exp,
+      sig,
+    });
     return new StreamableFile(obj.body, { type: obj.contentType });
   }
 

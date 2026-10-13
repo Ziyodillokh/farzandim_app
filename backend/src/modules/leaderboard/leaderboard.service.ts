@@ -1,9 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
 import { LeaderboardPeriod } from './dto/leaderboard-query.dto';
+import {
+  maskChildName,
+  visibleChildId,
+} from '../../common/helpers/leaderboard-privacy';
 
 /** `region=me` — joriy bolaning O'Z viloyati bo'yicha filtr. */
 export const LEADERBOARD_REGION_ME = 'me';
+
+/**
+ * Reytingda ko'rsatiladigan eng ko'p qator (top-N). Undan chuqurroq
+ * sahifalab barcha bolalarni sanab chiqish mumkin bo'lmasin (App Store
+ * audit F17). Joriy bolaning o'z o'rni ("Siz") baribir qaytariladi.
+ */
+export const LEADERBOARD_MAX_ROWS = 100;
+
+/** So'rovchi (JWT) — "o'z oilasi" bolalarini aniqlash uchun. */
+export interface LeaderboardViewer {
+  userId: string;
+  role: 'PARENT' | 'CHILD';
+}
 
 export interface LeaderboardEntry {
   rank: number;
@@ -59,41 +76,51 @@ export interface LeaderboardResult {
 export class LeaderboardService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Bola ismini reyting uchun NIQOBLAYDI: "Muhammad Abror" → "Muhammad A.".
-   *
-   * Google Play Families siyosati (2026-08-18 audit): bolaning TO'LIQ ismi +
-   * yosh + jins + viloyat kombinatsiyasi barcha begona foydalanuvchilarga
-   * ko'rsatilishi bolani identifikatsiya qilishi mumkin. To'liq ism eng kuchli
-   * identifikator — uni olib tashlasak, qolgan maydonlar (age/gender —
-   * default-avatar va yosh-guruh filtri uchun; region — "Hudud" tab'i uchun)
-   * klientlarni buzmasdan qolaveradi. Bir so'zli ism o'zgarishsiz qoladi.
-   */
-  private maskName(full: string): string {
-    const parts = full.trim().split(/\s+/).filter(Boolean);
-    if (parts.length <= 1) return parts.join('');
-    const initials = parts
-      .slice(1)
-      .map((p) => `${p.charAt(0).toUpperCase()}.`)
-      .join(' ');
-    return `${parts[0]} ${initials}`;
-  }
-
   async getLeaderboard(opts: {
     period: LeaderboardPeriod;
     region?: string;
     page: number;
     limit: number;
     childId?: string;
+    viewer: LeaderboardViewer;
   }): Promise<LeaderboardResult> {
-    const { period, page, limit, childId } = opts;
+    const { period, page, limit } = opts;
     const skip = (page - 1) * limit;
+    const ownChildIds = await this.resolveOwnChildIds(opts.viewer);
+    // `childId` faqat so'rovchining O'Z oilasidagi bola bo'lsa qabul qilinadi —
+    // aks holda istalgan bolaning viloyati/o'rni so'rab bilinardi.
+    const childId =
+      opts.childId && ownChildIds.has(opts.childId) ? opts.childId : undefined;
     const region = await this.resolveRegion(opts.region, childId);
+    const ctx = { region, skip, limit, page, childId, ownChildIds };
 
     if (period === LeaderboardPeriod.all) {
-      return this.allTime({ region, skip, limit, page, childId });
+      return this.allTime(ctx);
     }
-    return this.periodRange({ period, region, skip, limit, page, childId });
+    return this.periodRange({ ...ctx, period });
+  }
+
+  /**
+   * So'rovchi oilasining bolalari: bola uchun — o'zi, ota-ona uchun — uning
+   * barcha bolalari. Faqat shular uchun reytingda haqiqiy `childId` beriladi.
+   */
+  private async resolveOwnChildIds(
+    viewer: LeaderboardViewer,
+  ): Promise<ReadonlySet<string>> {
+    const where =
+      viewer.role === 'CHILD'
+        ? { childUserId: viewer.userId }
+        : { parentId: viewer.userId };
+    const rows = await this.prisma.child.findMany({
+      where,
+      select: { id: true },
+    });
+    return new Set(rows.map((r) => r.id));
+  }
+
+  /** `skip`/`limit` ni top-N chegarasiga moslaydi (chegaradan keyin — bo'sh). */
+  private visibleWindow(skip: number, limit: number): number {
+    return Math.max(0, Math.min(limit, LEADERBOARD_MAX_ROWS - skip));
   }
 
   /**
@@ -123,26 +150,33 @@ export class LeaderboardService {
     limit: number;
     page: number;
     childId?: string;
+    ownChildIds: ReadonlySet<string>;
   }): Promise<LeaderboardResult> {
-    const { region, skip, limit, page, childId } = o;
+    const { region, skip, limit, childId, ownChildIds } = o;
     const childRel = region ? { child: { is: { region } } } : {};
 
     const total = await this.prisma.childProfile.count({ where: { ...childRel } });
 
-    const profiles = await this.prisma.childProfile.findMany({
-      where: { ...childRel },
-      orderBy: [{ donBalance: 'desc' }, { childId: 'asc' }],
-      skip,
-      take: limit,
-      include: {
-        child: { select: { id: true, name: true, region: true, age: true, gender: true } },
-      },
-    });
+    const take = this.visibleWindow(skip, limit);
+    const profiles =
+      take === 0
+        ? []
+        : await this.prisma.childProfile.findMany({
+            where: { ...childRel },
+            orderBy: [{ donBalance: 'desc' }, { childId: 'asc' }],
+            skip,
+            take,
+            include: {
+              child: {
+                select: { id: true, name: true, region: true, age: true, gender: true },
+              },
+            },
+          });
 
     const entries: LeaderboardEntry[] = profiles.map((p, i) => ({
       rank: skip + i + 1,
-      childId: p.childId,
-      name: this.maskName(p.child.name),
+      childId: visibleChildId(p.childId, ownChildIds),
+      name: maskChildName(p.child.name),
       region: p.child.region ?? '',
       age: p.child.age,
       gender: p.child.gender ?? null,
@@ -175,7 +209,7 @@ export class LeaderboardService {
         currentChild = {
           rank: before + 1,
           childId,
-          name: this.maskName(my.child.name),
+          name: maskChildName(my.child.name),
           region: my.child.region ?? '',
           age: my.child.age,
           gender: my.child.gender ?? null,
@@ -188,7 +222,7 @@ export class LeaderboardService {
     return {
       entries,
       total,
-      hasMore: skip + entries.length < total,
+      hasMore: skip + entries.length < Math.min(total, LEADERBOARD_MAX_ROWS),
       currentChild,
       period: LeaderboardPeriod.all,
     };
@@ -202,8 +236,9 @@ export class LeaderboardService {
     limit: number;
     page: number;
     childId?: string;
+    ownChildIds: ReadonlySet<string>;
   }): Promise<LeaderboardResult> {
-    const { period, region, skip, limit, childId } = o;
+    const { period, region, skip, limit, childId, ownChildIds } = o;
     const days =
       period === LeaderboardPeriod.daily
         ? 1
@@ -233,7 +268,7 @@ export class LeaderboardService {
         const c = childMap.get(g.childId)!;
         return {
           childId: g.childId,
-          name: this.maskName(c.name),
+          name: maskChildName(c.name),
           region: c.region ?? '',
           age: c.age,
           gender: c.gender ?? null,
@@ -244,8 +279,12 @@ export class LeaderboardService {
 
     const total = ranked.length;
     const entries: LeaderboardEntry[] = ranked
-      .slice(skip, skip + limit)
-      .map((r, i) => ({ rank: skip + i + 1, ...r }));
+      .slice(skip, skip + this.visibleWindow(skip, limit))
+      .map((r, i) => ({
+        rank: skip + i + 1,
+        ...r,
+        childId: visibleChildId(r.childId, ownChildIds),
+      }));
 
     let currentChild: LeaderboardEntry | null = null;
     if (childId) {
@@ -263,7 +302,7 @@ export class LeaderboardService {
           currentChild = {
             rank: 0,
             childId,
-            name: this.maskName(c.name),
+            name: maskChildName(c.name),
             region: c.region ?? '',
             age: c.age,
             gender: c.gender ?? null,
@@ -277,7 +316,7 @@ export class LeaderboardService {
     return {
       entries,
       total,
-      hasMore: skip + entries.length < total,
+      hasMore: skip + entries.length < Math.min(total, LEADERBOARD_MAX_ROWS),
       currentChild,
       period,
     };

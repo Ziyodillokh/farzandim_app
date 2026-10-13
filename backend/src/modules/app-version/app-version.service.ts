@@ -13,14 +13,38 @@ type PlatformInfo = {
   playStoreUrl?: string;
   appStoreUrl?: string;
   directApkUrl?: string;
+  /**
+   * Platformaga xos majburiy yangilanish va reliz matni (App Store audit
+   * F42). Avval faqat umumiy (yuqori darajadagi) maydonlar bor edi —
+   * Android hotfix'ini majburlash iOS foydalanuvchilarini ham qulflardi,
+   * "Android 16" matni iOS'da ko'rinardi. Faylda berilmasa yuqori darajadagi
+   * qiymat nusxalanadi, shuning uchun klient har doim shu yerdan o'qiy oladi.
+   */
+  isForceUpdate?: boolean;
+  releaseNotes?: string;
 };
 
 type AppVersionEntry = {
   android: PlatformInfo;
   ios: PlatformInfo;
+  /** ESKI klientlar uchun umumiy qiymatlar — platforma maydonlari ustun. */
   releaseNotes: string;
   isForceUpdate: boolean;
 };
+
+/**
+ * Platforma bloklariga `isForceUpdate`/`releaseNotes`ni to'ldiradi (faylda
+ * bo'lmasa — yuqori darajadagi qiymat). Yuqori darajadagi maydonlar
+ * o'zgarmaydi — eski ilovalar ularni o'qishda davom etadi.
+ */
+export function withPlatformDefaults(entry: AppVersionEntry): AppVersionEntry {
+  const fill = (p: PlatformInfo): PlatformInfo => ({
+    ...p,
+    isForceUpdate: p.isForceUpdate ?? entry.isForceUpdate,
+    releaseNotes: p.releaseNotes ?? entry.releaseNotes,
+  });
+  return { ...entry, android: fill(entry.android), ios: fill(entry.ios) };
+}
 
 type AppVersionsConfig = {
   parent: AppVersionEntry;
@@ -61,7 +85,7 @@ export class AppVersionService {
       if (!found) {
         throw new InternalServerErrorException(`Config entry missing: ${app}`);
       }
-      entry = found;
+      entry = withPlatformDefaults(found);
     } catch (err) {
       if (err instanceof InternalServerErrorException) throw err;
       this.logger.error('app-version: config read failed', err);
