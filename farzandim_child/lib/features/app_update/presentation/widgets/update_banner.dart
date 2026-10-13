@@ -79,10 +79,10 @@ class UpdateBanner extends ConsumerWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    if (info.releaseNotes.isNotEmpty) ...[
+                    if (status.releaseNotes.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
-                        info.releaseNotes,
+                        status.releaseNotes,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(

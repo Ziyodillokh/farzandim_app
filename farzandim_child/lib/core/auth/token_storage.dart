@@ -110,4 +110,15 @@ class TokenStorage {
     final refresh = await readRefreshToken();
     return refresh != null && refresh.isNotEmpty;
   }
+
+  /// Sessiya ANIQ yo'qmi (refresh token o'chirilgan — server bekor qilgan).
+  /// O'qishda xato bo'lsa (masalan iOS qayta yongach qulf ochilmaguncha
+  /// Keychain yopiq) — `false`: noaniq holatda ulanishni o'chirmaymiz.
+  Future<bool> isSessionDefinitelyMissing() async {
+    try {
+      return !await hasValidSession();
+    } catch (_) {
+      return false;
+    }
+  }
 }

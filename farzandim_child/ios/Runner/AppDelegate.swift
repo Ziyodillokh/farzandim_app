@@ -3,30 +3,36 @@ import Flutter
 import UIKit
 import UserNotifications
 
-/// Klassik (UIScene'siz) ishga tushish — ATAYLAB.
+/// UIScene + AppDelegate'da OLDINDAN yaratilgan Flutter dvigateli — ATAYLAB.
 ///
-/// UIScene + `FlutterImplicitEngineDelegate` bilan plaginlar ilova ishga
-/// tushib BO'LGANDAN keyin ro'yxatdan o'tardi. firebase_messaging 15.x esa
-/// `UIApplicationDidFinishLaunchingNotification`ni kutib sozlanadi — signal
-/// o'tib ketgani uchun APNs ro'yxati, bildirishnoma delegati va jim push
-/// (`restrictions_sync`, `location_wake`) Dart'ga UMUMAN yetmasdi.
-/// flutter_foreground_task 8.x ham fon vazifasini shu yerda ro'yxatdan
-/// o'tkazadi. Bu yerda plaginlar `super`dan OLDIN ro'yxatdan o'tadi.
-/// UIScene'ga qaytish: firebase_messaging >= 16.7 va flutter_foreground_task
-/// >= 10 dan keyin.
+/// • iOS 27 SDK bilan yig'ilgan ilova UIScene'siz ishga tushmaydi
+///   (`_UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption` crash,
+///   iOS 27 simulyatorida tasdiqlangan) — klassik tartibga qaytib bo'lmaydi.
+/// • Storyboard'dagi implicit engine (`FlutterImplicitEngineDelegate`) bilan esa
+///   plaginlar ilova ishga tushib BO'LGANDAN keyin ro'yxatdan o'tardi:
+///   firebase_messaging 15.x `UIApplicationDidFinishLaunchingNotification`ni
+///   kutib sozlanadi — APNs token, bildirishnoma delegati va jim push
+///   (`restrictions_sync`, `location_wake`) Dart'ga UMUMAN yetmasdi;
+///   flutter_foreground_task ham fon vazifasini shu callback'da ro'yxatdan
+///   o'tkazadi.
+/// Shuning uchun dvigatel shu yerda yaratiladi va plaginlar `super`dan OLDIN
+/// ro'yxatdan o'tadi; oynani SceneDelegate shu dvigatel bilan quradi. Fonda
+/// (scene'siz) qayta ishga tushganda ham Dart `main()` ishlaydi.
 @main
 @objc class AppDelegate: FlutterAppDelegate {
+  let flutterEngine = FlutterEngine(name: "parvoz")
   private let locationRelauncher = LocationRelauncher()
 
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
-    if let registrar = registrar(forPlugin: "MotionStepsPlugin") {
+    flutterEngine.run()
+    GeneratedPluginRegistrant.register(with: flutterEngine)
+    if let registrar = flutterEngine.registrar(forPlugin: "MotionStepsPlugin") {
       MotionStepsPlugin.register(with: registrar)
     }
-    if let registrar = registrar(forPlugin: "ScreenTimePlugin") {
+    if let registrar = flutterEngine.registrar(forPlugin: "ScreenTimePlugin") {
       ScreenTimePlugin.register(with: registrar)
     }
     // flutter_local_notifications: ilova ichida ko'rsatilgan bildirishnoma

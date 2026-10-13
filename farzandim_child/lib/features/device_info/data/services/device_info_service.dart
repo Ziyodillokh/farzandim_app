@@ -19,6 +19,7 @@ import 'dart:async';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -114,8 +115,7 @@ class DeviceInfoService {
       };
       await dio.post<void>('/children/$childId/device-info', data: body);
     } catch (e) {
-      // ignore: avoid_print
-      print('DeviceInfo heartbeat xato: $e');
+      debugPrint('DeviceInfo heartbeat xato: $e');
     }
     await _sendScreenTimePermission(dio, childId);
   }
@@ -140,8 +140,9 @@ class DeviceInfoService {
       _sentScreenTimePermission = isAuthorized;
     } on DioException catch (e) {
       if (e.response?.statusCode == 400) _isScreenTimeFieldRejected = true;
-      // ignore: avoid_print
-      print('DeviceInfo screenTimePermission xato: ${e.response?.statusCode}');
+      debugPrint(
+        'DeviceInfo screenTimePermission xato: ${e.response?.statusCode}',
+      );
     }
   }
 

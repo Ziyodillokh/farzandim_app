@@ -9,7 +9,8 @@
 //
 // Backend: _start() fetchQuestions → startPlaying() startAttempt →
 // selectAnswer() per-savol validatsiya → _finish() submitAttempt (canonical
-// score). MockQuestions fallback agar backend yetkazib bera olmasa.
+// score). Savollarni yuklab bo'lmasa `QuizStatus.error` (UI'da "Qayta
+// urinish") — soxta zaxira savollar YO'Q.
 //
 // Timer'lar:
 //   _totalTimer    — umumiy vaqt (elapsed + qolgan)
@@ -21,7 +22,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:farzandim_child/features/contests/data/mock_questions.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/data/models/question_model.dart';
 import 'package:farzandim_child/features/contests/data/models/quiz_state.dart';
@@ -53,13 +53,16 @@ class QuizNotifier extends StateNotifier<QuizState> {
 
   Future<void> _start() async {
     state = state.copyWith(status: QuizStatus.loading);
-    // Backend'dan questions yuklash (fallback mock agar fail bo'lsa)
+    // Backend'dan savollarni yuklash. Bo'lmasa — xato holati + "Qayta
+    // urinish" (namunaviy savollarga jimgina tushilmaydi).
     final repo = _ref.read(contestsBackendRepositoryProvider);
     final questions = await _safeLoadQuestions(repo);
     if (!mounted) return;
-    final n = questions.isNotEmpty
-        ? questions.length
-        : MockQuestions.all.length;
+    if (questions.isEmpty) {
+      state = state.copyWith(status: QuizStatus.error);
+      return;
+    }
+    final n = questions.length;
     state = state.copyWith(
       questions: questions,
       answers: List<int?>.filled(n, null),
@@ -82,9 +85,15 @@ class QuizNotifier extends StateNotifier<QuizState> {
       final q = await repo.fetchQuestions(contest.id);
       return q;
     } catch (e) {
-      debugPrint('Quiz: backend questions fetch failed → mock fallback: $e');
+      debugPrint('Quiz: backend questions fetch failed: $e');
       return const [];
     }
+  }
+
+  /// Savollarni yuklash xato bo'lganda — qayta urinish.
+  Future<void> retry() async {
+    if (state.status != QuizStatus.error) return;
+    await _start();
   }
 
   void startPlaying() {

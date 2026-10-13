@@ -76,6 +76,7 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
   }
 
   private static func status() -> [String: Any] {
+    discardSelectionIfRevoked()
     let tokens = ParvozShield.loadTokens()
     let extras = ParvozShield.loadExtras()
     var status: [String: Any] = [
@@ -95,6 +96,23 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
       status["dailyLimitReached"] = ParvozShield.isDailyLimitReached()
     }
     return status
+  }
+
+  /// Ruxsat bekor qilingan (`.denied`) bo'lsa — saqlangan tanlov, kunlik
+  /// limit va qo'shimcha vaqt jadvallari tozalanadi (token'lar endi yaroqsiz).
+  /// `.notDetermined` tegilmaydi: ilova ishga tushganda holat bir lahza
+  /// shunday ko'rinishi mumkin — haqiqiy tanlovni o'chirib yubormaylik.
+  private static func discardSelectionIfRevoked() {
+    guard AuthorizationCenter.shared.authorizationStatus == .denied else { return }
+    let defaults = UserDefaults(suiteName: ParvozShield.appGroupId)
+    let hasSelection = defaults?.data(forKey: selectionKey) != nil
+    guard hasSelection || !ParvozShield.loadTokens().isEmpty else { return }
+    DeviceActivityCenter().stopMonitoring([
+      DeviceActivityName(ParvozShield.dailyActivity),
+      DeviceActivityName(ParvozShield.unlockActivity),
+    ])
+    ParvozShield.clearRevokedSelection()
+    defaults?.removeObject(forKey: selectionKey)
   }
 
   private static func authorizationName() -> String {

@@ -5,6 +5,7 @@
 // Manba: backend `GET /children/:childId/xp-events` (XpEvent). Faqat
 // don > 0 bo'lgan yozuvlar tarixda ko'rsatiladi (DON qayerdan yig'ilgani).
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// DON tarixidagi bitta yozuv.
@@ -43,77 +44,81 @@ class DonHistoryEntry {
 /// `DAILY_GOAL` = qadam mukofoti, `BOOK_READ` = audiokitob, `CONTEST_*` =
 /// test/konkurs, `OTHER` = video (backend `completeVideo` shu turni beradi).
 class DonSource {
-  const DonSource(this.label, this.icon, this.color);
+  const DonSource(this.labelKey, this.icon, this.color);
 
-  final String label;
+  /// Tarjima kaliti (`donHistory.source.*`) — yorliq joriy tilda ko'rinsin.
+  final String labelKey;
   final IconData icon;
   final Color color;
+
+  /// Manba yorlig'i joriy tilda.
+  String get label => labelKey.tr();
 
   static DonSource fromType(String type) {
     switch (type) {
       case 'DAILY_GOAL':
         return const DonSource(
-          'Qadamlar',
+          'donHistory.source.steps',
           Icons.directions_walk_rounded,
           Color(0xFF34C759),
         );
       case 'BOOK_READ':
         return const DonSource(
-          'Audiokitoblar',
+          'donHistory.source.audiobooks',
           Icons.headphones_rounded,
           Color(0xFF216BFF),
         );
       case 'CONTEST_JOIN':
         return const DonSource(
-          'Testda qatnashish',
+          'donHistory.source.contestJoin',
           Icons.quiz_rounded,
           Color(0xFFAF7BFF),
         );
       case 'CONTEST_WIN':
         return const DonSource(
-          'Test g\'olibi',
+          'donHistory.source.contestWin',
           Icons.emoji_events_rounded,
           Color(0xFFF2B233),
         );
       case 'CREATIVE_JOIN':
         return const DonSource(
-          'Ijodiy tanlov',
+          'donHistory.source.creativeJoin',
           Icons.brush_rounded,
           Color(0xFFFF7A9A),
         );
       case 'CREATIVE_WIN':
         return const DonSource(
-          'Ijodiy tanlov g\'olibi',
+          'donHistory.source.creativeWin',
           Icons.emoji_events_rounded,
           Color(0xFFF2B233),
         );
       case 'COURSE_LESSON':
         return const DonSource(
-          'Darslar',
+          'donHistory.source.courseLesson',
           Icons.menu_book_rounded,
           Color(0xFF20C4B8),
         );
       case 'STREAK_WEEKLY':
         return const DonSource(
-          'Haftalik faollik',
+          'donHistory.source.streakWeekly',
           Icons.local_fire_department_rounded,
           Color(0xFFFF7A45),
         );
       case 'CONTENT_POST':
         return const DonSource(
-          'Kontent',
+          'donHistory.source.contentPost',
           Icons.auto_awesome_rounded,
           Color(0xFF20C4B8),
         );
       case 'OTHER':
         return const DonSource(
-          'Videolar',
+          'donHistory.source.videos',
           Icons.play_circle_fill_rounded,
           Color(0xFFFF5A5D),
         );
       default:
         return const DonSource(
-          'Boshqa',
+          'donHistory.source.other',
           Icons.star_rounded,
           Color(0xFF8CA0B3),
         );

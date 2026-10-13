@@ -7,5 +7,3 @@
 "NSLocationAlwaysAndWhenInUseUsageDescription" = "Parvoz передаёт родителям ваше местоположение, даже когда приложение закрыто, — они знают, что вы в безопасности, и получают уведомления, когда вы приходите в сохранённые места или уходите из них.";
 "NSLocationAlwaysUsageDescription" = "Parvoz передаёт родителям ваше местоположение, даже когда приложение закрыто, чтобы они знали, что вы в безопасности.";
 "NSMotionUsageDescription" = "Parvoz считает ваши шаги за день с помощью датчика движения и показывает их родителям.";
-"NSHealthShareUsageDescription" = "Parvoz считает шаги с помощью датчика движения iPhone и не читает данные Apple Здоровье.";
-"NSHealthUpdateUsageDescription" = "Parvoz не записывает никаких данных в Apple Здоровье.";

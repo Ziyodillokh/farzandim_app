@@ -18,8 +18,6 @@ const _blue = Color(0xFF216BFF);
 const _blueSoft = Color(0xFF66B3FF);
 const _goal = 10000;
 
-const _weekShort = ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha', 'Ya'];
-
 TextStyle _unb(
   double s, {
   FontWeight w = FontWeight.w600,
@@ -242,7 +240,7 @@ class _DonRow extends StatelessWidget {
   }
 }
 
-// ── Hafta ustunlari (bugun aniq, qolgani preview) ──
+// ── Hafta ustunlari (bugun aniq, qolgan kunlar ma'lumotsiz — 0) ──
 class _WeekBars extends StatelessWidget {
   const _WeekBars({required this.todayIdx, required this.todaySteps});
 
@@ -251,6 +249,8 @@ class _WeekBars extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Hafta kunlari qisqa nomlari — joriy tilda (Du/Se… o'rniga).
+    final weekShort = 'common.weekdaysShort'.tr().split(',');
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
       decoration: BoxDecoration(
@@ -264,7 +264,7 @@ class _WeekBars extends StatelessWidget {
           for (var i = 0; i < 7; i++)
             Expanded(
               child: _Bar(
-                label: _weekShort[i],
+                label: i < weekShort.length ? weekShort[i] : '',
                 isToday: i == todayIdx,
                 // Bugun real; boshqa kunlar hali ma'lumotsiz (0).
                 frac: i == todayIdx

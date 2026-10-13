@@ -137,7 +137,56 @@ class _ContestQuizScreenState extends ConsumerState<ContestQuizScreen> {
         return _QuestionScreen(contest: widget.contest, state: state);
       case QuizStatus.finished:
         return _ResultScreen(contest: widget.contest, state: state);
+      case QuizStatus.error:
+        return _LoadErrorScreen(
+          onRetry: () =>
+              ref.read(quizProvider(widget.contest).notifier).retry(),
+        );
     }
+  }
+}
+
+// ─── Savollarni yuklab bo'lmadi ─────────────────────────────────────
+
+/// Savollar yuklanmadi — halol xabar + "Qayta urinish" / "Orqaga".
+class _LoadErrorScreen extends StatelessWidget {
+  const _LoadErrorScreen({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.wifi_off_rounded, color: tMuted, size: 52),
+            const SizedBox(height: 20),
+            Text(
+              'contests.questionsLoadError'.tr(),
+              textAlign: TextAlign.center,
+              style: tPop(15, w: FontWeight.w500),
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: onRetry,
+              style: FilledButton.styleFrom(backgroundColor: tBlue),
+              child: Text('common.retry'.tr()),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: Text(
+                'common.back'.tr(),
+                style: tPop(14, c: tMuted),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -937,7 +986,7 @@ class _ResultScreen extends ConsumerWidget {
                     child: _StatColumn(
                       label: 'contests.record'.tr(),
                       value: Text(
-                        '$record / $total ta',
+                        '$record / $total',
                         style: tUnb(16, w: FontWeight.w600, ls: -0.48),
                       ),
                     ),

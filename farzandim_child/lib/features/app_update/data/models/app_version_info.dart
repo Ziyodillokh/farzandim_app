@@ -5,10 +5,12 @@
 //
 // Backend kontrakt:
 //   GET /api/app/version?app=child → {
-//     android: { latest, minSupported, playStoreUrl?, directApkUrl? },
-//     ios:     { latest, minSupported, appStoreUrl? },
-//     releaseNotes: string,
-//     isForceUpdate: bool
+//     android: { latest, minSupported, playStoreUrl?, directApkUrl?,
+//                isForceUpdate?, releaseNotes? },
+//     ios:     { latest, minSupported, appStoreUrl?, isForceUpdate?,
+//                releaseNotes? },
+//     releaseNotes: string,   // eski klientlar uchun umumiy qiymat
+//     isForceUpdate: bool     // eski klientlar uchun umumiy qiymat
 //   }
 
 // ignore_for_file: public_member_api_docs
@@ -23,6 +25,8 @@ class PlatformVersionInfo {
     this.playStoreUrl,
     this.appStoreUrl,
     this.directApkUrl,
+    this.isForceUpdate,
+    this.releaseNotes,
   });
 
   factory PlatformVersionInfo.fromJson(Map<String, dynamic> json) {
@@ -32,6 +36,8 @@ class PlatformVersionInfo {
       playStoreUrl: json['playStoreUrl'] as String?,
       appStoreUrl: json['appStoreUrl'] as String?,
       directApkUrl: json['directApkUrl'] as String?,
+      isForceUpdate: json['isForceUpdate'] as bool?,
+      releaseNotes: json['releaseNotes'] as String?,
     );
   }
 
@@ -40,6 +46,12 @@ class PlatformVersionInfo {
   final String? playStoreUrl;
   final String? appStoreUrl;
   final String? directApkUrl;
+
+  /// Platformaga xos majburiy yangilanish (null — backend bermagan).
+  final bool? isForceUpdate;
+
+  /// Platformaga xos reliz matni (null — backend bermagan).
+  final String? releaseNotes;
 
   /// Birinchi mavjud URL (Store > direct APK).
   String? get storeUrl => playStoreUrl ?? appStoreUrl;
@@ -95,12 +107,14 @@ class AppUpdateStatus {
     required this.currentVersion,
     this.info,
     this.targetUrl,
+    this.releaseNotes = '',
   });
 
   const AppUpdateStatus.unknown(this.currentVersion)
       : state = UpdateState.unknown,
         info = null,
-        targetUrl = null;
+        targetUrl = null,
+        releaseNotes = '';
 
   final UpdateState state;
   final String currentVersion;
@@ -108,6 +122,9 @@ class AppUpdateStatus {
 
   /// Foydalanuvchini olib boriladigan URL (Store yoki APK fallback).
   final String? targetUrl;
+
+  /// Shu platforma uchun reliz matni (iOS'da Android matni ko'rinmaydi).
+  final String releaseNotes;
 
   bool get needsAttention =>
       state == UpdateState.softUpdateAvailable ||

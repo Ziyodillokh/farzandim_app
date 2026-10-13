@@ -220,7 +220,22 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
         ),
     ];
     final meIdx = rows.indexWhere((r) => r.me);
-    final _Row? meRow = meIdx >= 0 ? rows[meIdx] : null;
+    // Bola top-N ro'yxatda bo'lmasa — backend `currentChild` dan REAL o'rni.
+    final meFallback = ref.watch(currentChildRankingProvider);
+    final _Row? meRow = meIdx >= 0
+        ? rows[meIdx]
+        : meFallback == null
+        ? null
+        : _Row(
+            meFallback.rank,
+            meFallback.user.name,
+            scoreFor(meFallback.user, range),
+            meFallback.user.avatarColor,
+            me: true,
+            age: meFallback.user.age,
+            gender: meFallback.user.gender,
+            id: meFallback.user.id,
+          );
     final top3 = rows.take(3).toList();
     final rest = rows.length > 3 ? rows.sublist(3) : const <_Row>[];
     // O'z o'rnining `rest` ichidagi indeksi (scroll hisobi uchun).
@@ -651,6 +666,7 @@ class _PodiumColumn extends StatelessWidget {
           childId: row.id,
           gender: row.gender,
           age: row.age,
+          anonymous: !row.me,
         ),
         const SizedBox(height: 8),
         Text(
@@ -926,6 +942,7 @@ class _RankTile extends StatelessWidget {
             childId: row.id,
             gender: row.gender,
             age: row.age,
+            anonymous: !row.me,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -977,6 +994,7 @@ class _Avatar extends StatelessWidget {
     this.childId,
     this.gender,
     this.age,
+    this.anonymous = true,
   });
 
   final String name;
@@ -985,6 +1003,9 @@ class _Avatar extends StatelessWidget {
   final String? childId;
   final String? gender;
   final int? age;
+
+  /// Boshqa bola — rasm emas, faqat bosh harflar (maxfiylik).
+  final bool anonymous;
 
   // Ichki chegara YO'Q: rasm doirani chetigacha to'ldirsin. Avval 2px oq
   // chegara bor edi va rasm undan ichkariga qisilib, podium halqasi bilan
@@ -997,6 +1018,7 @@ class _Avatar extends StatelessWidget {
     gender: gender,
     age: age,
     color: color,
+    anonymous: anonymous,
   );
 }
 

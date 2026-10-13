@@ -13,7 +13,6 @@
 // 24 soat ko'rinmaydi (SharedPreferences `update.dismissed.{version}`).
 
 import 'dart:async';
-import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,6 +22,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/app_update/data/models/app_version_info.dart';
 import 'package:farzandim_child/features/app_update/data/repositories/backend_app_version_repository.dart';
+import 'package:farzandim_child/features/app_update/domain/update_decision.dart';
 
 const _prefsDismissPrefix = 'update.dismissed.';
 const _dismissTtl = Duration(hours: 24);
@@ -54,55 +54,41 @@ class AppUpdateNotifier extends AsyncNotifier<AppUpdateStatus> {
       return AppUpdateStatus.unknown(current);
     }
 
-    final platform = Platform.isAndroid ? info.android : info.ios;
+    // Web preview — do'kon yo'q, yangilanish ko'rsatilmaydi.
+    if (kIsWeb) return AppUpdateStatus.unknown(current);
 
-    // 1. Force update — versiya minSupported'dan past yoki backend flag.
-    //
     // ⚠️ `targetUrl` FAQAT `storeUrl` (Play Market/App Store) — Google Play
     // DDA 4.5-bandi buzilishi sababli (2026-08-04 rad etish xati)
-    // `directApkUrl` zaxira sifatida ham ISHLATILMAYDI. `storeUrl` bo'sh
-    // bo'lsa tugma bosilganda hech narsa ochilmaydi (`_launch` null'da jim
-    // qaytadi) — bu Play'dan tashqarida APK ochishdan XAVFSIZROQ. Backend
+    // `directApkUrl` zaxira sifatida ham ISHLATILMAYDI. Backend
     // `playStoreUrl`ni to'ldirishi SHART (docs/PLAY_STORE_CHECKLIST.md).
-    final ltMin = compareSemver(current, platform.minSupported) < 0;
-    // iOS: App Store havolasi bo'lmasa bloklovchi dialog chiqarmaymiz — tugma
-    // hech narsa ochmaydigan "berk ko'cha" App Review'da rad etiladi (2.1).
-    // `isForceUpdate` ikkala platforma uchun umumiy bayroq bo'lgani sabab
-    // Android uchun yoqilganda iOS'ni ham bloklab qo'ymasin.
-    final canForce = !PlatformCapabilities.isIOS || platform.storeUrl != null;
-    if ((info.isForceUpdate || ltMin) && canForce) {
-      return AppUpdateStatus(
-        state: UpdateState.forceUpdateRequired,
-        currentVersion: current,
-        info: info,
-        targetUrl: platform.storeUrl,
-      );
-    }
+    // iOS: faqat iOS ma'lumoti va haqiqiy App Store havolasi bo'lsa
+    // (App Review 2.1 — ishlamaydigan "Yangilash" tugmasi rad etiladi);
+    // umumiy (Android) `isForceUpdate` iOS'ni bloklamaydi.
+    final decision = decideUpdate(
+      currentVersion: current,
+      info: info,
+      isIOS: PlatformCapabilities.isIOS,
+    );
 
-    // 2. Soft update — versiya latest'dan past.
-    final ltLatest = compareSemver(current, platform.latest) < 0;
-    if (ltLatest) {
-      final dismissed = await _isDismissed(platform.latest);
-      if (dismissed) {
+    if (decision.state == UpdateState.softUpdateAvailable) {
+      final latest = PlatformCapabilities.isIOS
+          ? info.ios.latest
+          : info.android.latest;
+      if (await _isDismissed(latest)) {
         return AppUpdateStatus(
           state: UpdateState.upToDate,
           currentVersion: current,
           info: info,
         );
       }
-      return AppUpdateStatus(
-        state: UpdateState.softUpdateAvailable,
-        currentVersion: current,
-        info: info,
-        targetUrl: platform.storeUrl,
-      );
     }
 
-    // 3. Up-to-date.
     return AppUpdateStatus(
-      state: UpdateState.upToDate,
+      state: decision.state,
       currentVersion: current,
       info: info,
+      targetUrl: decision.targetUrl,
+      releaseNotes: decision.releaseNotes,
     );
   }
 

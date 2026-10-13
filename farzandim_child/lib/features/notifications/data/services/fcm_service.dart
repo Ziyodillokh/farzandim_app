@@ -17,6 +17,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/core/utils/release_logging.dart';
 import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/location/data/services/location_service.dart';
 import 'package:farzandim_child/features/screen_time/data/ios_restrictions_sync_service.dart';
@@ -42,6 +43,7 @@ String _defaultChannelDesc = 'notifications.channel.desc'.tr();
 /// xato bo'lsa jim chiqadi, crash yo'q.
 @pragma('vm:entry-point')
 Future<void> fcmBackgroundHandler(RemoteMessage message) async {
+  silenceDebugPrintInRelease();
   if (message.data['type'] == 'restrictions_sync' &&
       PlatformCapabilities.isIOS) {
     try {

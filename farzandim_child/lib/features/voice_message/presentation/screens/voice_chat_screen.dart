@@ -33,6 +33,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -213,13 +214,8 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       // Auto-scroll bottom (yangi xabar pastda).
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } else {
-      final err = ref.read(voiceMessageUploadProvider).errorMessage;
-      AppSnackBar.error(
-        context,
-        'voiceChat.errorPrefix'.tr(
-          namedArgs: {'error': err ?? 'voiceChat.sendErrorFallback'.tr()},
-        ),
-      );
+      // Xom exception matni ko'rsatilmaydi — tushunarli xabar.
+      AppSnackBar.error(context, 'voiceChat.voiceSendFailed'.tr());
     }
   }
 
@@ -254,12 +250,9 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
           .sendText(receiverId: parentUid, text: text);
       // Yangi xabar UI'ga chiqishi uchun list provider'ni yangilash.
       ref.invalidate(voiceMessagesProvider);
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      AppSnackBar.error(
-        context,
-        'voiceChat.messageSendFailed'.tr(namedArgs: {'error': '$e'}),
-      );
+      AppSnackBar.error(context, 'voiceChat.messageSendFailed'.tr());
     }
   }
 
@@ -368,13 +361,10 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
         ok = await ref
             .read(videoMessageUploadProvider.notifier)
             .sendBytes(bytes: bytes, durationSeconds: 0, filename: filename);
-      } catch (e) {
+      } catch (_) {
         if (!mounted) return;
         videoToast.dismiss();
-        AppSnackBar.error(
-          context,
-          'voiceChat.videoSendFailed'.tr(namedArgs: {'error': '$e'}),
-        );
+        AppSnackBar.error(context, 'voiceChat.videoSendFailed'.tr());
         return;
       }
     } else {
@@ -423,15 +413,8 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       );
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } else {
-      final state = ref.read(videoMessageUploadProvider);
-      AppSnackBar.error(
-        context,
-        'voiceChat.errorPrefix'.tr(
-          namedArgs: {
-            'error': state.errorMessage ?? 'voiceChat.sendErrorFallback'.tr(),
-          },
-        ),
-      );
+      // Xom exception matni ko'rsatilmaydi — tushunarli xabar.
+      AppSnackBar.error(context, 'voiceChat.videoSendFailed'.tr());
     }
   }
 
@@ -527,11 +510,11 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
                 loading: () => const Center(
                   child: CircularProgressIndicator(color: _pBlue),
                 ),
-                error: (e, _) => Center(
+                error: (_, __) => Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      'voiceChat.errorPrefix'.tr(namedArgs: {'error': '$e'}),
+                      'voiceChat.loadMessagesFailed'.tr(),
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Color(0xFFE74C4C)),
                     ),
@@ -585,8 +568,12 @@ class _ChatHeader extends ConsumerWidget {
         children: [
           GestureDetector(
             onTap: () {
-              if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop();
+              // Push'dan ochilganda (`go('/voice-chat')`) stack'da faqat shu
+              // sahifa bo'ladi — orqaga qaytish chatlar ro'yxatiga.
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/chats');
               }
             },
             behavior: HitTestBehavior.opaque,

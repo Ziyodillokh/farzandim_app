@@ -32,6 +32,25 @@
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
+		<key>UIApplicationSceneManifest</key>
+		<dict>
+			<key>UIApplicationSupportsMultipleScenes</key>
+			<false/>
+			<key>UISceneConfigurations</key>
+			<dict>
+				<key>UIWindowSceneSessionRoleApplication</key>
+				<array>
+					<dict>
+						<key>UISceneClassName</key>
+						<string>UIWindowScene</string>
+						<key>UISceneConfigurationName</key>
+						<string>flutter</string>
+						<key>UISceneDelegateClassName</key>
+						<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+					</dict>
+				</array>
+			</dict>
+		</dict>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
 		<key>UILaunchStoryboardName</key>
@@ -70,12 +89,6 @@
 		     iOS ilovani birinchi murojaatdayoq MAJBURAN yopadi (krash). -->
 		<key>NSMotionUsageDescription</key>
 		<string>Parvoz counts your daily steps with the motion sensor and shows them to your parents.</string>
-		<!-- health plagini HealthKit'ni ulaydi: matnlar bo'lmasa App Store yuklashni
-		     rad etadi (ITMS-90683). iOS'da qadamlar CoreMotion (pedometer) orqali. -->
-		<key>NSHealthShareUsageDescription</key>
-		<string>Parvoz counts steps with the iPhone motion sensor and does not read Apple Health data.</string>
-		<key>NSHealthUpdateUsageDescription</key>
-		<string>Parvoz does not write any data to Apple Health.</string>
 		<!-- flutter_foreground_task ishga tushishda shu BGTask'ni ro'yxatdan o'tkazadi —
 		     identifikator bu yerda bo'lmasa iOS ilovani darhol yopadi (krash). -->
 		<key>BGTaskSchedulerPermittedIdentifiers</key>

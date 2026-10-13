@@ -1,17 +1,20 @@
 // ─────────────────────────────────────────────────────────────────────
 // RankingAvatar — reyting/mini-reytingda bola avatari.
 //
-// Prioritet: HAQIQIY rasm (bola yuklagan) → jins+yoshga mos default avatar
-// → bosh harf (eng oxirgi zaxira). Rasm PUBLIC endpoint orqali childId bo'yicha
-// olinadi: GET /children/:id/avatar/image (auth kerak emas, @Public). Shu sabab
-// reytingdagi HAR bola o'z rasmi bilan (bo'lsa) ko'rinadi — hammasi bir xil
-// default emas.
+// Prioritet (faqat O'Z avatari uchun): HAQIQIY rasm (bola yuklagan) →
+// jins+yoshga mos default avatar → bosh harf (eng oxirgi zaxira). Rasm
+// childId bo'yicha olinadi: GET /children/:id/avatar/image.
+//
+// MAXFIYLIK: BOSHQA bolalar uchun (`anonymous: true`) rasm umuman
+// so'ralmaydi — faqat bosh harfli rangli doira ("AT"). Umumiy reytingda
+// begona bolalarning suratlari ko'rsatilmaydi.
 // ─────────────────────────────────────────────────────────────────────
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import 'package:farzandim_child/core/config/env_config.dart';
+import 'package:farzandim_child/features/ranking/data/ranking_name_privacy.dart';
 
 class RankingAvatar extends StatelessWidget {
   const RankingAvatar({
@@ -23,8 +26,12 @@ class RankingAvatar extends StatelessWidget {
     this.color = const Color(0xFF2A2F3A),
     this.borderColor,
     this.borderWidth = 2,
+    this.anonymous = false,
     super.key,
   });
+
+  /// `true` — boshqa bola: rasm/default avatar o'rniga faqat bosh harflar.
+  final bool anonymous;
 
   /// Bola ismi — rasm ham, default ham bo'lmasa bosh harf uchun.
   final String name;
@@ -67,6 +74,7 @@ class RankingAvatar extends StatelessWidget {
   }
 
   Widget _buildImage() {
+    if (anonymous) return _initials();
     final id = childId;
     if (id != null && id.isNotEmpty) {
       // Rasm bor-yo'qligini oldindan bilmaymiz — network'dan urinamiz, xato
@@ -89,6 +97,25 @@ class RankingAvatar extends StatelessWidget {
         cacheWidth: 240,
         errorBuilder: (_, __, ___) => _letter(),
       );
+
+  /// Bosh harfli avatar ("Akmal T." → "AT") — boshqa bolalar uchun.
+  Widget _initials() {
+    final text = rankingInitials(name);
+    return ColoredBox(
+      color: color,
+      child: Center(
+        child: Text(
+          text,
+          maxLines: 1,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: size * (text.length > 1 ? 0.32 : 0.38),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _letter() => ColoredBox(
         color: color,

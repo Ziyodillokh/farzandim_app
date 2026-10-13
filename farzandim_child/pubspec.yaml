@@ -162,6 +162,12 @@ dependency_overrides:
   # ning yangi API'sini (startStream/hasPermission) implement qilmagan.
   # Yangi record_linux 1.x mos. Parent App ham shu yechimni ishlatadi.
   record_linux: ^1.0.0
+  # health 13.1.4 — iOS platformasi OLIB TASHLANGAN vendor nusxa. Asl paket
+  # iOS'da HealthKit.framework'ni ulaydi, ilova esa HealthKit'dan
+  # foydalanmaydi (iOS qadamlari — CoreMotion) → App Review 2.5.1 xavfi.
+  # Android Health Connect o'zgarishsiz. Batafsil: third_party/health/pubspec.yaml
+  health:
+    path: third_party/health
 
 dev_dependencies:
   flutter_test:

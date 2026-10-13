@@ -2,10 +2,12 @@
 // ScreenTimeScreen — iOS "Ekran vaqti" (Apple Family Controls)
 // ─────────────────────────────────────────────────────────────────────
 //
-// 1) Himoyani yoqish — standart: AuthorizationCenter(.individual), Face ID
-//    yoki telefon paroli bilan (Oila guruhi kerak emas). Ixtiyoriy kuchli
-//    himoya: (.child) — Family Sharing, ota-ona Apple ID; shunda ruxsatni
-//    ham, ilovani ham ota-ona ruxsatisiz o'chirib bo'lmaydi.
+// 1) Himoyani yoqish — standart: AuthorizationCenter(.individual), ota-ona
+//    shu iPhone'da Face ID yoki telefon paroli bilan tasdiqlaydi (Sozlamalar
+//    › Ekran vaqti'dan o'chirilishi mumkin — ota-ona xabardor qilinadi).
+//    Oilada Apple Family Sharing bo'lsa — tavsiya etiladigan kuchli himoya
+//    (.child, ota-ona Apple Account'i); ruxsatni ham, ilovani ham ota-ona
+//    ruxsatisiz o'chirib bo'lmaydi.
 // 2) Cheklanadigan ilovalar — FamilyActivityPicker, ota-ona PIN'i bilan.
 //    Tanlov faqat qurilmada (App Group), serverga yuborilmaydi.
 // 3) Holat — jadval/"hammasini bloklash" bo'yicha cheklov hozir faolmi,
@@ -20,25 +22,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/restrictions_sync_provider.dart';
 import 'package:farzandim_child/features/permissions/presentation/widgets/permission_setup_widgets.dart';
 import 'package:farzandim_child/features/screen_time/data/screen_time_channel.dart';
+import 'package:farzandim_child/features/screen_time/domain/screen_time_error_key.dart';
 import 'package:farzandim_child/features/screen_time/presentation/providers/screen_time_providers.dart';
 import 'package:farzandim_child/features/screen_time/presentation/widgets/parent_pin_dialog.dart';
 
 const _card = Color(0xFF181C22);
 const _danger = Color(0xFFFF6B6B);
-
-/// Native xato kodlari, ular uchun alohida tarjima bor.
-const _knownErrorCodes = {
-  'invalidAccountType',
-  'authorizationCanceled',
-  'restricted',
-  'networkError',
-  'authenticationMethodUnavailable',
-  'authorizationConflict',
-};
 
 class ScreenTimeScreen extends ConsumerStatefulWidget {
   const ScreenTimeScreen({super.key});
@@ -71,7 +65,12 @@ class _ScreenTimeScreenState extends ConsumerState<ScreenTimeScreen>
     }
   }
 
-  Future<void> _run(Future<void> Function() action) async {
+  /// [isStrictMode] — kuchli (.child) ruxsat so'rovi; xato matni rejimga
+  /// mos tanlanadi (standart rejim xatosiga kuchli rejim matni chiqmasin).
+  Future<void> _run(
+    Future<void> Function() action, {
+    bool isStrictMode = false,
+  }) async {
     if (_busy) return;
     setState(() {
       _busy = true;
@@ -80,21 +79,36 @@ class _ScreenTimeScreenState extends ConsumerState<ScreenTimeScreen>
     try {
       await action();
     } on ScreenTimeException catch (e) {
-      final key = _knownErrorCodes.contains(e.code) ? e.code : 'generic';
-      if (mounted) setState(() => _error = 'screenTime.err.$key'.tr());
+      final key = screenTimeErrorKey(e.code, isStrictMode: isStrictMode);
+      if (mounted) setState(() => _error = key.tr());
     } finally {
       if (mounted) setState(() => _busy = false);
       ref.invalidate(screenTimeStatusProvider);
     }
   }
 
-  Future<void> _requestAuthorization({bool strict = false}) => _run(() async {
-        await ref
-            .read(screenTimeChannelProvider)
-            .requestAuthorization(strict: strict);
-        // Ruxsatdan keyin jadvallar ro'yxatdan o'tkazilsin.
-        unawaited(ref.read(restrictionsSyncServiceProvider).sync());
-      });
+  Future<void> _requestAuthorization({bool strict = false}) => _run(
+        () async {
+          await ref
+              .read(screenTimeChannelProvider)
+              .requestAuthorization(strict: strict);
+          // Ruxsatdan keyin jadvallar ro'yxatdan o'tkazilsin.
+          unawaited(ref.read(restrictionsSyncServiceProvider).sync());
+          // Bloklash ekranidagi "Qo'shimcha vaqt so'rash" eslatma orqali
+          // ishlaydi — bildirishnoma ruxsati hali so'ralmagan bo'lsa, shu
+          // yerda so'raymiz (rad etilgan bo'lsa tizim oynasi chiqmaydi).
+          unawaited(_requestNotificationPermission());
+        },
+        isStrictMode: strict,
+      );
+
+  Future<void> _requestNotificationPermission() async {
+    try {
+      await Permission.notification.request();
+    } catch (e) {
+      debugPrint('ScreenTime: bildirishnoma ruxsati so\'ralmadi: $e');
+    }
+  }
 
   Future<void> _setExtras(
     ScreenTimeStatus status, {

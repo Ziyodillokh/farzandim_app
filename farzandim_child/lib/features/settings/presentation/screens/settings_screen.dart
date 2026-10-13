@@ -5,19 +5,25 @@
 // Profil'dagi ⚙ bosilganda ochiladi. Qatorlar (Figma):
 //   Akkount            → /account-edit (Figma "Akkount sozlamalari")
 //   Faol sessiyalar    → joriy qurilma paneli
-//   Bildirishnomalar   → afzallik paneli (Eng muhimlar / Barchasi + Saqlash)
+//   Bildirishnomalar   → afzallik paneli (Eng muhimlar / Barchasi + Saqlash);
+//                        iOS'da ko'rsatilmaydi — tanlov hali hech qayerda
+//                        qo'llanmaydi (App Review: ishlamaydigan sozlama)
 //   Ilova tili         → til paneli (O'zbek / Rus / English + Saqlash)
 //   Qo'llab quvvatlash → aloqa paneli (Telegram / Telefon / Email + Yopish)
+//   Maxfiylik siyosati → farzandimedu.uz/privacy.html (App Store 5.1.1)
 //   Biz haqimizda      → kompaniya/versiya oynasi
+//   Ulanishni uzish va ma'lumotlarni o'chirish → DeleteAccountRow (5.1.1(v))
 //
 // LOGIKA SAQLANGAN: til (context.setLocale), versiya (package_info);
 // bildirishnoma afzalligi SharedPreferences'da (notif_pref_v1).
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:farzandim_child/core/constants/legal_urls.dart';
 import 'package:farzandim_child/core/platform/platform_capabilities.dart';
+import 'package:farzandim_child/features/settings/presentation/widgets/delete_account_row.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+    show debugPrint, defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -151,12 +157,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     subtitle: 'settings.rowSessionsSub'.tr(),
                     onTap: _showSessionsSheet,
                   ),
-                  _SettingsRow(
-                    icon: SolarIconsBold.bell,
-                    title: 'settings.rowNotif'.tr(),
-                    subtitle: 'settings.rowNotifSub'.tr(),
-                    onTap: _showNotifPrefSheet,
-                  ),
+                  // iOS: afzallik hali hech qayerda qo'llanmaydi — ishlamaydigan
+                  // sozlamani ko'rsatmaymiz (Android'da avvalgidek).
+                  if (!PlatformCapabilities.isIOS)
+                    _SettingsRow(
+                      icon: SolarIconsBold.bell,
+                      title: 'settings.rowNotif'.tr(),
+                      subtitle: 'settings.rowNotifSub'.tr(),
+                      onTap: _showNotifPrefSheet,
+                    ),
                   _SettingsRow(
                     icon: SolarIconsBold.global,
                     title: 'settings.rowLanguage'.tr(),
@@ -170,11 +179,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onTap: _showSupportSheet,
                   ),
                   _SettingsRow(
+                    icon: SolarIconsBold.shieldCheck,
+                    title: 'settings.rowPrivacy'.tr(),
+                    subtitle: 'settings.rowPrivacySub'.tr(),
+                    onTap: _openPrivacyPolicy,
+                  ),
+                  _SettingsRow(
                     icon: SolarIconsBold.smileCircle,
                     title: 'settings.rowAbout'.tr(),
                     subtitle: 'settings.rowAboutSub'.tr(),
                     onTap: _showAboutDialog,
                   ),
+                  const DeleteAccountRow(),
                 ],
               ),
             ),
@@ -226,7 +242,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onTap: () => setSheetState(() => selected = 'uz'),
         ),
         _OptionRow(
-          label: 'Rus',
+          label: 'Русский',
           flagAsset: 'assets/icons/flag_ru.svg',
           selected: selected == 'ru',
           onTap: () => setSheetState(() => selected = 'ru'),
@@ -247,16 +263,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _openPrivacyPolicy() async {
+    final isOpened = await openLegalUrl(kPrivacyPolicyUrl);
+    if (isOpened || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('common.somethingWentWrong'.tr())),
+    );
+  }
+
   // ── Faol sessiyalar — joriy qurilma ──
   Future<void> _showSessionsSheet() async {
     HapticFeedback.selectionClick();
-    var device = 'settings.webBrowser'.tr();
+    // "Web brauzer" faqat haqiqiy web preview'da; telefonda model nomi
+    // olinmasa — "Shu qurilma" (iPhone "Web brauzer" bo'lib ko'rinardi).
+    var device = kIsWeb ? 'settings.webBrowser'.tr() : 'settings.thisDevice'.tr();
     try {
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
         final a = await DeviceInfoPlugin().androidInfo;
         device = '${a.brand} ${a.model}';
+      } else if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+        final i = await DeviceInfoPlugin().iosInfo;
+        device = '${i.modelName} · iOS ${i.systemVersion}';
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[Settings] qurilma ma\'lumoti olinmadi: $e');
+    }
     if (!mounted) return;
     await _showParvozSheet(
       title: 'settings.rowSessions'.tr(),

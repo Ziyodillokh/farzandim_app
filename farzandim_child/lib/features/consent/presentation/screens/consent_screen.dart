@@ -17,12 +17,13 @@
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/core/constants/legal_urls.dart';
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/consent/presentation/providers/consent_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class ConsentScreen extends ConsumerStatefulWidget {
   const ConsentScreen({super.key});
@@ -44,18 +45,35 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
   }
 
   Future<void> _openPrivacyPolicy() async {
-    try {
-      await launchUrl(
-        Uri.parse('https://farzandimedu.uz/privacy.html'),
-        mode: LaunchMode.externalApplication,
-      );
-    } catch (_) {
-      /* havola ochilmadi — jimgina o'tkazamiz */
-    }
+    final isOpened = await openLegalUrl(kPrivacyPolicyUrl);
+    if (isOpened || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('common.somethingWentWrong'.tr())),
+    );
   }
 
   void _decline() {
-    // Rad etilsa — ilova ma'lumot yig'maydi. Ilovadan chiqamiz.
+    // Rad etilsa — ilova ma'lumot yig'maydi.
+    // iOS'da SystemNavigator.pop() hech narsa qilmaydi (ildiz
+    // FlutterViewController) va Apple ilovani dasturiy yopishni man qiladi —
+    // tugma "o'lik" bo'lib qolmasligi uchun tushuntirish oynasi ko'rsatamiz,
+    // ekran /consent'da qoladi. Android'da avvalgidek ilovadan chiqamiz.
+    if (PlatformCapabilities.isIOS) {
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('consent.declinedTitle'.tr()),
+          content: Text('consent.declinedBody'.tr()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text('common.ok'.tr()),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
     SystemNavigator.pop();
   }
 
@@ -100,11 +118,22 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
                         title: 'consent.locationTitle'.tr(),
                         text: 'consent.locationText'.tr(),
                       ),
-                      _ConsentBullet(
-                        icon: Icons.apps_rounded,
-                        title: 'consent.usageTitle'.tr(),
-                        text: 'consent.usageText'.tr(),
-                      ),
+                      // Ilovalardan foydalanish statistikasi faqat Android'da
+                      // ota-onaga yuboriladi. iOS'da (Apple Family Controls
+                      // sharti) bu ma'lumot qurilmadan chiqmaydi — o'rniga
+                      // Ekran vaqti cheklovi haqida aniq matn.
+                      if (PlatformCapabilities.canUploadAppUsage)
+                        _ConsentBullet(
+                          icon: Icons.apps_rounded,
+                          title: 'consent.usageTitle'.tr(),
+                          text: 'consent.usageText'.tr(),
+                        ),
+                      if (PlatformCapabilities.isIOS)
+                        _ConsentBullet(
+                          icon: Icons.hourglass_bottom_rounded,
+                          title: 'consent.screenTimeTitle'.tr(),
+                          text: 'consent.screenTimeText'.tr(),
+                        ),
                       _ConsentBullet(
                         icon: Icons.notifications_active_rounded,
                         title: 'consent.notificationsTitle'.tr(),

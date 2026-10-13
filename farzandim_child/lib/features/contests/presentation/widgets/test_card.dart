@@ -21,6 +21,7 @@ const tGlass = Color(0x14FFFFFF); // karta foni — oq ~8%
 const tGlassBorder = Color(0x24FFFFFF); // karta chegarasi — oq ~14%
 const tDim = Color(0x99FFFFFF); // oq 60%
 const tMuted = Color(0xFFA6A8A9); // xira kulrang
+const tRewardGreen = Color(0xFF41DD7A); // mukofot ("+N DON") rangi
 
 TextStyle tUnb(
   double s, {
@@ -41,7 +42,7 @@ TextStyle tPop(
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: s, fontWeight: w, color: c, height: 1.3);
 
-/// Ko'k "DON" pill (narx yonida).
+/// Ko'k "DON" belgisi (mukofot miqdori yonida — narx emas).
 class DonBadge extends StatelessWidget {
   const DonBadge({super.key});
 
@@ -184,7 +185,7 @@ class TestCard extends StatelessWidget {
                           child: Icon(c.placeholderIcon, size: 24, color: col),
                         ),
                         const SizedBox(width: 8),
-                        // O'ng-yuqori: ♡ (ustida) + "250 DON" (ostida).
+                        // O'ng-yuqori: ♡ (ustida) + "+N DON" mukofot (ostida).
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
@@ -197,18 +198,26 @@ class TestCard extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 6),
                               ],
-                              // Narx kesilmasin uchun FittedBox.
+                              // Mukofot ("+N DON") kesilmasin uchun FittedBox.
+                              // Narx emas: DON test uchun BERILADI.
                               FittedBox(
                                 fit: BoxFit.scaleDown,
                                 alignment: Alignment.centerRight,
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
+                                    const Icon(
+                                      Icons.stars_rounded,
+                                      size: 16,
+                                      color: tRewardGreen,
+                                    ),
+                                    const SizedBox(width: 3),
                                     Text(
-                                      '${c.bonus}',
+                                      '+${c.bonus}',
                                       style: tUnb(
                                         15,
                                         w: FontWeight.w600,
+                                        c: tRewardGreen,
                                         ls: -0.4,
                                       ),
                                     ),

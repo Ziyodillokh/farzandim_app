@@ -15,9 +15,9 @@
 // (`audioPlayerProvider.notifier.play`).
 //
 // Bo'sh holat (backend content bermasa) — chiroyli placeholder ko'rsatiladi.
-// Muqovadagi "250 DON" — hozircha placeholder narx: backend `price`
-// yubormaguncha shu qiymat chiqadi (kelajakda `AudiobookModel.price`
-// qo'shilganda avtomatik olinadi).
+// Muqova ostidagi "+N DON" — NARX EMAS, tinglab tugatganda beriladigan
+// MUKOFOT (`AudiobookModel.xpReward`). DON sotib olinmaydi va sarflanmaydi.
+// Mukofot 0 bo'lsa belgi ko'rsatilmaydi.
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -32,6 +32,7 @@ import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 const _blue = Color(0xFF216BFF);
+const _rewardGreen = Color(0xFF41DD7A); // mukofot (+N DON) rangi
 const _pageBg = Color(0xFF0B0F14);
 const _cardBg = Color(0xFF141A22);
 const _chipInactiveBorder = Color(0xFF2A323D);
@@ -253,8 +254,10 @@ class _HeroCoverCard extends StatelessWidget {
               child: _CoverImage(book: series.cover),
             ),
           ),
-          const SizedBox(height: 8),
-          _DonPill(price: series.cover.xpReward),
+          if (series.cover.xpReward > 0) ...[
+            const SizedBox(height: 8),
+            _DonRewardPill(reward: series.cover.xpReward),
+          ],
         ],
       ),
     );
@@ -422,13 +425,17 @@ class _GridBookCard extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(width: 6),
-              const Text(
-                '•',
-                style: TextStyle(color: _textMuted, fontSize: 11),
-              ),
-              const SizedBox(width: 6),
-              Flexible(child: _DonPill(price: series.cover.xpReward)),
+              if (series.cover.xpReward > 0) ...[
+                const SizedBox(width: 6),
+                const Text(
+                  '•',
+                  style: TextStyle(color: _textMuted, fontSize: 11),
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: _DonRewardPill(reward: series.cover.xpReward),
+                ),
+              ],
             ],
           ),
         ],
@@ -481,20 +488,23 @@ class _CoverImage extends StatelessWidget {
 // ═════════════════════════════════════════════════════════════════════
 // "250 DON" pill — ko'k dumaloq badge
 // ═════════════════════════════════════════════════════════════════════
-class _DonPill extends StatelessWidget {
-  const _DonPill({required this.price});
+/// "+N DON" mukofot belgisi (narx emas — tinglab tugatganda beriladi).
+class _DonRewardPill extends StatelessWidget {
+  const _DonRewardPill({required this.reward});
 
-  final int price;
+  final int reward;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        const Icon(Icons.stars_rounded, size: 14, color: _rewardGreen),
+        const SizedBox(width: 3),
         Text(
-          '$price',
+          '+$reward',
           style: const TextStyle(
-            color: Colors.white,
+            color: _rewardGreen,
             fontSize: 13,
             fontWeight: FontWeight.w700,
           ),

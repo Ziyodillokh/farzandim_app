@@ -1,17 +1,44 @@
 # Parvoz Growth (iOS, `uz.parvoz.growth`) — App Store Connect matnlari
 
-> Bu — BOLA ilovasining **iOS** versiyasi uchun App Store Connect'ga kiritiladigan
-> tayyor matnlar va javoblar. Android ro'yxati: `PLAY_STORE_LISTING_CHILD.md`.
+> Bu fayl BOLA ilovasining **iOS** versiyasi uchun App Store'da ko'rinadigan
+> matnlar (nom, subtitle, promo, tavsif, kalit so'zlar, skrinshotlar).
+> App Review Notes, Age Rating, App Privacy, Export Compliance va egasi
+> qo'lda bajaradigan ishlar ro'yxati: `docs/APP_STORE_SUBMISSION_CHILD_IOS.md`.
+> Maxfiylik siyosatiga iOS bo'limi loyihasi: `docs/PRIVACY_POLICY_IOS_SECTION_DRAFT.md`.
+> Android ro'yxati: `PLAY_STORE_LISTING_CHILD.md`.
 >
-> **Android'dan asosiy farq (matnlarda shunday yozilgan, o'zgartirmang):**
-> iOS'da ilovalardan foydalanish statistikasi **yig'ilmaydi va serverga
-> yuborilmaydi** (Apple Family Controls sharti). Ilovalarni cheklash Apple
-> Family Sharing orqali, faqat bola telefonining o'zida ishlaydi. Qadamlar
-> HealthKit'dan emas, iPhone harakat sensoridan (CoreMotion) olinadi.
+> **Matnlar joriy kodga mos (2026-10-13, `feat/child-ios`). O'zgartirishdan
+> oldin quyidagi qoidalarni o'qing:**
+> - **Kids Category EMAS.** Shuning uchun nom, subtitle, promo, tavsif,
+>   skrinshot yozuvlari va ikonada "for kids", "for children", "для детей",
+>   "детское приложение" kabi so'zlar ISHLATILMAYDI (Guideline 2.3.8, 5.1.4).
+>   Matnlar OTA-ONA ovozida yozilgan: ilovani ota-ona bolaning iPhone'iga
+>   o'rnatadi va o'z ilovasiga ulaydi. Kalit so'zlarda `kids` yo'q.
+> - **Android / Google Play tilga olinmaydi** (Guideline 2.3.10). Ota-ona
+>   ilovasi faqat nomi bilan — **Parvoz Parents** — aytiladi.
+> - **Ekran vaqti:** standart rejim — ota-ona bolaning iPhone'ida Face ID
+>   yoki parol bilan tasdiqlaydi (`.individual`). Apple Family Sharing
+>   ishlatadigan oilalar uchun ixtiyoriy "Strict protection" (`.child`).
+>   Family Sharing SHART EMAS — matnlarda shart deb yozmang.
+> - iOS'da ilovalar ro'yxati va ilovalardan foydalanish statistikasi
+>   **qurilmadan chiqmaydi**. Ota-ona ilovasida iPhone ilovalari bitta
+>   "iPhone: tanlangan ilovalar" (EN "iPhone: selected apps") elementi bo'lib
+>   ko'rinadi — faqat himoya yoqilganmi va nechta ilova/toifa/sayt tanlangani.
+> - Parvoz Growth'da **xarid yo'q**. Ba'zi imkoniyatlar ota-onaning Parvoz
+>   tarifiga bog'liq (narx va to'lov usuli tilga olinmaydi).
+> - SOS — "bir bosish" EMAS: Chats → "SOS message" → slayderni surish.
+>   Favqulodda xizmatlarga qo'ng'iroq qilmaydi.
+> - Qadamlar — iPhone harakat sensori (Core Motion). Apple Health ishlatilmaydi.
 >
-> **Til:** App Store Connect lokalizatsiyalari ro'yxatida o'zbek tili yo'q
-> bo'lsa — asosiy til **English (U.S.)**, qo'shimcha **Russian**. Ilovaning
-> o'zi uz/ru/en tillarida ishlaydi.
+> **Til:** App Store Connect'da o'zbek tili yo'q — asosiy til **English (U.S.)**,
+> qo'shimcha **Russian**. Ilovaning o'zi uz/ru/en tillarida ishlaydi.
+>
+> **Uzunlik tekshiruvi** (2026-10-13, python bilan sanalgan): subtitle EN 27 /
+> RU 27 belgi (limit 30 belgi); promo EN 163 / RU 159 belgi (limit 170);
+> tavsif EN va RU 4 000 belgidan kam; kalit so'zlar EN 95 bayt / RU 94 bayt
+> (limit 100 — kirill harfi 2 bayt, shuning uchun BAYT sanaladi). Matnni
+> o'zgartirsangiz qayta sanang:
+> `python3 -c "s='...'; print(len(s), len(s.encode('utf-8')))"`
 
 ---
 
@@ -20,17 +47,19 @@
 | Maydon | Qiymat |
 |---|---|
 | Name (≤30) | `Parvoz Growth` |
-| Subtitle EN (≤30) | `Family safety for kids` |
-| Subtitle RU (≤30) | `Безопасность ребёнка в семье` |
+| Subtitle EN (≤30) | `Family location, SOS & chat` |
+| Subtitle RU (≤30) | `Семейная безопасность и SOS` |
 | Bundle ID | `uz.parvoz.growth` |
 | SKU | `parvoz-growth-ios` (istalgan noyob qiymat) |
 | Primary category | Lifestyle |
 | Secondary category | Education |
-| Content rights | **Yes** — ilova uchinchi tomon kontentini ko'rsatadi (YouTube videolar, audiokitoblar). Huquqlaringiz borligini tasdiqlang. |
-| Kids Category | **Tanlamang.** Kids Category uchinchi tomon analitikasini (Crashlytics) taqiqlaydi; bu ilova ota-ona nazorati ilovasi. |
+| Kids Category / "Made for Kids" | **Tanlamang.** Bu ota-ona nazorati tizimining ilovasi; asosiy auditoriya — ota-onalar. |
+| Content rights | **Yes** — ilova uchinchi tomon kontentini ko'rsatadi (YouTube videolar, audiokitoblar, kitoblar). Huquqlaringiz borligini tasdiqlang. |
+| Copyright | `2026 FARZANDIM TECH MCHJ` |
 
 **URL'lar**
-- Privacy Policy: `https://farzandimedu.uz/privacy.html`
+- Privacy Policy: `https://farzandimedu.uz/privacy.html` — topshirishdan
+  OLDIN unga iOS bo'limini qo'shing (`docs/PRIVACY_POLICY_IOS_SECTION_DRAFT.md`).
 - Support URL: `https://farzandimedu.uz`
 - Marketing URL: `https://farzandimedu.uz`
 
@@ -39,12 +68,14 @@
 ## 2. Promotional Text (≤170)
 
 **EN**
-```
-Stay connected with your parents: share your location, send an SOS, record voice and video messages, and learn with audiobooks and quizzes.
+
+```text
+Companion to the Parvoz Parents app: family location sharing, SOS alerts, voice and video messages, Screen Time limits and learning content on your child's iPhone.
 ```
 **RU**
-```
-Будьте на связи с родителями: делитесь геолокацией, отправляйте SOS, голосовые и видеосообщения, учитесь с аудиокнигами и тестами.
+
+```text
+Компаньон приложения Parvoz Parents: геолокация для семьи, SOS-сигналы, голосовые и видеосообщения, ограничения Экранного времени и обучение на iPhone ребёнка.
 ```
 
 ---
@@ -52,178 +83,111 @@ Stay connected with your parents: share your location, send an SOS, record voice
 ## 3. Description (≤4000)
 
 ### EN
-```
-Parvoz Growth is the child's companion app of the Parvoz family safety system. It is not a standalone app: a parent creates a child profile in the Parvoz app and gets a family code or QR code. After the child enters it here, the two devices are linked.
+
+```text
+Parvoz Growth is the companion app for the Parvoz family safety service. A parent installs it on their child's iPhone and links it to the Parvoz Parents app with a 5-digit family code. Parvoz Growth does not work on its own.
 
 WHAT THE APP DOES
-• Location — shares the child's current location and route with their parents, also in the background, so parents know their child is safe and get alerts when the child arrives at or leaves saved places.
-• SOS — one tap sends an emergency alert to the parents.
-• Steps — counts daily steps with the iPhone motion sensor and shows the activity to parents. Apple Health data is not read or written.
-• Family messages — voice and video messages and photos between the child and their parents.
-• Screen Time — with the parent's approval through Apple Family Sharing, parents choose apps to restrict on the child's iPhone. Restrictions follow the parents' schedule automatically, even when the app is closed. The list of chosen apps stays on the child's iPhone and is never sent to our servers.
-• Learning — audiobooks, educational videos, quizzes and rewards.
+• Location — shares the iPhone's location with the linked parents, also in the background when location access is set to "Always", so they can see it on the map and get alerts when the child arrives at or leaves places they saved.
+• SOS — slide to confirm and the app sends an alert with the current location to the linked parents. It does not contact emergency services.
+• Family messages — text, voice and video messages and photos, only between the child and their own parents.
+• Steps — counts daily steps with the iPhone motion sensor and shows them to the parents. Apple Health is not used.
+• Screen Time — a parent turns on protection on the child's iPhone and confirms with Face ID or the passcode. Families who use Apple Family Sharing can choose the optional strict mode instead. The parent then picks the apps to restrict in Apple's app picker, protected by a parent PIN. From Parvoz Parents they can block the chosen apps now, set one daily limit for them, or schedule restriction times. Saved schedules and limits are enforced by iOS even when Parvoz Growth is closed. On the restriction screen the child can ask for more time, and the parent approves or declines.
+• Learning — audiobooks with background playback, educational videos, books, quizzes and olympiads. Correct answers and daily activity earn DON points — virtual in-app points with no cash value.
 
-OPEN AND HONEST
-• The app is not hidden: it has its own icon, and iOS shows its own indicators whenever location or the microphone is in use.
-• Each permission is explained before iOS asks for it, and the app keeps working if a permission is declined.
-• For supervising your own child with their knowledge — not for monitoring adults.
-• Children's data is never used for advertising and is never sold.
+PRIVACY AND TRANSPARENCY
+• Which apps are restricted, the list of apps and app usage stay on the iPhone. Parvoz only learns whether protection is on and how many apps are selected.
+• The app is not hidden: it has its own icon and name. Location and other access can be reviewed or turned off at any time in iPhone Settings.
+• Every permission is explained before iOS asks for it, and the app keeps working if a permission is declined.
+• While protection is on, Date & Time stays on Automatic so limits can't be bypassed by changing the clock. If the parent turns on "Prevent uninstall", deleting apps on the iPhone is blocked. Both end when protection is turned off in iPhone Settings › Screen Time.
+• For parents supervising their own child with the child's knowledge — not for monitoring other people.
+• No ads. Data is never sold or used for advertising.
+• Disconnect and delete the child's data at any time in Settings › "Disconnect and delete my data".
 
 REQUIREMENTS
-• The Parvoz app on the parent's phone.
-• For Screen Time restrictions: the child's iPhone must be in the parent's Apple Family Sharing group with a child account.
+• The Parvoz Parents app on the parent's phone, and an internet connection.
+• For Screen Time: an iPhone with a passcode, signed in to an Apple Account.
+• Parvoz Growth has no in-app purchases. Some features — location alerts and history, app limits and schedules, part of the learning library — depend on the parent's Parvoz plan.
 
 Privacy policy: https://farzandimedu.uz/privacy.html
-Contact: farzandimtech@gmail.com
+Support: support@farzandimedu.uz
 ```
 
 ### RU
-```
-Parvoz Growth — детское приложение-компаньон системы семейной безопасности Parvoz. Это не самостоятельное приложение: родитель создаёт профиль ребёнка в приложении Parvoz и получает семейный код или QR-код. После ввода кода здесь два устройства связываются.
+
+```text
+Parvoz Growth — приложение-компаньон семейной системы безопасности Parvoz. Родитель устанавливает его на iPhone ребёнка и связывает с приложением Parvoz Parents по 5-значному семейному коду. Отдельно Parvoz Growth не работает.
 
 ЧТО ДЕЛАЕТ ПРИЛОЖЕНИЕ
-• Геолокация — передаёт родителям текущее местоположение и маршрут ребёнка, в том числе в фоне, чтобы они знали, что ребёнок в безопасности, и получали уведомления, когда он приходит в сохранённые места или уходит из них.
-• SOS — одно нажатие отправляет родителям экстренный сигнал.
-• Шаги — считает шаги за день с помощью датчика движения iPhone и показывает активность родителям. Данные Apple Здоровье не читаются и не записываются.
-• Семейные сообщения — голосовые и видеосообщения и фото между ребёнком и родителями.
-• Экранное время — с подтверждения родителя через Семейный доступ Apple родители выбирают приложения, которые ограничиваются на iPhone ребёнка. Ограничения работают по расписанию родителей автоматически, даже если приложение закрыто. Список выбранных приложений хранится только на iPhone ребёнка и никогда не отправляется на наши серверы.
-• Обучение — аудиокниги, обучающие видео, тесты и награды.
+• Геолокация — передаёт местоположение iPhone связанным родителям, в том числе в фоне, если доступ к геопозиции установлен на «Всегда», чтобы они видели его на карте и получали уведомления, когда ребёнок приходит в сохранённые ими места или уходит из них.
+• SOS — после подтверждения сдвигом приложение отправляет связанным родителям сигнал с текущим местоположением. Экстренные службы не вызываются.
+• Семейные сообщения — текстовые, голосовые и видеосообщения и фото только между ребёнком и его родителями.
+• Шаги — считает шаги за день с помощью датчика движения iPhone и показывает их родителям. Apple Здоровье не используется.
+• Экранное время — родитель включает защиту на iPhone ребёнка и подтверждает Face ID или код-паролем. Семьи, которые пользуются Семейным доступом Apple, могут выбрать дополнительный строгий режим. Затем родитель выбирает ограничиваемые приложения в системном окне выбора Apple, защищённом PIN-кодом родителя. В Parvoz Parents можно сразу заблокировать выбранные приложения, задать для них один дневной лимит или расписание ограничений. Сохранённые расписания и лимиты iOS соблюдает, даже когда Parvoz Growth закрыт. На экране ограничения ребёнок может попросить больше времени, а родитель одобряет или отклоняет запрос.
+• Обучение — аудиокниги с фоновым воспроизведением, обучающие видео, книги, тесты и олимпиады. За правильные ответы и активность начисляются баллы DON — виртуальные баллы внутри приложения без денежной стоимости.
 
-ОТКРЫТО И ЧЕСТНО
-• Приложение не скрыто: у него есть своя иконка, а iOS показывает свои индикаторы, когда используются геолокация или микрофон.
+КОНФИДЕНЦИАЛЬНОСТЬ И ОТКРЫТОСТЬ
+• Какие приложения ограничены, список приложений и их использование остаются на iPhone. Parvoz знает только, включена ли защита и сколько приложений выбрано.
+• Приложение не скрыто: у него своя иконка и название. Доступ к геопозиции и другим данным можно проверить или отключить в Настройках iPhone.
 • Каждое разрешение объясняется до запроса iOS, и приложение продолжает работать, если разрешение отклонено.
-• Только для заботы о собственном ребёнке с его ведома — не для наблюдения за взрослыми.
-• Данные детей никогда не используются для рекламы и не продаются.
+• Пока защита включена, дата и время остаются в режиме «Автоматически», чтобы лимиты нельзя было обойти переводом часов. Если родитель включил «Запрет удаления», удаление приложений на iPhone блокируется. Оба ограничения снимаются, когда защита отключена в Настройках iPhone › Экранное время.
+• Для родителей, которые заботятся о своём ребёнке с его ведома, — не для наблюдения за другими людьми.
+• Без рекламы. Данные не продаются и не используются для рекламы.
+• Отключиться и удалить данные ребёнка можно в любой момент: Настройки › «Отключиться и удалить мои данные».
 
 ТРЕБОВАНИЯ
-• Приложение Parvoz на телефоне родителя.
-• Для ограничений экранного времени iPhone ребёнка должен быть в Семейном доступе родителя с детской учётной записью.
+• Приложение Parvoz Parents на телефоне родителя и подключение к интернету.
+• Для Экранного времени: iPhone с код-паролем и выполненным входом в Apple Account.
+• В Parvoz Growth нет встроенных покупок. Часть функций — уведомления и история геолокации, лимиты и расписания приложений, часть обучающей библиотеки — зависит от тарифа Parvoz у родителя.
 
 Политика конфиденциальности: https://farzandimedu.uz/privacy.html
-Контакты: farzandimtech@gmail.com
+Поддержка: support@farzandimedu.uz
 ```
 
----
-
-## 4. Keywords (≤100, vergul bilan, bo'sh joysiz)
-
-- EN: `parental control,family,location,kids,safety,screen time,child,sos,gps,steps`
-- RU: `родительский контроль,семья,геолокация,дети,безопасность,экранное время,sos,шаги`
-
----
-
-## 5. App Privacy (Data Collection) javoblari
-
-"Do you or your third-party partners collect data from this app?" → **Yes**.
-Hamma qatorda: **Used for tracking — No**, **Purpose — App Functionality**.
-
-| Apple kategoriyasi | Tur | Linked to user | Izoh |
-|---|---|---|---|
-| Location | Precise Location | Yes | Ota-ona xaritasi, geo-zona xabarlari, SOS |
-| Contact Info | Name | Yes | Bola profili ismi |
-| Health & Fitness | Fitness | Yes | Kunlik qadamlar (CoreMotion) |
-| User Content | Photos or Videos | Yes | Video xabarlar, rasmlar |
-| User Content | Audio Data | Yes | Ovozli xabarlar |
-| User Content | Other User Content | Yes | Oila chati matni, test javoblari |
-| Identifiers | User ID | Yes | Bola profili ID |
-| Identifiers | Device ID | Yes | Push (FCM) token |
-| Diagnostics | Crash Data | **No** | Firebase Crashlytics |
-| Diagnostics | Other Diagnostic Data | Yes | Batareya, model, OS versiyasi, ruxsat holatlari |
-| Other Data | Other Data Types | Yes | Bola yoshi |
-
-**Yig'ilMAYDI (No):** Usage Data (iOS'da ilova statistikasi qurilmadan
-chiqmaydi), Browsing/Search History, Contacts, Financial Info, Purchases,
-Sensitive Info, Health (HealthKit), Advertising Data.
-
-> `ios/Runner/PrivacyInfo.xcprivacy` shu jadval bilan bir xil. Biror
-> funksiya qo'shilsa/olib tashlansa — ikkalasini birga yangilang.
+> Tavsifdagi Settings qatori nomi ilovadagi qator bilan BIR XIL bo'lishi
+> shart: EN `Disconnect and delete my data`, RU `Отключиться и удалить мои данные`.
+> Ilovada boshqacha tarjima qilingan bo'lsa (`assets/translations/*.json`),
+> shu yerni ilovaga moslang. "Prevent uninstall" — Parvoz Parents'dagi
+> sozlama nomi; ota-ona ilovasidagi nom o'zgarsa, bu yerni ham yangilang.
+> Support e-mail ilovadagi (`settings_screen.dart`) manzil bilan bir xil;
+> sayt boshqa manzil ishlatadi — `docs/APP_STORE_SUBMISSION_CHILD_IOS.md`
+> §8 (F44) ga qarang.
 
 ---
 
-## 6. Age Rating (yangi so'rovnoma) — javoblar
+## 4. Keywords (≤100 BAYT, vergul bilan, bo'sh joysiz)
 
-- Zo'ravonlik, qo'rqinchli, kattalar mavzusi, qimor, alkogol/tamaki, tibbiy ma'lumot: **None / No**
-- Unrestricted Web Access: **No** (videolar admin tanlagan ro'yxatdan)
-- User-Generated Content / Messaging & Chat: **Yes** — faqat oila ichida (bola ↔ o'z ota-onasi), begonalar bilan yozishib bo'lmaydi
-- Advertising: **No**
-- Contests: **No** (testlar uchun faqat ichki ballar, real sovrin yo'q — agar real sovrin bo'lsa, Yes)
-- Parental Controls: **Yes**
-- Age Assurance: **No**
+- EN (95 bayt): `parental control,family locator,gps tracker,location,sos,screen time,geofence,safety,steps,chat`
+- RU (94 bayt): `родительский контроль,геолокация,семья,sos,gps,трекер`
 
-Yakuniy reytingni App Store Connect o'zi hisoblaydi.
+`kids`, `child`, `дети`, `детский` ATAYLAB yo'q (Kids Category atamalari).
+Nom va subtitle'dagi so'zlarni (`Parvoz`, `Growth`) takrorlash shart emas —
+Apple ularni allaqachon indekslaydi.
 
 ---
 
-## 7. App Review Information
-
-- Sign-in required: **Yes**
-- Contact: ism, telefon, `farzandimtech@gmail.com`
-- Demo: quyidagi `<<...>>` joylarini topshirishdan OLDIN to'ldiring. Oila kodi
-  muddati tugaydigan bo'lsa — topshirish kuni yangisini oling yoki muddatsiz
-  demo kod yarating.
-
-### Notes (EN — shu holicha qo'ying)
-```
-Parvoz Growth is the CHILD companion of our parent app "Parvoz" (iOS bundle uz.parvoz.parent). It only works after pairing with a parent account.
-
-HOW TO TEST
-1. Launch the app, pick a language and accept the consent screen.
-2. On the pairing screen enter the family code <<FAMILY_CODE>>, or scan the QR code shown in the parent demo account.
-   Parent demo account (in the "Parvoz" app): <<PHONE / LOGIN>>, code/password <<...>>.
-3. After pairing, a permissions screen explains each permission. All of them are optional; tap "Continue".
-
-FAMILY CONTROLS (Screen Time API)
-- Entitlement com.apple.developer.family-controls (Distribution) is enabled for uz.parvoz.growth and its extensions: uz.parvoz.growth.monitor (DeviceActivityMonitor), uz.parvoz.growth.shield (ShieldConfiguration) and uz.parvoz.growth.shieldaction (ShieldAction).
-- We call AuthorizationCenter.requestAuthorization(for: .child). Supervision therefore works only when this iPhone is signed in with a child Apple Account in the parent's Family Sharing group; the parent approves with their own Apple Account.
-- Path: Settings (gear icon) > Screen Time > "Get parent approval" > set the parent PIN > choose apps (FamilyActivityPicker).
-- The selected apps are opaque tokens stored only on the device (App Group). Our server only sends an app-agnostic schedule (e.g. "restrict from 21:00 to 07:00") and a "restrict now" switch. The DeviceActivityMonitor extension applies and removes the ManagedSettings shield at the schedule boundaries. No app usage data leaves the device.
-- On the Parvoz-branded shield the child can tap "Ask for more time". The ShieldAction extension only stores a flag and shows a local notification; tapping it opens Parvoz, where the child sends the request (minutes + optional reason, without any app name). If the parent approves, the shield is lifted until the granted time ends; a DeviceActivity schedule/event restores it even if the app is closed.
-- Optional always-on protection set by the parent on the device (parent PIN): adult website filter (webContent .auto) and "deny app installation".
-- Screen recording of the whole flow on a Family Sharing child device: <<VIDEO_URL>>
-
-BACKGROUND LOCATION
-Location sharing is the core feature: parents see where their child is and get arrival/departure alerts for saved places. "Always" is requested only after "While Using" and the app keeps working without it.
-
-OTHER
-Steps come from CoreMotion; no HealthKit data is read or written. The microphone and camera are used only when the child records a message or scans the pairing QR code.
-```
-
----
-
-## 8. Skrinshotlar
+## 5. Skrinshotlar
 
 - Majburiy: **6.9" iPhone** — 1320 × 2868 (yoki 1290 × 2796) px, 3–10 ta.
-  (iPad yo'q — ilova faqat iPhone uchun.)
-- Tavsiya etilgan ekranlar: 1) Bosh sahifa, 2) SOS, 3) Oila chati / video xabar,
-  4) Audiokitoblar, 5) Statistika (qadamlar), 6) Ekran vaqti, 7) Ruxsatlar ekrani.
-- Skrinshotlarda Android'ga xos narsa (ilova statistikasi, batareya
-  optimizatsiyasi) ko'rinmasin — iOS build'dan oling.
+  iPad skrinshoti kerak emas (ilova faqat iPhone uchun, `UIDeviceFamily = 1`).
+- Faqat **topshiriladigan iOS build'dan** oling. Tavsiya etilgan ekranlar:
+  1) Bosh sahifa, 2) Chats → SOS dialogi, 3) Oila chati / video xabar,
+  4) Audiokitoblar, 5) Statistika (qadamlar), 6) Ekran vaqti ("Turn on
+  protection" + "Restricted apps"), 7) Ruxsatlar ekrani.
+- Skrinshot yozuvlarida "for kids / для детей / детское" ISHLATMANG; ota-ona
+  ovozida yozing (masalan: "Know they arrived safely", "SOS with location").
+- Skrinshotlarda **real bolalarning ismi/rasmi** bo'lmasin (DON reytingi,
+  profil) — demo profil ishlating. Android'ga xos narsalar (ilova
+  statistikasi, batareya optimizatsiyasi) ko'rinmasin.
 
 ---
 
-## 9. Export Compliance
+## 6. Qolgan bo'limlar
 
-`Info.plist`da `ITSAppUsesNonExemptEncryption = false` (faqat HTTPS) — App
-Store Connect shifrlash savolini so'ramaydi.
+App Review Information (Notes), Age Rating, App Privacy, Export Compliance,
+Pricing & Availability va topshirishdan oldingi tekshiruv ro'yxati —
+`docs/APP_STORE_SUBMISSION_CHILD_IOS.md`.
 
----
-
-## 10. Maxfiylik siyosatiga iOS bo'limi (taklif)
-
-Joriy `privacy.html` Android'ni tasvirlaydi (UsageStats, Health Connect, Device
-Admin, Wi-Fi nomi). App Review siyosat ilova xatti-harakatiga mos kelishini
-tekshiradi. Quyidagi bo'limni qo'shish tavsiya etiladi (matnni siz tasdiqlaysiz —
-`privacy.html` do'konlar havola qiladigan yuridik matn):
-
-**UZ**
-```
-iOS (iPhone) ilovasi: ilovalardan foydalanish ma'lumoti va ilovalar ro'yxati yig'ilmaydi va serverga yuborilmaydi. Ilovalarni cheklash Apple Family Controls (Ekran vaqti) orqali, ota-onaning Apple Family Sharing tasdig'i bilan, faqat bola telefonining o'zida ishlaydi; cheklanadigan ilovalar tanlovi qurilmadan chiqmaydi. Qadamlar iPhone harakat sensoridan (Core Motion) olinadi; Apple Salomatlik (HealthKit) ma'lumotlari o'qilmaydi va yozilmaydi. Wi-Fi tarmoq nomi yig'ilmaydi.
-```
-**EN**
-```
-iOS (iPhone) app: app usage data and the list of installed apps are not collected and are not sent to our servers. App restrictions use Apple Family Controls (Screen Time) with the parent's approval through Apple Family Sharing and run only on the child's iPhone; the selection of restricted apps never leaves the device. Steps are read from the iPhone motion sensor (Core Motion); Apple Health (HealthKit) data is neither read nor written. The Wi-Fi network name is not collected.
-```
-
-> Eslatma: Android ilovasi ham 2026-08-17 dan beri Wi-Fi nomini yig'maydi
-> (`device_info_service.dart` izohi), siyosatdagi "Wi-Fi tarmoq nomi" qatori
-> eskirgan.
+> `ios/Runner/PrivacyInfo.xcprivacy` va App Store Connect'dagi App Privacy
+> javoblari bir xil bo'lishi kerak. Biror funksiya qo'shilsa/olib tashlansa —
+> ikkalasini birga yangilang.

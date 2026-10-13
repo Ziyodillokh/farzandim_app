@@ -11,7 +11,8 @@
 //   • Kunlik o'rtacha ekran vaqti + grafik + top ilovalar
 //
 // Real: todayStepsProvider, gamificationProfile (don/streak), allUsers
-// (reyting), dailyUsage (ekran vaqti + top ilovalar). Bo'sh bo'lsa PREVIEW.
+// (reyting), dailyUsage (ekran vaqti + top ilovalar). Streak/DON/reyting
+// faqat REAL qiymat (soxta namuna yo'q).
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/notifications/presentation/screens/notifications_screen.dart';
@@ -47,7 +48,8 @@ const _purple = Color(0xFFA78BFA);
 const _freeze = Color(0xFF4FC3F7);
 const _red = Color(0xFFEF5350);
 
-const _weekLabels = ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha', 'Ya'];
+/// Kunlik qadam maqsadi — hafta trekerida "bajarildi" belgisi shundan.
+const _stepsGoal = 10000;
 
 TextStyle _unb(
   double s, {
@@ -92,11 +94,11 @@ class StatisticsScreen extends ConsumerWidget {
     // audiokitob/test kabi real mukofotlar u yerga hech qachon yozilmaydi.
     final backend = ref.watch(backendGamificationProvider).valueOrNull;
     final profile = ref.watch(gamificationProfileProvider).valueOrNull;
-    // PREVIEW: real 0 bo'lsa Figma namunasi.
+    // Streak — REAL qiymat (0 bo'lsa 0; avval soxta "30 kun" chiqardi).
     final rawStreak = backend?.streak ?? profile?.streak ?? 0;
     final rawDon = backend?.don ?? profile?.don ?? 0;
     final rawSteps = ref.watch(todayStepsProvider).valueOrNull ?? 0;
-    final streak = rawStreak > 0 ? rawStreak : 30;
+    final streak = rawStreak;
     // DON — REAL qiymat. Mock (1250) OLIB TASHLANDI: avval bola 0 DON'da
     // soxta 1250 ko'rardi va "don balansi statistikaga o'tmayapti" deb
     // tushunilardi. Dashboard'da bu allaqachon real edi — endi bu yerda ham.
@@ -342,7 +344,9 @@ class _StatGrid extends StatelessWidget {
                   ),
                   child: Text('?', style: _unb(15, w: FontWeight.w700)),
                 ),
-                value: '$tests ta',
+                value: 'statistics.itemsCount'.tr(
+                  namedArgs: {'count': '$tests'},
+                ),
                 label: 'statistics.testsCompleted'.tr(),
               ),
             ),
@@ -494,10 +498,11 @@ class _StepsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final todayIdx = DateTime.now().weekday - 1;
-    // Bugungacha bo'lgan kunlar bajarilgan deb ko'rsatiladi (preview);
-    // real haftalik qadamlar backend'dan kelganda shu yerga ulanadi.
+    // Faqat REAL ma'lumot: bugun maqsad bajarilgan bo'lsa ✓. O'tgan kunlar
+    // uchun qadam tarixi yo'q — bo'sh (avval hammasi soxta ✓ edi).
     final days = [
-      for (var i = 0; i < 7; i++) i <= todayIdx ? _Day.check : _Day.empty,
+      for (var i = 0; i < 7; i++)
+        i == todayIdx && steps >= _stepsGoal ? _Day.check : _Day.empty,
     ];
     return _PanelCard(
       onTap: () => context.push('/steps-detail'),
@@ -526,7 +531,7 @@ class _StepsCard extends StatelessWidget {
                       children: [
                         Text(_fmtNum(steps), style: _unb(20)),
                         Text(
-                          ' / ${_fmtNum(10000)}',
+                          ' / ${_fmtNum(_stepsGoal)}',
                           style: _unb(14, w: FontWeight.w600, c: _dim),
                         ),
                       ],
@@ -558,11 +563,16 @@ class _WeekTracker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Hafta kunlari qisqa nomlari — joriy tilda (Du/Se… o'rniga).
+    final labels = 'common.weekdaysShort'.tr().split(',');
     return Row(
       children: [
         for (var i = 0; i < 7; i++) ...[
           Expanded(
-            child: _DayPill(label: _weekLabels[i], state: days[i]),
+            child: _DayPill(
+              label: i < labels.length ? labels[i] : '',
+              state: days[i],
+            ),
           ),
           if (i < 6) const SizedBox(width: 6),
         ],
@@ -640,8 +650,23 @@ class _DonCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final childId = ref.watch(pairingStateProvider).childId;
     final all = ref.watch(allUsersProvider);
-    // Bola atrofidagi 3 qator (yuqori-bola-quyi); reyting bo'sh — preview.
-    final rows = _window(all, childId);
+    // Bola atrofidagi 3 qator (yuqori-bola-quyi). Bola top-N da bo'lmasa —
+    // faqat o'zining REAL o'rni (backend `currentChild`). Ma'lumot yo'q
+    // bo'lsa halol xabar (avval soxta "Soliha/Akmal/Javohir" qatorlari edi).
+    final window = _window(all, childId);
+    final me = ref.watch(currentChildRankingProvider);
+    final rows = window.isNotEmpty || me == null
+        ? window
+        : [
+            (
+              me.rank,
+              me.user.name,
+              true,
+              me.user.id,
+              me.user.gender,
+              me.user.age,
+            ),
+          ];
     return GestureDetector(
       onTap: () => context.push('/ranking'),
       behavior: HitTestBehavior.opaque,
@@ -654,8 +679,6 @@ class _DonCard extends ConsumerWidget {
             Row(
               children: [
                 Text(_fmtNum(don), style: _unb(22)),
-                const SizedBox(width: 8),
-                Text('+560', style: _unb(17, c: _green)),
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -671,11 +694,15 @@ class _DonCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-            if (rows.isEmpty) ...[
-              const _RankRow(rank: 94, name: 'Soliha', me: false),
-              const _RankRow(rank: 95, name: 'Akmal', me: true, delta: '+3'),
-              const _RankRow(rank: 96, name: 'Javohir', me: false),
-            ] else
+            if (rows.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  'ranking.emptySubtitle'.tr(),
+                  style: _pop(13, c: _dim),
+                ),
+              )
+            else
               for (final r in rows)
                 _RankRow(
                   rank: r.$1,
@@ -724,7 +751,6 @@ class _RankRow extends StatelessWidget {
     required this.rank,
     required this.name,
     required this.me,
-    this.delta,
     this.childId,
     this.gender,
     this.age,
@@ -733,7 +759,6 @@ class _RankRow extends StatelessWidget {
   final int rank;
   final String name;
   final bool me;
-  final String? delta;
   final String? childId;
   final String? gender;
   final int? age;
@@ -751,6 +776,8 @@ class _RankRow extends StatelessWidget {
             gender: gender,
             age: age,
             color: const Color(0x1AFFFFFF),
+            // Boshqa bolalar — rasm emas, faqat bosh harflar (maxfiylik).
+            anonymous: !me,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -761,21 +788,6 @@ class _RankRow extends StatelessWidget {
               style: _pop(14, w: FontWeight.w600, c: me ? _blue : Colors.white),
             ),
           ),
-          if (delta != null)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.arrow_drop_up_rounded,
-                  size: 20,
-                  color: _green,
-                ),
-                Text(
-                  delta!,
-                  style: _pop(12, w: FontWeight.w600, c: _green),
-                ),
-              ],
-            ),
         ],
       ),
     );

@@ -40,6 +40,25 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
   bool _isPairing = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showSessionEnded());
+  }
+
+  /// Server sessiyani bekor qilgani sabab shu ekranga qaytarilgan bo'lsak —
+  /// sababini bir marta aytamiz (aks holda bola nima bo'lganini tushunmaydi).
+  void _showSessionEnded() {
+    if (!mounted || !ref.read(pairingStateProvider).isSessionEnded) return;
+    ref.read(pairingStateProvider.notifier).clearSessionEndedNotice();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('pairing.sessionEnded'.tr()),
+        duration: const Duration(seconds: 6),
+      ),
+    );
+  }
+
+  @override
   void dispose() {
     for (final c in _controllers) {
       c.dispose();

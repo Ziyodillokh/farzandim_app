@@ -14,7 +14,11 @@
 // Pairing tugagach DeviceInfoService boshlanadi va Firestore'ga
 // telefon ma'lumotlarini har 60 sekundda yuborib turadi.
 
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/core/auth/session_events.dart';
+import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/restrictions_sync_provider.dart';
@@ -68,12 +72,26 @@ final pairingStateProvider =
 class PairingNotifier extends StateNotifier<AppPairingState> {
   PairingNotifier(this._repository, this._auth, this._ref)
       : super(const AppPairingState()) {
+    _revokedSub = SessionEvents.revoked.listen(
+      (_) => unawaited(handleSessionRevoked()),
+    );
     _loadFromStorage();
   }
 
   final PairingRepository _repository;
   final AnonAuthRepository _auth;
   final Ref _ref;
+  StreamSubscription<void>? _revokedSub;
+
+  /// Davom etayotgan uzish — parallel chaqiruvlar (socket signali, sessiya
+  /// bekor bo'lishi, hisobni o'chirish) bitta tozalashni bo'lishadi.
+  Future<void>? _unpairing;
+
+  @override
+  void dispose() {
+    unawaited(_revokedSub?.cancel());
+    super.dispose();
+  }
 
   /// Ilova qayta ochilganda SharedPreferences'dan tiklash.
   ///
@@ -87,6 +105,16 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
     final childId = prefs.getString('childId');
     final childName = prefs.getString('childName');
     var currentUserId = prefs.getString('currentUserId');
+
+    // Server sessiyani bekor qilgan (refresh token o'chirilgan, masalan fon
+    // isolate'ida) — eski ulanish bilan "ulangan, lekin ishlamaydi" holatda
+    // qolmaymiz: lokal tozalab, bolani qayta ulanish ekraniga qaytaramiz.
+    if (parentUid != null &&
+        childId != null &&
+        await _ref.read(tokenStorageProvider).isSessionDefinitelyMissing()) {
+      await _endRevokedSession();
+      return;
+    }
 
     // Sprint 4.4.5 fallback: eski pair'larda `currentUserId` saqlanmagan.
     // Backend'dan `GET /api/users/me` orqali olib, prefs'ga saqlaymiz.
@@ -296,7 +324,10 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
   ///
   /// `true` — muvaffaqiyatli, `false` — xato (state.errorMessage'da sabab).
   Future<bool> tryPair(String code) async {
-    state = state.copyWith(status: PairingStatus.pairing);
+    state = state.copyWith(
+      status: PairingStatus.pairing,
+      isSessionEnded: false,
+    );
 
     try {
       // 1. Anonymous Auth — bola UID oladi (Firestore eski xulq;
@@ -329,6 +360,14 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
             status: PairingStatus.error,
             errorMessage: '${'pairing.errorCodeUsed'.tr()} '
                 '${'pairing.errorAskNewCode'.tr()}',
+          );
+          return false;
+        case PairingFailureRateLimited():
+          // 429 — "tarmoq xatosi" emas: necha daqiqa kutish kerakligini
+          // aniq aytamiz (aks holda "kod/server ishlamayapti" deb o'ylanadi).
+          state = state.copyWith(
+            status: PairingStatus.error,
+            errorMessage: 'pairing.tooManyAttempts'.tr(),
           );
           return false;
         case PairingFailureNetwork():
@@ -532,21 +571,49 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
   /// Bola qaytadan kod kiritishi uchun (yoki test/debug uchun).
   /// DeviceInfoService oldindan `markOffline` qilinadi — Parent App
   /// real-vaqt online holatini yangilaydi.
-  Future<void> unpair() async {
-    final deviceInfoService = _ref.read(deviceInfoServiceProvider);
-    await deviceInfoService.markOffline();
+  Future<void> unpair() {
+    return _unpairing ??= _doUnpair().whenComplete(() => _unpairing = null);
+  }
 
-    final locationService = _ref.read(locationServiceProvider);
-    locationService.stop();
+  /// Server sessiyani bekor qildi (refresh aniq rad etildi). Ulangan bo'lsak —
+  /// lokal ulanish va cheklovlar tozalanadi, pairing ekrani sababni aytadi.
+  /// Boshqa uzish allaqachon ketayotgan bo'lsa (masalan bola hisobini o'zi
+  /// o'chirmoqda) — e'tiborsiz qoldiramiz.
+  Future<void> handleSessionRevoked() async {
+    if (!state.isPaired || _unpairing != null) return;
+    await _endRevokedSession();
+  }
 
-    await _ref.read(backgroundServiceProvider).stop();
+  /// Pairing ekrani "sessiya tugadi" xabarini ko'rsatgach chaqiradi.
+  void clearSessionEndedNotice() {
+    if (!state.isSessionEnded) return;
+    state = state.copyWith(isSessionEnded: false);
+  }
+
+  Future<void> _endRevokedSession() async {
+    try {
+      await unpair();
+    } catch (e) {
+      debugPrint('[Pairing] bekor qilingan sessiyani tozalash xato: $e');
+    }
+    if (!mounted) return;
+    state = const AppPairingState(isSessionEnded: true);
+  }
+
+  Future<void> _doUnpair() async {
+    // Har qadam alohida himoyalangan — bitta servis xatosi pairing
+    // ma'lumotini (pastda) tozalashga to'sqinlik qilmasin, aks holda ilova
+    // keyingi ochilishda yana "ulangan" bo'lib qolardi.
+    await _safeReset(() => _ref.read(deviceInfoServiceProvider).markOffline());
+    await _safeReset(() async => _ref.read(locationServiceProvider).stop());
+    await _safeReset(() => _ref.read(backgroundServiceProvider).stop());
 
     // Native ilova-cheklov servisini ATAYIN to'xtatamiz (ACTION_STOP →
     // watchdog alarmi ham bekor bo'ladi). Aks holda o'z-o'zini tiklovchi
     // watchdog unpair'dan keyin ham servisni tirik ushlab, eski bloklarni
     // enforce qilaverardi.
     if (PlatformCapabilities.hasAndroidControls) {
-      await UsageStatsService().stopRestrictionService();
+      await _safeReset(() => UsageStatsService().stopRestrictionService());
     } else if (PlatformCapabilities.isIOS) {
       // Family Controls: tanlov, siyosat, jadvallar va ota-ona PIN'i
       // tozalanadi — boshqa oilaga ulanganda eski cheklovlar qolmasin.
@@ -564,9 +631,9 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
     await prefs.remove('restriction.blocked_packages');
     await prefs.remove('restriction.limits');
 
-    await _auth.signOut();
+    await _safeReset(_auth.signOut);
 
-    state = const AppPairingState();
+    if (mounted) state = const AppPairingState();
   }
 
   Future<void> _safeReset(Future<void> Function() reset) async {

@@ -34,7 +34,7 @@ class ConsentStorage {
     );
   }
 
-  /// Roziliklikni bekor qilish (test/debug uchun).
+  /// Rozilikni bekor qilish (hisobni o'chirish oqimi, test/debug).
   static Future<void> resetConsent() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kParentConsentV1);

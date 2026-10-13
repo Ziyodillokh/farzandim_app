@@ -357,8 +357,8 @@ class _FeedVideoCard extends ConsumerWidget {
               duration: const Duration(milliseconds: 1400),
               content: Text(
                 added
-                    ? 'Yoqtirilganlarga qo\'shildi'
-                    : 'Yoqtirilganlardan olib tashlandi',
+                    ? 'videos.liked.added'.tr()
+                    : 'videos.liked.removed'.tr(),
                 style: vPop(13, w: FontWeight.w500),
               ),
             ),

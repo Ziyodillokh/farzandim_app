@@ -17,7 +17,6 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:dio/dio.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:flutter/foundation.dart';
@@ -107,6 +106,11 @@ class PairStatusError extends PairStatusResult {
   final String message;
 }
 
+/// Juda ko'p urinish (429) — server bir necha daqiqaga cheklagan.
+class PairingFailureRateLimited extends PairingResult {
+  const PairingFailureRateLimited();
+}
+
 /// Tarmoq yoki server xatosi — qayta urinish.
 class PairingFailureNetwork extends PairingResult {
   const PairingFailureNetwork(this.message);
@@ -131,6 +135,7 @@ class PairingRepository {
   ///   - `PairingFailureInvalidCode` — kod noto'g'ri (404)
   ///   - `PairingFailureAlreadyUsed` — kod ishlatilgan (409),
   ///     parent regenerate qilishi kerak
+  ///   - `PairingFailureRateLimited` — juda ko'p urinish (429)
   ///   - `PairingFailureNetwork` — tarmoq xato
   Future<PairingResult> verifyCode(
     String code,
@@ -149,7 +154,7 @@ class PairingRepository {
       final accessToken = data['accessToken'] as String?;
       final refreshToken = data['refreshToken'] as String?;
       if (accessToken == null || refreshToken == null) {
-        debugPrint('PairingRepo: tokens yo\'q response: $data');
+        debugPrint('PairingRepo: javobda tokenlar yo\'q');
         return const PairingFailureNetwork('Tokens missing');
       }
 
@@ -190,9 +195,7 @@ class PairingRepository {
     } on DioException catch (e) {
       final status = e.response?.statusCode;
       final body = e.response?.data;
-      debugPrint(
-        'PairingRepo: pair fail status=$status body=$body',
-      );
+      debugPrint('PairingRepo: pair fail status=$status');
       switch (status) {
         case 409:
           // Backend 0.6.0 — 2 ta variant:
@@ -223,7 +226,7 @@ class PairingRepository {
           // Juda ko'p urinish (server rate-limit). Avval bu `default`ga
           // tushib "tarmoq xatosi" bo'lib ko'rinardi — foydalanuvchi (va Play
           // tekshiruvchisi) sababni bilmasdan "kod ishlamayapti" deb o'ylardi.
-          return PairingFailureNetwork('pairing.tooManyAttempts'.tr());
+          return const PairingFailureRateLimited();
         default:
           return PairingFailureNetwork(e.message ?? 'Unknown');
       }

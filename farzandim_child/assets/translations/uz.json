@@ -17,12 +17,16 @@
     "close": "Yopish",
     "fallbackChildName": "Bola",
     "weekdaysShort": "Du,Se,Ch,Pa,Ju,Sh,Ya",
+    "monthsShort": "yan,fev,mar,apr,may,iyn,iyl,avg,sen,okt,noy,dek",
+    "monthsFull": "yanvar,fevral,mart,aprel,may,iyun,iyul,avgust,sentabr,oktabr,noyabr,dekabr",
+    "dayMonth": "{day}-{month}",
     "details": "Batafsil",
     "enable": "Yoqish",
     "later": "Keyinroq",
     "open": "Ochish",
     "errorWithMessage": "Xato: {error}",
     "networkError": "Tarmoq xatosi. Qaytadan urinib ko'ring.",
+    "somethingWentWrong": "Nimadir xato ketdi. Qaytadan urinib ko'ring.",
     "grantPermission": "Ruxsat berish",
     "openSettings": "Sozlamalarni ochish",
     "connect": "Ulanish",
@@ -57,7 +61,7 @@
   "language": {
     "selectTitle": "Tilni tanlang",
     "selectSubtitle": "Ilova qaysi tilda bo'lishini xohlaysiz?",
-    "version": "Versiya - 1.0"
+    "version": "Versiya {version}"
   },
   "onboarding": {
     "skip": "O'tkazib yuborish",
@@ -116,11 +120,11 @@
     "hint": "Bolaning telefonini ota-onaning telefoniga ulang",
     "helpLink": "Kodni qayerdan olaman?",
     "helpTitle": "Kodni qaerdan olaman?",
-    "helpContent": "Ota-onangizdan Parvoz ilovasini ochib, sizning ismingiz qatoridagi kodni so'rang. Kod 5 raqamdan iborat va 24 soat amal qiladi.",
+    "helpContent": "Ota-onangizdan Parvoz ilovasini ochib, sizning ismingiz qatoridagi kodni so'rang. Kod 5 raqamdan iborat.",
     "helpClose": "Tushundim",
     "errorFallback": "Kod noto'g'ri",
     "enterCodeTitle": "Ota-onangiz ilovasidagi kodni kiriting",
-    "enterCodeSubtitle": "Kod 5 xonadan iborat va 24 soat amal qiladi",
+    "enterCodeSubtitle": "Kod 5 xonadan iborat",
     "enterButton": "Kirish",
     "howItWorks": "Bu qanday ishlaydi?",
     "qr": {
@@ -145,7 +149,7 @@
       "permissionBody": "QR kodni skanerlash uchun kameraga ruxsat bering. Agar oldin rad etgan bo'lsangiz, Sozlamalardan qo'lda yoqing.",
       "pasteHelp": "Kamera ishlamasa, Parent ilovasidagi QR matnini shu yerga joylab ulanishingiz mumkin.",
       "pasteButton": "Joylash",
-      "tokenHint": "farzandim:repair:... yoki to'g'ridan-to'g'ri token",
+      "tokenHint": "Ota-ona ilovasidagi kodni joylashtiring",
       "successTitle": "Muvaffaqiyatli ulandingiz!",
       "successSubtitle": "Telefoningiz ota-onangiz hisobiga bog'landi."
     },
@@ -160,7 +164,8 @@
     },
     "errorCodeUsed": "Bu kod allaqachon ishlatilgan.",
     "errorAskNewCode": "Ota-onangizdan yangi kod so'rang (Parent App → Bola → Yangi kod yaratish).",
-    "tooManyAttempts": "Juda ko'p urinish bo'ldi. Iltimos, 10 daqiqadan keyin qayta urinib ko'ring."
+    "tooManyAttempts": "Juda ko'p urinish bo'ldi. Iltimos, 10 daqiqadan keyin qayta urinib ko'ring.",
+    "sessionEnded": "Bu telefon ota-onangiz akkauntidan uzildi. Qayta ulanish uchun ota-onangiz ilovasidagi yangi kodni kiriting."
   },
   "permissions": {
     "title": "Ruxsatlar",
@@ -257,27 +262,18 @@
     "statusWifi": "Wi-Fi",
     "statusUnknown": "—",
     "diagnosticsTitle": "Diagnostika",
-    "diagnosticsComingSoon": "Tez orada ishga tushadi",
-    "diagnosticsHint": "Ekran vaqti tahlili kelmoqda",
     "appUsageTitle": "Ilovadan foydalanish",
-    "appUsageComingSoon": "Tez orada",
     "appUsageHint": "Bola qurilmaga Child Agent o'rnatilgach",
     "motivationalLabel": "Bugungi maslahat",
     "scheduleButton": "Mening jadvalim",
     "voiceTestButton": "Ovozli xabar (test)",
     "videoTestButton": "Video xabar yozish (test)",
     "newTests": "Yangi testlar",
-    "newTestsSoon": "Tez orada yangi testlar",
+    "newTestsSoon": "Hozircha faol testlar yo'q",
     "newAudiobooks": "Yangi audiokitoblar",
+    "noAudiobooksYet": "Hozircha audiokitoblar yo'q",
     "trendVideos": "Trend videolar",
     "level": "Daraja",
-    "tiles": {
-      "monthlyFlight": "Oy sari\nparvoz",
-      "goldenTales": "Oltin\nertaklar",
-      "jumpChallenge": "Jamp challenge",
-      "cartoonWorld": "Multfilm olami",
-      "funExperiments": "Qiziq tajribalar"
-    },
     "motivational": {
       "m1": "Telefondan ko'p foydalanmang, sport bilan shug'ullaning! ⚽",
       "m2": "Kitob o'qish - eng yaxshi do'st 📚",
@@ -321,7 +317,12 @@
     "videoMode": "Video rejimi",
     "mediaSendError": "Faylni yuborishda xato",
     "cameraNotFound": "Kamera topilmadi",
-    "recordFailed": "Yozib bo'lmadi: {error}",
+    "recordFailed": "Videoni yozib bo'lmadi. Qaytadan urinib ko'ring.",
+    "cameraOpenFailed": "Kamerani ochib bo'lmadi. Qaytadan urinib ko'ring.",
+    "cameraPermissionSnack": "Video xabar yozish uchun kameraga ruxsat kerak. Uni Sozlamalarda yoqing.",
+    "micPermissionSnack": "Ovoz bilan yozish uchun mikrofonga ruxsat kerak. Uni Sozlamalarda yoqing.",
+    "voiceSendFailed": "Ovozli xabar yuborilmadi. Internetni tekshirib, qayta urinib ko'ring.",
+    "loadMessagesFailed": "Xabarlarni yuklab bo'lmadi. Internetni tekshirib, qayta urinib ko'ring.",
     "lock": "Bloklash",
     "tapToFinish": "Tugatish uchun bosing",
     "pressToRecord": "Bosib turib yozing",
@@ -329,10 +330,10 @@
     "recording": "Yozilmoqda...",
     "voiceSent": "Ovozli xabar yuborildi",
     "parentNotFound": "Ota-ona aniqlanmadi",
-    "messageSendFailed": "Xabar yuborilmadi: {error}",
+    "messageSendFailed": "Xabar yuborilmadi. Internetni tekshirib, qayta urinib ko'ring.",
     "fileSendError": "Faylni yuborishda xato",
     "videoPreparing": "Video tayyorlanmoqda…",
-    "videoSendFailed": "Video yuborilmadi: {error}",
+    "videoSendFailed": "Video yuborilmadi. Internetni tekshirib, qayta urinib ko'ring.",
     "videoSent": "Video yuborildi",
     "startConversationEmpty": "Suhbatni boshlang"
   },
@@ -371,7 +372,7 @@
       "headerTitle": "Videolar",
       "categoryAll": "Barchasi",
       "noVideosTitle": "Videolar hozircha yo'q",
-      "noVideosSubtitle": "Tez orada yangi videolar qo'shiladi",
+      "noVideosSubtitle": "Qayta tekshirish uchun «Yangilash»ni bosing",
       "refresh": "Yangilash"
     },
     "filter": {
@@ -404,7 +405,9 @@
     "liked": {
       "title": "Yoqtirilgan videolar",
       "emptyTitle": "Hali yoqtirilgan video yo'q",
-      "emptySubtitle": "Videoni bosib turib yoki ♥ bosib qo'shing"
+      "emptySubtitle": "Videoni bosib turib yoki ♥ bosib qo'shing",
+      "added": "Yoqtirilganlarga qo'shildi",
+      "removed": "Yoqtirilganlardan olib tashlandi"
     },
     "engagement": {
       "loadFailed": "Ma'lumot yuklanmadi",
@@ -452,7 +455,7 @@
       "profilePhoto": "Profil rasmi",
       "uploadPhoto": "Rasm yuklash",
       "nameLabel": "Ism familiya",
-      "birthLabel": "Farzandingizning tug'ilgan kuni",
+      "birthLabel": "Tug'ilgan sana",
       "birthHint": "KK.OO.YYYY"
     },
     "ageDialog": {
@@ -596,11 +599,17 @@
     "unpair": "Ulanishni uzish",
     "unpairConfirmTitle": "Ulanishni uzasizmi?",
     "unpairConfirmBody": "Ota-onangiz bilan ulanish uziladi. Qaytadan ulanish uchun yangi oila kodi kerak bo'ladi.",
+    "deleteAccount": "Ulanishni uzish va ma'lumotlarni o'chirish",
+    "deleteAccountSub": "Bu telefon akkaunti va ma'lumotlari Parvoz'dan o'chiriladi",
+    "deleteAccountConfirmTitle": "Ma'lumotlaringiz o'chirilsinmi?",
+    "deleteAccountConfirmBody": "Parvoz'dagi akkauntingiz va unga bog'liq ma'lumotlar o'chiriladi, telefon ota-onangizdan uziladi. Bu telefondagi ilova cheklovlari olib tashlanadi. Buni ortga qaytarib bo'lmaydi. Keyinroq ota-onangiz ilovasidagi kod bilan qayta ulanishingiz mumkin.",
+    "deleteAccountConfirmButton": "O'chirish va uzish",
+    "deleteAccountError": "Ma'lumotlarni o'chirib bo'lmadi. Internet aloqasini tekshirib, qayta urinib ko'ring.",
     "systemTitle": "Tizim sozlamalari",
     "rowAccount": "Akkount",
-    "rowAccountSub": "Login, parol, telefon",
+    "rowAccountSub": "Ism, rasm, tug'ilgan sana",
     "rowSessions": "Faol sessiyalar",
-    "rowSessionsSub": "Kirilgan qurilmalar",
+    "rowSessionsSub": "Shu qurilma",
     "rowNotif": "Bildirishnomalar",
     "rowNotifSub": "Qaysi xabarlar kelishi",
     "rowLanguage": "Ilova tili",
@@ -608,10 +617,13 @@
     "rowSupportSub": "Qayta aloqa",
     "rowAbout": "Biz haqimizda",
     "rowAboutSub": "Kompaniya haqida",
+    "rowPrivacy": "Maxfiylik siyosati",
+    "rowPrivacySub": "Ma'lumotlaringiz qanday ishlatiladi",
     "notifImportant": "Eng muhimlar",
     "notifAll": "Barchasi",
     "currentDevice": "Hozirgi qurilma",
     "webBrowser": "Web brauzer",
+    "thisDevice": "Shu qurilma",
     "aboutBody": "Parvoz — bolalar uchun xavfsiz ta'lim va oilaviy aloqa ilovasi.",
     "version": "Versiya",
     "copied": "Nusxalandi",
@@ -671,8 +683,8 @@
     "title": "Qadamlar",
     "week": "Bu hafta",
     "todayPct": "Bugun kunlik maqsadning {pct}%",
-    "donInfo": "Har 1000 qadam = 5 don",
-    "donToday": "Bugun ishlab topilgan: {n} don"
+    "donInfo": "Har 1000 qadam = 5 DON",
+    "donToday": "Bugun ishlab topilgan: {n} DON"
   },
   "statistics": {
     "title": "Statistika",
@@ -702,6 +714,7 @@
     "byRegion": "Viloyat bo'yicha",
     "allUzbekistan": "Butun O'zbekiston",
     "you": "Siz",
+    "anonymousChild": "Ishtirokchi",
     "selectRegion": "Hududni tanlang",
     "selectAgeGroup": "Yosh guruhini tanlang",
     "pointsToNext": "Yana {points} ball — #{rank} ga ko'tarilasiz!",
@@ -715,8 +728,9 @@
   "contests": {
     "loadError": "Testlarni yuklab bo'lmadi",
     "checkInternet": "Internetni tekshirib, qayta torting",
+    "questionsLoadError": "Savollarni yuklab bo'lmadi. Internet aloqasini tekshirib, qayta urinib ko'ring.",
     "emptyTitle": "Hozircha test yo'q",
-    "emptySubtitle": "Tez orada yangi testlar qo'shiladi",
+    "emptySubtitle": "Yangi testlarni tekshirish uchun pastga torting",
     "finishedSnack": "Bu test yakunlangan — natijalar Reytingda",
     "favAdded": "Sevimlilarga qo'shildi",
     "favRemoved": "Sevimlilardan olib tashlandi",
@@ -788,17 +802,21 @@
     "locationText": "Ilova bolaning joriy joylashuvini va harakat tarixini — hatto ilova yopiq yoki fonda ishlayotganda ham — ota-onaga ko'rsatadi.",
     "usageTitle": "Ilovadan foydalanish",
     "usageText": "Qaysi ilovalarda qancha vaqt sarflanganini kuzatadi va ota-onaga hisobot beradi.",
+    "screenTimeTitle": "Ekran vaqti",
+    "screenTimeText": "Ota-ona roziligi bilan Apple Ekran vaqti shu iPhone'da ota-ona tanlagan ilovalarni cheklashi mumkin. Bola qaysi ilovadan qancha foydalangani faqat shu iPhone'da qoladi va Parvoz'ga hech qachon yuborilmaydi.",
     "notificationsTitle": "Bildirishnomalar",
     "notificationsText": "Ota-ona yuborgan xabarlar, eslatma va SOS push-xabarlarini qabul qiladi.",
     "securityTitle": "Xavfsizlik",
     "securityText": "Bolaning qurilma ma'lumotlari (batareya, model) ota-onaga yuboriladi.",
     "privacyTitle": "Maxfiylik",
-    "privacyText": "Ma'lumotlar shifrlangan holda saqlanadi va uchinchi shaxslarga berilmaydi.",
+    "privacyText": "Bu ma'lumotlarni ulangan ota-ona ko'radi. Ilova ishlashi uchun ular Google Firebase kabi xizmat ko'rsatuvchilar tomonidan qayta ishlanadi va hech qachon sotilmaydi yoki reklama uchun ishlatilmaydi.",
     "holdHint": "Bu tugmani faqat ota-onangiz bossin.",
     "confirming": "Tasdiqlanmoqda...",
     "confirmButton": "Ota-onam tasdiqlaydi",
     "privacyPolicy": "Maxfiylik siyosati",
-    "decline": "Rad etaman"
+    "decline": "Rad etaman",
+    "declinedTitle": "Rozilik kerak",
+    "declinedBody": "Ota-ona tasdiqlamaguncha hech qanday ma'lumot yig'ilmaydi. Parvoz Growth'dan faqat ota-onangiz roziligi bilan foydalanish mumkin — ota-onangizdan so'rang yoki ilovani yoping."
   },
   "unlockRequest": {
     "title": "Qo'shimcha vaqt so'rash",
@@ -840,7 +858,6 @@
   },
   "audiobooks": {
     "partLabel": "{number}-qism",
-    "shareComingSoon": "Ulashish tez orada qo'shiladi",
     "player": {
       "speed": "Tezlik",
       "sleepTimer": "Uyqu taymeri",
@@ -882,7 +899,7 @@
       "totalPages": "Jami: {total} sahifa",
       "go": "O'tish",
       "searchTitle": "Qidirish",
-      "searchUnsupported": "Matn qidirish hozircha qo'llab-quvvatlanmaydi. Keyingi versiyada qo'shiladi.",
+      "searchUnsupported": "Bu hujjatda matn qidirish mavjud emas.",
       "openFailed": "PDF ochilmadi",
       "loading": "Kitob yuklanmoqda...",
       "firstPage": "Birinchi sahifa",
@@ -893,7 +910,7 @@
   "articles": {
     "title": "Maqolalar",
     "loadFailed": "Maqolalarni yuklab bo'lmadi.",
-    "empty": "Hozircha maqola yo'q. Tez orada qo'shiladi!"
+    "empty": "Hozircha maqola yo'q."
   },
   "content": {
     "tabAudiobooks": "Audio kitoblar",
@@ -934,7 +951,9 @@
     "sosButton": "SOS xabar",
     "startConversation": "Suhbatni boshlang",
     "voiceMessagePreview": "Ovozli xabar",
-    "sosFailed": "SOS yuborilmadi",
+    "sosFailed": "SOS yuborilmadi. Internetni tekshirib, qayta urinib ko'ring.",
+    "sosEmergencyHint": "Agar xavf ostida bo'lsangiz, darhol 112 ga qo'ng'iroq qiling yoki yaqindagi kattalardan yordam so'rang.",
+    "notPairedHint": "Suhbatlashish uchun ilovani ota-onangizning Parvoz ilovasi bilan bog'lang.",
     "sosConfirmTitle": "DIQQAT! Siz SOS xabar yubormoqchisiz!",
     "sosSentBody": "SOS xabar yuborildi — ota-onangizga darhol bildirishnoma boradi.",
     "sosConfirmBody": "Siz haqiqatan SOS xabar yubormoqchimisiz?",
@@ -944,7 +963,15 @@
   },
   "chatSettings": {
     "galleryMobileOnly": "Galereyadan rasm tanlash faqat mobil ilovada",
-    "imageLoadError": "Rasmni yuklashda xato"
+    "imageLoadError": "Rasmni yuklashda xato",
+    "title": "Chat sozlamalari",
+    "theme": "Mavzu",
+    "light": "Yorug'",
+    "dark": "Qorong'i",
+    "wallpaper": "Fon rasmi",
+    "wallpaperHint": "Chat uchun fon tanlang",
+    "default": "Standart",
+    "gallery": "Galereya"
   },
   "development": {
     "title": "Rivojlanish ko'rsatkichi",
@@ -982,7 +1009,20 @@
     "emptyHint": "Qadam bosib, audiokitob eshitib yoki testda qatnashib DON yig'ing — bu yerda ko'rinadi.",
     "timesCount": "{count} marta",
     "today": "Bugun {time}",
-    "yesterday": "Kecha {time}"
+    "yesterday": "Kecha {time}",
+    "source": {
+      "steps": "Qadamlar",
+      "audiobooks": "Audiokitoblar",
+      "contestJoin": "Testda qatnashish",
+      "contestWin": "Test g'olibi",
+      "creativeJoin": "Ijodiy tanlov",
+      "creativeWin": "Ijodiy tanlov g'olibi",
+      "courseLesson": "Darslar",
+      "streakWeekly": "Haftalik faollik",
+      "contentPost": "Kontent",
+      "videos": "Videolar",
+      "other": "Boshqa"
+    }
   },
   "photo": {
     "uploadFailed": "Foto yuklanmadi"
@@ -1016,12 +1056,12 @@
     "settingsSub": "Ilovalarni cheklash (ota-ona uchun)",
     "intro": "Ota-onangiz Parvoz ilovasida belgilagan vaqtlarda tanlangan ilovalar cheklanadi.",
     "stepAuthTitle": "1. Himoyani yoqish",
-    "stepAuthBody": "Telefonni ota-ona qo'liga oladi va Face ID yoki telefon paroli bilan bir marta tasdiqlaydi. Apple ID yoki Oila guruhi kerak emas.",
+    "stepAuthBody": "Ota-ona shu iPhone'ni qo'liga oladi va Face ID yoki telefon paroli bilan tasdiqlaydi. Bu standart rejimda himoyani Sozlamalar › Ekran vaqti'dan o'chirish mumkin — shunda ota-onangizga xabar boradi.",
     "authApproved": "Tasdiqlangan",
     "authButton": "Himoyani yoqish",
     "authDenied": "Tasdiqlanmagan — qayta urinib ko'ring",
-    "strictLink": "Oilangizda Apple Family Sharing bormi? Kuchli himoya",
-    "strictHint": "Ota-ona Apple ID bilan tasdiqlaydi — bola himoyani ham, ilovani ham o'chira olmaydi.",
+    "strictLink": "Oilangizda Apple Family Sharing bo'lsa — tavsiya etiladi: kuchli himoya",
+    "strictHint": "Kuchliroq himoya: ota-ona o'z Apple Account'i bilan tasdiqlaydi — bola himoyani ham, ilovani ham o'chira olmaydi. Bu iPhone Apple Oila guruhida bola akkaunti bilan bo'lishi kerak.",
     "stepAppsTitle": "2. Cheklanadigan ilovalar",
     "stepAppsBody": "Ota-onangiz shu telefonda tanlaydi. Ro'yxat faqat shu telefonda saqlanadi va hech qayerga yuborilmaydi.",
     "appsNone": "Hali tanlanmagan",
@@ -1049,10 +1089,11 @@
     "retry": "Qayta urinish",
     "err": {
       "invalidAccountType": "Kuchli himoya uchun bu telefon Apple Oila guruhida bola akkaunti bilan bo'lishi kerak. Oddiy himoya uchun yuqoridagi \"Himoyani yoqish\" tugmasini bosing.",
+      "invalidAccountTypeStandard": "Shu iPhone Sozlamalarida Apple Account'ga kiring va qayta urinib ko'ring.",
       "authorizationCanceled": "Tasdiqlash bekor qilindi.",
       "restricted": "Bu qurilmada Ekran vaqti cheklangan.",
       "networkError": "Internet aloqasini tekshirib, qayta urining.",
-      "authenticationMethodUnavailable": "Qurilmada parol (passcode) o'rnatilmagan.",
+      "authenticationMethodUnavailable": "Bu iPhone'da parol (passcode) o'rnatilmagan. Sozlamalarda parol o'rnating va qayta urinib ko'ring.",
       "authorizationConflict": "Boshqa nazorat ilovasi allaqachon ruxsat olgan.",
       "generic": "Ekran vaqti hozir mavjud emas. Keyinroq urinib ko'ring."
     },

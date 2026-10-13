@@ -2,14 +2,15 @@
 // QuizState — konkurs savol-javob holati
 // ─────────────────────────────────────────────────────────────────────
 //
-// Sprint 5.7d: `questions: List<QuestionModel>` field qo'shildi. Real
-// backend'dan kelgan questions ishlatiladi; agar bo'sh bo'lsa
-// `MockQuestions.all` fallback (offline/401/eski sessiya).
+// Sprint 5.7d: `questions: List<QuestionModel>` field qo'shildi. Faqat REAL
+// backend savollari ishlatiladi. Yuklab bo'lmasa `QuizStatus.error` — UI
+// "Qayta urinish" tugmasini ko'rsatadi (avval jimgina 10 ta mahalliy namunaviy
+// savolga tushib, sertifikatsiz "soxta" test o'tkazilardi).
 
-import 'package:farzandim_child/features/contests/data/mock_questions.dart';
 import 'package:farzandim_child/features/contests/data/models/question_model.dart';
 
-enum QuizStatus { loading, intro, playing, paused, finished }
+/// `error` — savollarni yuklab bo'lmadi (tarmoq/server xatosi yoki bo'sh).
+enum QuizStatus { loading, intro, playing, paused, finished, error }
 
 enum AnswerState { none, correct, wrong, timeout }
 
@@ -60,7 +61,7 @@ class QuizState {
   /// correct=to'g'ri, wrong/timeout=noto'g'ri. `answers` bilan bir o'lchamda.
   final List<AnswerState> results;
 
-  /// Ochilgan to'g'ri javob indeksi (javob berilgach backend/mock beradi) —
+  /// Ochilgan to'g'ri javob indeksi (javob berilgach backend beradi) —
   /// noto'g'ri belgilanganda TO'G'RI variantni yashil ko'rsatish uchun.
   /// null = hali ochilmagan / noma'lum (tarmoq xatosi).
   final List<int?> correctIndices;
@@ -68,7 +69,7 @@ class QuizState {
   final List<QuestionModel> questions;
 
   /// Backend attempt ID (sertifikat endpoint'iga kerak — #56). Real attempt
-  /// boshlanganda o'rnatiladi; mock/offline rejimda null.
+  /// boshlanganda o'rnatiladi; boshlab bo'lmasa null.
   final String? attemptId;
 
   /// Bu test bo'yicha shaxsiy REKORD (eng ko'p to'g'ri javob) — lokal.
@@ -95,8 +96,8 @@ class QuizState {
     this.recordCorrect,
   });
 
-  List<QuestionModel> get effectiveQuestions =>
-      questions.isEmpty ? MockQuestions.all : questions;
+  /// Testdagi savollar (faqat backend'dan; zaxira namunaviy savollar yo'q).
+  List<QuestionModel> get effectiveQuestions => questions;
 
   QuestionModel get currentQuestion => effectiveQuestions[currentIndex];
 

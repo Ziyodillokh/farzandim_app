@@ -142,6 +142,15 @@ enum ParvozShield {
     UserDefaults(suiteName: appGroupId)?.set(now.timeIntervalSince1970, forKey: pendingRequestKey)
   }
 
+  /// Belgi bor va eskirmaganmi — O'CHIRMAYDI (bloklash ekrani matni uchun:
+  /// eslatmalar o'chiq bo'lsa ham bola so'rov saqlanganini va uni Parvoz
+  /// orqali yuborish kerakligini ko'rsin).
+  static func hasPendingUnlockRequest(now: Date = Date()) -> Bool {
+    let markedAt = UserDefaults(suiteName: appGroupId)?.double(forKey: pendingRequestKey) ?? 0
+    guard markedAt > 0 else { return false }
+    return now.timeIntervalSince1970 - markedAt < pendingRequestTTL
+  }
+
   /// Belgi bo'lsa va eskirmagan bo'lsa `true` qaytaradi va uni o'chiradi.
   static func consumeUnlockRequest(now: Date = Date()) -> Bool {
     guard let defaults = UserDefaults(suiteName: appGroupId) else { return false }
@@ -185,6 +194,18 @@ enum ParvozShield {
 
   static func setLanguage(_ code: String) {
     UserDefaults(suiteName: appGroupId)?.set(code, forKey: languageKey)
+  }
+
+  /// Ekran vaqti ruxsati bekor qilinganda — Apple token'larni yaroqsiz qiladi.
+  /// Saqlangan tanlov o'chiriladi va shield olinadi, shunda ilova va ota-ona
+  /// eskirgan "N ta ilova cheklangan" holatini ko'rsatmaydi. Siyosat va
+  /// doimiy himoya sozlamalari qoladi (qayta ruxsatda backend'dan yangilanadi).
+  static func clearRevokedSelection() {
+    let defaults = UserDefaults(suiteName: appGroupId)
+    for key in [tokensKey, unlockUntilKey, pendingRequestKey, dailyLimitReachedKey] {
+      defaults?.removeObject(forKey: key)
+    }
+    clearShield()
   }
 
   /// Uzish (unpair) paytida — token'lar, siyosat va barcha cheklovlar o'chadi.

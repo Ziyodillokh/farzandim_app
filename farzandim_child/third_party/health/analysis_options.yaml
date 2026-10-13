@@ -1,0 +1,5 @@
+# Vendor qilingan uchinchi tomon kodi (pub.dev health 13.1.4) — o'zgartirmaymiz,
+# shuning uchun ilovaning `flutter analyze` i uni tekshirmaydi.
+analyzer:
+  exclude:
+    - "**"

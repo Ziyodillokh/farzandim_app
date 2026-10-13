@@ -85,7 +85,7 @@ class ForceUpdateDialog extends StatelessWidget {
                 current: status.currentVersion,
                 latest: platformInfo?.latest ?? '—',
               ),
-              if (info != null && info.releaseNotes.isNotEmpty) ...[
+              if (status.releaseNotes.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Container(
                   width: double.infinity,
@@ -95,7 +95,7 @@ class ForceUpdateDialog extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    info.releaseNotes,
+                    status.releaseNotes,
                     style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 13,

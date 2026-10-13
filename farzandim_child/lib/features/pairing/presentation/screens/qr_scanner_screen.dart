@@ -23,7 +23,7 @@ import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -33,9 +33,9 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void _qrLog(String msg) {
-  // Browser console + IDE devlog'da ko'rinadi.
-  // ignore: avoid_print
-  print('[QR] $msg');
+  // Faqat debug build'da (IDE devlog). Release'da qurilma jurnaliga hech
+  // narsa yozilmaydi — QR ichida bir martalik qayta ulanish tokeni bor.
+  if (!kDebugMode) return;
   developer.log(msg, name: 'QR');
 }
 
@@ -209,8 +209,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   /// QR matni ham, to'g'ridan-to'g'ri token ham qabul qilinadi.
   Future<void> _processRawToken(String raw) async {
     _qrLog(
-      'processRawToken: raw="${raw.length > 50 ? '${raw.substring(0, 50)}...' : raw}" '
-      '(len=${raw.length}), processing=$_processing',
+      'processRawToken: len=${raw.length}, processing=$_processing',
     );
     if (_processing) {
       _qrLog('processRawToken: SKIP — already processing');
@@ -304,8 +303,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     } on DioException catch (e) {
       _qrLog(
         'processRawToken: DioException — '
-        'status=${e.response?.statusCode}, body=${e.response?.data}, '
-        'message=${e.message}',
+        'status=${e.response?.statusCode}, message=${e.message}',
       );
       final msg = _friendlyError(e);
       if (!mounted) return;
@@ -318,12 +316,15 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       if (!mounted) return;
       setState(() {
         _processing = false;
-        _status = 'common.errorWithMessage'.tr(namedArgs: {'error': '$e'});
+        // Xom exception matni o'rniga tushunarli xabar (tafsilot logda).
+        _status = 'common.somethingWentWrong'.tr();
       });
     }
   }
 
   String _friendlyError(DioException e) {
+    // 429 — server urinishlarni vaqtincha cheklagan; "tarmoq xatosi" emas.
+    if (e.response?.statusCode == 429) return 'pairing.tooManyAttempts'.tr();
     final data = e.response?.data;
     if (data is Map<String, dynamic>) {
       final msg = data['message'];

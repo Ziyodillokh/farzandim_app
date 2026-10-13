@@ -17,12 +17,16 @@
     "close": "Close",
     "fallbackChildName": "Child",
     "weekdaysShort": "Mo,Tu,We,Th,Fr,Sa,Su",
+    "monthsShort": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec",
+    "monthsFull": "January,February,March,April,May,June,July,August,September,October,November,December",
+    "dayMonth": "{month} {day}",
     "details": "Details",
     "enable": "Turn on",
     "later": "Later",
     "open": "Open",
     "errorWithMessage": "Error: {error}",
     "networkError": "Network error. Please try again.",
+    "somethingWentWrong": "Something went wrong. Please try again.",
     "grantPermission": "Grant permission",
     "openSettings": "Open settings",
     "connect": "Connect",
@@ -57,7 +61,7 @@
   "language": {
     "selectTitle": "Choose your language",
     "selectSubtitle": "Which language do you want to use the app in?",
-    "version": "Version - 1.0"
+    "version": "Version {version}"
   },
   "onboarding": {
     "skip": "Skip",
@@ -116,11 +120,11 @@
     "hint": "Connect your phone to your parent's phone",
     "helpLink": "Where do I get the code?",
     "helpTitle": "Where do I get the code?",
-    "helpContent": "Ask your parents to open the Parvoz app and find the code next to your name. The code is 5 digits and is valid for 24 hours.",
+    "helpContent": "Ask your parents to open the Parvoz app and find the code next to your name. The code is 5 digits.",
     "helpClose": "Got it",
     "errorFallback": "Invalid code",
     "enterCodeTitle": "Enter the code from your parent's app",
-    "enterCodeSubtitle": "The code is 5 digits and valid for 24 hours",
+    "enterCodeSubtitle": "The code is 5 digits",
     "enterButton": "Enter",
     "howItWorks": "How does this work?",
     "qr": {
@@ -145,7 +149,7 @@
       "permissionBody": "Grant camera access to scan the QR code. If you denied it before, enable it manually in Settings.",
       "pasteHelp": "If the camera doesn't work, you can paste the QR text from the Parent app here to connect.",
       "pasteButton": "Paste",
-      "tokenHint": "farzandim:repair:... or the token itself",
+      "tokenHint": "Paste the code from your parent's app",
       "successTitle": "Successfully connected!",
       "successSubtitle": "Your phone is linked to your parent's account."
     },
@@ -160,7 +164,8 @@
     },
     "errorCodeUsed": "This code has already been used.",
     "errorAskNewCode": "Ask your parent for a new code (Parent App → Child → Create new code).",
-    "tooManyAttempts": "Too many attempts. Please try again in 10 minutes."
+    "tooManyAttempts": "Too many attempts. Please try again in 10 minutes.",
+    "sessionEnded": "This phone was disconnected from your parent's account. Enter a new code from your parent's app to connect again."
   },
   "permissions": {
     "title": "Permissions",
@@ -257,27 +262,18 @@
     "statusWifi": "Wi-Fi",
     "statusUnknown": "—",
     "diagnosticsTitle": "Diagnostics",
-    "diagnosticsComingSoon": "Available soon",
-    "diagnosticsHint": "Screen time analysis is coming",
     "appUsageTitle": "App usage",
-    "appUsageComingSoon": "Coming soon",
     "appUsageHint": "Once Child Agent is installed on the device",
     "motivationalLabel": "Tip of the day",
     "scheduleButton": "My schedule",
     "voiceTestButton": "Voice message (test)",
     "videoTestButton": "Record video (test)",
     "newTests": "New tests",
-    "newTestsSoon": "New tests coming soon",
+    "newTestsSoon": "No active tests right now",
     "newAudiobooks": "New audiobooks",
+    "noAudiobooksYet": "No audiobooks yet",
     "trendVideos": "Trending videos",
     "level": "Level",
-    "tiles": {
-      "monthlyFlight": "Flight to\nthe Moon",
-      "goldenTales": "Golden\ntales",
-      "jumpChallenge": "Jump challenge",
-      "cartoonWorld": "Cartoon world",
-      "funExperiments": "Fun\nexperiments"
-    },
     "motivational": {
       "m1": "Use your phone less, do some sport! ⚽",
       "m2": "Reading books is the best friend 📚",
@@ -321,7 +317,12 @@
     "videoMode": "Video mode",
     "mediaSendError": "Failed to send file",
     "cameraNotFound": "Camera not found",
-    "recordFailed": "Couldn't record: {error}",
+    "recordFailed": "Couldn't record the video. Try again.",
+    "cameraOpenFailed": "Couldn't open the camera. Try again.",
+    "cameraPermissionSnack": "Camera access is needed to record a video message. Allow it in Settings.",
+    "micPermissionSnack": "Microphone access is needed to record with sound. Allow it in Settings.",
+    "voiceSendFailed": "Voice message not sent. Check your internet and try again.",
+    "loadMessagesFailed": "Couldn't load messages. Check your internet and try again.",
     "lock": "Lock",
     "tapToFinish": "Tap to finish",
     "pressToRecord": "Press and hold to record",
@@ -329,10 +330,10 @@
     "recording": "Recording...",
     "voiceSent": "Voice message sent",
     "parentNotFound": "Parent not found",
-    "messageSendFailed": "Message not sent: {error}",
+    "messageSendFailed": "Message not sent. Check your internet and try again.",
     "fileSendError": "Error sending file",
     "videoPreparing": "Preparing video…",
-    "videoSendFailed": "Video not sent: {error}",
+    "videoSendFailed": "Video not sent. Check your internet and try again.",
     "videoSent": "Video sent",
     "startConversationEmpty": "Start a conversation"
   },
@@ -371,7 +372,7 @@
       "headerTitle": "Videos",
       "categoryAll": "All",
       "noVideosTitle": "No videos yet",
-      "noVideosSubtitle": "New videos will be added soon",
+      "noVideosSubtitle": "Tap Refresh to check again",
       "refresh": "Refresh"
     },
     "filter": {
@@ -404,7 +405,9 @@
     "liked": {
       "title": "Liked videos",
       "emptyTitle": "No liked videos yet",
-      "emptySubtitle": "Add by long-pressing a video or tapping ♥"
+      "emptySubtitle": "Add by long-pressing a video or tapping ♥",
+      "added": "Added to liked videos",
+      "removed": "Removed from liked videos"
     },
     "engagement": {
       "loadFailed": "Failed to load data",
@@ -452,7 +455,7 @@
       "profilePhoto": "Profile photo",
       "uploadPhoto": "Upload photo",
       "nameLabel": "Full name",
-      "birthLabel": "Your child's date of birth",
+      "birthLabel": "Date of birth",
       "birthHint": "DD.MM.YYYY"
     },
     "ageDialog": {
@@ -596,11 +599,17 @@
     "unpair": "Disconnect",
     "unpairConfirmTitle": "Disconnect?",
     "unpairConfirmBody": "The connection with your parent will be removed. A new family code will be needed to reconnect.",
+    "deleteAccount": "Disconnect and delete my data",
+    "deleteAccountSub": "Removes this phone's account and data from Parvoz",
+    "deleteAccountConfirmTitle": "Delete your data?",
+    "deleteAccountConfirmBody": "Your Parvoz account and the data linked to it will be deleted, and this phone will be disconnected from your parent. App restrictions on this phone will be removed. This can't be undone. You can connect again later with a code from your parent's app.",
+    "deleteAccountConfirmButton": "Delete and disconnect",
+    "deleteAccountError": "Couldn't delete your data. Check your internet connection and try again.",
     "systemTitle": "System settings",
     "rowAccount": "Account",
-    "rowAccountSub": "Login, password, phone",
+    "rowAccountSub": "Name, photo, date of birth",
     "rowSessions": "Active sessions",
-    "rowSessionsSub": "Signed-in devices",
+    "rowSessionsSub": "This device",
     "rowNotif": "Notifications",
     "rowNotifSub": "Which messages arrive",
     "rowLanguage": "App language",
@@ -608,10 +617,13 @@
     "rowSupportSub": "Feedback",
     "rowAbout": "About us",
     "rowAboutSub": "About the company",
+    "rowPrivacy": "Privacy policy",
+    "rowPrivacySub": "How we handle your data",
     "notifImportant": "Most important",
     "notifAll": "All",
     "currentDevice": "Current device",
     "webBrowser": "Web browser",
+    "thisDevice": "This device",
     "aboutBody": "Parvoz — a safe learning and family connection app for children.",
     "version": "Version",
     "copied": "Copied",
@@ -671,8 +683,8 @@
     "title": "Steps",
     "week": "This week",
     "todayPct": "{pct}% of today's goal",
-    "donInfo": "Every 1000 steps = 5 don",
-    "donToday": "Earned today: {n} don"
+    "donInfo": "Every 1000 steps = 5 DON",
+    "donToday": "Earned today: {n} DON"
   },
   "statistics": {
     "title": "Statistics",
@@ -702,6 +714,7 @@
     "byRegion": "By region",
     "allUzbekistan": "All Uzbekistan",
     "you": "You",
+    "anonymousChild": "Participant",
     "selectRegion": "Select region",
     "selectAgeGroup": "Select age group",
     "pointsToNext": "{points} more points — rise to #{rank}!",
@@ -715,8 +728,9 @@
   "contests": {
     "loadError": "Failed to load tests",
     "checkInternet": "Check your internet and pull to retry",
+    "questionsLoadError": "Couldn't load the questions. Check your internet connection and try again.",
     "emptyTitle": "No tests yet",
-    "emptySubtitle": "New tests will be added soon",
+    "emptySubtitle": "Pull down to check for new tests",
     "finishedSnack": "This test has ended — results are in the Ranking",
     "favAdded": "Added to favorites",
     "favRemoved": "Removed from favorites",
@@ -788,17 +802,21 @@
     "locationText": "The app shows the parent the child's current location and movement history — even when the app is closed or running in the background.",
     "usageTitle": "App usage",
     "usageText": "Tracks how much time is spent in each app and reports it to the parent.",
+    "screenTimeTitle": "Screen Time",
+    "screenTimeText": "With the parent's approval, Apple Screen Time can restrict the apps the parent chooses on this iPhone. Which apps the child uses and for how long stays on this iPhone and is never sent to Parvoz.",
     "notificationsTitle": "Notifications",
     "notificationsText": "Receives messages, reminders and SOS push notifications sent by the parent.",
     "securityTitle": "Safety",
     "securityText": "The child's device information (battery, model) is sent to the parent.",
     "privacyTitle": "Privacy",
-    "privacyText": "Data is stored encrypted and is not shared with third parties.",
+    "privacyText": "The linked parent sees this data. To run the app, it is processed by service providers such as Google Firebase, and it is never sold or used for advertising.",
     "holdHint": "Only your parent should tap this button.",
     "confirming": "Confirming...",
     "confirmButton": "My parent confirms",
     "privacyPolicy": "Privacy policy",
-    "decline": "Decline"
+    "decline": "Decline",
+    "declinedTitle": "Consent is required",
+    "declinedBody": "Nothing is collected until a parent confirms. Parvoz Growth can only be used with your parent's consent — ask your parent, or close the app."
   },
   "unlockRequest": {
     "title": "Request extra time",
@@ -840,7 +858,6 @@
   },
   "audiobooks": {
     "partLabel": "Part {number}",
-    "shareComingSoon": "Sharing will be added soon",
     "player": {
       "speed": "Speed",
       "sleepTimer": "Sleep timer",
@@ -882,7 +899,7 @@
       "totalPages": "Total: {total} pages",
       "go": "Go",
       "searchTitle": "Search",
-      "searchUnsupported": "Text search is not supported yet. It will be added in the next version.",
+      "searchUnsupported": "Text search isn't available for this document.",
       "openFailed": "Couldn't open PDF",
       "loading": "Loading book...",
       "firstPage": "First page",
@@ -893,7 +910,7 @@
   "articles": {
     "title": "Articles",
     "loadFailed": "Failed to load articles.",
-    "empty": "No articles yet. Coming soon!"
+    "empty": "No articles yet."
   },
   "content": {
     "tabAudiobooks": "Audiobooks",
@@ -934,7 +951,9 @@
     "sosButton": "SOS message",
     "startConversation": "Start a conversation",
     "voiceMessagePreview": "Voice message",
-    "sosFailed": "Failed to send SOS",
+    "sosFailed": "Couldn't send SOS. Check your internet and try again.",
+    "sosEmergencyHint": "If you are in danger, call 112 right away or ask a nearby adult for help.",
+    "notPairedHint": "Link this app with your parent's Parvoz app to start chatting.",
     "sosConfirmTitle": "ATTENTION! You are sending an SOS!",
     "sosSentBody": "SOS sent — your parents will be notified immediately.",
     "sosConfirmBody": "Do you really want to send an SOS?",
@@ -944,7 +963,15 @@
   },
   "chatSettings": {
     "galleryMobileOnly": "Choosing an image from the gallery is only available in the mobile app",
-    "imageLoadError": "Error loading image"
+    "imageLoadError": "Error loading image",
+    "title": "Chat settings",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "wallpaper": "Wallpaper",
+    "wallpaperHint": "Choose a background for the chat",
+    "default": "Default",
+    "gallery": "Gallery"
   },
   "development": {
     "title": "Development score",
@@ -982,7 +1009,20 @@
     "emptyHint": "Collect DON by walking, listening to audiobooks or taking quizzes — it will appear here.",
     "timesCount": "{count} times",
     "today": "Today {time}",
-    "yesterday": "Yesterday {time}"
+    "yesterday": "Yesterday {time}",
+    "source": {
+      "steps": "Steps",
+      "audiobooks": "Audiobooks",
+      "contestJoin": "Taking a test",
+      "contestWin": "Test winner",
+      "creativeJoin": "Creative contest",
+      "creativeWin": "Creative contest winner",
+      "courseLesson": "Lessons",
+      "streakWeekly": "Weekly activity",
+      "contentPost": "Content",
+      "videos": "Videos",
+      "other": "Other"
+    }
   },
   "photo": {
     "uploadFailed": "Couldn't upload the photo"
@@ -1016,12 +1056,12 @@
     "settingsSub": "App limits (for parents)",
     "intro": "During the times your parents set in the Parvoz app, the selected apps are restricted.",
     "stepAuthTitle": "1. Turn on protection",
-    "stepAuthBody": "A parent takes the iPhone and confirms once with Face ID or the phone passcode. No Apple ID or Family Sharing needed.",
+    "stepAuthBody": "A parent takes this iPhone and confirms with Face ID or the phone passcode. In this standard mode, protection can be turned off in Settings › Screen Time — your parent is notified if that happens.",
     "authApproved": "Approved",
     "authButton": "Turn on protection",
     "authDenied": "Not approved — try again",
-    "strictLink": "Using Apple Family Sharing? Strict protection",
-    "strictHint": "A parent approves with their Apple ID — the child can't turn off protection or delete the app.",
+    "strictLink": "Recommended if your family uses Apple Family Sharing: strict protection",
+    "strictHint": "Stronger protection: a parent approves with their Apple Account, and the child can't turn off protection or delete the app. This iPhone must be in your Apple family group with a child account.",
     "stepAppsTitle": "2. Restricted apps",
     "stepAppsBody": "Your parent chooses them on this iPhone. The list stays only on this iPhone and is never sent anywhere.",
     "appsNone": "Nothing selected yet",
@@ -1049,10 +1089,11 @@
     "retry": "Try again",
     "err": {
       "invalidAccountType": "For strict protection this iPhone must be in Apple Family Sharing with a child account. For standard protection, tap \"Turn on protection\" above.",
+      "invalidAccountTypeStandard": "Sign in to an Apple Account in Settings on this iPhone, then try again.",
       "authorizationCanceled": "Approval was cancelled.",
       "restricted": "Screen Time is restricted on this device.",
       "networkError": "Check your internet connection and try again.",
-      "authenticationMethodUnavailable": "No passcode is set on this device.",
+      "authenticationMethodUnavailable": "No passcode is set on this iPhone. Set a passcode in Settings, then try again.",
       "authorizationConflict": "Another parental control app already has access.",
       "generic": "Screen Time isn't available right now. Please try later."
     },

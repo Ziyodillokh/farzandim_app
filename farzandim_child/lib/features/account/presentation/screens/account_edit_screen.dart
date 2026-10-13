@@ -177,12 +177,10 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
       if (!mounted) return;
       _showSnack('common.saved'.tr(), _green);
       Navigator.pop(context);
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      _showSnack(
-        'common.errorWithMessage'.tr(namedArgs: {'error': e.toString()}),
-        _red,
-      );
+      // Xom exception matni o'rniga tushunarli xabar.
+      _showSnack('common.somethingWentWrong'.tr(), _red);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -246,11 +244,11 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                 loading: () => const Center(
                   child: CircularProgressIndicator(color: Colors.white38),
                 ),
-                error: (e, _) => Center(
+                error: (_, __) => Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      'common.errorWithMessage'.tr(namedArgs: {'error': '$e'}),
+                      'common.somethingWentWrong'.tr(),
                       textAlign: TextAlign.center,
                       style: _pop(13.5, c: _red),
                     ),

@@ -864,10 +864,9 @@ packages:
   health:
     dependency: "direct main"
     description:
-      name: health
-      sha256: "320633022fb2423178baa66508001c4ca5aee5806ffa2c913e66488081e9fd47"
-      url: "https://pub.dev"
-    source: hosted
+      path: "third_party/health"
+      relative: true
+    source: path
     version: "13.1.4"
   hooks:
     dependency: transitive

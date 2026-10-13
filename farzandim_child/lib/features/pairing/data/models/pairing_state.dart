@@ -36,6 +36,7 @@ class AppPairingState {
     this.errorMessage,
     this.pairRequestId,
     this.pairRequestExpiresAt,
+    this.isSessionEnded = false,
   });
 
   final PairingStatus status;
@@ -49,6 +50,10 @@ class AppPairingState {
   final String? pairRequestId;
   final DateTime? pairRequestExpiresAt;
 
+  /// Server sessiyani bekor qilgani sabab ulanish uzildi — pairing ekrani
+  /// bir marta "qayta ulaning" xabarini ko'rsatadi.
+  final bool isSessionEnded;
+
   bool get isPaired =>
       status == PairingStatus.paired && parentUid != null && childId != null;
 
@@ -61,6 +66,7 @@ class AppPairingState {
     String? errorMessage,
     String? pairRequestId,
     DateTime? pairRequestExpiresAt,
+    bool? isSessionEnded,
   }) {
     return AppPairingState(
       status: status ?? this.status,
@@ -72,6 +78,7 @@ class AppPairingState {
       pairRequestId: pairRequestId ?? this.pairRequestId,
       pairRequestExpiresAt:
           pairRequestExpiresAt ?? this.pairRequestExpiresAt,
+      isSessionEnded: isSessionEnded ?? this.isSessionEnded,
     );
   }
 }

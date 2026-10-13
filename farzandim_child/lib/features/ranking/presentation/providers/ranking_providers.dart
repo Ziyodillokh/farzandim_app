@@ -75,6 +75,22 @@ final allUsersProvider = Provider<List<RankingUser>>((ref) {
   );
 });
 
+/// Joriy bolaning REAL o'rni (backend `currentChild`) — bola top-N
+/// ro'yxatda bo'lmasa ham. Ma'lumot yo'q bo'lsa `null` (soxta qator yo'q).
+final currentChildRankingProvider =
+    Provider<({RankingUser user, int rank})?>((ref) {
+  final async = ref.watch(backendRankingProvider);
+  return async.maybeWhen(
+    data: (result) {
+      final user = result.currentChild;
+      final rank = result.currentChildRank;
+      if (user == null || rank == null || rank <= 0) return null;
+      return (user: user, rank: rank);
+    },
+    orElse: () => null,
+  );
+});
+
 final filteredUsersProvider = Provider<List<RankingUser>>((ref) {
   final users = ref.watch(allUsersProvider);
   final tab = ref.watch(rankingTabProvider);

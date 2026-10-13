@@ -25,6 +25,7 @@
 // taqiqlaydi — ruxsatlar ekrani faqat BIR MARTA (tanishtiruv) ko'rsatiladi,
 // keyin har doim /dashboard.
 
+import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
@@ -75,9 +76,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     // 2. Pairing holati — `paired` SharedPreferences'dagi parentUid/childId
     //    bilan aniqlanadi (Firebase emas — tez).
+    //    Refresh token yo'q bo'lsa (server sessiyani bekor qilgan) — ulanmagan
+    //    deb hisoblaymiz; PairingNotifier eski ma'lumotni o'zi tozalaydi.
     final parentUid = prefs.getString('parentUid');
     final childId = prefs.getString('childId');
-    final isPaired = parentUid != null && childId != null;
+    final isPaired = parentUid != null &&
+        childId != null &&
+        !await ref.read(tokenStorageProvider).isSessionDefinitelyMissing();
 
     // 3. Til — faqat YANGI foydalanuvchi (hali pair emas va til tanlanmagan).
     //    Mavjud (pair bo'lgan) foydalanuvchi til sahifasini qayta ko'rmaydi.

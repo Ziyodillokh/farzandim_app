@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// SharedPreferences kaliti — til bir marta tanlangach qayta so'ralmaydi.
@@ -38,6 +39,24 @@ class LanguageSelectScreen extends StatefulWidget {
 
 class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
   bool _navigating = false;
+
+  /// Ilovaning REAL versiyasi (PackageInfo) — avval qattiq "1.0" yozilgan edi.
+  String? _version;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) setState(() => _version = info.version);
+    } catch (_) {
+      // Versiya aniqlanmadi — qator ko'rsatilmaydi.
+    }
+  }
 
   Future<void> _select(Locale locale) async {
     if (_navigating) return;
@@ -122,7 +141,11 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 20),
                     child: Text(
-                      'language.version'.tr(),
+                      _version == null
+                          ? ''
+                          : 'language.version'.tr(
+                              namedArgs: {'version': _version!},
+                            ),
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.2),

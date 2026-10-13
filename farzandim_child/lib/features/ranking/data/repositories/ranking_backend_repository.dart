@@ -19,9 +19,14 @@
 // `region: 'me'` — bolaning o'z viloyati (klient o'z viloyatini mustaqil
 // bilmaydi, u faqat javobdan keladi). Backend `me` ni server tomonda hal
 // qiladi.
+//
+// MAXFIYLIK: boshqa bolalarning ismi shu yerda "Ism F." ko'rinishiga
+// keltiriladi (`maskRankingName`) — backend niqoblashiga tayanilmaydi.
+// `currentChild` — bola top-N ichida bo'lmasa ham o'zining REAL o'rni.
 
 // ignore_for_file: public_member_api_docs
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +34,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/features/ranking/data/models/ranking_user.dart';
+import 'package:farzandim_child/features/ranking/data/ranking_name_privacy.dart';
 
 final rankingBackendRepositoryProvider = Provider<RankingBackendRepository>((
   ref,
@@ -37,9 +43,20 @@ final rankingBackendRepositoryProvider = Provider<RankingBackendRepository>((
 });
 
 class RankingResult {
-  const RankingResult({required this.users, this.currentUserId});
+  const RankingResult({
+    required this.users,
+    this.currentUserId,
+    this.currentChild,
+    this.currentChildRank,
+  });
   final List<RankingUser> users;
   final String? currentUserId;
+
+  /// Joriy bola (backend `currentChild`) — top-N ro'yxatda bo'lmasa ham.
+  final RankingUser? currentChild;
+
+  /// Joriy bolaning REAL o'rni (backend `currentChild.rank`).
+  final int? currentChildRank;
 }
 
 class RankingBackendRepository {
@@ -77,7 +94,17 @@ class RankingBackendRepository {
           .whereType<Map<String, dynamic>>()
           .map((raw) => _toRankingUser(raw, range, childId))
           .toList();
-      return RankingResult(users: users, currentUserId: childId);
+      // Joriy bola (top-N ichida bo'lmasa ham) — faqat o'z childId'si bo'lsa.
+      final meRaw = data['currentChild'];
+      final meMap = meRaw is Map<String, dynamic> ? meRaw : null;
+      final me = meMap == null ? null : _toRankingUser(meMap, range, childId);
+      final isMeValid = me != null && me.isCurrentUser;
+      return RankingResult(
+        users: users,
+        currentUserId: childId,
+        currentChild: isMeValid ? me : null,
+        currentChildRank: isMeValid ? (meMap?['rank'] as num?)?.toInt() : null,
+      );
     } on DioException catch (e) {
       debugPrint('RankingBackend.fetch: ${e.response?.statusCode} ${e.message}');
       rethrow;
@@ -91,12 +118,19 @@ class RankingBackendRepository {
   ) {
     final don = (raw['don'] as num?)?.toInt() ?? 0;
     final id = (raw['childId'] as String?) ?? '';
+    final isMe = id.isNotEmpty && id == childId;
+    final rawName = (raw['name'] as String?) ?? '';
+    // Boshqa bolalar — faqat "Ism F." (to'liq ism ko'rsatilmaydi). O'z ismi
+    // o'zgarishsiz (bo'sh bo'lsa umumiy zaxira nom).
+    final name = isMe
+        ? (rawName.trim().isEmpty ? 'common.fallbackChildName'.tr() : rawName)
+        : (maskRankingName(rawName) ?? 'ranking.anonymousChild'.tr());
     // Bir range uchun fetch qilinadi, lekin RankingUser barcha range scorlarini
     // saqlaydi — qolganlarini 0 qilamiz, UI tab'ga qarab tegishlisini
     // ko'rsatadi.
     return RankingUser(
       id: id,
-      name: (raw['name'] as String?) ?? '—',
+      name: name,
       age: (raw['age'] as num?)?.toInt() ?? 8,
       gender: raw['gender'] as String?,
       region: (raw['region'] as String?) ?? "O'zbekiston",
@@ -108,7 +142,7 @@ class RankingBackendRepository {
       badgeCount: 0,
       previousRank: (raw['rank'] as num?)?.toInt() ?? 0,
       avatarColor: _avatarColorFor(id),
-      isCurrentUser: id.isNotEmpty && id == childId,
+      isCurrentUser: isMe,
     );
   }
 

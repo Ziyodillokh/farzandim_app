@@ -11,9 +11,10 @@
 //     joylashuv bilan SOS, ota-onaga push).
 //
 // Real: pairing bo'lsa "Ota-ona" qatori voiceMessagesProvider'dan oxirgi
-// xabar/o'qilmaganlar bilan. Pairing yo'q bo'lsa PREVIEW (Figma qatorlar).
+// xabar/o'qilmaganlar bilan. Pairing yo'q bo'lsa — halol bo'sh holat xabari.
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/core/utils/localized_date.dart';
 import 'package:farzandim_child/features/account/presentation/providers/child_repository_provider.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/features/sos/presentation/providers/sos_provider.dart';
@@ -55,11 +56,6 @@ TextStyle _pop(
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: s, fontWeight: w, color: c, height: 1.35);
 
-const _months = [
-  'yan', 'fev', 'mar', 'apr', 'may', 'iyn',
-  'iyl', 'avg', 'sen', 'okt', 'noy', 'dek', //
-];
-
 String _timeLabel(DateTime? d) {
   if (d == null) return '';
   final now = DateTime.now();
@@ -67,7 +63,7 @@ String _timeLabel(DateTime? d) {
     return '${d.hour.toString().padLeft(2, '0')}:'
         '${d.minute.toString().padLeft(2, '0')}';
   }
-  return '${d.day} ${_months[d.month - 1]}';
+  return localizedDayMonth(d, short: true);
 }
 
 /// "Chatlar" sahifasi.
@@ -136,7 +132,7 @@ class ChatsListScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 children: pairing.isPaired
                     ? _realRows(context, items, parentName)
-                    : _previewRows(context),
+                    : [_NotPairedHint(text: 'chats.notPairedHint'.tr())],
               ),
             ),
             // ── SOS xabar (Figma) ──
@@ -218,31 +214,35 @@ class ChatsListScreen extends ConsumerWidget {
       ),
     ];
   }
+}
 
-  // ── PREVIEW: Figma'dagi qatorlar (pairing yo'q bo'lsa) ──
-  List<Widget> _previewRows(BuildContext context) {
-    return [
-      _ChatRow(
-        name: 'Nodira',
-        letter: 'N',
-        color: const Color(0xFFEF7DA0),
-        lastMessage: 'Uyga kirib obed qilib ket',
-        time: '11:41',
-        unread: 2,
-        online: true,
-        onTap: () => context.push('/voice-chat'),
+/// Pairing yo'q — halol xabar (avval soxta "Nodira/Akmal" chat qatorlari
+/// ko'rsatilardi).
+class _NotPairedHint extends StatelessWidget {
+  const _NotPairedHint({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 48, 8, 16),
+      child: Column(
+        children: [
+          Icon(
+            Icons.forum_outlined,
+            size: 48,
+            color: Colors.white.withValues(alpha: 0.3),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: _pop(14, c: Colors.white.withValues(alpha: 0.6)),
+          ),
+        ],
       ),
-      _ChatRow(
-        name: 'Akmal',
-        letter: 'A',
-        color: const Color(0xFF41DD7A),
-        lastMessage: 'Matemmatikaga kech qolma',
-        time: '12 sen',
-        unread: 0,
-        online: false,
-        onTap: () => context.push('/voice-chat'),
-      ),
-    ];
+    );
   }
 }
 
@@ -474,6 +474,14 @@ class _SosDialogContentState extends ConsumerState<_SosDialogContent> {
               _error!,
               textAlign: TextAlign.center,
               style: _pop(12.5, c: const Color(0xFFFF6B6B)),
+            ),
+            // SOS ketmadi — favqulodda xizmatlarga to'g'ridan-to'g'ri
+            // qo'ng'iroq qilish yo'riqnomasi (ilova 112 ga ulanmaydi).
+            const SizedBox(height: 6),
+            Text(
+              'chats.sosEmergencyHint'.tr(),
+              textAlign: TextAlign.center,
+              style: _pop(13, w: FontWeight.w600),
             ),
           ],
           const SizedBox(height: 22),

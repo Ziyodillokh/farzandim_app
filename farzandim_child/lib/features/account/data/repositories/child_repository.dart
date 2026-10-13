@@ -5,6 +5,7 @@
 // AccountEditScreen ushbu repodan foydalanadi:
 //   - updateMyProfile() — name/age/region yangilash (PUT /children/me)
 //   - uploadMyAvatar()  — foto MinIO'ga yuklash (POST /children/me/avatar)
+//   - deleteMyAccount() — hisob va ma'lumotlarni o'chirish (DELETE /users/me)
 //
 // Eski versiya Firebase Firestore + Storage ishlatardi — ammo loyiha
 // backend'i NestJS + MinIO. Firebase sozlanmagani uchun rasm yuklash
@@ -53,6 +54,14 @@ class ChildRepository {
     });
 
     await _dio.post<Map<String, dynamic>>('/children/me/avatar', data: form);
+  }
+
+  /// Bolaning hisobi va ma'lumotlarini serverdan o'chiradi
+  /// (DELETE /users/me, CHILD JWT). Ota-onadagi bola profili qayta ulanish
+  /// uchun saqlanadi — backend uni "ulanmagan" holatga qaytaradi.
+  /// Xato bo'lsa `DioException` tashlanadi (UI xabar ko'rsatadi).
+  Future<void> deleteMyAccount() async {
+    await _dio.delete<dynamic>('/users/me');
   }
 
   /// Bog'langan ota-onaning ismi — GET /children/:id/parent.

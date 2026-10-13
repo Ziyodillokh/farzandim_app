@@ -53,7 +53,7 @@ class StreakDetailScreen extends ConsumerWidget {
     bool earned(Achievement a) =>
         unlocked.contains(a.id) || (a.id == 'streak_10' && streak >= 10);
 
-    final medals = Achievements.all;
+    final medals = Achievements.visible;
     final earnedCount = medals.where(earned).length;
 
     return Scaffold(

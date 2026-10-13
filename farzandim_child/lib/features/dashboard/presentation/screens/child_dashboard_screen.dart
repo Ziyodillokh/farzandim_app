@@ -8,12 +8,13 @@
 //   • 3 stat chip GURUHLANGAN pill (assimetrik burchak) + rangli glow:
 //     🔥 streak (amber) | 👟 qadamlar (ko'k) | 🪙 DON (yashil)
 //   • "Yangi testlar" banner — solid #173654 + "Batafsil" + test rasmi
-//   • "Yangi kitoblar" karta (3 muqova + 250 DON)
+//   • "Yangi kitoblar" karta (3 muqova + "+N DON" mukofot belgisi)
 //   • "Trend videolar" gorizontal lenta (thumbnail #173654)
 //
 // Real ma'lumot: gamificationProfileProvider (don/streak), todayStepsProvider,
 // recommendedBooksProvider, topVideosProvider, activeContestsProvider,
-// unreadNotificationsCountProvider. Backend bo'sh bo'lsa PREVIEW kartalar.
+// unreadNotificationsCountProvider. Backend bo'sh bo'lsa — halol bo'sh holat
+// (soxta namunaviy kartalar yo'q).
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/notifications/presentation/screens/notifications_screen.dart';
@@ -467,12 +468,12 @@ class _StatChipsRow extends ConsumerWidget {
     // real-time (WS `profile:updated`) — `backendGamificationProvider`.
     final backend = ref.watch(backendGamificationProvider).valueOrNull;
     final profile = ref.watch(gamificationProfileProvider).valueOrNull;
-    // PREVIEW: real qiymat 0 bo'lsa Figma'dagi namuna (bola faollik boshlagach
-    // avtomatik realga almashadi).
+    // Streak — REAL qiymat (0 bo'lsa 0). Avval 0 o'rniga soxta "7 kun"
+    // ko'rsatilardi va Profil/Streak sahifasidagi real 0 bilan zid edi.
     final rawStreak = backend?.streak ?? profile?.streak ?? 0;
     final rawDon = backend?.don ?? profile?.don ?? 0;
     final rawSteps = ref.watch(todayStepsProvider).valueOrNull ?? 0;
-    final streak = rawStreak > 0 ? rawStreak : 7;
+    final streak = rawStreak;
     // DON — REAL qiymat (bola gamifikatsiyada yiqqan). Mock (1250) OLIB
     // TASHLANDI: bola app'da DON hamma joyda real ko'rinsin.
     final don = rawDon;
@@ -672,7 +673,7 @@ class _Banner extends ConsumerWidget {
   }
 }
 
-/// Faol test yo'q — "tez orada" fallback banner (bosilsa Testlar sahifasi).
+/// Faol test yo'q — neytral bo'sh holat banneri (bosilsa Testlar sahifasi).
 class _EmptyTestsBanner extends StatelessWidget {
   const _EmptyTestsBanner();
 
@@ -764,30 +765,11 @@ class _AudiobooksSection extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           if (books.isEmpty)
-            // PREVIEW: backend'da audiokitob yo'q — namunaviy muqovalar.
-            Row(
-              children: [
-                const Expanded(
-                  child: _MockBookCard(
-                    title: 'Buyuk\nsarguzasht',
-                    color: Color(0xFFD96C2C),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _MockBookCard(
-                    title: 'dashboard.tiles.monthlyFlight'.tr(),
-                    color: const Color(0xFF1F3A5F),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _MockBookCard(
-                    title: 'dashboard.tiles.goldenTales'.tr(),
-                    color: const Color(0xFFF2C21B),
-                  ),
-                ),
-              ],
+            // Backend'da audiokitob yo'q — halol bo'sh holat (avval bu yerda
+            // bosib bo'lmaydigan soxta muqovalar ko'rsatilardi).
+            _EmptySectionNote(
+              icon: Icons.headphones_rounded,
+              text: 'dashboard.noAudiobooksYet'.tr(),
             )
           else
             Row(
@@ -833,29 +815,66 @@ class _AudiobookCard extends ConsumerWidget {
                   : _CoverFallback(title: book.title, color: book.coverColor),
             ),
           ),
-          const SizedBox(height: 8),
-          _PricePill(don: book.xpReward),
+          if (book.xpReward > 0) ...[
+            const SizedBox(height: 8),
+            _RewardPill(reward: book.xpReward),
+          ],
         ],
       ),
     );
   }
 }
 
-/// "N DON" pill (real DON — book.xpReward) + ko'k DON badge.
-class _PricePill extends StatelessWidget {
-  const _PricePill({required this.don});
+/// "+N DON" MUKOFOT belgisi (book.xpReward) — tinglab tugatganda beriladi.
+/// Narx emas: DON sotib olinmaydi va sarflanmaydi, shuning uchun "+" va
+/// yulduzcha bilan mukofot sifatida ko'rsatiladi.
+class _RewardPill extends StatelessWidget {
+  const _RewardPill({required this.reward});
 
-  final int don;
+  final int reward;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('$don', style: _unb(12, w: FontWeight.w600, ls: -0.36)),
+        const Icon(Icons.stars_rounded, size: 14, color: _coinGreen),
+        const SizedBox(width: 3),
+        Text(
+          '+$reward',
+          style: _unb(12, w: FontWeight.w600, c: _coinGreen, ls: -0.36),
+        ),
         const SizedBox(width: 4),
         const _DonBadge(),
       ],
+    );
+  }
+}
+
+/// Bo'lim bo'sh bo'lganda — ikon + qisqa halol xabar (soxta kontent o'rniga).
+class _EmptySectionNote extends StatelessWidget {
+  const _EmptySectionNote({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      decoration: BoxDecoration(
+        color: _glass,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _glassBorder),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 24, color: _dim),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text, style: _pop(14, c: _dim))),
+        ],
+      ),
     );
   }
 }
@@ -905,32 +924,11 @@ class _VideosSection extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         if (videos.isEmpty)
-          // PREVIEW: backend'da video yo'q — namunaviy kartalar.
-          SizedBox(
-            height: stripH,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              clipBehavior: Clip.none,
-              children: [
-                _MockVideoCard(
-                  title: 'dashboard.tiles.jumpChallenge'.tr(),
-                  views: '169K',
-                  color: const Color(0xFFD64B12),
-                ),
-                const SizedBox(width: 12),
-                _MockVideoCard(
-                  title: 'dashboard.tiles.cartoonWorld'.tr(),
-                  views: '96K',
-                  color: const Color(0xFF2E7D5B),
-                ),
-                const SizedBox(width: 12),
-                _MockVideoCard(
-                  title: 'dashboard.tiles.funExperiments'.tr(),
-                  views: '54K',
-                  color: const Color(0xFF5B4B8A),
-                ),
-              ],
-            ),
+          // Backend'da video yo'q — halol bo'sh holat (avval soxta ko'rishlar
+          // soni bilan bosib bo'lmaydigan namunaviy kartalar chiqardi).
+          _EmptySectionNote(
+            icon: Icons.play_circle_outline_rounded,
+            text: 'videos.feed.noVideosTitle'.tr(),
           )
         else
           SizedBox(
@@ -1076,85 +1074,6 @@ class _VideoMeta extends StatelessWidget {
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-// ════════════ PREVIEW kartalar (backend bo'sh bo'lganda) ════════════
-
-/// Namunaviy kitob muqovasi — rangli fon + nom + "250 DON" pill.
-class _MockBookCard extends StatelessWidget {
-  const _MockBookCard({required this.title, required this.color});
-
-  final String title;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        AspectRatio(
-          aspectRatio: 0.74,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [color, Color.lerp(color, Colors.black, 0.35)!],
-              ),
-            ),
-            alignment: Alignment.center,
-            padding: const EdgeInsets.all(8),
-            child: Text(
-              title,
-              textAlign: TextAlign.center,
-              style: _unb(12, w: FontWeight.w600),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        // PREVIEW namuna (backend kitob yo'q) — namunaviy DON.
-        const _PricePill(don: 250),
-      ],
-    );
-  }
-}
-
-/// Namunaviy video kartasi — rangli thumbnail + play + avatar + ko'rishlar.
-class _MockVideoCard extends StatelessWidget {
-  const _MockVideoCard({
-    required this.title,
-    required this.views,
-    required this.color,
-  });
-
-  final String title;
-  final String views;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 300,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _VideoThumb(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [color, Color.lerp(color, Colors.black, 0.4)!],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          _VideoMeta(title: title, views: views),
         ],
       ),
     );

@@ -10,9 +10,11 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/offline/offline_buffer.dart';
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/core/realtime/socket_providers.dart';
 import 'package:farzandim_child/core/routing/app_router.dart';
 import 'package:farzandim_child/core/theme/app_theme.dart';
+import 'package:farzandim_child/core/utils/release_logging.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/unlock_request_provider.dart';
 import 'package:farzandim_child/core/theme/theme_mode_provider.dart';
 import 'package:farzandim_child/features/app_update/data/models/app_version_info.dart';
@@ -27,12 +29,24 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Release build'da debugPrint jurnalga yozmaydi (koordinata, token va
+  // so'rov tanalari qurilma log'iga tushmasin).
+  silenceDebugPrintInRelease();
+
+  // iPhone: interfeys faqat portret. Info.plist landshaftni ham saqlaydi —
+  // video pleyerlar to'liq ekranda landshaftga o'tadi va chiqishda yana
+  // portretga qaytaradi (App Store audit F48).
+  if (PlatformCapabilities.isIOS) {
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  }
 
   // ── Global xato tutqichlari (crash himoyasi) ──────────────────────
   // Ba'zi qurilmalarda (ayniqsa Xiaomi/MIUI) ushlanmagan Flutter yoki

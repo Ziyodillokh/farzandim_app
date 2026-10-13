@@ -13,6 +13,7 @@
 
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:farzandim_child/core/auth/session_events.dart';
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:flutter/foundation.dart';
@@ -125,6 +126,9 @@ class _RefreshInterceptor extends Interceptor {
     try {
       refreshToken = await tokenStorage.readRefreshToken();
       if (refreshToken == null || refreshToken.isEmpty) {
+        // 401 va refresh token umuman yo'q — sessiyani tiklab bo'lmaydi
+        // (masalan fon isolate'i tokenlarni allaqachon tozalagan).
+        SessionEvents.notifyRevoked();
         completer.complete(null);
         return null;
       }
@@ -172,8 +176,11 @@ class _RefreshInterceptor extends Interceptor {
           return rotatedAccess;
         }
         // Token o'zgarmagan + backend rad etdi = refresh token haqiqatan bekor
-        // (30-kun tugadi yoki "hamma joydan chiqish"). Endi tozalaymiz.
+        // (30-kun tugadi yoki "hamma joydan chiqish"). Endi tozalaymiz va
+        // UI'ga xabar beramiz — ilova "ulangan, lekin ishlamaydi" holatida
+        // qolmasin, bola qayta ulanish ekraniga qaytsin.
         await tokenStorage.clear();
+        SessionEvents.notifyRevoked();
       }
       completer.complete(null);
       return null;

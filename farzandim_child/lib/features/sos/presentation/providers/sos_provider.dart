@@ -90,10 +90,12 @@ class SosNotifier extends StateNotifier<SosState> {
         status: SosStatus.sent,
         lastAlertId: id,
       );
-    } catch (e) {
+    } catch (_) {
+      // Xom exception matni bolaga ko'rsatilmaydi — faqat tushunarli xabar
+      // (UI ostida "112 ga qo'ng'iroq qiling" yo'riqnomasi ham chiqadi).
       state = state.copyWith(
         status: SosStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: 'chats.sosFailed'.tr(),
       );
     }
   }

@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:farzandim_child/core/utils/release_logging.dart';
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/offline/offline_buffer.dart';
 import 'package:farzandim_child/core/utils/tashkent_time.dart';
@@ -41,6 +42,7 @@ import 'package:farzandim_child/firebase_options.dart';
 
 @pragma('vm:entry-point')
 void backgroundEntry() {
+  silenceDebugPrintInRelease();
   FlutterForegroundTask.setTaskHandler(ChildBackgroundTaskHandler());
 }
 

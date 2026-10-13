@@ -15,6 +15,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:farzandim_child/core/utils/localized_date.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/usage_providers.dart';
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
@@ -42,14 +43,10 @@ class _DailyShareScreenState extends ConsumerState<DailyShareScreen> {
   final GlobalKey _boundaryKey = GlobalKey();
   bool _sharing = false;
 
-  static const _months = [
-    'yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun',
-    'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr',
-  ];
-
+  /// Bugungi sana joriy tilda ("13-oktabr, 2026" / "October 13, 2026").
   String get _dateText {
     final d = DateTime.now();
-    return '${d.day}-${_months[d.month - 1]}, ${d.year}';
+    return '${localizedDayMonth(d)}, ${d.year}';
   }
 
   Future<void> _share() async {
@@ -84,7 +81,9 @@ class _DailyShareScreenState extends ConsumerState<DailyShareScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final name = ref.watch(pairingStateProvider).childName ?? 'Farzand';
+    final name =
+        ref.watch(pairingStateProvider).childName ??
+        'common.fallbackChildName'.tr();
     final backend = ref.watch(backendGamificationProvider).valueOrNull;
     final steps = ref.watch(todayStepsProvider).valueOrNull ?? 0;
     final don = backend?.don ?? 0;

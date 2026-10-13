@@ -150,11 +150,11 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
         _controller = controller;
         _initializing = false;
       });
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
         _initializing = false;
-        _initError = '$e';
+        _initError = 'voiceChat.cameraOpenFailed'.tr();
       });
     }
   }
@@ -212,10 +212,10 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
       });
       if (!mounted) return;
       setState(() => _isRecording = true);
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
-        _initError = 'voiceChat.recordFailed'.tr(namedArgs: {'error': '$e'});
+        _initError = 'voiceChat.recordFailed'.tr();
       });
     }
   }

@@ -14,7 +14,7 @@
 // kontentni to'liq sahifa qilib ochadi (deep-link/FCM uchun).
 //
 // Real: notificationsProvider (+ o'qildi/o'chirish amallari). Bo'sh
-// bo'lsa PREVIEW (Figma'dagi qatorlar). LOGIKA SAQLANGAN: tap →
+// bo'lsa — bo'sh holat xabari. LOGIKA SAQLANGAN: tap →
 // markAsRead + relatedRoute, swipe → o'chirish.
 
 import 'package:cached_network_image/cached_network_image.dart';

@@ -11,7 +11,8 @@
 //     olti burchakli medal (ochilgan) yoki rangli qulf (yopiq)
 //
 // Real: gamificationProfileProvider (don/streak/yutuqlar), todayStepsProvider,
-// pairing (ism), childAvatarUrlProvider. Bo'sh bo'lsa PREVIEW (Figma raqamlari).
+// pairing (ism), childAvatarUrlProvider. Faqat REAL qiymatlar (soxta namuna
+// raqamlari/qurilma nomi yo'q).
 // LOGIKA SAQLANGAN: yangi yutuq unlock bo'lsa confetti + toast.
 
 import 'dart:ui' show ImageFilter;
@@ -49,7 +50,6 @@ const _stepBlue = Color(0xFF3B82F6);
 const _green = Color(0xFF22C55E);
 const _purple = Color(0xFF8B5CF6);
 const _orange = Color(0xFFF2811D);
-const _red = Color(0xFFE23F32);
 
 TextStyle _unb(
   double s, {
@@ -80,23 +80,40 @@ String _fmtNum(int v) {
   return b.toString();
 }
 
-/// Qurilma nomi + batareya foizi. Aniqlab bo'lmasa PREVIEW (Figma).
-final _deviceLineProvider = FutureProvider<(String, int)>((ref) async {
-  var model = 'Iphone 16 pro'; // PREVIEW (Figma)
-  var battery = 98; // PREVIEW (Figma)
+/// Qurilma nomi + batareya foizi — REAL qiymatlar. Aniqlab bo'lmagan qism
+/// `null` (UI uni yashiradi; avval soxta "Iphone 16 pro • 98%" chiqardi).
+final _deviceLineProvider = FutureProvider<(String?, int?)>((ref) async {
+  String? model;
+  int? battery;
   try {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       final a = await DeviceInfoPlugin().androidInfo;
       model = '${a.brand} ${a.model}';
+    } else if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      final i = await DeviceInfoPlugin().iosInfo;
+      // `modelName` — "iPhone 15 Pro" kabi tijoriy nom; bo'lmasa "iPhone".
+      model = i.modelName.trim().isNotEmpty ? i.modelName : i.model;
     }
-  } catch (_) {}
+  } catch (_) {
+    // Aniqlanmadi — model `null` qoladi va qator yashiriladi.
+  }
   try {
-    battery = await Battery().batteryLevel;
-  } catch (_) {}
+    final level = await Battery().batteryLevel;
+    // iOS simulyatorda/aniqlanmaganda -1 qaytishi mumkin.
+    if (level >= 0 && level <= 100) battery = level;
+  } catch (_) {
+    // Aniqlanmadi — batareya `null` qoladi va yashiriladi.
+  }
   return (model, battery);
 });
 
-/// Yutuqlar grid'i elementi (real yoki preview).
+/// Ochilgan yutuq uchun tayyor medal PNG (katalog id → asset).
+const _badgeAssets = <String, String>{
+  'first_book': 'assets/icons/badge_book1.png',
+  'math_top10': 'assets/icons/badge_top10.png',
+};
+
+/// Yutuqlar grid'i elementi (katalogdan).
 class _BadgeSpec {
   const _BadgeSpec(
     this.label,
@@ -119,91 +136,6 @@ class _BadgeSpec {
   final String? title;
   final String? desc;
 }
-
-// PREVIEW yutuqlar — 12 katak. Bola hali hech narsa yutmagan bo'lsa HAMMASI
-// QULFLANGAN ko'rinadi (avval 6 tasi hardcode `unlocked: true` edi → "hamma
-// yutuq ochiq bo'lib qolgan" bug'i). Real yutuq unlock bo'lganda `else`
-// shoxida katalogdan chinakam holat bilan ko'rsatiladi.
-List<_BadgeSpec> get _previewBadges => [
-  _BadgeSpec(
-    'gamification.achievementFirstBookTitle'.tr(),
-    _purple,
-    asset: 'assets/icons/badge_book1.png',
-    title: 'gamification.previewFirstBookTitle'.tr(),
-    desc: 'gamification.previewFirstBookDesc'.tr(),
-  ),
-  _BadgeSpec(
-    'gamification.achievementStreak7Title'.tr(),
-    _orange,
-    asset: 'assets/icons/badge_7kun.png',
-    title: 'gamification.previewStreak7Title'.tr(),
-    desc: 'gamification.previewStreak7Desc'.tr(),
-  ),
-  _BadgeSpec(
-    'gamification.achievementMathTop100Title'.tr(),
-    _green,
-    asset: 'assets/icons/badge_top100.png',
-    title: 'gamification.previewMathTop100Title'.tr(),
-    desc: 'gamification.previewMathTop100Desc'.tr(),
-  ),
-  _BadgeSpec(
-    'gamification.achievementTenBooksTitle'.tr(),
-    _red,
-    asset: 'assets/icons/badge_book10.png',
-    title: 'gamification.previewTenBooksTitle'.tr(),
-    desc: 'gamification.previewTenBooksDesc'.tr(),
-  ),
-  _BadgeSpec(
-    'gamification.achievementStreak100Title'.tr(),
-    _amber,
-    asset: 'assets/icons/badge_100kun.png',
-    title: 'gamification.previewStreak100Title'.tr(),
-    desc: 'gamification.previewStreak100Desc'.tr(),
-  ),
-  _BadgeSpec(
-    'gamification.achievementMathTop10Title'.tr(),
-    _stepBlue,
-    asset: 'assets/icons/badge_top10.png',
-    title: 'gamification.previewMathTop10Title'.tr(),
-    desc: 'gamification.previewMathTop10Desc'.tr(),
-  ),
-  _BadgeSpec(
-    'gamification.achievementStreak7Title'.tr(),
-    _orange,
-    title: 'gamification.goalStreak7Title'.tr(),
-    desc: 'gamification.goalStreak7Desc'.tr(),
-  ),
-  _BadgeSpec(
-    'gamification.achievementMathTop100Title'.tr(),
-    _green,
-    title: 'gamification.goalMathTop100Title'.tr(),
-    desc: 'gamification.goalMathTop100Desc'.tr(),
-  ),
-  _BadgeSpec(
-    'gamification.achievementFirstBookTitle'.tr(),
-    _purple,
-    title: 'gamification.goalFirstBookTitle'.tr(),
-    desc: 'gamification.goalFirstBookDesc'.tr(),
-  ),
-  _BadgeSpec(
-    'gamification.achievementMathTop10Title'.tr(),
-    _stepBlue,
-    title: 'gamification.goalMathTop10Title'.tr(),
-    desc: 'gamification.goalMathTop10Desc'.tr(),
-  ),
-  _BadgeSpec(
-    'gamification.achievementTenBooksTitle'.tr(),
-    _purple,
-    title: 'gamification.goalTenBooksTitle'.tr(),
-    desc: 'gamification.goalTenBooksDesc'.tr(),
-  ),
-  _BadgeSpec(
-    'gamification.achievementStreak100Title'.tr(),
-    _orange,
-    title: 'gamification.goalStreak100Title'.tr(),
-    desc: 'gamification.goalStreak100Desc'.tr(),
-  ),
-];
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -253,7 +185,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     final pairing = ref.watch(pairingStateProvider);
     final profile = ref.watch(gamificationProfileProvider).valueOrNull;
-    final childName = pairing.childName ?? 'Akmal'; // PREVIEW (Figma)
+    final childName = (pairing.childName?.trim().isNotEmpty ?? false)
+        ? pairing.childName!
+        : 'common.fallbackChildName'.tr();
     final avatarUrl = (pairing.childId != null && pairing.childId!.isNotEmpty)
         ? ref.watch(childAvatarUrlProvider(pairing.childId!)).valueOrNull
         : null;
@@ -276,16 +210,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       childData?['gender'] as String?,
       (childData?['age'] as num?)?.toInt(),
     );
-    final device =
-        ref.watch(_deviceLineProvider).valueOrNull ??
-        ('Iphone 16 pro', 98); // PREVIEW (Figma)
+    final device = ref.watch(_deviceLineProvider).valueOrNull;
+    final deviceModel = device?.$1;
+    final deviceBattery = device?.$2;
 
     // DON va STREAK — HAQIQIY manba backend (`ChildProfile`): qadamdan kelgan
     // don (har 1000 qadam = 5 don) va faollik streak'i shu yerda. Backend
-    // yuklanmagan bo'lsa (null) Firestore/preview'ga tushamiz.
+    // yuklanmagan bo'lsa (null) Firestore'ga, u ham bo'lmasa 0 (real holat).
     final backend = ref.watch(backendGamificationProvider).valueOrNull;
-    final streak =
-        backend?.streak ?? ((profile?.streak ?? 0) > 0 ? profile!.streak : 7);
+    final streak = backend?.streak ?? profile?.streak ?? 0;
     // DON — REAL qiymat. Mock (1250) OLIB TASHLANDI: bola 0 DON'da soxta
     // 1250 ko'rardi. Backend yuklanmagan bo'lsa Firestore fallback, u ham
     // bo'lmasa 0 (haqiqiy holat) — hech qachon o'ylab topilgan son emas.
@@ -294,30 +227,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     // Qadam REAL — preview yo'q (ota-ona bilan mos bo'lishi uchun).
     final steps = rawSteps;
 
-    // Yutuqlar: real unlock bo'lsa katalogdan, bo'lmasa PREVIEW grid.
-    // Manba BACKEND (`ChildProfile.achievements`) — Firestore emas (o'lik).
+    // Yutuqlar — DOIM real katalogdan (ochilmaganlari qulflangan). Avval
+    // hech narsa ochilmagan bo'lsa soxta "00/100" va katalogda yo'q namunaviy
+    // medallar ko'rsatilardi. Manba BACKEND (`ChildProfile.achievements`).
     final unlockedIds = backend?.unlockedAchievements ?? const <String>[];
-    final List<_BadgeSpec> badges;
-    final String countText;
-    if (unlockedIds.isEmpty) {
-      badges = _previewBadges;
-      countText = '00/100';
-    } else {
-      final all = Achievements.all;
-      badges = [
-        for (final a in all)
-          _BadgeSpec(
-            a.titleKey.tr(),
-            a.color,
-            icon: a.icon,
-            unlocked: unlockedIds.contains(a.id),
-            title: a.titleKey.tr(),
-            desc: a.descriptionKey.tr(),
-          ),
-      ];
-      final n = badges.where((b) => b.unlocked).length;
-      countText = '${n.toString().padLeft(2, '0')}/${all.length}';
-    }
+    final catalog = Achievements.visible;
+    final badges = [
+      for (final a in catalog)
+        _BadgeSpec(
+          a.titleKey.tr(),
+          a.color,
+          icon: a.icon,
+          asset: _badgeAssets[a.id],
+          unlocked: unlockedIds.contains(a.id),
+          title: a.titleKey.tr(),
+          desc: a.descriptionKey.tr(),
+        ),
+    ];
+    final unlockedCount = badges.where((b) => b.unlocked).length;
+    final countText =
+        '${unlockedCount.toString().padLeft(2, '0')}/${catalog.length}';
 
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
 
@@ -354,21 +283,35 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: _unb(24),
                   ),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(device.$1, style: _pop(13, c: _dim)),
-                      Text('  •  ', style: _pop(13, c: _dim)),
-                      const Icon(
-                        Icons.battery_full_rounded,
-                        size: 15,
-                        color: _dim,
-                      ),
-                      const SizedBox(width: 2),
-                      Text('${device.$2}%', style: _pop(13, c: _dim)),
-                    ],
-                  ),
+                  // Qurilma qatori — faqat aniqlangan REAL qiymatlar.
+                  if (deviceModel != null || deviceBattery != null) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (deviceModel != null)
+                          Flexible(
+                            child: Text(
+                              deviceModel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: _pop(13, c: _dim),
+                            ),
+                          ),
+                        if (deviceModel != null && deviceBattery != null)
+                          Text('  •  ', style: _pop(13, c: _dim)),
+                        if (deviceBattery != null) ...[
+                          const Icon(
+                            Icons.battery_full_rounded,
+                            size: 15,
+                            color: _dim,
+                          ),
+                          const SizedBox(width: 2),
+                          Text('$deviceBattery%', style: _pop(13, c: _dim)),
+                        ],
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   // ── 3 stat chip (Figma) ──
                   Row(
@@ -919,7 +862,7 @@ class _BadgeSheet extends StatelessWidget {
                 border: Border.all(color: _glassBorder),
               ),
               child: Text(
-                spec.unlocked ? 'profile.accept'.tr() : 'OK',
+                spec.unlocked ? 'profile.accept'.tr() : 'common.ok'.tr(),
                 style: _pop(15, w: FontWeight.w600),
               ),
             ),

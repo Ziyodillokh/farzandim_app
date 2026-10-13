@@ -407,11 +407,8 @@ class LocationService {
         data: payload,
       );
 
-      debugPrint(
-        'LocationService: location yozildi (Backend) '
-        '(${position.latitude.toStringAsFixed(5)}, '
-        '${position.longitude.toStringAsFixed(5)})',
-      );
+      // Koordinatalar log'ga YOZILMAYDI (bola joylashuvi — maxfiy ma'lumot).
+      debugPrint('LocationService: location yozildi (Backend)');
 
       final geofenceEvents = response.data?['geofenceEvents'];
       if (geofenceEvents is List && geofenceEvents.isNotEmpty) {

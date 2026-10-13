@@ -93,7 +93,6 @@ class AudioPlayerScreen extends ConsumerWidget {
                   ? '$seriesTitle · ${book.author}'
                   : book.author,
               onBack: () => Navigator.of(context).maybePop(),
-              onShare: () => _showShareInfo(context),
             ),
             Expanded(
               child: Column(
@@ -119,32 +118,21 @@ class AudioPlayerScreen extends ConsumerWidget {
       ),
     );
   }
-
-  void _showShareInfo(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('audiobooks.shareComingSoon'.tr()),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
 }
 
 // ═════════════════════════════════════════════════════════════════════
-// Top bar — ← [Title/Subtitle] [↑ share]
+// Top bar — ← [Title/Subtitle] (o'ngda bo'sh joy — sarlavha markazda qoladi)
 // ═════════════════════════════════════════════════════════════════════
 class _TopBar extends StatelessWidget {
   const _TopBar({
     required this.title,
     required this.subtitle,
     required this.onBack,
-    required this.onShare,
   });
 
   final String title;
   final String subtitle;
   final VoidCallback onBack;
-  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +168,10 @@ class _TopBar extends StatelessWidget {
               ],
             ),
           ),
-          _IconTile(icon: SolarIconsOutline.uploadMinimalistic, onTap: onShare),
+          // "Ulashish" tugmasi olib tashlandi (funksiya yo'q edi, faqat
+          // "tez orada" xabari chiqardi). Orqaga tugmasi bilan muvozanat
+          // saqlash uchun bir xil o'lchamdagi bo'sh joy.
+          const SizedBox(width: 44),
         ],
       ),
     );
