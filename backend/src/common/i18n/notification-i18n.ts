@@ -51,6 +51,18 @@ const T: Record<string, Record<NotifLang, string>> = {
     en: 'A new device wants to connect using the family code. Confirm.',
   },
 
+  // ── Bola qurilmani uzdi va ma'lumotlarini o'chirdi (ota-onaga) ──
+  'childDisconnected.title': {
+    uz: '{name} — qurilma uzildi',
+    ru: '{name} — устройство отключено',
+    en: '{name} — device disconnected',
+  },
+  'childDisconnected.body': {
+    uz: "Farzandingiz ilovada ulanishni uzib, ma'lumotlarini o'chirdi. Qayta ulash uchun oila kodidan foydalaning.",
+    ru: 'Ребёнок отключил устройство в приложении и удалил свои данные. Для повторного подключения используйте семейный код.',
+    en: 'Your child disconnected the device in the app and deleted their data. Use the family code to connect again.',
+  },
+
   // ── Akkauntga kirish (session access) so'rovi (ota-onaga) ──
   'sessionAccess.title': {
     uz: "Yangi qurilma kirish so'rovi",

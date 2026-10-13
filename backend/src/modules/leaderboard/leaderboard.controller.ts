@@ -1,6 +1,8 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ConsumerJwtAuthGuard } from '../../common/guards';
+import { CurrentUser } from '../../common/decorators';
+import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { LeaderboardService } from './leaderboard.service';
 import { LeaderboardQueryDto, LeaderboardPeriod } from './dto/leaderboard-query.dto';
 
@@ -17,13 +19,17 @@ export class LeaderboardController {
       'XP reyting — period (weekly/monthly/all) + viloyat + pagination + joriy bola ("Siz")',
   })
   @ApiResponse({ status: 200, description: 'Reyting sahifasi' })
-  async get(@Query() query: LeaderboardQueryDto) {
+  async get(
+    @Query() query: LeaderboardQueryDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
     return this.service.getLeaderboard({
       period: query.period ?? LeaderboardPeriod.all,
       region: query.region,
       page: query.page ?? 1,
       limit: query.limit ?? 15,
       childId: query.childId,
+      viewer: { userId: user.userId, role: user.role },
     });
   }
 }

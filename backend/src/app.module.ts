@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { validate } from './common/config/env.schema';
+import { buildThrottlers } from './common/throttle/throttle.config';
 
 // Infrastructure / shared modules
 import { DatabaseModule } from './common/database/database.module';
@@ -28,6 +29,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { GamificationModule } from './modules/gamification/gamification.module';
 import { PhotoRequestsModule } from './modules/photo-requests/photo-requests.module';
+import { ListenSessionsModule } from './modules/listen-sessions/listen-sessions.module';
 import { SosAlertsModule } from './modules/sos-alerts/sos-alerts.module';
 import { InstalledAppsModule } from './modules/installed-apps/installed-apps.module';
 import { AppLimitsModule } from './modules/app-limits/app-limits.module';
@@ -73,15 +75,9 @@ import { AppController } from './app.controller';
     // limitlar yo'qoladi va noto'g'ri limit boshqa route'ga qo'llanadi).
     // Aynan shu 2026-08-10 da `checkout` (5/10daq) limitini `child-pair`
     // route'iga tarqatib, Play reviewer'ini bloklab qo'ygan edi.
-    //   childPair — 5 xonali oila kodini enumeration qilishga qarshi
-    //   checkout  — Uzum IB anti-fraud talabi (karta brute-force)
-    ThrottlerModule.forRoot([
-      { name: 'childPair', ttl: 600_000, limit: 30 },
-      { name: 'checkout', ttl: 600_000, limit: 5 },
-      //   adminLogin — panel parolini brute-force qilishga qarshi.
-      //   10 daqiqada 5 urinish (IP + email juftligi bo'yicha).
-      { name: 'adminLogin', ttl: 600_000, limit: 5 },
-    ]),
+    // Limitlar va "faqat e'lon qilingan route'da" qoidasi:
+    // common/throttle/throttle.config.ts.
+    ThrottlerModule.forRoot(buildThrottlers()),
 
     // Infrastructure
     DatabaseModule,
@@ -108,6 +104,7 @@ import { AppController } from './app.controller';
     FeedbackModule,
     GamificationModule,
     PhotoRequestsModule,
+    ListenSessionsModule,
     SosAlertsModule,
     InstalledAppsModule,
     AppLimitsModule,

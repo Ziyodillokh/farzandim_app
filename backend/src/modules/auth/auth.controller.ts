@@ -20,6 +20,10 @@ import {
 } from '@nestjs/swagger';
 import { Request } from 'express';
 import { SkipThrottle, Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import {
+  CHILD_PAIR_CODE_LIMIT,
+  CHILD_PAIR_IP_LIMIT,
+} from '../../common/throttle/throttle.config';
 import { AuthService } from './auth.service';
 import { TelegramAuthDto } from './dto/telegram-auth.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -197,16 +201,19 @@ export class AuthController {
 
   @Post('child-pair')
   @Public()
-  // 5 xonali kodni IP bo'yicha enumeration qilishdan himoya.
-  @Throttle({ childPair: { limit: 30, ttl: 600_000 } })
-  // ⚠️ MAJBURIY: ThrottlerGuard AppModule'da ro'yxatdan o'tgan BARCHA nomli
-  // limitlarni tekshiradi, `@Throttle` esa faqat sanab o'tilganini override
-  // qiladi. Shu sabab `checkout` (5/10daq — to'lov uchun) limiti bu yo'lga ham
-  // qo'llanib, amaldagi cheklov 30 emas 5 bo'lib qolgandi: Play tekshiruvchisi
-  // 5-urinishdan keyin 429 olib, ilovaga kira olmasdi (bu esa aynan
-  // "Login credentials are incorrect" rad sababini qaytarardi). Jonli javob
-  // header'i buni ko'rsatgan edi: `retry-after-checkout`.
-  @SkipThrottle({ checkout: true })
+  // 5 xonali kodni enumeration qilishdan himoya — O'Z limitlari bilan:
+  //   childPair     — haqiqiy klient IP'si bo'yicha (main.ts trustProxy)
+  //   childPairCode — oila kodi bo'yicha (IP almashtirish yordam bermaydi)
+  @Throttle({
+    childPair: CHILD_PAIR_IP_LIMIT,
+    childPairCode: CHILD_PAIR_CODE_LIMIT,
+  })
+  // ⚠️ Boshqa nomli limitlar (checkout/adminLogin — 5/10daq) bu yo'lga
+  // TUSHMASLIGI kerak: avval reviewer 5-urinishdan keyin 429 olib, ilova
+  // "Tarmoq xatosi" ko'rsatardi (Play 2026-08-10, App Store audit F8).
+  // throttle.config.ts'dagi `skipIf` buni allaqachon ta'minlaydi; bu yerda
+  // ham aniq o'chirib qo'yamiz (ikki qavat himoya).
+  @SkipThrottle({ checkout: true, adminLogin: true })
   @UseGuards(ThrottlerGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({

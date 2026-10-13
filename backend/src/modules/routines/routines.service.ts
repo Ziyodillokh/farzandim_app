@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
+import { FcmService } from '../../common/fcm/fcm.service';
 import { tashkentNow, isActiveNow } from '../../common/helpers/routines-rules';
 import { CreateRoutineDto } from './dto/create-routine.dto';
 import { UpdateRoutineDto } from './dto/update-routine.dto';
@@ -17,6 +18,7 @@ export class RoutinesService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly realtime: RealtimeGateway,
+    private readonly fcm: FcmService,
   ) {}
 
   async listByChild(userId: string, childId: string) {
@@ -126,6 +128,8 @@ export class RoutinesService {
 
     await this.audit.log(userId, 'routine', 'CREATE', routine.id, dto, request);
     this.realtime.emitToChild(childId, 'routine:created', routine);
+    // Fondagi/yopiq bola ilovasi (ayniqsa iOS) ham darhol sync qilsin.
+    void this.fcm.pushChildResync(child.childUserId);
 
     return routine;
   }
@@ -182,6 +186,7 @@ export class RoutinesService {
 
     await this.audit.log(userId, 'routine', 'UPDATE', id, dto, request);
     this.realtime.emitToChild(updated.childId, 'routine:updated', updated);
+    void this.fcm.pushChildResync(routine.child.childUserId);
 
     return updated;
   }
@@ -204,6 +209,7 @@ export class RoutinesService {
     await this.prisma.routine.delete({ where: { id } });
     await this.audit.log(userId, 'routine', 'DELETE', id, undefined, request);
     this.realtime.emitToChild(childIdForEmit, 'routine:deleted', { id });
+    void this.fcm.pushChildResync(routine.child.childUserId);
 
     return { ok: true };
   }

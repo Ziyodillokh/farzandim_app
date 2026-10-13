@@ -9,6 +9,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { EnvConfig } from './common/config/env.schema';
+import { resolveTrustProxy } from './common/helpers/trust-proxy';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -18,9 +19,10 @@ async function bootstrap() {
     new FastifyAdapter({
       bodyLimit: 100 * 1024 * 1024, // 100 MB
       forceCloseConnections: true,
-      // nginx orqasida — haqiqiy klient IP'sini X-Forwarded-For'dan oladi
-      // (admin IP allowlist enforcement uchun `request.ip` to'g'ri bo'lsin).
-      trustProxy: true,
+      // nginx orqasida — FAQAT lokal proksiga ishonamiz, shunda `request.ip`
+      // klient soxtalashtira olmaydigan haqiqiy IP bo'ladi (rate-limit, admin
+      // IP allowlist, webhook guard). Batafsil: helpers/trust-proxy.ts.
+      trustProxy: resolveTrustProxy(process.env.TRUST_PROXY),
     }),
   );
 

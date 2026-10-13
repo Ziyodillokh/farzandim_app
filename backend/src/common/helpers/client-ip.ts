@@ -1,19 +1,14 @@
 /**
  * Haqiqiy klient IP'sini aniqlaydi (nginx orqasida).
  *
- * trustProxy yoqilgan (main.ts) — Fastify `request.ip` X-Forwarded-For'ning
- * eng chap (asl klient) IP'sini qaytaradi. Baribir header'dan ham fallback
- * o'qiymiz va IPv4-mapped IPv6 (`::ffff:`) prefiksini olib tashlaymiz.
+ * Fastify `trustProxy` faqat lokal proksiga ishonadi (main.ts,
+ * helpers/trust-proxy.ts) — shuning uchun `request.ip` nginx'ga ulangan
+ * haqiqiy klient IP'si. X-Forwarded-For header'ini bu yerda O'ZIMIZ
+ * O'QIMAYMIZ: uning chap qismi klient tomonidan soxtalashtirilishi mumkin
+ * (avval aynan shu sabab admin IP allowlist'ini chetlab o'tish mumkin edi —
+ * App Store audit F41). IPv4-mapped IPv6 (`::ffff:`) prefiksi olib tashlanadi.
  */
 export function getClientIp(req: any): string {
-  const xff = req?.headers?.['x-forwarded-for'];
-  let ip = '';
-  if (typeof xff === 'string' && xff.length > 0) {
-    ip = xff.split(',')[0]!.trim();
-  } else if (Array.isArray(xff) && xff.length > 0) {
-    ip = String(xff[0]).split(',')[0]!.trim();
-  } else {
-    ip = req?.ip || req?.socket?.remoteAddress || '';
-  }
+  const ip = req?.ip || req?.socket?.remoteAddress || '';
   return String(ip).replace(/^::ffff:/, '').trim();
 }

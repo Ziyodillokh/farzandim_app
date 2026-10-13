@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  UnauthorizedException,
   InternalServerErrorException,
   UnsupportedMediaTypeException,
   PayloadTooLargeException,
@@ -22,6 +23,19 @@ import { UpdateDeviceInfoDto } from './dto/update-device-info.dto';
 import { UpdateInterestsDto } from './dto/update-interests.dto';
 import { UpdateMyProfileDto } from './dto/update-my-profile.dto';
 import { tr } from '../../common/i18n/notification-i18n';
+import { ConfigService } from '@nestjs/config';
+import { EnvConfig } from '../../common/config/env.schema';
+import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
+import { verifyChildAvatarSignature } from '../../common/helpers/child-avatar-signature';
+import { stripImageMetadata } from '../../common/helpers/image-metadata';
+import { ChildDataPurgeService } from '../child-data-purge/child-data-purge.service';
+
+/** Bola rasmi proksisiga kirish ma'lumotlari (token yoki imzo). */
+export interface AvatarImageAccess {
+  viewer?: JwtPayload;
+  exp?: string;
+  sig?: string;
+}
 
 const ALLOWED_AVATAR_MIMES = [
   'image/jpeg',
@@ -30,6 +44,15 @@ const ALLOWED_AVATAR_MIMES = [
   'image/webp',
 ];
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+/** `PUT /children/:id` dagi bola qurilmasida qo'llanadigan siyosat maydonlari. */
+const DEVICE_POLICY_FIELDS = [
+  'blockUnknownSources',
+  'blockAllApps',
+  'blockUninstall',
+  'webFilterEnabled',
+  'blockedWebCategories',
+] as const satisfies readonly (keyof UpdateChildDto)[];
 
 @Injectable()
 export class ChildrenService {
@@ -43,6 +66,8 @@ export class ChildrenService {
     private readonly batteryAlert: BatteryAlertService,
     private readonly permissionAlert: PermissionAlertService,
     private readonly entitlement: EntitlementService,
+    private readonly config: ConfigService<EnvConfig, true>,
+    private readonly childDataPurge: ChildDataPurgeService,
   ) {}
 
   /* ------------------------------------------------------------------ */
@@ -408,6 +433,9 @@ export class ChildrenService {
     if (dto.usagePermission !== undefined) {
       data.usagePermission = dto.usagePermission;
     }
+    if (dto.screenTimePermission !== undefined) {
+      data.screenTimePermission = dto.screenTimePermission;
+    }
     // Heartbeat kelgani — qurilma ulangan deb belgilaymiz.
     if (!child.isConnected) data.isConnected = true;
     // Qayta-online aniqlash (connectionLostNotifiedAt tozalash) va "aloqa
@@ -436,12 +464,14 @@ export class ChildrenService {
         notificationPermission: child.notificationPermission,
         backgroundAllowed: child.backgroundAllowed,
         accessibilityEnabled: child.accessibilityEnabled,
+        screenTimePermission: child.screenTimePermission,
       },
       {
         locationPermission: dto.locationPermission,
         notificationPermission: dto.notificationPermission,
         backgroundAllowed: dto.backgroundAllowed,
         accessibilityEnabled: dto.accessibilityEnabled,
+        screenTimePermission: dto.screenTimePermission,
       },
     );
 
@@ -535,6 +565,12 @@ export class ChildrenService {
     });
 
     await this.audit.log(userId, 'child', 'UPDATE', id, dto, reqMeta);
+
+    // Qurilma siyosati o'zgardi — bola ilovasi (fonda/yopiq bo'lsa ham)
+    // darhol qayta sync qilsin (`GET /children/:id/device-policy`).
+    if (DEVICE_POLICY_FIELDS.some((field) => dto[field] !== undefined)) {
+      void this.fcm.pushChildResync(updated.childUserId);
+    }
 
     return updated;
   }
@@ -676,8 +712,19 @@ export class ChildrenService {
       throw new ForbiddenException('Only parent can delete');
     }
 
-    await this.prisma.child.delete({ where: { id } });
-    await this.audit.log(userId, 'child', 'DELETE', id, undefined, reqMeta);
+    // Bola profili bilan birga bola QURILMASI akkaunti (User), ovozli/video
+    // xabarlar, rasmlar va MinIO fayllari ham o'chiriladi (App Store audit
+    // F40). Avval faqat `child.delete` edi — CHILD User (onDelete SetNull),
+    // xabarlar va media serverda qolib ketardi.
+    const purged = await this.childDataPurge.purgeChildProfile(child);
+    await this.audit.log(
+      userId,
+      'child',
+      'DELETE',
+      id,
+      { childUserDeleted: purged.childUserDeleted, mediaObjects: purged.mediaObjects },
+      reqMeta,
+    );
 
     return { ok: true };
   }
@@ -779,7 +826,13 @@ export class ChildrenService {
     const ext = file.originalname.split('.').pop() || 'jpg';
     const storagePath = `child-avatars/${child.id}.${ext}`;
 
-    await this.storage.upload(BUCKETS.avatars, storagePath, file.buffer, file.mimetype);
+    // EXIF/GPS (uy joylashuvi, qurilma) saqlanmasin — App Store audit F17.
+    await this.storage.upload(
+      BUCKETS.avatars,
+      storagePath,
+      stripImageMetadata(file.buffer),
+      file.mimetype,
+    );
 
     // Delete old avatar if path differs
     if (child.photoPath && child.photoPath !== storagePath) {
@@ -827,9 +880,41 @@ export class ChildrenService {
     return { url, expiresIn: 3600 };
   }
 
-  /** Avatar baytlarini proxy uchun qaytaradi (auth'siz, childId UUID orqali). */
-  async getAvatarObject(id: string) {
+  /**
+   * Avatar baytlarini proxy uchun qaytaradi.
+   *
+   * Avval `@Public` edi — childId (UUID) bilgan HAR KIM bola rasmini
+   * yuklab olardi, reyting esa barcha childId'larni tarqatardi (App Store
+   * audit F17). Endi ruxsat faqat:
+   *   1) bolaning o'zi yoki uning ota-onasi token'i (Authorization: Bearer),
+   *   2) server bergan imzolangan havola (`?exp=&sig=` — admin panel `<img>`),
+   *   3) eski ochiq rejim — standart YOQIQ (chiqarilgan ilovalar token
+   *      yubormaydi); `CHILD_AVATAR_PUBLIC_LEGACY=false` bilan o'chiriladi.
+   * Ruxsat bo'lmasa bola mavjudligi ham oshkor qilinmaydi (401/403).
+   */
+  async getAvatarObject(id: string, access: AvatarImageAccess) {
+    const isSigned = verifyChildAvatarSignature(
+      id,
+      access.exp,
+      access.sig,
+      this.config.get('JWT_ACCESS_SECRET', { infer: true }),
+    );
+    const isLegacyPublic =
+      this.config.get('CHILD_AVATAR_PUBLIC_LEGACY', { infer: true }) !== 'false';
+    const isOpen = isSigned || isLegacyPublic;
+    if (!isOpen && !access.viewer) {
+      throw new UnauthorizedException('Authentication required');
+    }
+
     const child = await this.prisma.child.findUnique({ where: { id } });
+    const viewerId = access.viewer?.userId;
+    const isFamily =
+      !!child &&
+      !!viewerId &&
+      (child.parentId === viewerId || child.childUserId === viewerId);
+    if (!isOpen && !isFamily) {
+      throw new ForbiddenException('Forbidden');
+    }
     if (!child?.photoPath) {
       throw new NotFoundException('No avatar uploaded');
     }
