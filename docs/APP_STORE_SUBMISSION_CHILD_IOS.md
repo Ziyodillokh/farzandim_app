@@ -20,11 +20,11 @@
 | Maydon | Qiymat |
 |---|---|
 | Sign-in required | **Yes** |
-| User name | `<<APPLE_REVIEW_FAMILY_CODE>>` (5 xonali oila kodi) |
+| User name | `48258` (5 xonali oila kodi) |
 | Password | `Family code only — see Notes` |
 | Contact first/last name | `<<ISM>>` `<<FAMILIYA>>` |
 | Contact phone | `<<+998...>>` |
-| Contact email | `<<SUPPORT_EMAIL>>` — §8 F44 qaroriga ko'ra bitta, kuzatiladigan manzil |
+| Contact email | `support@farzandimedu.uz` — §8 F44 qaroriga ko'ra bitta, kuzatiladigan manzil |
 | Attachment | ixtiyoriy: Ekran vaqti oqimining videosi (Notes'dagi havola bilan bir xil) |
 
 ### Notes (EN — to'ldirib, shu holicha qo'ying; ≤4000 belgi)
@@ -36,8 +36,8 @@ sanang (`pbpaste | wc -m` yoki python) — 4 000 dan oshmasin.
 Parvoz Growth is the companion app of the Parvoz family safety service. A parent installs it on their child's iPhone and pairs it with our parent app "Parvoz Parents" (App Store id6798972223; also on Google Play). No Android device is needed for this review.
 
 DEMO ACCESS
-- Family code: <<APPLE_REVIEW_FAMILY_CODE>> (5 digits). It never expires and can be paired on several devices at the same time.
-- Parvoz Parents demo account (iPhone or iPad): phone <<DEMO_PARENT_PHONE>>, password <<DEMO_PARENT_PASSWORD>> (no SMS). Active Premium plan with sample content; nothing to purchase.
+- Family code: 48258 (5 digits). It never expires and can be paired on several devices at the same time.
+- Parvoz Parents demo account (iPhone or iPad): phone +998900152601, password <<DEMO_PARENT_PASSWORD>> (no SMS). Active Premium plan with sample content; nothing to purchase.
 
 HOW TO TEST (iPhone with a passcode, signed in to an Apple Account, online)
 1. Choose a language. On the consent screen tap "My parent confirms".
@@ -45,7 +45,7 @@ HOW TO TEST (iPhone with a passcode, signed in to an Apple Account, online)
 3. Pick an interest. Permissions are optional; please allow Notifications (used by "Ask for more time"), then tap "Continue".
 4. Home banner "App restrictions are off" (or Profile tab > gear > Screen Time) > "Turn on protection" > confirm with Face ID or the passcode.
 5. "Restricted apps" > "Choose" > create any 4-digit parent PIN > pick apps in Apple's picker > "Done".
-6. In Parvoz Parents open the demo child and turn on "Block all apps", or in app restrictions select "iPhone: selected apps" and block it or set a daily limit. With Parvoz Growth open it applies within about a minute (otherwise on next launch or push); the chosen apps then show the Parvoz shield.
+6. In Parvoz Parents open the demo child > app restrictions > "iPhone: selected apps" and block it (or set a daily limit). With Parvoz Growth open it applies within about a minute (otherwise on next launch or push); the chosen apps then show the Parvoz shield.
 7. On the shield tap "Ask for more time", tap the notification, choose minutes, send. Approve in Parvoz Parents: the apps open until the extra time ends, then the shield returns, even if Parvoz Growth is closed.
 
 FAMILY CONTROLS
@@ -53,7 +53,7 @@ FAMILY CONTROLS
 - Default: requestAuthorization(for: .individual); a parent confirms with Face ID/passcode on the child's iPhone. Most of our parents use Android phones and cannot create an Apple Family Sharing group. Families using Family Sharing can tap "Strict protection", which requests .child.
 - The selection stays on the device (opaque tokens in the App Group). App names, the app list and app usage never leave the iPhone. The server sends only app-agnostic rules (block now, time windows, one daily limit, approved extra time). The app reports only whether access is on and how many apps/categories/sites are selected, shown to the parent as one entry "iPhone: selected apps".
 - While protection is on, Date & Time stays Automatic so limits can't be bypassed. If the parent enables "Prevent uninstall", deleting apps is blocked. Optional (parent PIN): adult website filter, block new installs. All end when protection is turned off in Settings > Screen Time.
-- Recording of this build: <<VIDEO_URL>>
+- A screen recording of this flow on build 7 is attached in App Review Information.
 
 SOS
 Home > chat icon (top right) > "SOS message" > slide "Send SOS". Sends an alert with the current location to the linked parents; it does not contact emergency services.
