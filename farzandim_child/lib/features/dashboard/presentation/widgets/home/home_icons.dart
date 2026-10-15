@@ -69,25 +69,6 @@ const homeLibraryFilledSvg =
     'A2.8 2.8 0 0 1 13.6 2.6ZM14.6 4.2V9.4L15.9 8.4L17.2 9.4V4.2ZM14.2 16.4'
     'H16.6A0.6 0.6 0 0 1 16.6 17.6H14.2A0.6 0.6 0 0 1 14.2 16.4Z"/></svg>';
 
-/// Natijalar (nav) — chiziqli ustunlar.
-const homeResultsSvg =
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
-    '<g $_stroke stroke-width="1.6">'
-    '<path d="M3.6 20.6V12.6A2.4 2.4 0 0 1 8.4 12.6V20.6Z"/>'
-    '<path d="M11.4 20.6V9.8A2.2 2.2 0 0 1 13.6 7.6H18.4A2.2 2.2 0 0 1 20.6 9.8'
-    'V20.6Z"/>'
-    '<path d="M12.6 7.6V5A1.6 1.6 0 0 1 15.8 5V7.6"/></g></svg>';
-
-/// Rivojlanish (nav, faol) — xuddi shu siluet, to'ldirilgan.
-const homeResultsFilledSvg =
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
-    '<g fill="#FFFFFF" stroke="#FFFFFF" stroke-width="1.6" '
-    'stroke-linejoin="round">'
-    '<path d="M3.6 20.6V12.6A2.4 2.4 0 0 1 8.4 12.6V20.6Z"/>'
-    '<path d="M11.4 20.6V9.8A2.2 2.2 0 0 1 13.6 7.6H18.4A2.2 2.2 0 0 1 20.6 9.8'
-    'V20.6Z"/>'
-    '<path d="M12.6 7.6V5A1.6 1.6 0 0 1 15.8 5V7.6Z"/></g></svg>';
-
 /// Kuchli yo'nalish — to'ldirilgan o'suvchi ustunlar.
 const homeBarsSvg =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'

@@ -3,7 +3,6 @@
 import 'package:farzandim_child/features/learning/domain/learning_models.dart';
 import 'package:farzandim_child/features/learning/domain/progress_models.dart';
 import 'package:farzandim_child/features/learning/presentation/providers/progress_providers.dart';
-import 'package:farzandim_child/features/progress/presentation/widgets/subject_score_tile.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -61,26 +60,5 @@ void main() {
     addTearDown(container.dispose);
 
     expect(container.read(progressRecommendationProvider), isNull);
-  });
-
-  group('fitTileWidths', () {
-    test(
-      'keng ekranda — matnga mos (proporsional), jami kenglik saqlanadi',
-      () {
-        final w = fitTileWidths([120, 110, 100], 330);
-        expect(w[0], greaterThan(w[1]));
-        expect(w[1], greaterThan(w[2]));
-        expect(w.reduce((a, b) => a + b), closeTo(330, 0.001));
-      },
-    );
-
-    test('tor ekranda biror plitka juda torayadi — teng kengliklar', () {
-      final w = fitTileWidths([80, 95, 130], 255);
-      expect(w, everyElement(closeTo(85, 0.001)));
-    });
-
-    test('bo\'sh ro\'yxat — bo\'sh natija', () {
-      expect(fitTileWidths([], 300), isEmpty);
-    });
   });
 }

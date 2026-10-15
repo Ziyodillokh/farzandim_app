@@ -84,19 +84,18 @@ import 'package:go_router/go_router.dart';
 
 /// Slide right-to-left page transition — Dashboard'dan boshqa ekranga
 /// ochilganda zamonaviy "drill-down" his. 250ms, easeOutCubic.
-/// Pastki nav tablari uchun — siljimaydi, faqat yumshoq almashinadi:
-/// ikkala sahifadagi nav bir joyda turadi va "qimirlab" ketmaydi.
+/// Pastki nav tablari uchun — siljimaydi, oniy almashadi: nav bir joyda
+/// turadi va "qimirlab" ketmaydi.
 CustomTransitionPage<T> _tabPage<T>(GoRouterState state, Widget child) {
   return CustomTransitionPage<T>(
     key: state.pageKey,
-    transitionDuration: const Duration(milliseconds: 180),
-    reverseTransitionDuration: const Duration(milliseconds: 150),
+    // Tab bar odatiy xatti-harakati: oniy almashinuv (animatsiya paytida
+    // ikki sahifaning navi ustma-ust tushib, ikonlar "qimirlamaydi").
+    transitionDuration: Duration.zero,
+    reverseTransitionDuration: Duration.zero,
     child: child,
     transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-        FadeTransition(
-          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-          child: child,
-        ),
+        child,
   );
 }
 

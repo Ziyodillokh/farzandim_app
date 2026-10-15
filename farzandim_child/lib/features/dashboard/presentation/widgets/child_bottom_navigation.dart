@@ -12,7 +12,6 @@
 // Faol tab — ko'k yumaloq-kvadrat fon + ko'k glow, oq ikon va yozuv.
 
 import 'dart:math' as math;
-import 'dart:ui' show ImageFilter;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/feature_flags.dart';
@@ -25,7 +24,9 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 
-const _navBg = Color(0xEB0D141B);
+// Shaffof blur yo'q: sahifa almashganda orqadagi eski nav xiralashib
+// "oq soya" bo'lib ko'rinardi. Deyarli to'liq to'q fon — toza va barqaror.
+const _navBg = Color(0xFA0D141B);
 const _navBorder = Color(0x1AFFFFFF);
 const _inactive = Color(0xFFA9B4C4);
 const _haloColor = Color(0xFF15407A);
@@ -91,8 +92,8 @@ final _tabs = <_Tab>[
   _Tab(
     path: '/progress',
     labelKey: 'nav.results',
-    icon: (c, a) => HomeSvgIcon(
-      a ? homeResultsFilledSvg : homeResultsSvg,
+    icon: (c, a) => Icon(
+      a ? SolarIconsBold.graphUp : SolarIconsOutline.graphUp,
       size: 23,
       color: c,
     ),
@@ -150,31 +151,25 @@ class ChildBottomNavigation extends StatelessWidget {
             height: kChildNavBarHeight,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 9),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                  child: Container(
-                    height: kChildNavBarHeight,
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    decoration: BoxDecoration(
-                      color: _navBg,
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: _navBorder),
-                    ),
-                    child: Row(
-                      children: [
-                        for (final tab in _tabs)
-                          Expanded(
-                            child: _NavItem(
-                              tab: tab,
-                              active: tab.isActive(location),
-                              onTap: () => go(tab.path),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
+              child: Container(
+                height: kChildNavBarHeight,
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                decoration: BoxDecoration(
+                  color: _navBg,
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: _navBorder),
+                ),
+                child: Row(
+                  children: [
+                    for (final tab in _tabs)
+                      Expanded(
+                        child: _NavItem(
+                          tab: tab,
+                          active: tab.isActive(location),
+                          onTap: () => go(tab.path),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),

@@ -103,7 +103,7 @@ BoxDecoration homeCardDecoration({double radius = 22}) => BoxDecoration(
 double growthTopInset(BuildContext context) {
   final top = MediaQuery.paddingOf(context).top;
   final isIOS = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
-  return isIOS ? top - 2 : top + 8;
+  return isIOS ? top + 6 : top + 20;
 }
 
 /// Bir qatorli matn — joy yetmasa kesilmaydi, sig'guncha kichrayadi.
