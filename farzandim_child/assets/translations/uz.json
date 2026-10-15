@@ -1166,7 +1166,13 @@
     "searchHint": "Test yoki fan nomi",
     "searchEmpty": "Hech narsa topilmadi",
     "searchStart": "Qidirish uchun yozing",
-    "mixed": "Aralash"
+    "mixed": "Aralash",
+    "latest": "Yangi testlar",
+    "latestSubtitle": "Eng so‘nggi qo‘shilgan testlar",
+    "minutes": {
+      "other": "{} daqiqa"
+    },
+    "finished": "Yakunlangan"
   },
   "progress": {
     "title": "Rivojlanish",

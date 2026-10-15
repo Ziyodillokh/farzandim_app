@@ -10,6 +10,36 @@ import 'package:solar_icons/solar_icons.dart';
 
 enum LibraryKind { video, audiobook }
 
+/// Rasm ustidagi oq matn o'qilishi uchun yengil soya.
+const _textShadow = [Shadow(color: Color(0xCC000000), blurRadius: 6)];
+
+/// Muqova. YouTube'ning `hqdefault/sddefault/0.jpg` rasmlari 4:3 bo'lib,
+/// 16:9 kadr tepasi va pastida QORA POLOSA bor — portret kartada ular
+/// chiziq bo'lib ko'rinardi. Bunday rasm polosalar kesiladigan qilib
+/// kattalashtiriladi (4:3 → 16:9 balandlik: ×4/3).
+class _Cover extends StatelessWidget {
+  const _Cover({required this.url});
+
+  final String url;
+
+  static final _letterboxed = RegExp(
+    r'(ytimg\.com|youtube\.com)/vi(_webp)?/[^/]+/(hqdefault|sddefault|0)\.',
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final image = Image.network(
+      url,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+    );
+    if (!_letterboxed.hasMatch(url)) return image;
+    return ClipRect(
+      child: Transform.scale(scale: 4 / 3, child: image),
+    );
+  }
+}
+
 /// Kutubxona lentasi elementi (video yoki audiokitob).
 class LibraryItem {
   const LibraryItem({
@@ -69,23 +99,18 @@ class LibraryCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (item.imageUrl.isNotEmpty)
-              Image.network(
-                item.imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              ),
+            if (item.imageUrl.isNotEmpty) _Cover(url: item.imageUrl),
             // Pastdan qoraytirish — matn o'qilishi uchun.
             const DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  stops: [0.25, 0.55, 1],
+                  stops: [0.22, 0.5, 0.78],
                   colors: [
                     Color(0x00060B12),
-                    Color(0xB3060B12),
-                    Color(0xF2060B12),
+                    Color(0xCC060B12),
+                    Color(0xF7060B12),
                   ],
                 ),
               ),
@@ -106,8 +131,8 @@ class LibraryCard extends StatelessWidget {
               child: _SaveButton(saved: item.saved, onTap: item.onToggleSave),
             ),
             Positioned(
-              left: 10,
-              right: 8,
+              left: 8,
+              right: 6,
               bottom: 8,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +141,11 @@ class LibraryCard extends StatelessWidget {
                     item.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: homeText(12, weight: FontWeight.w700, height: 1.2),
+                    style: homeText(
+                      12,
+                      weight: FontWeight.w700,
+                      height: 1.2,
+                    ).copyWith(shadows: _textShadow),
                   ),
                   const SizedBox(height: 2),
                   Text(

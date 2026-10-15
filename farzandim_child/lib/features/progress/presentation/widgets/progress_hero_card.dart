@@ -171,7 +171,7 @@ class _Growth extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: homeText(
-            11,
+            12,
             weight: FontWeight.w400,
             color: _label,
             letterSpacing: 0.15,
@@ -184,7 +184,7 @@ class _Growth extends StatelessWidget {
           child: Text(
             'progress.overallGrowth'.tr(),
             maxLines: 1,
-            style: homeText(20.9, weight: FontWeight.w800, height: 1.25),
+            style: homeText(22, weight: FontWeight.w800, height: 1.25),
           ),
         ),
         const SizedBox(height: 8.2),
@@ -206,7 +206,7 @@ class _Growth extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   '$sign${progress.growthPercent.abs()}%',
-                  style: homeDisplay(19.8, color: color, letterSpacing: -0.3),
+                  style: homeDisplay(22, color: color, letterSpacing: -0.3),
                 ),
               ),
             ),
@@ -217,7 +217,7 @@ class _Growth extends StatelessWidget {
           child: Text(
             'progress.vsLastWeek'.tr(),
             maxLines: 2,
-            style: homeText(12, color: HomeColors.textDim, height: 1.25),
+            style: homeText(13, color: HomeColors.textDim, height: 1.25),
           ),
         ),
       ],
@@ -233,8 +233,8 @@ class _OverallRing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 104.5,
-      height: 104.5,
+      width: 112,
+      height: 112,
       child: CustomPaint(
         painter: _RingPainter(progress: percent.clamp(0, 100) / 100),
         // Matn bloki markazdan biroz pastda (maketdagidek).
@@ -244,17 +244,13 @@ class _OverallRing extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('$percent%', style: homeDisplay(19.5, height: 1.1)),
+                Text('$percent%', style: homeDisplay(22.5, height: 1.1)),
                 const SizedBox(height: 5),
                 Text(
                   'progress.overallResult'.tr(),
                   textAlign: TextAlign.center,
                   maxLines: 2,
-                  style: homeText(
-                    10.5,
-                    color: HomeColors.textDim,
-                    height: 1.25,
-                  ),
+                  style: homeText(12, color: HomeColors.textDim, height: 1.25),
                 ),
               ],
             ),
@@ -367,7 +363,7 @@ class _StatTile extends StatelessWidget {
               Flexible(
                 child: FitText(
                   value,
-                  style: homeText(17, weight: FontWeight.w800, height: 1.2),
+                  style: homeText(19, weight: FontWeight.w800, height: 1.2),
                 ),
               ),
             ],
@@ -387,7 +383,7 @@ class _StatTile extends StatelessWidget {
                     line,
                     maxLines: 1,
                     style: homeText(
-                      11.5,
+                      12.5,
                       color: HomeColors.textDim,
                       height: 1.25,
                     ),

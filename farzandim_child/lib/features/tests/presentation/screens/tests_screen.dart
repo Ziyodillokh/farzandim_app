@@ -7,6 +7,7 @@
 //   • "Bugungi testlar" hero — kunlik reja (preview) + illyustratsiya
 //   • "So‘nggi natijalar" qatori — o'rtacha natija (preview)
 //   • "Fanlar bo‘yicha" — HAQIQIY backend testlari fan bo'yicha
+//   • "Yangi testlar" — so'nggi testlar ro'yxati (bosilsa test ochiladi)
 //
 // Pastga tortilsa testlar qayta yuklanadi.
 
@@ -17,6 +18,7 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/home/des
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_header.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
+import 'package:farzandim_child/features/tests/presentation/widgets/latest_tests_section.dart';
 import 'package:farzandim_child/features/tests/presentation/widgets/results_summary_row.dart';
 import 'package:farzandim_child/features/tests/presentation/widgets/subject_grid.dart';
 import 'package:farzandim_child/features/tests/presentation/widgets/tests_hero_card.dart';
@@ -81,17 +83,17 @@ class TestsScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 14),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 13),
                     child: TestsHeroCard(),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 14),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 14),
                     child: ResultsSummaryRow(),
                   ),
-                  const SizedBox(height: 17.8),
+                  const SizedBox(height: 26),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.5),
                     child: Text(
@@ -99,10 +101,15 @@ class TestsScreen extends ConsumerWidget {
                       style: homeDisplay(20.5, letterSpacing: -0.3),
                     ),
                   ),
-                  const SizedBox(height: 9),
+                  const SizedBox(height: 12),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 15),
                     child: SubjectGrid(),
+                  ),
+                  const SizedBox(height: 26),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 15),
+                    child: LatestTestsSection(),
                   ),
                 ],
               ),

@@ -59,7 +59,7 @@ class ResultRow extends ConsumerWidget {
         onTap: () => showResultSheet(context, ref, result),
         behavior: HitTestBehavior.opaque,
         child: Container(
-          constraints: const BoxConstraints(minHeight: 50),
+          constraints: const BoxConstraints(minHeight: 58),
           padding: const EdgeInsets.fromLTRB(6.5, 4.5, 6, 4.5),
           decoration: BoxDecoration(
             color: _rowBg,
@@ -70,7 +70,7 @@ class ResultRow extends ConsumerWidget {
             children: [
               SubjectIcon(
                 subject: result.subject,
-                size: 30,
+                size: 36,
                 background: _square,
               ),
               const SizedBox(width: 13),
@@ -81,9 +81,13 @@ class ResultRow extends ConsumerWidget {
                   children: [
                     Text(
                       resultTitle(result),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: homeText(12, weight: FontWeight.w600, height: 1.2),
+                      style: homeText(
+                        13.5,
+                        weight: FontWeight.w600,
+                        height: 1.2,
+                      ),
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -91,7 +95,7 @@ class ResultRow extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: homeText(
-                        11,
+                        12,
                         color: HomeColors.textDim,
                         height: 1.25,
                       ),
@@ -104,13 +108,13 @@ class ResultRow extends ConsumerWidget {
               const SizedBox(width: 14),
               SizedBox(
                 // Shrift masshtabi bilan kengayadi (sana kesilmasin).
-                width: MediaQuery.textScalerOf(context).scale(46),
+                width: MediaQuery.textScalerOf(context).scale(52),
                 child: Text(
                   formatResultDate(result.date),
                   maxLines: 1,
                   overflow: TextOverflow.fade,
                   softWrap: false,
-                  style: homeText(11, color: HomeColors.textDim),
+                  style: homeText(12, color: HomeColors.textDim),
                 ),
               ),
               const SizedBox(width: 13),
@@ -129,7 +133,7 @@ class ResultRow extends ConsumerWidget {
 
 /// "9/10" — daraja rangida chegarali pill.
 class ScorePill extends StatelessWidget {
-  const ScorePill({super.key, required this.result, this.fontSize = 13});
+  const ScorePill({super.key, required this.result, this.fontSize = 14.5});
 
   final TestResult result;
   final double fontSize;
@@ -184,7 +188,7 @@ Future<void> showResultSheet(
           children: [
             Text(
               'progress.resultTitle'.tr(),
-              style: homeText(12, color: HomeColors.textDim),
+              style: homeText(13, color: HomeColors.textDim),
             ),
             const SizedBox(height: 12),
             Row(
@@ -206,7 +210,7 @@ Future<void> showResultSheet(
                       const SizedBox(height: 2),
                       Text(
                         formatResultDate(result.date),
-                        style: homeText(12, color: HomeColors.textDim),
+                        style: homeText(13, color: HomeColors.textDim),
                       ),
                     ],
                   ),
@@ -246,7 +250,7 @@ Future<void> showResultSheet(
               icon: const Icon(SolarIconsOutline.restart, size: 18),
               label: Text(
                 'progress.retry'.tr(),
-                style: homeText(13.5, weight: FontWeight.w600),
+                style: homeText(14.5, weight: FontWeight.w600),
               ),
             ),
           ],

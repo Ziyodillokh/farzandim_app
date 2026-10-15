@@ -1169,7 +1169,14 @@
     "searchHint": "Test or subject name",
     "searchEmpty": "Nothing found",
     "searchStart": "Start typing to search",
-    "mixed": "Mixed"
+    "mixed": "Mixed",
+    "latest": "New tests",
+    "latestSubtitle": "Recently added tests",
+    "minutes": {
+      "one": "{} minute",
+      "other": "{} minutes"
+    },
+    "finished": "Finished"
   },
   "progress": {
     "title": "Progress",

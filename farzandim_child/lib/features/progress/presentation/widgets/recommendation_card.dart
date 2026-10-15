@@ -37,7 +37,7 @@ class RecommendationCard extends ConsumerWidget {
       },
     );
     final parts = template.split(_subjectMark);
-    final dim = homeText(12, color: HomeColors.textDim, height: 1.45);
+    final dim = homeText(13, color: HomeColors.textDim, height: 1.45);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 11, 10.5, 11),
@@ -54,8 +54,8 @@ class RecommendationCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 46,
-            height: 47,
+            width: 52,
+            height: 52,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: _square,
@@ -71,7 +71,7 @@ class RecommendationCard extends ConsumerWidget {
               children: [
                 Text(
                   'progress.recommendation'.tr(),
-                  style: homeText(18, weight: FontWeight.w800, height: 1.25),
+                  style: homeText(19.5, weight: FontWeight.w800, height: 1.25),
                 ),
                 const SizedBox(height: 2),
                 Text.rich(
@@ -85,7 +85,7 @@ class RecommendationCard extends ConsumerWidget {
                             // copyWith(fontWeight) bundle'dagi SemiBold faylni
                             // yuklamaydi — alohida stil kerak.
                             style: homeText(
-                              12,
+                              13,
                               weight: FontWeight.w600,
                               color: Colors.white,
                               height: 1.45,
@@ -151,7 +151,7 @@ class _DoTestButton extends StatelessWidget {
                 children: [
                   Text(
                     'progress.doTest'.tr(),
-                    style: homeText(13, weight: FontWeight.w600, height: 1.2),
+                    style: homeText(14, weight: FontWeight.w600, height: 1.2),
                   ),
                   const SizedBox(width: 7),
                   const Icon(

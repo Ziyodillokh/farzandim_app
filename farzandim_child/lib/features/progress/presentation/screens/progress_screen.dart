@@ -33,7 +33,7 @@ import 'package:go_router/go_router.dart';
 const _recentLimit = 3;
 
 /// Maketdagi bo'limlar orasidagi masofa.
-const _sectionGap = 11.0;
+const _sectionGap = 14.0;
 
 class ProgressScreen extends ConsumerWidget {
   const ProgressScreen({

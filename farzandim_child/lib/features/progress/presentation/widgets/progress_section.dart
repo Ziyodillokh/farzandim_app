@@ -15,7 +15,7 @@ class ProgressSection extends StatelessWidget {
     required this.subtitle,
     required this.child,
     this.onSeeAll,
-    this.contentPadding = const EdgeInsets.fromLTRB(8.5, 0, 7.5, 9.6),
+    this.contentPadding = const EdgeInsets.fromLTRB(10, 0, 10, 12),
   });
 
   final String title;
@@ -36,39 +36,30 @@ class ProgressSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(13.5, 8.5, 6, 0),
+            padding: const EdgeInsets.fromLTRB(14, 6, 4, 0),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: homeText(
-                          17.5,
-                          weight: FontWeight.w800,
-                          height: 1.25,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: homeText(12.2, color: HomeColors.textDim),
-                      ),
-                    ],
+                  child: FitText(
+                    title,
+                    style: homeText(19, weight: FontWeight.w800, height: 1.25),
                   ),
                 ),
                 if (onSeeAll != null) _SeeAll(onTap: onSeeAll!),
               ],
             ),
           ),
-          const SizedBox(height: 9),
+          // Izoh butun kenglikda — "Barchasini ko'rish" bilan to'qnashmaydi.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 0),
+            child: Text(
+              subtitle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: homeText(13, color: HomeColors.textDim, height: 1.3),
+            ),
+          ),
+          const SizedBox(height: 12),
           Padding(padding: contentPadding, child: child),
         ],
       ),
@@ -89,31 +80,29 @@ class _SeeAll extends StatelessWidget {
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: ConstrainedBox(
-          // Sarlavha bloki balandligida (≈37pt) — maket oraliqlari buzilmasin.
-          constraints: const BoxConstraints(minHeight: 36),
+          constraints: const BoxConstraints(minHeight: 44),
           child: Padding(
             padding: const EdgeInsets.only(left: 8),
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 5),
+                  padding: EdgeInsets.zero,
                   child: Text(
                     'progress.seeAll'.tr(),
                     style: homeText(
-                      12,
-                      weight: FontWeight.w500,
+                      13,
+                      weight: FontWeight.w600,
                       color: progressLinkColor,
                     ),
                   ),
                 ),
                 const SizedBox(width: 2),
                 const Padding(
-                  padding: EdgeInsets.only(top: 3),
+                  padding: EdgeInsets.zero,
                   child: Icon(
                     Icons.chevron_right_rounded,
-                    size: 21,
+                    size: 22,
                     color: progressLinkColor,
                   ),
                 ),

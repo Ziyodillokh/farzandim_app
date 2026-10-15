@@ -19,7 +19,6 @@ import 'package:farzandim_child/core/feature_flags.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/design_scale.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
-import 'package:farzandim_child/features/progress/presentation/progress_icons.dart';
 import 'package:farzandim_child/shared/widgets/mini_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -73,7 +72,11 @@ final _tabs = <_Tab>[
   _Tab(
     path: '/content',
     labelKey: 'nav.library',
-    icon: (c, _) => HomeSvgIcon(homeLibrarySvg, size: 23, color: c),
+    icon: (c, a) => HomeSvgIcon(
+      a ? homeLibraryFilledSvg : homeLibrarySvg,
+      size: 23,
+      color: c,
+    ),
     alsoActiveOn: const ['/videos', '/audiobooks', '/books'],
   ),
   _Tab(
@@ -89,7 +92,7 @@ final _tabs = <_Tab>[
     path: '/progress',
     labelKey: 'nav.results',
     icon: (c, a) => HomeSvgIcon(
-      a ? progressBarsFilledSvg : homeResultsSvg,
+      a ? homeResultsFilledSvg : homeResultsSvg,
       size: 23,
       color: c,
     ),
@@ -125,6 +128,11 @@ class ChildBottomNavigation extends StatelessWidget {
       if (location == path) return;
       if (path == '/dashboard') {
         context.go(path);
+      } else if (_tabs.any(
+        (t) => t.path != '/dashboard' && t.isActive(location),
+      )) {
+        // Tabdan tabga — stek o'smaydi, "orqaga" doim Asosiyga qaytaradi.
+        context.pushReplacement(path);
       } else {
         context.push(path);
       }

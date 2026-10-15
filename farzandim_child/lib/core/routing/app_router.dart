@@ -84,6 +84,22 @@ import 'package:go_router/go_router.dart';
 
 /// Slide right-to-left page transition — Dashboard'dan boshqa ekranga
 /// ochilganda zamonaviy "drill-down" his. 250ms, easeOutCubic.
+/// Pastki nav tablari uchun — siljimaydi, faqat yumshoq almashinadi:
+/// ikkala sahifadagi nav bir joyda turadi va "qimirlab" ketmaydi.
+CustomTransitionPage<T> _tabPage<T>(GoRouterState state, Widget child) {
+  return CustomTransitionPage<T>(
+    key: state.pageKey,
+    transitionDuration: const Duration(milliseconds: 180),
+    reverseTransitionDuration: const Duration(milliseconds: 150),
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          child: child,
+        ),
+  );
+}
+
 CustomTransitionPage<T> _slidePage<T>(GoRouterState state, Widget child) {
   return CustomTransitionPage<T>(
     // go_router'ning noyob pageKey'i — bir xil ekran stack'da takror
@@ -309,7 +325,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/qr-scan', builder: (_, __) => const QrScannerScreen()),
       GoRoute(
         path: '/dashboard',
-        builder: (_, __) => const ChildDashboardScreen(),
+        pageBuilder: (context, state) =>
+            _tabPage(state, const ChildDashboardScreen()),
       ),
       GoRoute(
         path: '/account-edit',
@@ -323,8 +340,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/profile',
-        pageBuilder: (context, state) =>
-            _slidePage(state, const ProfileScreen()),
+        pageBuilder: (context, state) => _tabPage(state, const ProfileScreen()),
       ),
       GoRoute(
         path: '/notifications',
@@ -342,7 +358,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/statistics',
         pageBuilder: (context, state) =>
-            _slidePage(state, const StatisticsScreen()),
+            _tabPage(state, const StatisticsScreen()),
       ),
       // "Kunlik rivojlanish" kartasi → streak + medallar batafsil.
       GoRoute(
@@ -364,10 +380,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/videos',
-        pageBuilder: (context, state) => _slidePage(
-          state,
-          const LibraryScreen(initialTab: LibraryTab.videos),
-        ),
+        pageBuilder: (context, state) =>
+            _tabPage(state, const LibraryScreen(initialTab: LibraryTab.videos)),
       ),
       GoRoute(
         path: '/video-player',
@@ -386,7 +400,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/audiobooks',
-        pageBuilder: (context, state) => _slidePage(
+        pageBuilder: (context, state) => _tabPage(
           state,
           const LibraryScreen(initialTab: LibraryTab.audiobooks),
         ),
@@ -395,8 +409,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Bottom nav endi shu yagona tabga olib boradi (avval 2 ta alohida edi).
       GoRoute(
         path: '/content',
-        pageBuilder: (context, state) =>
-            _slidePage(state, const LibraryScreen()),
+        pageBuilder: (context, state) => _tabPage(state, const LibraryScreen()),
       ),
       GoRoute(
         path: '/audiobook-detail',
@@ -438,7 +451,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/contests',
-        pageBuilder: (context, state) => _slidePage(state, const TestsScreen()),
+        pageBuilder: (context, state) => _tabPage(state, const TestsScreen()),
       ),
       GoRoute(
         path: '/tests/subject',
@@ -456,7 +469,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/progress',
         pageBuilder: (context, state) =>
-            _slidePage(state, const ProgressScreen()),
+            _tabPage(state, const ProgressScreen()),
       ),
       GoRoute(
         path: '/progress/subjects',

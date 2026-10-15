@@ -29,11 +29,3 @@ const progressBulbSvg =
     '<g $_stroke stroke-width="1.8">'
     '<path d="M12 1.8V3M4.7 4.6L5.6 5.5M19.3 4.6L18.4 5.5M1.9 11.2H3.1'
     'M20.9 11.2H22.1"/></g></svg>';
-
-/// To'ldirilgan ustunlar (faol "Rivojlanish" tabi).
-const progressBarsFilledSvg =
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="#FFFFFF">'
-    '<rect x="2.4" y="12" width="3.8" height="9.6" rx="1.9"/>'
-    '<rect x="7.6" y="7" width="3.8" height="14.6" rx="1.9"/>'
-    '<rect x="12.8" y="3" width="3.8" height="18.6" rx="1.9"/>'
-    '<rect x="18" y="9.4" width="3.8" height="12.2" rx="1.9"/></g></svg>';

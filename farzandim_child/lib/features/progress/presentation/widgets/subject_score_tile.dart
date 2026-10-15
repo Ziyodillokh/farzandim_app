@@ -61,7 +61,7 @@ class SubjectScoreTile extends StatelessWidget {
                         score.subject.labelKey.tr(),
                         maxLines: 1,
                         style: homeText(
-                          12,
+                          13.5,
                           weight: FontWeight.w600,
                           height: 1.2,
                         ),
@@ -75,7 +75,7 @@ class SubjectScoreTile extends StatelessWidget {
                         '${score.percent}%',
                         maxLines: 1,
                         style: homeText(
-                          14,
+                          16,
                           weight: FontWeight.w700,
                           height: 1.2,
                         ),
@@ -116,7 +116,7 @@ class StrongSubjectsRow extends StatelessWidget {
   );
 
   Widget _layout(BuildContext context) {
-    final style = homeText(12, weight: FontWeight.w600, height: 1.2);
+    final style = homeText(13.5, weight: FontWeight.w600, height: 1.2);
     final scaler = MediaQuery.textScalerOf(context);
     final direction = Directionality.of(context);
     double measure(String text) => (TextPainter(

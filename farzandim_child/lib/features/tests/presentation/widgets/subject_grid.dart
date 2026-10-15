@@ -15,7 +15,7 @@ import 'package:go_router/go_router.dart';
 
 const _cardBg = Color(0xFF11161F);
 const _cardBorder = Color(0xFF232838);
-const _gap = 9.4;
+const _gap = 12.0;
 const _cardHeight = 106.0;
 
 /// Shrift masshtabiga moslashgan karta balandligi.
