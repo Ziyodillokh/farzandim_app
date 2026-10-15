@@ -1,4 +1,5 @@
-// Bosh sahifa header'i: "Asosiy" + chat + bildirishnomalar.
+// Sahifa header'i (Growth uslubi): katta sarlavha + o'ngda kvadrat tugmalar.
+// Bosh sahifa: "Asosiy" + chat + bildirishnomalar; Testlar: qidiruv + ♡.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
@@ -15,46 +16,70 @@ class HomeHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final unread = ref.watch(unreadNotificationsCountProvider).valueOrNull ?? 0;
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            'nav.home'.tr(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: homeDisplay(28.5, letterSpacing: -0.2),
-          ),
-        ),
-        _HeaderButton(
-          svg: homeChatSvg,
-          iconSize: 20,
+    return PageHeader(
+      title: 'nav.home'.tr(),
+      actions: [
+        HeaderIconButton(
           semanticLabel: 'chats.title'.tr(),
           onTap: () => context.push('/chats'),
+          child: const HomeSvgIcon(homeChatSvg, size: 20),
         ),
-        const SizedBox(width: 12),
-        _HeaderButton(
-          svg: homeBellSvg,
-          iconSize: 20,
+        HeaderIconButton(
           semanticLabel: 'notifications.title'.tr(),
           showDot: unread > 0,
           onTap: () => showNotificationsSheet(context),
+          child: const HomeSvgIcon(homeBellSvg, size: 20),
         ),
       ],
     );
   }
 }
 
-class _HeaderButton extends StatelessWidget {
-  const _HeaderButton({
-    required this.svg,
-    required this.iconSize,
+/// Katta sarlavha + o'ng tomonda 12pt oraliqli tugmalar.
+class PageHeader extends StatelessWidget {
+  const PageHeader({
+    super.key,
+    required this.title,
+    this.actions = const [],
+    this.titleSize = 28.5,
+  });
+
+  final String title;
+  final List<Widget> actions;
+  final double titleSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: homeDisplay(titleSize, letterSpacing: -0.2),
+          ),
+        ),
+        for (var i = 0; i < actions.length; i++) ...[
+          if (i > 0) const SizedBox(width: 12),
+          actions[i],
+        ],
+      ],
+    );
+  }
+}
+
+/// Header tugmasi — ko'rinishi 43×38 (maket), bosish maydoni 44×44.
+class HeaderIconButton extends StatelessWidget {
+  const HeaderIconButton({
+    super.key,
+    required this.child,
     required this.semanticLabel,
     required this.onTap,
     this.showDot = false,
   });
 
-  final String svg;
-  final double iconSize;
+  final Widget child;
   final String semanticLabel;
   final VoidCallback onTap;
   final bool showDot;
@@ -67,7 +92,6 @@ class _HeaderButton extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
-        // Ko'rinishi 43×38 (maket), bosish maydoni 44×44 (HIG minimum).
         child: SizedBox(
           width: 44,
           height: 44,
@@ -83,7 +107,7 @@ class _HeaderButton extends StatelessWidget {
                     color: HomeColors.iconButton,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: HomeSvgIcon(svg, size: iconSize),
+                  child: child,
                 ),
                 if (showDot)
                   Positioned(

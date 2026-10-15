@@ -1152,5 +1152,22 @@
     "chemistry": "Chemistry",
     "informatics": "Computer science",
     "russian": "Russian"
+  },
+  "tests": {
+    "searchLabel": "Search",
+    "favorites": "Favorite tests",
+    "averageResult": "Average score: {percent}%",
+    "bySubjects": "By subject",
+    "count": {
+      "one": "{} test",
+      "other": "{} tests"
+    },
+    "empty": "No tests yet",
+    "emptyHint": "New tests will appear here",
+    "subjectSoon": "Tests for this subject are coming soon",
+    "searchHint": "Test or subject name",
+    "searchEmpty": "Nothing found",
+    "searchStart": "Start typing to search",
+    "mixed": "Mixed"
   }
 }

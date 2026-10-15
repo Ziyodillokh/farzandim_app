@@ -48,7 +48,10 @@ class _Tab {
 
   final String path;
   final String labelKey;
-  final Widget Function(Color color) icon;
+
+  /// (rang, faolmi) → ikon. Faol tab — to'ldirilgan (Bold), nofaol —
+  /// chiziqli (Outline) variant (maketdagidek).
+  final Widget Function(Color color, bool active) icon;
   final List<String> alsoActiveOn;
 
   bool isActive(String location) =>
@@ -59,29 +62,41 @@ final _tabs = <_Tab>[
   _Tab(
     path: '/dashboard',
     labelKey: 'nav.home',
-    icon: (c) => Icon(SolarIconsBold.homeSmile, size: 23, color: c),
+    icon: (c, a) => Icon(
+      a ? SolarIconsBold.homeSmile : SolarIconsOutline.homeSmile,
+      size: 23,
+      color: c,
+    ),
   ),
   _Tab(
     path: '/content',
     labelKey: 'nav.library',
-    icon: (c) => HomeSvgIcon(homeLibrarySvg, size: 23, color: c),
+    icon: (c, _) => HomeSvgIcon(homeLibrarySvg, size: 23, color: c),
     alsoActiveOn: const ['/videos', '/audiobooks', '/books'],
   ),
   _Tab(
     path: '/contests',
     labelKey: 'nav.quizzes',
-    icon: (c) => Icon(SolarIconsOutline.documentText, size: 23, color: c),
+    icon: (c, a) => Icon(
+      a ? SolarIconsBold.documentText : SolarIconsOutline.documentText,
+      size: 23,
+      color: c,
+    ),
   ),
   _Tab(
     path: '/statistics',
     labelKey: 'nav.results',
-    icon: (c) => HomeSvgIcon(homeResultsSvg, size: 23, color: c),
+    icon: (c, _) => HomeSvgIcon(homeResultsSvg, size: 23, color: c),
     alsoActiveOn: const ['/analytics'],
   ),
   _Tab(
     path: '/profile',
     labelKey: 'nav.profile',
-    icon: (c) => Icon(SolarIconsOutline.user, size: 23, color: c),
+    icon: (c, a) => Icon(
+      a ? SolarIconsBold.user : SolarIconsOutline.user,
+      size: 23,
+      color: c,
+    ),
   ),
 ];
 
@@ -162,7 +177,7 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = active ? Colors.white : _inactive;
-    final icon = tab.icon(color);
+    final icon = tab.icon(color, active);
     return Semantics(
       button: true,
       selected: active,

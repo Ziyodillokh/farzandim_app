@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────
 //
 // Real backend `/api/content/olympiads` (yosh filtri backend'da). Grid
-// `allTestsProvider` (faol + yakunlangan), hero `featuredContestProvider`.
+// `allTestsProvider` (faol + yakunlangan) — Testlar sahifasi fanlar bo'yicha guruhlaydi.
 // Sevimlilar — lokal (SharedPreferences), header ♡ tugmasi uchun.
 
 import 'dart:convert';
@@ -51,22 +51,6 @@ final allTestsProvider = Provider<List<ContestModel>>((ref) {
     ...ref.watch(activeContestsProvider),
     ...ref.watch(finishedContestsProvider),
   ];
-});
-
-/// Hero karta uchun tanlangan test — birinchi faol (bo'lmasa null).
-final featuredContestProvider = Provider<ContestModel?>((ref) {
-  final active = ref.watch(activeContestsProvider);
-  return active.isNotEmpty ? active.first : null;
-});
-
-/// Yuklanmoqdami — UI spinner uchun.
-final contestsLoadingProvider = Provider<bool>((ref) {
-  return ref.watch(backendContestsProvider).isLoading;
-});
-
-/// Tarmoq/server xatosi — xato+qayta urinish ko'rsatish uchun.
-final contestsErrorProvider = Provider<bool>((ref) {
-  return ref.watch(backendContestsProvider).hasError;
 });
 
 // ════════════ Sevimli testlar (lokal, TO'LIQ MODEL saqlanadi) ════════════

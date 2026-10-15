@@ -2,7 +2,7 @@
 // test_card — "Testlar" bo'limi umumiy Parvoz tokenlari + TestCard
 // ─────────────────────────────────────────────────────────────────────
 //
-// ContestsScreen (grid) va Sevimli testlar sahifasi bir xil premium kartani
+// Fan testlari, qidiruv va Sevimli testlar sahifalari bir xil premium kartani
 // ishlatadi: soha ikoni (rangli kvadrat + glow) + "N DON" bonus + sarlavha +
 // "N ta test" + qiyinlik yorlig'i. Faol → shartlar sheet, yakunlangan → xira.
 

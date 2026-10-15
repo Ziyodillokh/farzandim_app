@@ -81,6 +81,17 @@ const homeArrowUpRightSvg =
     '<g $_stroke stroke-width="3.4">'
     '<path d="M5 19L19 5M8.5 5H19V15.5"/></g></svg>';
 
+/// Qidiruv — qalin chiziqli lupa (Testlar header).
+const homeSearchSvg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+    '<g $_stroke stroke-width="2.5">'
+    '<circle cx="10.6" cy="10.6" r="7"/><path d="M15.8 15.8L21 21"/></g></svg>';
+
+/// Orqaga — chapga strelka (ichki sahifalar header'i).
+const homeBackSvg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+    '<g $_stroke stroke-width="2.2"><path d="M15 5L8 12L15 19"/></g></svg>';
+
 /// SVG ikon — oq chizilgan SVG'ni berilgan rangga bo'yaydi.
 class HomeSvgIcon extends StatelessWidget {
   const HomeSvgIcon(this.svg, {super.key, required this.size, this.color});

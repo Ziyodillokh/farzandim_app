@@ -19,10 +19,18 @@ const _sqrtXSvg =
     '<path d="M13.4 9.6L20.4 18.6M20.4 9.6L13.4 18.6"/></g></svg>';
 
 class SubjectIcon extends StatelessWidget {
-  const SubjectIcon({super.key, required this.subject, this.size = 35});
+  const SubjectIcon({
+    super.key,
+    required this.subject,
+    this.size = 35,
+    this.background = _squareColor,
+  });
 
   final Subject subject;
   final double size;
+
+  /// Kvadrat foni (Testlar sahifasida yorqinroq ko'k).
+  final Color background;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +39,7 @@ class SubjectIcon extends StatelessWidget {
       height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: _squareColor,
+        color: background,
         borderRadius: BorderRadius.circular(size * 0.29),
         boxShadow: const [
           BoxShadow(color: Color(0x401356AA), blurRadius: 8, spreadRadius: -2),
@@ -65,7 +73,7 @@ class SubjectIcon extends StatelessWidget {
       case Subject.native:
         return CustomPaint(
           size: Size(size * 0.46, size * 0.5),
-          painter: const _BookStackPainter(),
+          painter: _BookStackPainter(slotColor: background),
         );
       case Subject.history:
         return Icon(SolarIconsBold.history, size: g, color: _glyphColor);
@@ -96,7 +104,10 @@ class SubjectIcon extends StatelessWidget {
 
 /// Ona tili — uch qavat kitob (maketdagi "E" shaklli belgi).
 class _BookStackPainter extends CustomPainter {
-  const _BookStackPainter();
+  const _BookStackPainter({required this.slotColor});
+
+  /// Tirqishlar rangi = kvadrat foni.
+  final Color slotColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -107,7 +118,7 @@ class _BookStackPainter extends CustomPainter {
     canvas.drawRRect(RRect.fromLTRBR(0, 0, w, h, r), body);
 
     // Ikki gorizontal "sahifa" tirqishi — o'ngdan ochiq, kitoblar qatlami.
-    final slot = Paint()..color = _squareColor;
+    final slot = Paint()..color = slotColor;
     final slotH = h * 0.14;
     for (final top in [h * 0.25, h * 0.61]) {
       canvas.drawRRect(
@@ -134,5 +145,6 @@ class _BookStackPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _BookStackPainter oldDelegate) =>
+      oldDelegate.slotColor != slotColor;
 }

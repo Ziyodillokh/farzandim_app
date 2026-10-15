@@ -1150,5 +1150,21 @@
     "chemistry": "Kimyo",
     "informatics": "Informatika",
     "russian": "Rus tili"
+  },
+  "tests": {
+    "searchLabel": "Qidirish",
+    "favorites": "Sevimli testlar",
+    "averageResult": "O‘rtacha natija: {percent}%",
+    "bySubjects": "Fanlar bo‘yicha",
+    "count": {
+      "other": "{} ta test"
+    },
+    "empty": "Hozircha testlar yo‘q",
+    "emptyHint": "Yangi testlar qo‘shilganda shu yerda chiqadi",
+    "subjectSoon": "Bu fan bo‘yicha testlar tez orada qo‘shiladi",
+    "searchHint": "Test yoki fan nomi",
+    "searchEmpty": "Hech narsa topilmadi",
+    "searchStart": "Qidirish uchun yozing",
+    "mixed": "Aralash"
   }
 }

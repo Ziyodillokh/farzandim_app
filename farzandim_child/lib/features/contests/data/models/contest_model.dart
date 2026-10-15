@@ -24,7 +24,7 @@ String contestSubjectKey(String subject) {
   final s = subject
       .trim()
       .toLowerCase()
-      .replaceAll(RegExp("[’ʻ`´]"), "'");
+      .replaceAll(RegExp("[’‘ʻʼ`´]"), "'");
   if (s.isEmpty) return '';
   if (s.startsWith('matem') ||
       s.startsWith('geometr') ||

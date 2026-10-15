@@ -12,6 +12,7 @@
 //     --dart-define=SHOT_LOCALE=uz               # ixtiyoriy: uz | ru | en
 //     --dart-define=SHOT_WIDTH=393 --dart-define=SHOT_HEIGHT=852
 //     --dart-define=SHOT_TEXT_SCALE=1.0          # ixtiyoriy: shrift masshtabi
+//     --dart-define=SHOT_PAGE=home               # home | tests
 //
 // Ma'lumotlar namunaviy (provider override'lar), tarmoq yo'q.
 
@@ -23,10 +24,14 @@ import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
+import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
+import 'package:farzandim_child/features/contests/data/repositories/contests_backend_repository.dart';
+import 'package:farzandim_child/features/contests/presentation/providers/contests_providers.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_feed.dart';
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:farzandim_child/features/notifications/presentation/providers/notifications_providers.dart';
+import 'package:farzandim_child/features/tests/presentation/screens/tests_screen.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/video_engagement_providers.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/videos_providers.dart';
@@ -46,6 +51,7 @@ const _locale = String.fromEnvironment('SHOT_LOCALE', defaultValue: 'uz');
 const _width = String.fromEnvironment('SHOT_WIDTH', defaultValue: '393');
 const _height = String.fromEnvironment('SHOT_HEIGHT', defaultValue: '852');
 const _textScale = String.fromEnvironment('SHOT_TEXT_SCALE', defaultValue: '1');
+const _page = String.fromEnvironment('SHOT_PAGE', defaultValue: 'home');
 
 const _safeTop = 59.0;
 const _safeBottom = 34.0;
@@ -108,13 +114,19 @@ void main() {
 
 Widget _app() {
   final router = GoRouter(
-    initialLocation: '/dashboard',
+    initialLocation: _page == 'tests' ? '/contests' : '/dashboard',
     routes: [
       GoRoute(
         path: '/dashboard',
         builder: (_, __) => HomeScaffold(
           onRefresh: () async {},
           navigation: const ChildBottomNavigation(showMiniPlayer: false),
+        ),
+      ),
+      GoRoute(
+        path: '/contests',
+        builder: (_, __) => const TestsScreen(
+          navigation: ChildBottomNavigation(showMiniPlayer: false),
         ),
       ),
     ],
@@ -144,6 +156,7 @@ Widget _app() {
         topVideosProvider.overrideWithValue(_videos),
         newestAudiobooksProvider.overrideWithValue(_books),
         favoriteVideoIdsProvider.overrideWith(_OfflineFavorites.new),
+        backendContestsProvider.overrideWith((ref) async => _contests()),
       ],
       child: Builder(
         builder: (context) => MaterialApp.router(
@@ -200,6 +213,42 @@ const _books = [
   ),
 ];
 
+/// Maketdagi 6 fan: har birida 30 ta test, faollarining bonusi jami 250 DON.
+ContestBundle _contests() {
+  const subjects = [
+    'Ilmiy-ommabop',
+    'Matematika',
+    'Ingliz tili',
+    'Tarix',
+    'Geografiya',
+    'Biologiya',
+  ];
+  ContestModel test(String soha, int i, {required bool active}) => ContestModel(
+    id: '$soha-$i',
+    title: '$soha #$i',
+    description: '',
+    soha: soha,
+    ishtirokchilarSoni: 10,
+    deadline: DateTime(2026, 12, 31),
+    isActive: active,
+    placeholderColor: const Color(0xFF173654),
+    placeholderIcon: Icons.quiz_outlined,
+    bonus: 25,
+    savollarSoni: 10,
+    vaqtChegarasiDaq: 15,
+  );
+  return ContestBundle(
+    active: [
+      for (final s in subjects)
+        for (var i = 0; i < 10; i++) test(s, i, active: true),
+    ],
+    finished: [
+      for (final s in subjects)
+        for (var i = 10; i < 30; i++) test(s, i, active: false),
+    ],
+  );
+}
+
 /// Sevimlilar — backend so'rovisiz (test muhiti).
 class _OfflineFavorites extends FavoriteVideoIdsNotifier {
   @override
@@ -239,6 +288,13 @@ Future<void> _preloadGoogleFonts() async {
 }
 
 Future<void> _precacheImages(WidgetTester tester) async {
+  if (_page == 'tests') {
+    await precacheImage(
+      const AssetImage('assets/illustrations/tests_hero.png'),
+      tester.element(find.byType(TestsScreen)),
+    );
+    return;
+  }
   final context = tester.element(find.byType(HomeFeed));
   for (final url in [
     ..._videos.map((v) => v.thumbnailUrl),

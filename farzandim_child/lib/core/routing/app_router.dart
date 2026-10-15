@@ -52,8 +52,10 @@ import 'package:farzandim_child/features/audiobooks/presentation/screens/audiobo
 import 'package:farzandim_child/features/content/presentation/screens/content_hub_screen.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/contest_quiz_screen.dart';
-import 'package:farzandim_child/features/contests/presentation/screens/contests_screen.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/liked_tests_screen.dart';
+import 'package:farzandim_child/features/tests/presentation/screens/subject_tests_screen.dart';
+import 'package:farzandim_child/features/tests/presentation/screens/tests_screen.dart';
+import 'package:farzandim_child/features/tests/presentation/screens/tests_search_screen.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/liked_questions_screen.dart';
 import 'package:farzandim_child/features/don_history/presentation/screens/don_history_screen.dart';
 import 'package:farzandim_child/features/ranking/presentation/screens/ranking_screen.dart';
@@ -256,6 +258,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           '/audiobook-detail',
           '/audio-player',
           '/contests',
+          '/tests/subject',
+          '/tests/search',
           '/contest-quiz',
           '/liked-tests',
           '/liked-questions',
@@ -427,8 +431,25 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/contests',
+        pageBuilder: (context, state) => _slidePage(state, const TestsScreen()),
+      ),
+      GoRoute(
+        path: '/tests/subject',
+        // Fan kaliti `extra`da keladi; yo'q bo'lsa (deep-link / tiklash) —
+        // Testlar sahifasi.
+        redirect: (context, state) {
+          final key = state.extra;
+          return key is String && key.isNotEmpty ? null : '/contests';
+        },
+        pageBuilder: (context, state) => _slidePage(
+          state,
+          SubjectTestsScreen(subjectKey: (state.extra as String?) ?? ''),
+        ),
+      ),
+      GoRoute(
+        path: '/tests/search',
         pageBuilder: (context, state) =>
-            _slidePage(state, const ContestsScreen()),
+            _slidePage(state, const TestsSearchScreen()),
       ),
       GoRoute(
         path: '/liked-tests',
