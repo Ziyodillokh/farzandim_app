@@ -6,17 +6,13 @@
 // (`/tests/subject`); fan bo'yicha test bo'lmasa — xabar.
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim_child/features/contests/presentation/providers/contests_providers.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
 import 'package:farzandim_child/features/learning/domain/learning_models.dart';
 import 'package:farzandim_child/features/learning/presentation/providers/learning_providers.dart';
 import 'package:farzandim_child/features/learning/presentation/widgets/subject_icon.dart';
-import 'package:farzandim_child/features/tests/domain/test_subject.dart';
-import 'package:farzandim_child/features/tests/presentation/providers/tests_providers.dart';
+import 'package:farzandim_child/features/tests/presentation/open_subject_tests.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 const _heroTop = Color(0xFF00336E);
@@ -108,7 +104,11 @@ class TestsHeroCard extends ConsumerWidget {
                     SizedBox(
                       width: left + 1.5,
                       child: _StartButton(
-                        onTap: () => _openSubject(context, ref, plan.items),
+                        onTap: () => openSubjectTests(
+                          context,
+                          ref,
+                          plan.items.map((i) => i.subject),
+                        ),
                       ),
                     ),
                   ],
@@ -120,40 +120,6 @@ class TestsHeroCard extends ConsumerWidget {
       ),
     );
   }
-}
-
-/// Rejadagi birinchi testlari bor fanni ochadi; hech biri bo'lmasa — xabar.
-void _openSubject(
-  BuildContext context,
-  WidgetRef ref,
-  List<DailyPlanItem> items, {
-  Subject? only,
-}) {
-  HapticFeedback.selectionClick();
-  // Testlar hali yuklanmagan / xato — "tez orada" deyish noto'g'ri bo'lardi.
-  final async = ref.read(backendContestsProvider);
-  if (!async.hasValue) {
-    if (async.hasError) _showSnack(context, 'contests.loadError'.tr());
-    return;
-  }
-  final candidates = only == null ? items.map((i) => i.subject) : [only];
-  for (final subject in candidates) {
-    final key = subjectTestKey(subject);
-    final group = ref.read(testSubjectProvider(key));
-    if (group != null && group.count > 0) {
-      context.push('/tests/subject', extra: key);
-      return;
-    }
-  }
-  _showSnack(context, 'tests.subjectSoon'.tr());
-}
-
-void _showSnack(BuildContext context, String text) {
-  ScaffoldMessenger.maybeOf(context)
-    ?..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(content: Text(text), behavior: SnackBarBehavior.floating),
-    );
 }
 
 class _Illustration extends StatelessWidget {
@@ -198,8 +164,7 @@ class _PlanTiles extends ConsumerWidget {
           Expanded(
             child: _PlanTile(
               item: shown[i],
-              onTap: () =>
-                  _openSubject(context, ref, items, only: shown[i].subject),
+              onTap: () => openSubjectTests(context, ref, [shown[i].subject]),
             ),
           ),
         ],

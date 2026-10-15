@@ -12,7 +12,7 @@
 //     --dart-define=SHOT_LOCALE=uz               # ixtiyoriy: uz | ru | en
 //     --dart-define=SHOT_WIDTH=393 --dart-define=SHOT_HEIGHT=852
 //     --dart-define=SHOT_TEXT_SCALE=1.0          # ixtiyoriy: shrift masshtabi
-//     --dart-define=SHOT_PAGE=home               # home | tests
+//     --dart-define=SHOT_PAGE=home               # home | tests | progress
 //
 // Ma'lumotlar namunaviy (provider override'lar), tarmoq yo'q.
 
@@ -31,6 +31,7 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bo
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_feed.dart';
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:farzandim_child/features/notifications/presentation/providers/notifications_providers.dart';
+import 'package:farzandim_child/features/progress/presentation/screens/progress_screen.dart';
 import 'package:farzandim_child/features/tests/presentation/screens/tests_screen.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/video_engagement_providers.dart';
@@ -114,13 +115,23 @@ void main() {
 
 Widget _app() {
   final router = GoRouter(
-    initialLocation: _page == 'tests' ? '/contests' : '/dashboard',
+    initialLocation: switch (_page) {
+      'tests' => '/contests',
+      'progress' => '/progress',
+      _ => '/dashboard',
+    },
     routes: [
       GoRoute(
         path: '/dashboard',
         builder: (_, __) => HomeScaffold(
           onRefresh: () async {},
           navigation: const ChildBottomNavigation(showMiniPlayer: false),
+        ),
+      ),
+      GoRoute(
+        path: '/progress',
+        builder: (_, __) => const ProgressScreen(
+          navigation: ChildBottomNavigation(showMiniPlayer: false),
         ),
       ),
       GoRoute(
@@ -288,6 +299,7 @@ Future<void> _preloadGoogleFonts() async {
 }
 
 Future<void> _precacheImages(WidgetTester tester) async {
+  if (_page == 'progress') return;
   if (_page == 'tests') {
     await precacheImage(
       const AssetImage('assets/illustrations/tests_hero.png'),

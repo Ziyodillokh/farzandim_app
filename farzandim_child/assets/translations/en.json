@@ -52,7 +52,7 @@
     "audiobooks": "Audiobooks",
     "profile": "Profile",
     "library": "Library",
-    "results": "Results"
+    "results": "Progress"
   },
   "welcome": {
     "appName": "Parvoz",
@@ -1169,5 +1169,30 @@
     "searchEmpty": "Nothing found",
     "searchStart": "Start typing to search",
     "mixed": "Mixed"
+  },
+  "progress": {
+    "title": "Progress",
+    "weeklyLabel": "WEEKLY PROGRESS",
+    "overallGrowth": "Overall growth",
+    "vsLastWeek": "Compared to last week",
+    "overallResult": "Overall\nscore",
+    "testsThisWeek": "Tests solved\nthis week",
+    "correctAnswers": "Correct\nanswers",
+    "successStreak": "Success\nstreak",
+    "strongSubjects": "Strong subjects",
+    "strongSubtitle": "Subjects where you do best",
+    "seeAll": "See all",
+    "recentResults": "Recent results",
+    "recentSubtitle": "Results of recently solved tests",
+    "recommendation": "Tip",
+    "recommendationText": "Today we recommend solving {count} {subject} tests.",
+    "doTest": "Take a test",
+    "calendar": "Daily progress",
+    "resultTitle": "Test result",
+    "correctOf": "{correct}/{total} correct",
+    "retry": "Try again",
+    "noResults": "No results yet — solve your first test!",
+    "subjectsTitle": "Results by subject",
+    "allResultsTitle": "All results"
   }
 }

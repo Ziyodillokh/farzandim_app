@@ -6,7 +6,7 @@
 //   🏠 Asosiy     — /dashboard
 //   📚 Kutubxona  — /content (video darslar + audiokitoblar)
 //   📝 Testlar    — /contests
-//   📊 Natijalar  — /statistics (Natijalar sahifasi qurilguncha)
+//   📊 Rivojlanish — /progress
 //   👤 Profil     — /profile
 //
 // Faol tab — ko'k yumaloq-kvadrat fon + ko'k glow, oq ikon va yozuv.
@@ -18,6 +18,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/feature_flags.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
+import 'package:farzandim_child/features/progress/presentation/progress_icons.dart';
 import 'package:farzandim_child/shared/widgets/mini_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -84,10 +85,14 @@ final _tabs = <_Tab>[
     ),
   ),
   _Tab(
-    path: '/statistics',
+    path: '/progress',
     labelKey: 'nav.results',
-    icon: (c, _) => HomeSvgIcon(homeResultsSvg, size: 23, color: c),
-    alsoActiveOn: const ['/analytics'],
+    icon: (c, a) => HomeSvgIcon(
+      a ? progressBarsFilledSvg : homeResultsSvg,
+      size: 23,
+      color: c,
+    ),
+    alsoActiveOn: const ['/statistics', '/analytics'],
   ),
   _Tab(
     path: '/profile',

@@ -52,7 +52,7 @@
     "audiobooks": "Аудиокниги",
     "profile": "Профиль",
     "library": "Библиотека",
-    "results": "Результаты"
+    "results": "Развитие"
   },
   "welcome": {
     "appName": "Parvoz",
@@ -1175,5 +1175,30 @@
     "searchEmpty": "Ничего не найдено",
     "searchStart": "Начните вводить для поиска",
     "mixed": "Разное"
+  },
+  "progress": {
+    "title": "Развитие",
+    "weeklyLabel": "РАЗВИТИЕ ЗА НЕДЕЛЮ",
+    "overallGrowth": "Общий рост",
+    "vsLastWeek": "По сравнению с прошлой неделей",
+    "overallResult": "Общий\nрезультат",
+    "testsThisWeek": "Тестов решено\nза неделю",
+    "correctAnswers": "Правильных\nответов",
+    "successStreak": "Успехов\nподряд",
+    "strongSubjects": "Сильные предметы",
+    "strongSubtitle": "Предметы, где у вас лучшие результаты",
+    "seeAll": "Смотреть все",
+    "recentResults": "Последние результаты",
+    "recentSubtitle": "Результаты недавно решённых тестов",
+    "recommendation": "Совет",
+    "recommendationText": "Сегодня рекомендуется решить {count} тестов по предмету {subject}.",
+    "doTest": "Решать тест",
+    "calendar": "Ежедневный прогресс",
+    "resultTitle": "Результат теста",
+    "correctOf": "{correct}/{total} правильных ответов",
+    "retry": "Решить ещё",
+    "noResults": "Пока нет результатов — решите первый тест!",
+    "subjectsTitle": "Результаты по предметам",
+    "allResultsTitle": "Все результаты"
   }
 }

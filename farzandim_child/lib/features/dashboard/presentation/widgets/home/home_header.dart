@@ -42,11 +42,13 @@ class PageHeader extends StatelessWidget {
     required this.title,
     this.actions = const [],
     this.titleSize = 28.5,
+    this.titleLetterSpacing = -0.2,
   });
 
   final String title;
   final List<Widget> actions;
   final double titleSize;
+  final double titleLetterSpacing;
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +59,7 @@ class PageHeader extends StatelessWidget {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: homeDisplay(titleSize, letterSpacing: -0.2),
+            style: homeDisplay(titleSize, letterSpacing: titleLetterSpacing),
           ),
         ),
         for (var i = 0; i < actions.length; i++) ...[

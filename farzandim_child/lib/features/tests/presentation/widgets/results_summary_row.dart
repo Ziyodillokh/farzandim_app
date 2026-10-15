@@ -1,5 +1,5 @@
 // "So‘nggi natijalar" — ixcham qator: ikon, o'rtacha natija, bezak ustunlar.
-// Bosilsa Natijalar (hozircha Statistika) sahifasi ochiladi.
+// Bosilsa Rivojlanish sahifasi ochiladi.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
@@ -33,7 +33,7 @@ class ResultsSummaryRow extends ConsumerWidget {
     return Semantics(
       button: true,
       child: GestureDetector(
-        onTap: () => context.push('/statistics'),
+        onTap: () => context.push('/progress'),
         behavior: HitTestBehavior.opaque,
         child: Container(
           height: 66,

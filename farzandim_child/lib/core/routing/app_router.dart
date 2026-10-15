@@ -53,6 +53,8 @@ import 'package:farzandim_child/features/content/presentation/screens/content_hu
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/contest_quiz_screen.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/liked_tests_screen.dart';
+import 'package:farzandim_child/features/progress/presentation/screens/progress_lists_screens.dart';
+import 'package:farzandim_child/features/progress/presentation/screens/progress_screen.dart';
 import 'package:farzandim_child/features/tests/presentation/screens/subject_tests_screen.dart';
 import 'package:farzandim_child/features/tests/presentation/screens/tests_screen.dart';
 import 'package:farzandim_child/features/tests/presentation/screens/tests_search_screen.dart';
@@ -260,6 +262,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           '/contests',
           '/tests/subject',
           '/tests/search',
+          '/progress',
+          '/progress/subjects',
+          '/progress/results',
           '/contest-quiz',
           '/liked-tests',
           '/liked-questions',
@@ -445,6 +450,21 @@ final routerProvider = Provider<GoRouter>((ref) {
           state,
           SubjectTestsScreen(subjectKey: (state.extra as String?) ?? ''),
         ),
+      ),
+      GoRoute(
+        path: '/progress',
+        pageBuilder: (context, state) =>
+            _slidePage(state, const ProgressScreen()),
+      ),
+      GoRoute(
+        path: '/progress/subjects',
+        pageBuilder: (context, state) =>
+            _slidePage(state, const ProgressSubjectsScreen()),
+      ),
+      GoRoute(
+        path: '/progress/results',
+        pageBuilder: (context, state) =>
+            _slidePage(state, const ProgressResultsScreen()),
       ),
       GoRoute(
         path: '/tests/search',

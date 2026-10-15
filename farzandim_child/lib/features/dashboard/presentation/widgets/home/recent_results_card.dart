@@ -1,7 +1,7 @@
 // "So‘nggi natijalar" — o'rtacha natija halqasi, kuchli fan va tavsiya.
 //
 // Ma'lumot `learningSummaryProvider`dan (hozircha preview). Bosilsa
-// Natijalar (hozircha Statistika) sahifasi ochiladi.
+// Rivojlanish sahifasi ochiladi.
 
 import 'dart:math' as math;
 
@@ -25,7 +25,7 @@ class RecentResultsCard extends ConsumerWidget {
     final focus = summary.focusSubject;
 
     return GestureDetector(
-      onTap: () => context.push('/statistics'),
+      onTap: () => context.push('/progress'),
       behavior: HitTestBehavior.opaque,
       child: Container(
         decoration: homeCardDecoration(),

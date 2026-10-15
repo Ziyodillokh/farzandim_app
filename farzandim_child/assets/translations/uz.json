@@ -52,7 +52,7 @@
     "audiobooks": "Audiokitoblar",
     "profile": "Profil",
     "library": "Kutubxona",
-    "results": "Natijalar"
+    "results": "Rivojlanish"
   },
   "welcome": {
     "appName": "Parvoz",
@@ -1166,5 +1166,30 @@
     "searchEmpty": "Hech narsa topilmadi",
     "searchStart": "Qidirish uchun yozing",
     "mixed": "Aralash"
+  },
+  "progress": {
+    "title": "Rivojlanish",
+    "weeklyLabel": "HAFTALIK RIVOJLANISH",
+    "overallGrowth": "Umumiy o‘sish",
+    "vsLastWeek": "O‘tgan haftaga nisbatan",
+    "overallResult": "Umumiy\nnatija",
+    "testsThisWeek": "Bu hafta\nyechilgan test",
+    "correctAnswers": "To‘g‘ri javoblar\nsoni",
+    "successStreak": "Ketma-ket\nmuvaffaqiyat",
+    "strongSubjects": "Kuchli fanlar",
+    "strongSubtitle": "Siz eng yaxshi natija ko‘rsatayotgan fanlar",
+    "seeAll": "Barchasini ko‘rish",
+    "recentResults": "So‘nggi natijalar",
+    "recentSubtitle": "Yaqinda yechilgan testlar natijalari",
+    "recommendation": "Tavsiya",
+    "recommendationText": "Bugun {subject} bo‘yicha {count} ta test ishlash tavsiya etiladi.",
+    "doTest": "Test ishlash",
+    "calendar": "Kunlik rivojlanish",
+    "resultTitle": "Test natijasi",
+    "correctOf": "{correct}/{total} to‘g‘ri javob",
+    "retry": "Yana ishlash",
+    "noResults": "Hali natija yo‘q — birinchi testni yeching!",
+    "subjectsTitle": "Fanlar bo‘yicha natija",
+    "allResultsTitle": "Barcha natijalar"
   }
 }
