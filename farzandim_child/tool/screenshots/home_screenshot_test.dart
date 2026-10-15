@@ -13,6 +13,8 @@
 //     --dart-define=SHOT_WIDTH=393 --dart-define=SHOT_HEIGHT=852
 //     --dart-define=SHOT_TEXT_SCALE=1.0          # ixtiyoriy: shrift masshtabi
 //     --dart-define=SHOT_PAGE=home               # home | tests | progress | library | library_audio
+//                                                # + learning_shots.dart: quiz, result, setup, calendar…
+//     --dart-define=SHOT_STATE=fresh             # fresh | partial | done | nosetup (kunlik reja)
 //
 // Ma'lumotlar namunaviy (provider override'lar), tarmoq yo'q.
 
@@ -45,6 +47,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'learning_shots.dart';
 
 const _out = String.fromEnvironment('SHOT_OUT', defaultValue: 'build/home.png');
 const _imagesDir = String.fromEnvironment('SHOT_IMAGES');
@@ -108,6 +112,11 @@ void main() {
         await _precacheImages(tester);
       });
       await tester.pump(const Duration(milliseconds: 300));
+      await performLearningActions(tester, _page);
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 200)),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
 
       await tester.runAsync(() async {
         final render =
@@ -126,12 +135,14 @@ void main() {
 Widget _app() {
   final router = GoRouter(
     initialLocation: switch (_page) {
+      _ when learningLocation(_page) != null => learningLocation(_page)!,
       'tests' => '/contests',
       'progress' => '/progress',
       'library' || 'library_audio' => '/content',
       _ => '/dashboard',
     },
     routes: [
+      ...learningShotRoutes(),
       GoRoute(
         path: '/dashboard',
         builder: (_, __) => HomeScaffold(
@@ -168,6 +179,7 @@ Widget _app() {
     startLocale: const Locale(_locale),
     child: ProviderScope(
       overrides: [
+        ...learningOverrides(),
         backendGamificationProvider.overrideWith(
           (ref) => Stream.value(
             const BackendGamification(
@@ -385,7 +397,11 @@ Future<void> _preloadGoogleFonts() async {
 }
 
 Future<void> _precacheImages(WidgetTester tester) async {
-  if (_page == 'progress' || _page.startsWith('library')) return;
+  if (_page == 'progress' ||
+      _page.startsWith('library') ||
+      learningPages.contains(_page)) {
+    return;
+  }
   if (_page == 'tests') {
     await precacheImage(
       const AssetImage('assets/illustrations/tests_hero.png'),

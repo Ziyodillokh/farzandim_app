@@ -9,6 +9,7 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/home/hom
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:farzandim_child/features/learning/presentation/providers/learning_providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -36,49 +37,53 @@ class HomeStatCards extends ConsumerWidget {
     final don = backend?.don ?? profile?.don ?? 0;
     final solved = ref.watch(learningSummaryProvider).solvedQuestions;
 
-    return GestureDetector(
-      onTap: () => context.push('/statistics'),
-      behavior: HitTestBehavior.opaque,
-      child: Row(
-        children: [
-          Expanded(
-            child: _StatCard(
-              glow: HomeColors.amber,
-              icon: SolarIconsBold.fire,
-              iconColor: HomeColors.amber,
-              value: 'statistics.daysCount'.tr(namedArgs: {'days': '$streak'}),
-              label: 'home.streak'.tr(),
-            ),
+    // Har karta o'z sahifasini ochadi: ketma-ketlik, natijalar, DON tarixi.
+    return Row(
+      children: [
+        Expanded(
+          child: GrowthStatCard(
+            onTap: () => context.push('/streak-detail'),
+            glow: HomeColors.amber,
+            icon: SolarIconsBold.fire,
+            iconColor: HomeColors.amber,
+            value: 'statistics.daysCount'.tr(namedArgs: {'days': '$streak'}),
+            label: 'home.streak'.tr(),
           ),
-          const SizedBox(width: 7),
-          Expanded(
-            child: _StatCard(
-              glow: HomeColors.blue,
-              icon: SolarIconsBold.fileText,
-              iconColor: HomeColors.blue,
-              value: formatHomeNumber(solved),
-              label: 'home.solved'.tr(),
-            ),
+        ),
+        const SizedBox(width: 7),
+        Expanded(
+          child: GrowthStatCard(
+            onTap: () => context.push('/progress/results'),
+            glow: HomeColors.blue,
+            icon: SolarIconsBold.fileText,
+            iconColor: HomeColors.blue,
+            value: formatHomeNumber(solved),
+            label: 'home.solved'.tr(),
           ),
-          const SizedBox(width: 7),
-          Expanded(
-            child: _StatCard(
-              glow: HomeColors.green,
-              icon: SolarIconsBold.dollar,
-              iconColor: HomeColors.green,
-              value: formatHomeNumber(don),
-              label: 'home.balance'.tr(),
-              trailing: const DonBadge(),
-            ),
+        ),
+        const SizedBox(width: 7),
+        Expanded(
+          child: GrowthStatCard(
+            onTap: () => context.push('/don-history'),
+            glow: HomeColors.green,
+            icon: SolarIconsBold.dollar,
+            iconColor: HomeColors.green,
+            value: formatHomeNumber(don),
+            label: 'home.balance'.tr(),
+            trailing: const DonBadge(),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({
+/// Stat karta (bosh sahifa va Profil): ikon, qiymat (+ belgi), yorliq va
+/// rangli glow. Bosilsa [onTap].
+class GrowthStatCard extends StatelessWidget {
+  const GrowthStatCard({
+    super.key,
+    required this.onTap,
     required this.glow,
     required this.icon,
     required this.iconColor,
@@ -87,6 +92,7 @@ class _StatCard extends StatelessWidget {
     this.trailing,
   });
 
+  final VoidCallback onTap;
   final Color glow;
   final IconData icon;
   final Color iconColor;
@@ -104,6 +110,20 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scaled = MediaQuery.textScalerOf(context).scale(_textBlock);
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        behavior: HitTestBehavior.opaque,
+        child: _card(scaled),
+      ),
+    );
+  }
+
+  Widget _card(double scaled) {
     return Container(
       height: _baseHeight + (scaled - _textBlock).clamp(0, 60),
       clipBehavior: Clip.antiAlias,
@@ -146,28 +166,29 @@ class _StatCard extends StatelessWidget {
               children: [
                 Icon(icon, size: 25, color: iconColor),
                 const Spacer(),
-                Row(
-                  children: [
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          value,
-                          maxLines: 1,
-                          style: homeDisplay(
-                            17.5,
-                            height: 1.1,
-                            letterSpacing: -0.2,
-                          ),
+                // Qiymat va belgi birga kichrayadi (tor ekranda raqam
+                // yolg'iz siqilib qolmasin).
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        value,
+                        maxLines: 1,
+                        style: homeDisplay(
+                          17.5,
+                          height: 1.1,
+                          letterSpacing: -0.2,
                         ),
                       ),
-                    ),
-                    if (trailing != null) ...[
-                      const SizedBox(width: 5),
-                      trailing!,
+                      if (trailing != null) ...[
+                        const SizedBox(width: 5),
+                        trailing!,
+                      ],
                     ],
-                  ],
+                  ),
                 ),
                 const SizedBox(height: 3),
                 FitText(

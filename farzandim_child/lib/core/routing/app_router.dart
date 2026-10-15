@@ -21,6 +21,9 @@
 
 import 'package:farzandim_child/core/feature_flags.dart';
 import 'package:farzandim_child/core/platform/platform_capabilities.dart';
+import 'package:farzandim_child/core/routing/growth_routes.dart';
+import 'package:farzandim_child/core/routing/route_pages.dart';
+import 'package:farzandim_child/features/learning/presentation/screens/learning_setup_screen.dart';
 import 'package:farzandim_child/features/consent/presentation/providers/consent_provider.dart';
 import 'package:farzandim_child/features/consent/presentation/screens/consent_screen.dart';
 import 'package:farzandim_child/features/account/presentation/screens/account_edit_screen.dart';
@@ -47,16 +50,10 @@ import 'package:farzandim_child/features/books/presentation/screens/books_feed_s
 import 'package:farzandim_child/features/books/presentation/screens/pdf_viewer_screen.dart';
 import 'package:farzandim_child/features/gamification/presentation/screens/profile_screen.dart';
 import 'package:farzandim_child/features/notifications/presentation/screens/notifications_screen.dart';
-import 'package:farzandim_child/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:farzandim_child/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/contest_quiz_screen.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/liked_tests_screen.dart';
-import 'package:farzandim_child/features/progress/presentation/screens/progress_lists_screens.dart';
-import 'package:farzandim_child/features/progress/presentation/screens/progress_screen.dart';
-import 'package:farzandim_child/features/tests/presentation/screens/subject_tests_screen.dart';
-import 'package:farzandim_child/features/tests/presentation/screens/tests_screen.dart';
-import 'package:farzandim_child/features/tests/presentation/screens/tests_search_screen.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/liked_questions_screen.dart';
 import 'package:farzandim_child/features/don_history/presentation/screens/don_history_screen.dart';
 import 'package:farzandim_child/features/ranking/presentation/screens/ranking_screen.dart';
@@ -81,48 +78,6 @@ import 'package:farzandim_child/features/onboarding/presentation/screens/languag
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-/// Slide right-to-left page transition — Dashboard'dan boshqa ekranga
-/// ochilganda zamonaviy "drill-down" his. 250ms, easeOutCubic.
-/// Pastki nav tablari uchun — siljimaydi, oniy almashadi: nav bir joyda
-/// turadi va "qimirlab" ketmaydi.
-CustomTransitionPage<T> _tabPage<T>(GoRouterState state, Widget child) {
-  return CustomTransitionPage<T>(
-    key: state.pageKey,
-    // Tab bar odatiy xatti-harakati: oniy almashinuv (animatsiya paytida
-    // ikki sahifaning navi ustma-ust tushib, ikonlar "qimirlamaydi").
-    transitionDuration: Duration.zero,
-    reverseTransitionDuration: Duration.zero,
-    child: child,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-        child,
-  );
-}
-
-CustomTransitionPage<T> _slidePage<T>(GoRouterState state, Widget child) {
-  return CustomTransitionPage<T>(
-    // go_router'ning noyob pageKey'i — bir xil ekran stack'da takror
-    // bo'lsa ham kalitlar to'qnashmaydi (duplicate page key crash fix).
-    key: state.pageKey,
-    transitionDuration: const Duration(milliseconds: 250),
-    reverseTransitionDuration: const Duration(milliseconds: 200),
-    child: child,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeInCubic,
-      );
-      return SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0.08, 0),
-          end: Offset.zero,
-        ).animate(curved),
-        child: FadeTransition(opacity: curved, child: child),
-      );
-    },
-  );
-}
 
 /// `/video-player` uchun wrapper — ochilgan videoni "Ko'rish tarixi"ga yozadi,
 /// so'ng havola turiga qarab kerakli player'ni ochadi (YouTube / reels /
@@ -263,7 +218,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // hozircha mock data — `kEnableContentLibrary` `false` paytda
       // /dashboard'ga qaytariladi (deep-link himoyasi).
       if (!kEnableContentLibrary) {
-        const contentPaths = {
+        final contentPaths = {
           '/analytics',
           '/videos',
           '/video-player',
@@ -272,12 +227,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           '/audiobooks',
           '/audiobook-detail',
           '/audio-player',
-          '/contests',
-          '/tests/subject',
-          '/tests/search',
-          '/progress',
-          '/progress/subjects',
-          '/progress/results',
+          ...growthContentPaths,
           '/contest-quiz',
           '/liked-tests',
           '/liked-questions',
@@ -309,11 +259,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/welcome',
         builder: (_, __) => const LanguageSelectScreen(),
       ),
-      // 3 ta slaydli onboarding — birinchi ochilishda Splash yo'naltiradi.
-      // SharedPreferences `onboarding_seen_v1` tugagach qayta ko'rsatilmaydi.
+      // Onboarding (sinf → fanlar → qiziqishlar) — pair'dan keyin Splash
+      // bir marta yo'naltiradi (`onboarding_seen_v1`).
       GoRoute(
         path: '/onboarding',
-        builder: (_, __) => const OnboardingScreen(),
+        builder: (_, __) => const LearningSetupScreen(isOnboarding: true),
       ),
       GoRoute(path: '/pairing', builder: (_, __) => const PairingScreen()),
       GoRoute(
@@ -325,62 +275,62 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/dashboard',
         pageBuilder: (context, state) =>
-            _tabPage(state, const ChildDashboardScreen()),
+            tabPage(state, const ChildDashboardScreen()),
       ),
       GoRoute(
         path: '/account-edit',
         pageBuilder: (context, state) =>
-            _slidePage(state, const AccountEditScreen()),
+            slidePage(state, const AccountEditScreen()),
       ),
       GoRoute(
         path: '/settings',
         pageBuilder: (context, state) =>
-            _slidePage(state, const SettingsScreen()),
+            slidePage(state, const SettingsScreen()),
       ),
       GoRoute(
         path: '/profile',
-        pageBuilder: (context, state) => _tabPage(state, const ProfileScreen()),
+        pageBuilder: (context, state) => tabPage(state, const ProfileScreen()),
       ),
       GoRoute(
         path: '/notifications',
         pageBuilder: (context, state) =>
-            _slidePage(state, const NotificationsScreen()),
+            slidePage(state, const NotificationsScreen()),
       ),
       // Sprint 4.4.40: "Hammasini ko'rish" tugmasi tap → bola statistika
       // ekrani (Date navigator + ScreenTimeChart + barcha ilovalar).
       GoRoute(
         path: '/analytics',
         pageBuilder: (context, state) =>
-            _slidePage(state, const AnalyticsScreen()),
+            slidePage(state, const AnalyticsScreen()),
       ),
       // Dashboard'dagi stat chiplar (streak/qadam/DON) → Statistika sahifasi.
       GoRoute(
         path: '/statistics',
         pageBuilder: (context, state) =>
-            _tabPage(state, const StatisticsScreen()),
+            tabPage(state, const StatisticsScreen()),
       ),
       // "Kunlik rivojlanish" kartasi → streak + medallar batafsil.
       GoRoute(
         path: '/streak-detail',
         pageBuilder: (context, state) =>
-            _slidePage(state, const StreakDetailScreen()),
+            slidePage(state, const StreakDetailScreen()),
       ),
       // "Kunlik qadamlar" kartasi → qadam batafsil.
       GoRoute(
         path: '/steps-detail',
         pageBuilder: (context, state) =>
-            _slidePage(state, const StepsDetailScreen()),
+            slidePage(state, const StepsDetailScreen()),
       ),
       // Kunlik rivojlanishni ulashish (qadam/DON/streak kartochka → share).
       GoRoute(
         path: '/daily-share',
         pageBuilder: (context, state) =>
-            _slidePage(state, const DailyShareScreen()),
+            slidePage(state, const DailyShareScreen()),
       ),
       GoRoute(
         path: '/videos',
         pageBuilder: (context, state) =>
-            _tabPage(state, const LibraryScreen(initialTab: LibraryTab.videos)),
+            tabPage(state, const LibraryScreen(initialTab: LibraryTab.videos)),
       ),
       GoRoute(
         path: '/video-player',
@@ -390,16 +340,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/watch-history',
         pageBuilder: (context, state) =>
-            _slidePage(state, const WatchHistoryScreen()),
+            slidePage(state, const WatchHistoryScreen()),
       ),
       GoRoute(
         path: '/liked-videos',
         pageBuilder: (context, state) =>
-            _slidePage(state, const LikedVideosScreen()),
+            slidePage(state, const LikedVideosScreen()),
       ),
       GoRoute(
         path: '/audiobooks',
-        pageBuilder: (context, state) => _tabPage(
+        pageBuilder: (context, state) => tabPage(
           state,
           const LibraryScreen(initialTab: LibraryTab.audiobooks),
         ),
@@ -408,11 +358,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Bottom nav endi shu yagona tabga olib boradi (avval 2 ta alohida edi).
       GoRoute(
         path: '/content',
-        pageBuilder: (context, state) => _tabPage(state, const LibraryScreen()),
+        pageBuilder: (context, state) => tabPage(state, const LibraryScreen()),
       ),
       GoRoute(
         path: '/audiobook-detail',
-        pageBuilder: (context, state) => _slidePage(
+        pageBuilder: (context, state) => slidePage(
           state,
           AudiobookDetailScreen(series: state.extra! as AudiobookSeries),
         ),
@@ -420,13 +370,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/audio-player',
         pageBuilder: (context, state) =>
-            _slidePage(state, const AudioPlayerScreen()),
+            slidePage(state, const AudioPlayerScreen()),
       ),
       // Sprint 5.x — Books feature
       GoRoute(
         path: '/books',
         pageBuilder: (context, state) =>
-            _slidePage(state, const BooksFeedScreen()),
+            slidePage(state, const BooksFeedScreen()),
       ),
       GoRoute(
         path: '/books/pdf',
@@ -439,7 +389,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/articles',
         pageBuilder: (context, state) =>
-            _slidePage(state, const ArticlesFeedScreen()),
+            slidePage(state, const ArticlesFeedScreen()),
       ),
       GoRoute(
         path: '/articles/view',
@@ -448,52 +398,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           return ArticleViewScreen(article: article);
         },
       ),
-      GoRoute(
-        path: '/contests',
-        pageBuilder: (context, state) => _tabPage(state, const TestsScreen()),
-      ),
-      GoRoute(
-        path: '/tests/subject',
-        // Fan kaliti `extra`da keladi; yo'q bo'lsa (deep-link / tiklash) —
-        // Testlar sahifasi.
-        redirect: (context, state) {
-          final key = state.extra;
-          return key is String && key.isNotEmpty ? null : '/contests';
-        },
-        pageBuilder: (context, state) => _slidePage(
-          state,
-          SubjectTestsScreen(subjectKey: (state.extra as String?) ?? ''),
-        ),
-      ),
-      GoRoute(
-        path: '/progress',
-        pageBuilder: (context, state) =>
-            _tabPage(state, const ProgressScreen()),
-      ),
-      GoRoute(
-        path: '/progress/subjects',
-        pageBuilder: (context, state) =>
-            _slidePage(state, const ProgressSubjectsScreen()),
-      ),
-      GoRoute(
-        path: '/progress/results',
-        pageBuilder: (context, state) =>
-            _slidePage(state, const ProgressResultsScreen()),
-      ),
-      GoRoute(
-        path: '/tests/search',
-        pageBuilder: (context, state) =>
-            _slidePage(state, const TestsSearchScreen()),
-      ),
+      ...growthRoutes,
       GoRoute(
         path: '/liked-tests',
         pageBuilder: (context, state) =>
-            _slidePage(state, const LikedTestsScreen()),
+            slidePage(state, const LikedTestsScreen()),
       ),
       GoRoute(
         path: '/liked-questions',
         pageBuilder: (context, state) =>
-            _slidePage(state, const LikedQuestionsScreen()),
+            slidePage(state, const LikedQuestionsScreen()),
       ),
       // #56 — Sertifikat (g'olib uchun)
       GoRoute(
@@ -513,12 +427,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/ranking',
         pageBuilder: (context, state) =>
-            _slidePage(state, const RankingScreen()),
+            slidePage(state, const RankingScreen()),
       ),
       GoRoute(
         path: '/don-history',
         pageBuilder: (context, state) =>
-            _slidePage(state, const DonHistoryScreen()),
+            slidePage(state, const DonHistoryScreen()),
       ),
       GoRoute(
         path: '/video-recording',
@@ -540,22 +454,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/chats',
         pageBuilder: (context, state) =>
-            _slidePage(state, const ChatsListScreen()),
+            slidePage(state, const ChatsListScreen()),
       ),
       GoRoute(
         path: '/voice-chat',
         pageBuilder: (context, state) =>
-            _slidePage(state, const VoiceChatScreen()),
+            slidePage(state, const VoiceChatScreen()),
       ),
       GoRoute(
         path: '/schedules',
         pageBuilder: (context, state) =>
-            _slidePage(state, const SchedulesScreen()),
+            slidePage(state, const SchedulesScreen()),
       ),
       GoRoute(
         path: '/screen-time',
         pageBuilder: (context, state) =>
-            _slidePage(state, const ScreenTimeScreen()),
+            slidePage(state, const ScreenTimeScreen()),
       ),
       GoRoute(
         path: '/permission-setup',

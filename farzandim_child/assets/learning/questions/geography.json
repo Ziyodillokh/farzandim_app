@@ -1,0 +1,230 @@
+{
+  "subject": "geography",
+  "questions": [
+    {
+      "id": "geography-01",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {"uz": "Okeanlar", "ru": "Океаны", "en": "Oceans"},
+      "question": {"uz": "Yer sharidagi eng katta okean qaysi?", "ru": "Какой океан самый большой на Земле?", "en": "Which is the largest ocean on Earth?"},
+      "options": [
+        {"uz": "Atlantika okeani", "ru": "Атлантический", "en": "Atlantic Ocean"},
+        {"uz": "Hind okeani", "ru": "Индийский", "en": "Indian Ocean"},
+        {"uz": "Tinch okeani", "ru": "Тихий", "en": "Pacific Ocean"},
+        {"uz": "Shimoliy Muz okeani", "ru": "Северный Ледовитый", "en": "Arctic Ocean"}
+      ],
+      "answer": 2,
+      "explanation": {"uz": "Tinch okeani eng katta va eng chuqur okean bo‘lib, Yer yuzasining qariyb uchdan bir qismini egallaydi.", "ru": "Тихий океан — самый большой и самый глубокий: он занимает почти треть поверхности Земли.", "en": "The Pacific is the largest and deepest ocean, covering almost a third of the Earth's surface."}
+    },
+    {
+      "id": "geography-02",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {"uz": "Materiklar", "ru": "Материки", "en": "Continents"},
+      "question": {"uz": "Eng katta materik qaysi?", "ru": "Какой материк самый большой?", "en": "Which is the largest continent?"},
+      "options": [
+        {"uz": "Yevroosiyo", "ru": "Евразия", "en": "Eurasia"},
+        {"uz": "Afrika", "ru": "Африка", "en": "Africa"},
+        {"uz": "Antarktida", "ru": "Антарктида", "en": "Antarctica"},
+        {"uz": "Shimoliy Amerika", "ru": "Северная Америка", "en": "North America"}
+      ],
+      "answer": 0,
+      "explanation": {"uz": "Yevroosiyo eng katta materik bo‘lib, unda dunyoning ikki qismi — Yevropa va Osiyo joylashgan. O‘zbekiston ham shu materikda.", "ru": "Евразия — самый большой материк, на нём расположены две части света: Европа и Азия. Узбекистан тоже находится здесь.", "en": "Eurasia is the largest continent and includes two parts of the world, Europe and Asia. Uzbekistan is located on it too."}
+    },
+    {
+      "id": "geography-03",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {"uz": "O‘zbekiston geografiyasi", "ru": "География Узбекистана", "en": "Geography of Uzbekistan"},
+      "question": {"uz": "O‘zbekiston Respublikasining poytaxti qaysi shahar?", "ru": "Какой город является столицей Республики Узбекистан?", "en": "What is the capital city of the Republic of Uzbekistan?"},
+      "options": [
+        {"uz": "Samarqand", "ru": "Самарканд", "en": "Samarkand"},
+        {"uz": "Toshkent", "ru": "Ташкент", "en": "Tashkent"},
+        {"uz": "Buxoro", "ru": "Бухара", "en": "Bukhara"},
+        {"uz": "Namangan", "ru": "Наманган", "en": "Namangan"}
+      ],
+      "answer": 1,
+      "explanation": {"uz": "Toshkent — O‘zbekistonning poytaxti va eng katta shahri. U Chirchiq daryosi vodiysida joylashgan.", "ru": "Ташкент — столица и самый крупный город Узбекистана. Он расположен в долине реки Чирчик.", "en": "Tashkent is the capital and largest city of Uzbekistan. It lies in the valley of the Chirchiq River."}
+    },
+    {
+      "id": "geography-04",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {"uz": "Tog‘lar", "ru": "Горы", "en": "Mountains"},
+      "question": {"uz": "Dunyodagi eng baland tog‘ cho‘qqisi qaysi?", "ru": "Какая горная вершина самая высокая в мире?", "en": "Which is the highest mountain peak in the world?"},
+      "options": [
+        {"uz": "Elbrus", "ru": "Эльбрус", "en": "Elbrus"},
+        {"uz": "Kilimanjaro", "ru": "Килиманджаро", "en": "Kilimanjaro"},
+        {"uz": "Monblan", "ru": "Монблан", "en": "Mont Blanc"},
+        {"uz": "Jomolungma (Everest)", "ru": "Джомолунгма (Эверест)", "en": "Everest (Chomolungma)"}
+      ],
+      "answer": 3,
+      "explanation": {"uz": "Jomolungma (Everest) Himolay tog‘larida joylashgan va uning balandligi 8848 metrdan oshadi.", "ru": "Джомолунгма (Эверест) находится в Гималаях, её высота превышает 8848 метров.", "en": "Everest (Chomolungma) is in the Himalayas, and its height is more than 8,848 metres."}
+    },
+    {
+      "id": "geography-05",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {"uz": "Orol dengizi", "ru": "Аральское море", "en": "Aral Sea"},
+      "question": {"uz": "Amudaryo va Sirdaryo qaysi suv havzasiga quyiladi?", "ru": "В какой водоём впадают Амударья и Сырдарья?", "en": "Which body of water do the Amu Darya and the Syr Darya flow into?"},
+      "options": [
+        {"uz": "Kaspiy dengizi", "ru": "Каспийское море", "en": "Caspian Sea"},
+        {"uz": "Orol dengizi", "ru": "Аральское море", "en": "Aral Sea"},
+        {"uz": "Qora dengiz", "ru": "Чёрное море", "en": "Black Sea"},
+        {"uz": "Issiqko‘l", "ru": "Иссык-Куль", "en": "Lake Issyk-Kul"}
+      ],
+      "answer": 1,
+      "explanation": {"uz": "Ikkala daryo ham Orol dengiziga quyiladi. Suvning ko‘p qismi sug‘orishga sarflangani uchun Orol dengizi ancha qurib, kichrayib ketgan.", "ru": "Обе реки впадают в Аральское море. Из-за того что много воды забирают на орошение, море сильно обмелело и уменьшилось.", "en": "Both rivers flow into the Aral Sea. Because so much of their water is used for irrigation, the sea has shrunk dramatically."}
+    },
+    {
+      "id": "geography-06",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {"uz": "Ma’muriy bo‘linish", "ru": "Административное деление", "en": "Administrative divisions"},
+      "question": {"uz": "O‘zbekiston tarkibida nechta viloyat bor?", "ru": "Сколько областей в составе Узбекистана?", "en": "How many regions (viloyats) does Uzbekistan have?"},
+      "options": [
+        {"uz": "8 ta", "ru": "8", "en": "8"},
+        {"uz": "10 ta", "ru": "10", "en": "10"},
+        {"uz": "12 ta", "ru": "12", "en": "12"},
+        {"uz": "14 ta", "ru": "14", "en": "14"}
+      ],
+      "answer": 2,
+      "explanation": {"uz": "O‘zbekistonda 12 ta viloyat bor. Ulardan tashqari, Qoraqalpog‘iston Respublikasi va Toshkent shahri ham alohida ma’muriy birlik hisoblanadi.", "ru": "В Узбекистане 12 областей. Кроме того, отдельными единицами являются Республика Каракалпакстан и город Ташкент.", "en": "Uzbekistan has 12 regions. In addition, the Republic of Karakalpakstan and the city of Tashkent are separate administrative units."}
+    },
+    {
+      "id": "geography-07",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {"uz": "Yerning tuzilishi", "ru": "Строение Земли", "en": "Earth's structure"},
+      "question": {"uz": "Yer po‘sti ostida joylashgan va Yer hajmining eng katta qismini egallaydigan qatlam qanday ataladi?", "ru": "Как называется слой под земной корой, который занимает большую часть объёма Земли?", "en": "What is the layer beneath the Earth's crust that makes up most of the Earth's volume called?"},
+      "options": [
+        {"uz": "Atmosfera", "ru": "Атмосфера", "en": "Atmosphere"},
+        {"uz": "Yadro", "ru": "Ядро", "en": "Core"},
+        {"uz": "Gidrosfera", "ru": "Гидросфера", "en": "Hydrosphere"},
+        {"uz": "Mantiya", "ru": "Мантия", "en": "Mantle"}
+      ],
+      "answer": 3,
+      "explanation": {"uz": "Mantiya Yer po‘sti bilan yadro orasida joylashgan va sayyora hajmining 80 foizdan ortig‘ini egallaydi.", "ru": "Мантия лежит между земной корой и ядром и занимает более 80 % объёма планеты.", "en": "The mantle lies between the crust and the core and makes up more than 80% of the planet's volume."}
+    },
+    {
+      "id": "geography-08",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {"uz": "Xarita va koordinatalar", "ru": "Карты и координаты", "en": "Maps and coordinates"},
+      "question": {"uz": "Geografik uzunlik qaysi chiziqdan boshlab hisoblanadi?", "ru": "От какой линии отсчитывается географическая долгота?", "en": "From which line is geographic longitude measured?"},
+      "options": [
+        {"uz": "Bosh (Grinvich) meridiani", "ru": "Нулевой (Гринвичский) меридиан", "en": "Prime (Greenwich) meridian"},
+        {"uz": "Ekvator", "ru": "Экватор", "en": "Equator"},
+        {"uz": "Shimoliy tropik", "ru": "Северный тропик", "en": "Tropic of Cancer"},
+        {"uz": "Shimoliy qutb doirasi", "ru": "Северный полярный круг", "en": "Arctic Circle"}
+      ],
+      "answer": 0,
+      "explanation": {"uz": "Uzunlik Grinvich orqali o‘tuvchi bosh meridiandan sharqqa va g‘arbga qarab 0° dan 180° gacha hisoblanadi. Kenglik esa ekvatordan hisoblanadi.", "ru": "Долготу отсчитывают от нулевого меридиана, проходящего через Гринвич, на восток и запад от 0° до 180°. А широту — от экватора.", "en": "Longitude is measured east and west from 0° to 180°, starting at the prime meridian through Greenwich. Latitude is measured from the Equator."}
+    },
+    {
+      "id": "geography-09",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {"uz": "Iqlim", "ru": "Климат", "en": "Climate"},
+      "question": {"uz": "O‘zbekiston iqlimi qanday iqlim turiga kiradi?", "ru": "К какому типу относится климат Узбекистана?", "en": "What type of climate does Uzbekistan have?"},
+      "options": [
+        {"uz": "Nam tropik", "ru": "Влажный тропический", "en": "Humid tropical"},
+        {"uz": "Ekvatorial", "ru": "Экваториальный", "en": "Equatorial"},
+        {"uz": "Keskin kontinental", "ru": "Резко континентальный", "en": "Sharply continental"},
+        {"uz": "Arktika iqlimi", "ru": "Арктический", "en": "Arctic"}
+      ],
+      "answer": 2,
+      "explanation": {"uz": "O‘zbekiston okeanlardan juda uzoqda joylashgan. Shuning uchun yozi issiq va quruq, qishi nisbatan sovuq, yog‘ingarchilik esa kam bo‘ladi.", "ru": "Узбекистан находится очень далеко от океанов. Поэтому лето здесь жаркое и сухое, зима сравнительно холодная, а осадков мало.", "en": "Uzbekistan is very far from any ocean. That is why summers are hot and dry, winters are fairly cold, and there is little rainfall."}
+    },
+    {
+      "id": "geography-10",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {"uz": "Tabiiy zonalar", "ru": "Природные зоны", "en": "Natural zones"},
+      "question": {"uz": "Yil bo‘yi issiq va deyarli har kuni yomg‘ir yog‘adigan, qalin doim yashil o‘rmonlar o‘sadigan tabiiy zona qaysi?", "ru": "В какой природной зоне круглый год жарко, почти каждый день идут дожди и растут густые вечнозелёные леса?", "en": "Which natural zone is hot all year, gets rain almost every day and has dense evergreen forests?"},
+      "options": [
+        {"uz": "Tundra", "ru": "Тундра", "en": "Tundra"},
+        {"uz": "Dasht", "ru": "Степь", "en": "Steppe"},
+        {"uz": "Cho‘l", "ru": "Пустыня", "en": "Desert"},
+        {"uz": "Nam ekvatorial o‘rmonlar", "ru": "Влажные экваториальные леса", "en": "Tropical rainforest"}
+      ],
+      "answer": 3,
+      "explanation": {"uz": "Nam ekvatorial o‘rmonlar ekvator yaqinida joylashgan. Masalan, Amazonka o‘rmonlari dunyodagi eng katta tropik o‘rmon hisoblanadi.", "ru": "Влажные экваториальные леса растут вблизи экватора. Например, леса Амазонии — крупнейший тропический лес в мире.", "en": "Tropical rainforests grow near the Equator. The Amazon rainforest, for example, is the largest tropical rainforest in the world."}
+    },
+    {
+      "id": "geography-11",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {"uz": "O‘zbekiston tog‘lari", "ru": "Горы Узбекистана", "en": "Mountains of Uzbekistan"},
+      "question": {"uz": "O‘zbekistonning eng baland nuqtasi — Hazrati Sulton cho‘qqisi qaysi tog‘ tizmasida joylashgan?", "ru": "В каком горном хребте находится высшая точка Узбекистана — пик Хазрет-Султан?", "en": "In which mountain range is Khazret Sultan, the highest point of Uzbekistan, located?"},
+      "options": [
+        {"uz": "Hisor tizmasi", "ru": "Гиссарский хребет", "en": "Gissar Range"},
+        {"uz": "Chotqol tizmasi", "ru": "Чаткальский хребет", "en": "Chatkal Range"},
+        {"uz": "Nurota tog‘lari", "ru": "Нуратинские горы", "en": "Nuratau Mountains"},
+        {"uz": "Qurama tizmasi", "ru": "Кураминский хребет", "en": "Kurama Range"}
+      ],
+      "answer": 0,
+      "explanation": {"uz": "Hazrati Sulton cho‘qqisi O‘zbekiston janubidagi Hisor tizmasida joylashgan va uning balandligi 4643 metr.", "ru": "Пик Хазрет-Султан находится в Гиссарском хребте на юге Узбекистана, его высота — 4643 метра.", "en": "Khazret Sultan is in the Gissar Range in the south of Uzbekistan, and it is 4,643 metres high."}
+    },
+    {
+      "id": "geography-12",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {"uz": "Cho‘llar", "ru": "Пустыни", "en": "Deserts"},
+      "question": {"uz": "Amudaryo va Sirdaryo oralig‘ida joylashgan katta cho‘l qaysi?", "ru": "Какая большая пустыня расположена между Амударьёй и Сырдарьёй?", "en": "Which large desert lies between the Amu Darya and the Syr Darya?"},
+      "options": [
+        {"uz": "Qoraqum", "ru": "Каракумы", "en": "Karakum"},
+        {"uz": "Qizilqum", "ru": "Кызылкум", "en": "Kyzylkum"},
+        {"uz": "Sahroi Kabir", "ru": "Сахара", "en": "Sahara"},
+        {"uz": "Gobi", "ru": "Гоби", "en": "Gobi"}
+      ],
+      "answer": 1,
+      "explanation": {"uz": "Qizilqum («qizil qum») Amudaryo va Sirdaryo oralig‘ida joylashgan. Qoraqum esa Amudaryoning janubi-g‘arbida, Turkmanistonda.", "ru": "Кызылкум («красные пески») лежит между Амударьёй и Сырдарьёй. А Каракумы находятся к юго-западу от Амударьи, в Туркменистане.", "en": "The Kyzylkum (“red sands”) lies between the Amu Darya and the Syr Darya. The Karakum is south-west of the Amu Darya, in Turkmenistan."}
+    },
+    {
+      "id": "geography-13",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {"uz": "Yerning harakati", "ru": "Движение Земли", "en": "Earth's motion"},
+      "question": {"uz": "Yerning o‘z o‘qi atrofida aylanishi natijasida nima sodir bo‘ladi?", "ru": "Что происходит в результате вращения Земли вокруг своей оси?", "en": "What happens as a result of the Earth spinning on its axis?"},
+      "options": [
+        {"uz": "Yil fasllari almashadi", "ru": "Сменяются времена года", "en": "The seasons change"},
+        {"uz": "Oy fazalari o‘zgaradi", "ru": "Меняются фазы Луны", "en": "The Moon's phases change"},
+        {"uz": "Kecha va kunduz almashadi", "ru": "Сменяются день и ночь", "en": "Day and night alternate"},
+        {"uz": "Zilzilalar sodir bo‘ladi", "ru": "Происходят землетрясения", "en": "Earthquakes happen"}
+      ],
+      "answer": 2,
+      "explanation": {"uz": "Yer o‘z o‘qi atrofida taxminan 24 soatda bir marta aylanadi, shu sababli kecha va kunduz almashadi. Fasllar esa Yer o‘qining og‘maligi va Quyosh atrofida aylanishi bilan bog‘liq.", "ru": "Земля делает оборот вокруг своей оси примерно за 24 часа, поэтому день сменяет ночь. А времена года связаны с наклоном земной оси и движением вокруг Солнца.", "en": "The Earth turns once on its axis about every 24 hours, which gives us day and night. The seasons come from the tilt of the Earth's axis as it travels around the Sun."}
+    },
+    {
+      "id": "geography-14",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {"uz": "Xarita masshtabi", "ru": "Масштаб карты", "en": "Map scale"},
+      "question": {"uz": "Masshtabi 1:100 000 bo‘lgan xaritadagi 1 sm joyda qancha masofaga teng?", "ru": "Какому расстоянию на местности соответствует 1 см на карте масштаба 1:100 000?", "en": "On a map with a scale of 1:100,000, how much real distance does 1 cm represent?"},
+      "options": [
+        {"uz": "100 m", "ru": "100 м", "en": "100 m"},
+        {"uz": "1 km", "ru": "1 км", "en": "1 km"},
+        {"uz": "10 km", "ru": "10 км", "en": "10 km"},
+        {"uz": "100 km", "ru": "100 км", "en": "100 km"}
+      ],
+      "answer": 1,
+      "explanation": {"uz": "1:100 000 masshtab xaritadagi 1 sm joyda 100 000 sm ga teng ekanini bildiradi. 100 000 sm = 1000 m = 1 km.", "ru": "Масштаб 1:100 000 означает, что 1 см на карте равен 100 000 см на местности, а 100 000 см = 1000 м = 1 км.", "en": "A scale of 1:100,000 means 1 cm on the map equals 100,000 cm on the ground, and 100,000 cm = 1,000 m = 1 km."}
+    },
+    {
+      "id": "geography-15",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {"uz": "Yarimsharlar", "ru": "Полушария", "en": "Hemispheres"},
+      "question": {"uz": "O‘zbekiston Yer sharining qaysi yarimsharlarida joylashgan?", "ru": "В каких полушариях Земли расположен Узбекистан?", "en": "In which hemispheres of the Earth is Uzbekistan located?"},
+      "options": [
+        {"uz": "Janubiy va Sharqiy", "ru": "Южное и Восточное", "en": "Southern and Eastern"},
+        {"uz": "Shimoliy va G‘arbiy", "ru": "Северное и Западное", "en": "Northern and Western"},
+        {"uz": "Janubiy va G‘arbiy", "ru": "Южное и Западное", "en": "Southern and Western"},
+        {"uz": "Shimoliy va Sharqiy", "ru": "Северное и Восточное", "en": "Northern and Eastern"}
+      ],
+      "answer": 3,
+      "explanation": {"uz": "O‘zbekiston ekvatordan shimolda va Grinvich meridianidan sharqda joylashgan, ya’ni Shimoliy va Sharqiy yarimsharlarda.", "ru": "Узбекистан лежит к северу от экватора и к востоку от Гринвичского меридиана — значит, в Северном и Восточном полушариях.", "en": "Uzbekistan lies north of the Equator and east of the Greenwich meridian, so it is in the Northern and Eastern hemispheres."}
+    }
+  ]
+}

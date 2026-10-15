@@ -5,7 +5,7 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/home/hom
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
 import 'package:farzandim_child/features/learning/domain/progress_models.dart';
 import 'package:farzandim_child/features/progress/presentation/progress_icons.dart';
-import 'package:farzandim_child/features/tests/presentation/open_subject_tests.dart';
+import 'package:farzandim_child/features/learning/presentation/learning_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -103,8 +103,7 @@ class RecommendationCard extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: _DoTestButton(
-              onTap: () =>
-                  openSubjectTests(context, ref, [recommendation.subject]),
+              onTap: () => openSubjectQuiz(context, recommendation.subject),
             ),
           ),
         ],

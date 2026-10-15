@@ -1,0 +1,695 @@
+{
+  "subject": "informatics",
+  "questions": [
+    {
+      "id": "informatics-01",
+      "difficulty": 1,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Axborot birliklari",
+        "ru": "Единицы информации",
+        "en": "Units of information"
+      },
+      "question": {
+        "uz": "1 baytda necha bit bor?",
+        "ru": "Сколько бит в 1 байте?",
+        "en": "How many bits are there in 1 byte?"
+      },
+      "options": [
+        {
+          "uz": "2",
+          "ru": "2",
+          "en": "2"
+        },
+        {
+          "uz": "8",
+          "ru": "8",
+          "en": "8"
+        },
+        {
+          "uz": "10",
+          "ru": "10",
+          "en": "10"
+        },
+        {
+          "uz": "16",
+          "ru": "16",
+          "en": "16"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "1 bayt = 8 bit. Bit — axborotning eng kichik birligi, u 0 yoki 1 qiymatni oladi.",
+        "ru": "1 байт = 8 бит. Бит — наименьшая единица информации, он принимает значение 0 или 1.",
+        "en": "1 byte = 8 bits. A bit is the smallest unit of information and can be either 0 or 1."
+      }
+    },
+    {
+      "id": "informatics-02",
+      "difficulty": 1,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Kompyuter qurilmalari",
+        "ru": "Устройства компьютера",
+        "en": "Computer devices"
+      },
+      "question": {
+        "uz": "Quyidagilardan qaysi biri ma’lumot kiritish qurilmasi?",
+        "ru": "Какое из этих устройств является устройством ввода?",
+        "en": "Which of these is an input device?"
+      },
+      "options": [
+        {
+          "uz": "Monitor",
+          "ru": "Монитор",
+          "en": "Monitor"
+        },
+        {
+          "uz": "Printer",
+          "ru": "Принтер",
+          "en": "Printer"
+        },
+        {
+          "uz": "Klaviatura",
+          "ru": "Клавиатура",
+          "en": "Keyboard"
+        },
+        {
+          "uz": "Karnaylar",
+          "ru": "Колонки",
+          "en": "Speakers"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Klaviatura yordamida kompyuterga matn va buyruqlar kiritiladi. Monitor, printer va karnaylar esa ma’lumotni chiqaradi.",
+        "ru": "С клавиатуры в компьютер вводят текст и команды. Монитор, принтер и колонки, наоборот, выводят информацию.",
+        "en": "A keyboard is used to type text and commands into a computer. A monitor, printer and speakers are output devices."
+      }
+    },
+    {
+      "id": "informatics-03",
+      "difficulty": 1,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Parol xavfsizligi",
+        "ru": "Надёжные пароли",
+        "en": "Password safety"
+      },
+      "question": {
+        "uz": "Quyidagi parollardan qaysi biri eng ishonchli?",
+        "ru": "Какой из этих паролей самый надёжный?",
+        "en": "Which of these passwords is the strongest?"
+      },
+      "options": [
+        {
+          "uz": "123456",
+          "ru": "123456",
+          "en": "123456"
+        },
+        {
+          "uz": "qwerty",
+          "ru": "qwerty",
+          "en": "qwerty"
+        },
+        {
+          "uz": "ali2010",
+          "ru": "ali2010",
+          "en": "ali2010"
+        },
+        {
+          "uz": "Kq7#mP2!xL",
+          "ru": "Kq7#mP2!xL",
+          "en": "Kq7#mP2!xL"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Ishonchli parol uzun bo‘ladi va katta-kichik harflar, raqamlar hamda belgilardan iborat bo‘ladi. Oddiy raqamlar, ism va tug‘ilgan yilni topish oson.",
+        "ru": "Надёжный пароль длинный и содержит заглавные и строчные буквы, цифры и символы. Простые цифры, имя и год рождения легко подобрать.",
+        "en": "A strong password is long and mixes upper- and lower-case letters, numbers and symbols. Simple digits, names and birth years are easy to guess."
+      }
+    },
+    {
+      "id": "informatics-04",
+      "difficulty": 1,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Fayllar",
+        "ru": "Файлы",
+        "en": "Files"
+      },
+      "question": {
+        "uz": "Qaysi kengaytma odatda rasm faylini bildiradi?",
+        "ru": "Какое расширение обычно имеет файл с изображением?",
+        "en": "Which file extension usually means the file is a picture?"
+      },
+      "options": [
+        {
+          "uz": ".mp3",
+          "ru": ".mp3",
+          "en": ".mp3"
+        },
+        {
+          "uz": ".docx",
+          "ru": ".docx",
+          "en": ".docx"
+        },
+        {
+          "uz": ".jpg",
+          "ru": ".jpg",
+          "en": ".jpg"
+        },
+        {
+          "uz": ".exe",
+          "ru": ".exe",
+          "en": ".exe"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": ".jpg — rasm (fotosurat) fayli. .mp3 — audio, .docx — matnli hujjat, .exe esa dastur fayli.",
+        "ru": ".jpg — файл изображения (фотографии). .mp3 — аудио, .docx — текстовый документ, .exe — программа.",
+        "en": ".jpg is an image (photo) file. .mp3 is audio, .docx is a text document and .exe is a program."
+      }
+    },
+    {
+      "id": "informatics-05",
+      "difficulty": 1,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Internetda xavfsizlik",
+        "ru": "Безопасность в интернете",
+        "en": "Online safety"
+      },
+      "question": {
+        "uz": "Internetda notanish odam sizdan uy manzilingizni so‘rayapti. Nima qilish kerak?",
+        "ru": "Незнакомый человек в интернете просит назвать домашний адрес. Как правильно поступить?",
+        "en": "A stranger online asks for your home address. What should you do?"
+      },
+      "options": [
+        {
+          "uz": "Manzilni yozib yuborish",
+          "ru": "Отправить адрес",
+          "en": "Send the address"
+        },
+        {
+          "uz": "Rad etib, kattalarga aytish",
+          "ru": "Отказать и рассказать взрослым",
+          "en": "Say no and tell an adult"
+        },
+        {
+          "uz": "Faqat ko‘cha nomini aytish",
+          "ru": "Назвать только улицу",
+          "en": "Give only the street name"
+        },
+        {
+          "uz": "Uyning rasmini yuborish",
+          "ru": "Отправить фото дома",
+          "en": "Send a photo of the house"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Shaxsiy ma’lumotlarni notanish odamlarga hech qachon bermang. Bunday holatda ota-onangiz yoki ustozingizga xabar bering.",
+        "ru": "Личные данные нельзя сообщать незнакомцам. В такой ситуации нужно рассказать родителям или учителю.",
+        "en": "Never share personal information with strangers. In a situation like this, tell your parents or a teacher."
+      }
+    },
+    {
+      "id": "informatics-06",
+      "difficulty": 2,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Ikkilik sanoq tizimi",
+        "ru": "Двоичная система",
+        "en": "Binary numbers"
+      },
+      "question": {
+        "uz": "Ikkilik sanoq tizimidagi 1011₂ sonini o‘nlik sanoq tizimiga o‘tkazing.",
+        "ru": "Переведите двоичное число 1011₂ в десятичную систему счисления.",
+        "en": "Convert the binary number 1011₂ to decimal."
+      },
+      "options": [
+        {
+          "uz": "11",
+          "ru": "11",
+          "en": "11"
+        },
+        {
+          "uz": "13",
+          "ru": "13",
+          "en": "13"
+        },
+        {
+          "uz": "1011",
+          "ru": "1011",
+          "en": "1011"
+        },
+        {
+          "uz": "9",
+          "ru": "9",
+          "en": "9"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Har bir xona 2 ning darajasini bildiradi: 1 · 8 + 0 · 4 + 1 · 2 + 1 · 1 = 11.",
+        "ru": "Каждый разряд — степень двойки: 1 · 8 + 0 · 4 + 1 · 2 + 1 · 1 = 11.",
+        "en": "Each digit stands for a power of 2: 1 × 8 + 0 × 4 + 1 × 2 + 1 × 1 = 11."
+      }
+    },
+    {
+      "id": "informatics-07",
+      "difficulty": 2,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Mantiq",
+        "ru": "Логика",
+        "en": "Logic"
+      },
+      "question": {
+        "uz": "Quyidagi mantiqiy ifodalardan qaysi biri rost?",
+        "ru": "Какое из этих логических выражений истинно?",
+        "en": "Which of these logical expressions is true?"
+      },
+      "options": [
+        {
+          "uz": "(5 > 3) VA (2 > 4)",
+          "ru": "(5 > 3) И (2 > 4)",
+          "en": "(5 > 3) AND (2 > 4)"
+        },
+        {
+          "uz": "(5 > 3) YOKI (2 > 4)",
+          "ru": "(5 > 3) ИЛИ (2 > 4)",
+          "en": "(5 > 3) OR (2 > 4)"
+        },
+        {
+          "uz": "EMAS (5 > 3)",
+          "ru": "НЕ (5 > 3)",
+          "en": "NOT (5 > 3)"
+        },
+        {
+          "uz": "(2 > 4) VA (1 > 0)",
+          "ru": "(2 > 4) И (1 > 0)",
+          "en": "(2 > 4) AND (1 > 0)"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "YOKI amali kamida bitta qism rost bo‘lsa, rost bo‘ladi: 5 > 3 — rost. VA uchun ikkala qism ham rost bo‘lishi kerak, 2 > 4 esa yolg‘on.",
+        "ru": "ИЛИ истинно, если истинна хотя бы одна часть: 5 > 3 — истина. Для И нужны две истинные части, а 2 > 4 — ложь.",
+        "en": "OR is true if at least one part is true, and 5 > 3 is true. AND needs both parts to be true, but 2 > 4 is false."
+      }
+    },
+    {
+      "id": "informatics-08",
+      "difficulty": 2,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Fayllar va papkalar",
+        "ru": "Файлы и папки",
+        "en": "Files and folders"
+      },
+      "question": {
+        "uz": "Fayl manzili: D:\\Maktab\\Matematika\\uy_ishi.docx. uy_ishi.docx fayli qaysi papkada joylashgan?",
+        "ru": "Путь к файлу: D:\\Школа\\Математика\\задание.docx. В какой папке находится файл задание.docx?",
+        "en": "The file path is D:\\School\\Maths\\homework.docx. Which folder is homework.docx in?"
+      },
+      "options": [
+        {
+          "uz": "D:",
+          "ru": "D:",
+          "en": "D:"
+        },
+        {
+          "uz": "Maktab",
+          "ru": "Школа",
+          "en": "School"
+        },
+        {
+          "uz": "Matematika",
+          "ru": "Математика",
+          "en": "Maths"
+        },
+        {
+          "uz": "docx",
+          "ru": "docx",
+          "en": "docx"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Fayl yo‘lda o‘z nomidan oldin yozilgan papkada turadi — bu Matematika. U Maktab papkasi ichida, Maktab esa D: diskida.",
+        "ru": "Файл лежит в папке, указанной прямо перед его именем, — это Математика. Она находится в папке Школа на диске D:.",
+        "en": "A file sits in the folder named just before it in the path: Maths. That folder is inside School, on drive D:."
+      }
+    },
+    {
+      "id": "informatics-09",
+      "difficulty": 2,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Algoritmlar",
+        "ru": "Алгоритмы",
+        "en": "Algorithms"
+      },
+      "question": {
+        "uz": "Algoritm: x := 3; x := x * 2; x := x + 4; x := x * 2. Algoritm bajarilgandan so‘ng x nechaga teng bo‘ladi?",
+        "ru": "Алгоритм: x := 3; x := x * 2; x := x + 4; x := x * 2. Чему будет равно x после выполнения?",
+        "en": "Algorithm: x := 3; x := x * 2; x := x + 4; x := x * 2. What is x after it runs?"
+      },
+      "options": [
+        {
+          "uz": "20",
+          "ru": "20",
+          "en": "20"
+        },
+        {
+          "uz": "14",
+          "ru": "14",
+          "en": "14"
+        },
+        {
+          "uz": "16",
+          "ru": "16",
+          "en": "16"
+        },
+        {
+          "uz": "26",
+          "ru": "26",
+          "en": "26"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Buyruqlarni ketma-ket bajaramiz: 3 · 2 = 6, keyin 6 + 4 = 10, oxirida 10 · 2 = 20.",
+        "ru": "Выполняем команды по порядку: 3 · 2 = 6, затем 6 + 4 = 10, и наконец 10 · 2 = 20.",
+        "en": "Run the commands in order: 3 × 2 = 6, then 6 + 4 = 10, and finally 10 × 2 = 20."
+      }
+    },
+    {
+      "id": "informatics-10",
+      "difficulty": 2,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Internet",
+        "ru": "Интернет",
+        "en": "The Internet"
+      },
+      "question": {
+        "uz": "Sayt manzili https:// bilan boshlansa, bu nimani bildiradi?",
+        "ru": "Что означает, что адрес сайта начинается с https://?",
+        "en": "What does it mean when a website address starts with https://?"
+      },
+      "options": [
+        {
+          "uz": "Sayt bepul",
+          "ru": "Сайт бесплатный",
+          "en": "The site is free"
+        },
+        {
+          "uz": "Saytda reklama yo‘q",
+          "ru": "На сайте нет рекламы",
+          "en": "The site has no ads"
+        },
+        {
+          "uz": "Sayt ingliz tilida",
+          "ru": "Сайт на английском",
+          "en": "The site is in English"
+        },
+        {
+          "uz": "Ulanish shifrlangan",
+          "ru": "Соединение зашифровано",
+          "en": "The connection is encrypted"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "S harfi «secure», ya’ni «xavfsiz» degani: brauzer va sayt o‘rtasidagi ma’lumotlar shifrlanadi. Lekin bu saytning o‘zi ishonchli ekanini kafolatlamaydi.",
+        "ru": "Буква S означает secure — «защищённый»: данные между браузером и сайтом шифруются. Но это не гарантирует, что сам сайт честный.",
+        "en": "The S stands for “secure”: data between your browser and the site is encrypted. It does not prove the site itself is trustworthy, though."
+      }
+    },
+    {
+      "id": "informatics-11",
+      "difficulty": 3,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Ikkilik sanoq tizimi",
+        "ru": "Двоичная система",
+        "en": "Binary numbers"
+      },
+      "question": {
+        "uz": "O‘nlik sanoq tizimidagi 13 sonini ikkilik sanoq tizimida yozing.",
+        "ru": "Запишите десятичное число 13 в двоичной системе счисления.",
+        "en": "Write the decimal number 13 in binary."
+      },
+      "options": [
+        {
+          "uz": "1011",
+          "ru": "1011",
+          "en": "1011"
+        },
+        {
+          "uz": "1101",
+          "ru": "1101",
+          "en": "1101"
+        },
+        {
+          "uz": "1110",
+          "ru": "1110",
+          "en": "1110"
+        },
+        {
+          "uz": "1001",
+          "ru": "1001",
+          "en": "1001"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "13 ni 2 ning darajalari yig‘indisi sifatida yozamiz: 13 = 8 + 4 + 1 = 1 · 8 + 1 · 4 + 0 · 2 + 1 · 1. Demak, 1101.",
+        "ru": "Разложим 13 по степеням двойки: 13 = 8 + 4 + 1 = 1 · 8 + 1 · 4 + 0 · 2 + 1 · 1. Значит, 1101.",
+        "en": "Split 13 into powers of 2: 13 = 8 + 4 + 1 = 1 × 8 + 1 × 4 + 0 × 2 + 1 × 1. So it is 1101."
+      }
+    },
+    {
+      "id": "informatics-12",
+      "difficulty": 3,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Axborot birliklari",
+        "ru": "Единицы информации",
+        "en": "Units of information"
+      },
+      "question": {
+        "uz": "2 Kbaytda necha bit bor? (1 Kbayt = 1024 bayt)",
+        "ru": "Сколько бит в 2 Кбайтах? (1 Кбайт = 1024 байта)",
+        "en": "How many bits are there in 2 KB? (1 KB = 1024 bytes)"
+      },
+      "options": [
+        {
+          "uz": "2048",
+          "ru": "2048",
+          "en": "2048"
+        },
+        {
+          "uz": "16 000",
+          "ru": "16 000",
+          "en": "16,000"
+        },
+        {
+          "uz": "16 384",
+          "ru": "16 384",
+          "en": "16,384"
+        },
+        {
+          "uz": "2000",
+          "ru": "2000",
+          "en": "2000"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "2 Kbayt = 2 · 1024 = 2048 bayt. Har bir baytda 8 bit bor: 2048 · 8 = 16 384 bit.",
+        "ru": "2 Кбайта = 2 · 1024 = 2048 байт. В каждом байте 8 бит: 2048 · 8 = 16 384 бита.",
+        "en": "2 KB = 2 × 1024 = 2048 bytes. Each byte has 8 bits: 2048 × 8 = 16,384 bits."
+      }
+    },
+    {
+      "id": "informatics-13",
+      "difficulty": 3,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Sikllar",
+        "ru": "Циклы",
+        "en": "Loops"
+      },
+      "question": {
+        "uz": "s := 0; i ning 1, 2, 3, 4 qiymatlari uchun takrorlang: s := s + i * i. Sikl tugagach, s nechaga teng?",
+        "ru": "s := 0; для i = 1, 2, 3, 4 повторить: s := s + i * i. Чему равно s после цикла?",
+        "en": "s := 0; repeat for i = 1, 2, 3, 4: s := s + i * i. What is s after the loop?"
+      },
+      "options": [
+        {
+          "uz": "30",
+          "ru": "30",
+          "en": "30"
+        },
+        {
+          "uz": "10",
+          "ru": "10",
+          "en": "10"
+        },
+        {
+          "uz": "20",
+          "ru": "20",
+          "en": "20"
+        },
+        {
+          "uz": "100",
+          "ru": "100",
+          "en": "100"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Har bir qadamda i ning kvadrati qo‘shiladi: 1 + 4 + 9 + 16 = 30.",
+        "ru": "На каждом шаге прибавляется квадрат i: 1 + 4 + 9 + 16 = 30.",
+        "en": "Each step adds the square of i: 1 + 4 + 9 + 16 = 30."
+      }
+    },
+    {
+      "id": "informatics-14",
+      "difficulty": 3,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Elektron jadvallar",
+        "ru": "Электронные таблицы",
+        "en": "Spreadsheets"
+      },
+      "question": {
+        "uz": "Elektron jadvalda A1 katakda 10 soni, B1 da =A1*2 formulasi, C1 da esa =B1-A1+5 formulasi yozilgan. C1 katakda qanday qiymat chiqadi?",
+        "ru": "В электронной таблице в ячейке A1 записано 10, в B1 — формула =A1*2, в C1 — формула =B1-A1+5. Какое значение будет в C1?",
+        "en": "In a spreadsheet, A1 contains 10, B1 contains =A1*2 and C1 contains =B1-A1+5. What value does C1 show?"
+      },
+      "options": [
+        {
+          "uz": "25",
+          "ru": "25",
+          "en": "25"
+        },
+        {
+          "uz": "5",
+          "ru": "5",
+          "en": "5"
+        },
+        {
+          "uz": "35",
+          "ru": "35",
+          "en": "35"
+        },
+        {
+          "uz": "15",
+          "ru": "15",
+          "en": "15"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Avval B1 hisoblanadi: 10 · 2 = 20. Keyin C1: 20 − 10 + 5 = 15.",
+        "ru": "Сначала вычисляется B1: 10 · 2 = 20. Затем C1: 20 − 10 + 5 = 15.",
+        "en": "First B1 is calculated: 10 × 2 = 20. Then C1: 20 − 10 + 5 = 15."
+      }
+    },
+    {
+      "id": "informatics-15",
+      "difficulty": 3,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Axborot miqdori",
+        "ru": "Количество информации",
+        "en": "Amount of information"
+      },
+      "question": {
+        "uz": "Alifbo 32 ta belgidan iborat. Shu alifboning bitta belgisi necha bit axborot tashiydi?",
+        "ru": "Алфавит состоит из 32 символов. Сколько бит информации несёт один символ этого алфавита?",
+        "en": "An alphabet has 32 characters. How many bits of information does one character of this alphabet carry?"
+      },
+      "options": [
+        {
+          "uz": "5 bit",
+          "ru": "5 бит",
+          "en": "5 bits"
+        },
+        {
+          "uz": "32 bit",
+          "ru": "32 бита",
+          "en": "32 bits"
+        },
+        {
+          "uz": "8 bit",
+          "ru": "8 бит",
+          "en": "8 bits"
+        },
+        {
+          "uz": "16 bit",
+          "ru": "16 бит",
+          "en": "16 bits"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "N = 2ⁱ formulasidan foydalanamiz: 32 = 2⁵, demak, bitta belgi 5 bit axborot tashiydi.",
+        "ru": "По формуле N = 2ⁱ: 32 = 2⁵, значит, один символ несёт 5 бит информации.",
+        "en": "Use the formula N = 2ⁱ: 32 = 2⁵, so one character carries 5 bits of information."
+      }
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 // Rivojlanish — natija darajalari, foiz va tavsiya mantig'i.
 
 import 'package:farzandim_child/features/learning/domain/learning_models.dart';
+import 'package:farzandim_child/features/learning/domain/localized_text.dart';
 import 'package:farzandim_child/features/learning/domain/progress_models.dart';
 import 'package:farzandim_child/features/learning/presentation/providers/progress_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 TestResult _result(int correct, int total) => TestResult(
   id: 'x',
   subject: Subject.math,
-  topic: 'Kasrlar',
+  topic: LocalizedText.same('Kasrlar'),
   correct: correct,
   total: total,
   date: DateTime(2026, 10, 15),

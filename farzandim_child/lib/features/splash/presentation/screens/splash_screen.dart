@@ -31,8 +31,7 @@ import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/onboarding/presentation/screens/language_select_screen.dart'
     show kLanguagePickedKey;
-import 'package:farzandim_child/features/onboarding/presentation/screens/onboarding_screen.dart'
-    show kOnboardingSeenKey;
+import 'package:farzandim_child/features/onboarding/data/onboarding_prefs.dart';
 import 'package:farzandim_child/features/permissions/presentation/screens/ios_permission_setup_screen.dart'
     show kPermissionIntroSeenKey;
 import 'package:flutter/foundation.dart' show kIsWeb;

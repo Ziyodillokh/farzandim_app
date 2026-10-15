@@ -1,0 +1,695 @@
+{
+  "subject": "chemistry",
+  "questions": [
+    {
+      "id": "chemistry-01",
+      "difficulty": 1,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Kimyoviy belgilar",
+        "ru": "Химические знаки",
+        "en": "Element symbols"
+      },
+      "question": {
+        "uz": "Kislorodning kimyoviy belgisi qanday?",
+        "ru": "Какой химический знак у кислорода?",
+        "en": "What is the chemical symbol for oxygen?"
+      },
+      "options": [
+        {
+          "uz": "Ok",
+          "ru": "Ok",
+          "en": "Ok"
+        },
+        {
+          "uz": "Os",
+          "ru": "Os",
+          "en": "Os"
+        },
+        {
+          "uz": "O",
+          "ru": "O",
+          "en": "O"
+        },
+        {
+          "uz": "Ox",
+          "ru": "Ox",
+          "en": "Ox"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Kislorod lotincha Oxygenium deb ataladi, uning belgisi — O. Os esa osmiy elementining belgisi.",
+        "ru": "Кислород по-латински — Oxygenium, его знак — O. А Os — это знак осмия.",
+        "en": "Oxygen’s Latin name is Oxygenium and its symbol is O. Os is the symbol for osmium."
+      }
+    },
+    {
+      "id": "chemistry-02",
+      "difficulty": 1,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Suv",
+        "ru": "Вода",
+        "en": "Water"
+      },
+      "question": {
+        "uz": "Suvning kimyoviy formulasi qaysi?",
+        "ru": "Какова химическая формула воды?",
+        "en": "What is the chemical formula of water?"
+      },
+      "options": [
+        {
+          "uz": "H₂O",
+          "ru": "H₂O",
+          "en": "H₂O"
+        },
+        {
+          "uz": "CO₂",
+          "ru": "CO₂",
+          "en": "CO₂"
+        },
+        {
+          "uz": "H₂O₂",
+          "ru": "H₂O₂",
+          "en": "H₂O₂"
+        },
+        {
+          "uz": "NaCl",
+          "ru": "NaCl",
+          "en": "NaCl"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Suv molekulasi ikkita vodorod va bitta kislorod atomidan iborat: H₂O. H₂O₂ — vodorod peroksid, NaCl — osh tuzi.",
+        "ru": "Молекула воды состоит из двух атомов водорода и одного атома кислорода: H₂O. H₂O₂ — пероксид водорода, NaCl — поваренная соль.",
+        "en": "A water molecule has two hydrogen atoms and one oxygen atom: H₂O. H₂O₂ is hydrogen peroxide and NaCl is table salt."
+      }
+    },
+    {
+      "id": "chemistry-03",
+      "difficulty": 1,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Metallar va nometallar",
+        "ru": "Металлы и неметаллы",
+        "en": "Metals and non-metals"
+      },
+      "question": {
+        "uz": "Quyidagi elementlardan qaysi biri metall?",
+        "ru": "Какой из этих элементов является металлом?",
+        "en": "Which of these elements is a metal?"
+      },
+      "options": [
+        {
+          "uz": "Oltingugurt",
+          "ru": "Сера",
+          "en": "Sulfur"
+        },
+        {
+          "uz": "Kislorod",
+          "ru": "Кислород",
+          "en": "Oxygen"
+        },
+        {
+          "uz": "Uglerod",
+          "ru": "Углерод",
+          "en": "Carbon"
+        },
+        {
+          "uz": "Temir",
+          "ru": "Железо",
+          "en": "Iron"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Temir (Fe) — metall: u yaltiroq, issiqlik va elektr tokini yaxshi o‘tkazadi. Oltingugurt, kislorod va uglerod — nometallar.",
+        "ru": "Железо (Fe) — металл: оно блестит и хорошо проводит тепло и электрический ток. Сера, кислород и углерод — неметаллы.",
+        "en": "Iron (Fe) is a metal: it is shiny and conducts heat and electricity well. Sulfur, oxygen and carbon are non-metals."
+      }
+    },
+    {
+      "id": "chemistry-04",
+      "difficulty": 1,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Aralashmalar",
+        "ru": "Смеси",
+        "en": "Mixtures"
+      },
+      "question": {
+        "uz": "Quyidagilardan qaysi biri aralashma emas, balki toza modda?",
+        "ru": "Что из перечисленного является чистым веществом, а не смесью?",
+        "en": "Which of these is a pure substance rather than a mixture?"
+      },
+      "options": [
+        {
+          "uz": "Havo",
+          "ru": "Воздух",
+          "en": "Air"
+        },
+        {
+          "uz": "Dengiz suvi",
+          "ru": "Морская вода",
+          "en": "Sea water"
+        },
+        {
+          "uz": "Distillangan suv",
+          "ru": "Дистиллированная вода",
+          "en": "Distilled water"
+        },
+        {
+          "uz": "Sut",
+          "ru": "Молоко",
+          "en": "Milk"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Distillangan suv faqat H₂O molekulalaridan iborat. Havo — gazlar aralashmasi, dengiz suvida tuzlar erigan, sut ham ko‘p moddalar aralashmasi.",
+        "ru": "Дистиллированная вода состоит только из молекул H₂O. Воздух — смесь газов, в морской воде растворены соли, молоко — тоже смесь многих веществ.",
+        "en": "Distilled water contains only H₂O molecules. Air is a mix of gases, sea water has dissolved salts, and milk is a mixture of many substances."
+      }
+    },
+    {
+      "id": "chemistry-05",
+      "difficulty": 1,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Kimyoviy hodisalar",
+        "ru": "Химические явления",
+        "en": "Chemical changes"
+      },
+      "question": {
+        "uz": "Quyidagilardan qaysi biri kimyoviy hodisa?",
+        "ru": "Какое из этих явлений является химическим?",
+        "en": "Which of these is a chemical change?"
+      },
+      "options": [
+        {
+          "uz": "Muzning erishi",
+          "ru": "Таяние льда",
+          "en": "Melting ice"
+        },
+        {
+          "uz": "Qog‘ozning yonishi",
+          "ru": "Горение бумаги",
+          "en": "Burning paper"
+        },
+        {
+          "uz": "Suvning qaynashi",
+          "ru": "Кипение воды",
+          "en": "Boiling water"
+        },
+        {
+          "uz": "Shishaning sinishi",
+          "ru": "Разбивание стекла",
+          "en": "Breaking glass"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Qog‘oz yonganda yangi moddalar — karbonat angidrid, suv va kul hosil bo‘ladi. Qolgan holatlarda modda o‘zgarmaydi, faqat uning holati yoki shakli o‘zgaradi.",
+        "ru": "При горении бумаги образуются новые вещества — углекислый газ, вода и зола. В остальных случаях вещество не меняется, меняется лишь его состояние или форма.",
+        "en": "Burning paper produces new substances: carbon dioxide, water and ash. In the other cases the substance stays the same and only its state or shape changes."
+      }
+    },
+    {
+      "id": "chemistry-06",
+      "difficulty": 2,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Atom tuzilishi",
+        "ru": "Строение атома",
+        "en": "Atomic structure"
+      },
+      "question": {
+        "uz": "Natriyning tartib raqami 11, nisbiy atom massasi 23. Neytral natriy atomida nechta elektron bor?",
+        "ru": "Порядковый номер натрия — 11, относительная атомная масса — 23. Сколько электронов в нейтральном атоме натрия?",
+        "en": "Sodium has atomic number 11 and relative atomic mass 23. How many electrons does a neutral sodium atom have?"
+      },
+      "options": [
+        {
+          "uz": "11",
+          "ru": "11",
+          "en": "11"
+        },
+        {
+          "uz": "23",
+          "ru": "23",
+          "en": "23"
+        },
+        {
+          "uz": "12",
+          "ru": "12",
+          "en": "12"
+        },
+        {
+          "uz": "34",
+          "ru": "34",
+          "en": "34"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Neytral atomda elektronlar soni protonlar soniga, ya’ni tartib raqamiga teng — 11 ta. 12 esa neytronlar soni (23 − 11).",
+        "ru": "В нейтральном атоме число электронов равно числу протонов, то есть порядковому номеру, — 11. А 12 — это число нейтронов (23 − 11).",
+        "en": "In a neutral atom the number of electrons equals the number of protons, which is the atomic number: 11. 12 is the number of neutrons (23 − 11)."
+      }
+    },
+    {
+      "id": "chemistry-07",
+      "difficulty": 2,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Molekulyar massa",
+        "ru": "Молекулярная масса",
+        "en": "Molecular mass"
+      },
+      "question": {
+        "uz": "CO₂ ning nisbiy molekulyar massasini hisoblang. (Ar: C = 12, O = 16)",
+        "ru": "Вычислите относительную молекулярную массу CO₂. (Ar: C = 12, O = 16)",
+        "en": "Calculate the relative molecular mass of CO₂. (Ar: C = 12, O = 16)"
+      },
+      "options": [
+        {
+          "uz": "28",
+          "ru": "28",
+          "en": "28"
+        },
+        {
+          "uz": "44",
+          "ru": "44",
+          "en": "44"
+        },
+        {
+          "uz": "40",
+          "ru": "40",
+          "en": "40"
+        },
+        {
+          "uz": "32",
+          "ru": "32",
+          "en": "32"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "CO₂ tarkibida bitta uglerod va ikkita kislorod atomi bor: 12 + 2 · 16 = 44.",
+        "ru": "В CO₂ один атом углерода и два атома кислорода: 12 + 2 · 16 = 44.",
+        "en": "CO₂ has one carbon atom and two oxygen atoms: 12 + 2 × 16 = 44."
+      }
+    },
+    {
+      "id": "chemistry-08",
+      "difficulty": 2,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Indikatorlar",
+        "ru": "Индикаторы",
+        "en": "Indicators"
+      },
+      "question": {
+        "uz": "Lakmus kislotali eritmada qanday rangga kiradi?",
+        "ru": "В какой цвет окрашивается лакмус в растворе кислоты?",
+        "en": "What colour does litmus turn in an acidic solution?"
+      },
+      "options": [
+        {
+          "uz": "Ko‘k",
+          "ru": "Синий",
+          "en": "Blue"
+        },
+        {
+          "uz": "Qizil",
+          "ru": "Красный",
+          "en": "Red"
+        },
+        {
+          "uz": "Binafsha",
+          "ru": "Фиолетовый",
+          "en": "Purple"
+        },
+        {
+          "uz": "Sariq",
+          "ru": "Жёлтый",
+          "en": "Yellow"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Kislota lakmusni qizil rangga bo‘yaydi. Ishqorda lakmus ko‘karadi, neytral muhitda esa binafsha rangda qoladi.",
+        "ru": "Кислота окрашивает лакмус в красный цвет. В щёлочи лакмус синеет, а в нейтральной среде остаётся фиолетовым.",
+        "en": "Acids turn litmus red. In alkalis litmus turns blue, and in a neutral solution it stays purple."
+      }
+    },
+    {
+      "id": "chemistry-09",
+      "difficulty": 2,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Valentlik",
+        "ru": "Валентность",
+        "en": "Valency"
+      },
+      "question": {
+        "uz": "Ko‘pchilik birikmalarda kislorodning valentligi nechaga teng?",
+        "ru": "Какова валентность кислорода в большинстве соединений?",
+        "en": "What is the valency of oxygen in most compounds?"
+      },
+      "options": [
+        {
+          "uz": "I",
+          "ru": "I",
+          "en": "I"
+        },
+        {
+          "uz": "IV",
+          "ru": "IV",
+          "en": "IV"
+        },
+        {
+          "uz": "III",
+          "ru": "III",
+          "en": "III"
+        },
+        {
+          "uz": "II",
+          "ru": "II",
+          "en": "II"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Kislorod deyarli barcha birikmalarda ikki valentli (II). Masalan, suvda (H₂O) bitta kislorod atomi ikkita vodorod atomi bilan bog‘langan.",
+        "ru": "Кислород почти во всех соединениях двухвалентен (II). Например, в воде (H₂O) один атом кислорода связан с двумя атомами водорода.",
+        "en": "Oxygen has a valency of II in almost all compounds. For example, in water (H₂O) one oxygen atom is bonded to two hydrogen atoms."
+      }
+    },
+    {
+      "id": "chemistry-10",
+      "difficulty": 2,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Aralashmalarni ajratish",
+        "ru": "Разделение смесей",
+        "en": "Separating mixtures"
+      },
+      "question": {
+        "uz": "Temir qipiqlari va oltingugurt kukuni aralashmasini qaysi usulda oson ajratish mumkin?",
+        "ru": "Каким способом проще всего разделить смесь железных опилок и порошка серы?",
+        "en": "What is the easiest way to separate a mixture of iron filings and sulfur powder?"
+      },
+      "options": [
+        {
+          "uz": "Filtrlash",
+          "ru": "Фильтрованием",
+          "en": "Filtering"
+        },
+        {
+          "uz": "Bug‘latish",
+          "ru": "Выпариванием",
+          "en": "Evaporating"
+        },
+        {
+          "uz": "Distillash",
+          "ru": "Перегонкой",
+          "en": "Distilling"
+        },
+        {
+          "uz": "Magnit yordamida",
+          "ru": "С помощью магнита",
+          "en": "Using a magnet"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Temir magnitga tortiladi, oltingugurt esa tortilmaydi. Shuning uchun magnit temir qipiqlarini aralashmadan oson ajratib oladi.",
+        "ru": "Железо притягивается магнитом, а сера — нет. Поэтому магнит легко извлекает железные опилки из смеси.",
+        "en": "Iron is attracted to a magnet but sulfur is not, so a magnet easily pulls the iron filings out of the mixture."
+      }
+    },
+    {
+      "id": "chemistry-11",
+      "difficulty": 3,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Eritmalar",
+        "ru": "Растворы",
+        "en": "Solutions"
+      },
+      "question": {
+        "uz": "180 g suvda 20 g tuz eritildi. Eritmadagi tuzning massa ulushi qancha?",
+        "ru": "В 180 г воды растворили 20 г соли. Какова массовая доля соли в растворе?",
+        "en": "20 g of salt is dissolved in 180 g of water. What is the mass fraction of salt in the solution?"
+      },
+      "options": [
+        {
+          "uz": "11%",
+          "ru": "11%",
+          "en": "11%"
+        },
+        {
+          "uz": "9%",
+          "ru": "9%",
+          "en": "9%"
+        },
+        {
+          "uz": "10%",
+          "ru": "10%",
+          "en": "10%"
+        },
+        {
+          "uz": "20%",
+          "ru": "20%",
+          "en": "20%"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Eritma massasi 180 + 20 = 200 g. Tuzning massa ulushi: 20 : 200 = 0,1, ya’ni 10%.",
+        "ru": "Масса раствора 180 + 20 = 200 г. Массовая доля соли: 20 : 200 = 0,1, то есть 10%.",
+        "en": "The solution weighs 180 + 20 = 200 g. The mass fraction of salt is 20 ÷ 200 = 0.1, which is 10%."
+      }
+    },
+    {
+      "id": "chemistry-12",
+      "difficulty": 3,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Reaksiya tenglamalari",
+        "ru": "Уравнения реакций",
+        "en": "Chemical equations"
+      },
+      "question": {
+        "uz": "2H₂ + O₂ → ?H₂O tenglamada H₂O oldiga qanday koeffitsiyent qo‘yiladi?",
+        "ru": "Какой коэффициент нужно поставить перед H₂O в уравнении 2H₂ + O₂ → ?H₂O?",
+        "en": "Which coefficient goes in front of H₂O in the equation 2H₂ + O₂ → ?H₂O?"
+      },
+      "options": [
+        {
+          "uz": "1",
+          "ru": "1",
+          "en": "1"
+        },
+        {
+          "uz": "2",
+          "ru": "2",
+          "en": "2"
+        },
+        {
+          "uz": "3",
+          "ru": "3",
+          "en": "3"
+        },
+        {
+          "uz": "4",
+          "ru": "4",
+          "en": "4"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Chap tomonda 4 ta vodorod va 2 ta kislorod atomi bor. O‘ng tomonda ham shuncha bo‘lishi uchun 2H₂O yoziladi.",
+        "ru": "Слева 4 атома водорода и 2 атома кислорода. Чтобы справа было столько же, пишем 2H₂O.",
+        "en": "The left side has 4 hydrogen atoms and 2 oxygen atoms. To get the same on the right, write 2H₂O."
+      }
+    },
+    {
+      "id": "chemistry-13",
+      "difficulty": 3,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Elementning massa ulushi",
+        "ru": "Массовая доля элемента",
+        "en": "Mass fraction of element"
+      },
+      "question": {
+        "uz": "Suvdagi (H₂O) kislorodning massa ulushi taxminan qancha? (Ar: H = 1, O = 16)",
+        "ru": "Какова примерно массовая доля кислорода в воде (H₂O)? (Ar: H = 1, O = 16)",
+        "en": "Roughly what is the mass fraction of oxygen in water (H₂O)? (Ar: H = 1, O = 16)"
+      },
+      "options": [
+        {
+          "uz": "89%",
+          "ru": "89%",
+          "en": "89%"
+        },
+        {
+          "uz": "11%",
+          "ru": "11%",
+          "en": "11%"
+        },
+        {
+          "uz": "50%",
+          "ru": "50%",
+          "en": "50%"
+        },
+        {
+          "uz": "94%",
+          "ru": "94%",
+          "en": "94%"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Mr(H₂O) = 2 · 1 + 16 = 18. Kislorodning ulushi: 16 : 18 ≈ 0,89, ya’ni taxminan 89%.",
+        "ru": "Mr(H₂O) = 2 · 1 + 16 = 18. Доля кислорода: 16 : 18 ≈ 0,89, то есть около 89%.",
+        "en": "Mr(H₂O) = 2 × 1 + 16 = 18. Oxygen’s share is 16 ÷ 18 ≈ 0.89, or about 89%."
+      }
+    },
+    {
+      "id": "chemistry-14",
+      "difficulty": 3,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Modda miqdori",
+        "ru": "Количество вещества",
+        "en": "Amount of substance"
+      },
+      "question": {
+        "uz": "36 g suvda necha mol modda bor? (M(H₂O) = 18 g/mol)",
+        "ru": "Сколько моль вещества содержится в 36 г воды? (M(H₂O) = 18 г/моль)",
+        "en": "How many moles are there in 36 g of water? (M(H₂O) = 18 g/mol)"
+      },
+      "options": [
+        {
+          "uz": "2 mol",
+          "ru": "2 моль",
+          "en": "2 mol"
+        },
+        {
+          "uz": "0,5 mol",
+          "ru": "0,5 моль",
+          "en": "0.5 mol"
+        },
+        {
+          "uz": "18 mol",
+          "ru": "18 моль",
+          "en": "18 mol"
+        },
+        {
+          "uz": "648 mol",
+          "ru": "648 моль",
+          "en": "648 mol"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Modda miqdori massani molyar massaga bo‘lish bilan topiladi: n = m / M = 36 : 18 = 2 mol.",
+        "ru": "Количество вещества равно массе, делённой на молярную массу: n = m / M = 36 : 18 = 2 моль.",
+        "en": "The amount of substance is mass divided by molar mass: n = m / M = 36 ÷ 18 = 2 mol."
+      }
+    },
+    {
+      "id": "chemistry-15",
+      "difficulty": 3,
+      "grades": [
+        5,
+        9
+      ],
+      "topic": {
+        "uz": "Reaksiya turlari",
+        "ru": "Типы реакций",
+        "en": "Types of reactions"
+      },
+      "question": {
+        "uz": "Zn + 2HCl → ZnCl₂ + H₂↑ reaksiyasi qaysi turga kiradi?",
+        "ru": "К какому типу относится реакция Zn + 2HCl → ZnCl₂ + H₂↑?",
+        "en": "What type of reaction is Zn + 2HCl → ZnCl₂ + H₂↑?"
+      },
+      "options": [
+        {
+          "uz": "Birikish",
+          "ru": "Соединения",
+          "en": "Combination"
+        },
+        {
+          "uz": "Parchalanish",
+          "ru": "Разложения",
+          "en": "Decomposition"
+        },
+        {
+          "uz": "O‘rin olish",
+          "ru": "Замещения",
+          "en": "Substitution"
+        },
+        {
+          "uz": "Almashinish",
+          "ru": "Обмена",
+          "en": "Exchange"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Oddiy modda (rux) murakkab moddadagi vodorodning o‘rnini oladi. Bunday reaksiya o‘rin olish reaksiyasi deyiladi.",
+        "ru": "Простое вещество (цинк) занимает место водорода в сложном веществе. Такая реакция называется реакцией замещения.",
+        "en": "A simple substance (zinc) takes the place of hydrogen in a compound. This is called a substitution reaction."
+      }
+    }
+  ]
+}

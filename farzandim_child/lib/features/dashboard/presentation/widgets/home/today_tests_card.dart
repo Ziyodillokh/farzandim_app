@@ -1,13 +1,19 @@
 // "Bugungi testlar" — kunlik reja (fanlar × savollar) + "Boshlash".
 //
-// Reja `dailyPlanProvider`dan (hozircha preview). Kunlik test oqimi hali
-// yo'q — "Boshlash" mavjud Testlar sahifasini ochadi.
+// Reja `dailyPlanProvider`dan. Fan plitkasi — shu fan testi, "Boshlash" —
+// navbatdagi yechilmagan fan ("Davom etish"), hammasi bajarilsa — kalendar.
+// Bajarilgan fan plitkasida natija (9/10) va yashil belgi. Fan tanlanmagan
+// bo'lsa — sozlash kartasi.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
 import 'package:farzandim_child/features/learning/domain/learning_models.dart';
+import 'package:farzandim_child/features/learning/presentation/daily_plan_text.dart';
+import 'package:farzandim_child/features/learning/presentation/learning_navigation.dart';
 import 'package:farzandim_child/features/learning/presentation/providers/learning_providers.dart';
+import 'package:farzandim_child/features/learning/presentation/widgets/done_badge_icon.dart';
+import 'package:farzandim_child/features/learning/presentation/widgets/learning_setup_card.dart';
 import 'package:farzandim_child/features/learning/presentation/widgets/subject_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,14 +21,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 
+const _doneBorder = Color(0x5545E2BE);
+const _doneText = Color(0xFF45E2BE);
+
 class TodayTestsCard extends ConsumerWidget {
   const TodayTestsCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final plan = ref.watch(dailyPlanProvider);
-    // Reja yo'q (fan tanlanmagan / backend bo'sh) — natijalar kartasi kabi
-    // yashiriladi ("0 ta test tayyor" ko'rsatilmaydi).
+    if (ref.watch(needsLearningSetupProvider)) return const LearningSetupCard();
+    // Yuklanmoqda — bo'sh joy ("0 ta test tayyor" ko'rsatilmaydi).
     if (plan.isEmpty) return const SizedBox.shrink();
     return Container(
       decoration: BoxDecoration(
@@ -57,9 +66,7 @@ class TodayTestsCard extends ConsumerWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'home.todayTestsReady'.tr(
-                          namedArgs: {'count': '${plan.items.length}'},
-                        ),
+                        dailyPlanSubtitle(plan),
                         style: homeText(14.2, color: HomeColors.textDim),
                       ),
                     ],
@@ -74,16 +81,14 @@ class TodayTestsCard extends ConsumerWidget {
           const SizedBox(height: 3),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: _StartButton(onTap: () => _start(context)),
+            child: _StartButton(
+              label: dailyPlanButtonLabel(plan),
+              onTap: () => startDailyLearning(context, ref),
+            ),
           ),
         ],
       ),
     );
-  }
-
-  void _start(BuildContext context) {
-    HapticFeedback.selectionClick();
-    context.push('/contests');
   }
 }
 
@@ -92,21 +97,29 @@ class _CalendarButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Hozircha bezak: kunlik testlar tarixi (kalendar) Daily Learning
-    // backend'i bilan qo'shiladi — shu sababli bosilmaydi va o'qilmaydi.
-    return ExcludeSemantics(
-      child: Container(
-        width: 44,
-        height: 42,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: HomeColors.calendarButton,
-          borderRadius: BorderRadius.circular(13),
-        ),
-        child: const HomeSvgIcon(
-          homeCalendarSvg,
-          size: 24,
-          color: Color(0xFFB4CAE6),
+    // Testlar kalendari (kunlik tarix).
+    return Semantics(
+      button: true,
+      label: 'learn.calendarTitle'.tr(),
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          context.push(LearningRoutes.calendar);
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          width: 44,
+          height: 42,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: HomeColors.calendarButton,
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: const HomeSvgIcon(
+            homeCalendarSvg,
+            size: 24,
+            color: Color(0xFFB4CAE6),
+          ),
         ),
       ),
     );
@@ -141,10 +154,7 @@ class _SubjectTiles extends StatelessWidget {
     final direction = Directionality.of(context);
     final labels = [
       for (final item in items)
-        (
-          name: item.subject.labelKey.tr(),
-          count: 'home.questions'.plural(item.questionCount),
-        ),
+        (name: item.subject.labelKey.tr(), count: dailyPlanItemCaption(item)),
     ];
 
     double measure(String text, TextStyle style) => (TextPainter(
@@ -170,7 +180,7 @@ class _SubjectTiles extends StatelessWidget {
         Widget tile(int i, double width) => SizedBox(
           width: width,
           child: _SubjectTile(
-            subject: items[i].subject,
+            item: items[i],
             name: labels[i].name,
             count: labels[i].count,
             nameStyle: nameStyle,
@@ -204,14 +214,14 @@ class _SubjectTiles extends StatelessWidget {
 
 class _SubjectTile extends StatelessWidget {
   const _SubjectTile({
-    required this.subject,
+    required this.item,
     required this.name,
     required this.count,
     required this.nameStyle,
     required this.countStyle,
   });
 
-  final Subject subject;
+  final DailyPlanItem item;
   final String name;
   final String count;
   final TextStyle nameStyle;
@@ -221,38 +231,63 @@ class _SubjectTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      padding: const EdgeInsets.only(left: 9, right: 4),
-      decoration: BoxDecoration(
-        color: HomeColors.testsTile,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: HomeColors.testsTileBorder),
-      ),
-      child: Row(
-        children: [
-          SubjectIcon(subject: subject, size: _SubjectTiles._iconSize),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                FitText(name, style: nameStyle),
-                const SizedBox(height: 3),
-                FitText(count, style: countStyle),
-              ],
+    final done = item.isDone;
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        onTap: () => openSubjectQuiz(context, item.subject),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          height: height,
+          padding: const EdgeInsets.only(left: 9, right: 4),
+          decoration: BoxDecoration(
+            color: HomeColors.testsTile,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: done ? _doneBorder : HomeColors.testsTileBorder,
             ),
           ),
-        ],
+          child: Row(
+            children: [
+              DoneBadgeIcon(
+                done: done,
+                child: SubjectIcon(
+                  subject: item.subject,
+                  size: _SubjectTiles._iconSize,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FitText(name, style: nameStyle),
+                    const SizedBox(height: 3),
+                    FitText(
+                      count,
+                      style: done
+                          ? countStyle.copyWith(
+                              color: _doneText,
+                              fontWeight: FontWeight.w700,
+                            )
+                          : countStyle,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
 class _StartButton extends StatelessWidget {
-  const _StartButton({required this.onTap});
+  const _StartButton({required this.label, required this.onTap});
 
+  final String label;
   final VoidCallback onTap;
 
   @override
@@ -268,9 +303,11 @@ class _StartButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                'home.start'.tr(),
-                style: homeText(13.5, weight: FontWeight.w600, height: 1.2),
+              Flexible(
+                child: FitText(
+                  label,
+                  style: homeText(13.5, weight: FontWeight.w600, height: 1.2),
+                ),
               ),
               const SizedBox(width: 10),
               const Icon(

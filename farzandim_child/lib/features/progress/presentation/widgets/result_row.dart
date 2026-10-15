@@ -7,7 +7,7 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/home/hom
 import 'package:farzandim_child/features/learning/domain/progress_models.dart';
 import 'package:farzandim_child/features/learning/presentation/widgets/subject_icon.dart';
 import 'package:farzandim_child/features/progress/presentation/widgets/subject_score_tile.dart';
-import 'package:farzandim_child/features/tests/presentation/open_subject_tests.dart';
+import 'package:farzandim_child/features/learning/presentation/learning_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -43,8 +43,12 @@ String formatResultDate(DateTime d, {DateTime? now}) {
   return sameYear ? '${d.day} $month' : '${d.day} $month, ${d.year}';
 }
 
-/// Fan + mavzu: "Matematika. Arifmetika".
-String resultTitle(TestResult r) => '${r.subject.labelKey.tr()}. ${r.topic}';
+/// Fan + mavzu: "Matematika. Arifmetika" (mavzu bo'lmasa — faqat fan).
+String resultTitle(BuildContext context, TestResult r) {
+  final subject = r.subject.labelKey.tr();
+  final topic = r.topic.of(context.locale.languageCode).trim();
+  return topic.isEmpty ? subject : '$subject. $topic';
+}
 
 class ResultRow extends ConsumerWidget {
   const ResultRow({super.key, required this.result});
@@ -56,7 +60,9 @@ class ResultRow extends ConsumerWidget {
     return Semantics(
       button: true,
       child: GestureDetector(
-        onTap: () => showResultSheet(context, ref, result),
+        onTap: () => result.canReview
+            ? openResultReview(context, result)
+            : showResultSheet(context, ref, result),
         behavior: HitTestBehavior.opaque,
         child: Container(
           constraints: const BoxConstraints(minHeight: 58),
@@ -80,7 +86,7 @@ class ResultRow extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      resultTitle(result),
+                      resultTitle(context, result),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: homeText(
@@ -204,7 +210,7 @@ Future<void> showResultSheet(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        resultTitle(result),
+                        resultTitle(context, result),
                         style: homeText(14.5, weight: FontWeight.w700),
                       ),
                       const SizedBox(height: 2),
@@ -245,7 +251,7 @@ Future<void> showResultSheet(
               ),
               onPressed: () {
                 Navigator.of(sheetContext).pop();
-                openSubjectTests(context, ref, [result.subject]);
+                openSubjectQuiz(context, result.subject);
               },
               icon: const Icon(SolarIconsOutline.restart, size: 18),
               label: Text(

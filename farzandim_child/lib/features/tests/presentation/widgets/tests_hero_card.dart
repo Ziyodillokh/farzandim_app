@@ -1,16 +1,19 @@
 // "Bugungi testlar" hero kartasi (Testlar sahifasi) — kunlik reja fanlari,
 // "Boshlash" va o'ngda illyustratsiya.
 //
-// Kunlik test oqimi (Daily Learning) backend bilan quriladi. Hozircha fan
-// plitkasi / "Boshlash" o'sha fanning HAQIQIY testlarini ochadi
-// (`/tests/subject`); fan bo'yicha test bo'lmasa — xabar.
+// Fan plitkasi — shu fanning kunlik testi, "Boshlash" — navbatdagi
+// yechilmagan fan (bosh sahifadagi karta bilan bir xil holatlar).
+// Fan tanlanmagan bo'lsa — sozlash kartasi.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
 import 'package:farzandim_child/features/learning/domain/learning_models.dart';
+import 'package:farzandim_child/features/learning/presentation/daily_plan_text.dart';
+import 'package:farzandim_child/features/learning/presentation/learning_navigation.dart';
 import 'package:farzandim_child/features/learning/presentation/providers/learning_providers.dart';
+import 'package:farzandim_child/features/learning/presentation/widgets/done_badge_icon.dart';
+import 'package:farzandim_child/features/learning/presentation/widgets/learning_setup_card.dart';
 import 'package:farzandim_child/features/learning/presentation/widgets/subject_icon.dart';
-import 'package:farzandim_child/features/tests/presentation/open_subject_tests.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -23,6 +26,8 @@ const _tileBorder = Color(0xFF02376D);
 const _iconSquare = Color(0xFF0A57CC);
 const _button = Color(0xFF1274FC);
 const _buttonBorder = Color(0xFF4A93FF);
+const _doneBorder = Color(0x5545E2BE);
+const _doneText = Color(0xFF45E2BE);
 
 /// Illyustratsiya (maketdan) — 240×424 px, kartaning o'ng chetida.
 const _illustration = 'assets/illustrations/tests_hero.png';
@@ -37,6 +42,7 @@ class TestsHeroCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final plan = ref.watch(dailyPlanProvider);
+    if (ref.watch(needsLearningSetupProvider)) return const LearningSetupCard();
     if (plan.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -84,9 +90,7 @@ class TestsHeroCard extends ConsumerWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            'home.todayTestsReady'.tr(
-                              namedArgs: {'count': '${plan.items.length}'},
-                            ),
+                            dailyPlanSubtitle(plan),
                             style: homeText(13.8, color: HomeColors.textDim),
                           ),
                         ],
@@ -104,11 +108,8 @@ class TestsHeroCard extends ConsumerWidget {
                     SizedBox(
                       width: left + 1.5,
                       child: _StartButton(
-                        onTap: () => openSubjectTests(
-                          context,
-                          ref,
-                          plan.items.map((i) => i.subject),
-                        ),
+                        label: dailyPlanButtonLabel(plan),
+                        onTap: () => startDailyLearning(context, ref),
                       ),
                     ),
                   ],
@@ -147,13 +148,13 @@ class _Illustration extends StatelessWidget {
   }
 }
 
-class _PlanTiles extends ConsumerWidget {
+class _PlanTiles extends StatelessWidget {
   const _PlanTiles({required this.items});
 
   final List<DailyPlanItem> items;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     // Maket — 3 ta plitka; ko'proq fan bo'lsa birinchi 3 tasi (qolgani
     // "Boshlash" orqali ochiladi).
     final shown = items.take(3).toList();
@@ -164,7 +165,7 @@ class _PlanTiles extends ConsumerWidget {
           Expanded(
             child: _PlanTile(
               item: shown[i],
-              onTap: () => openSubjectTests(context, ref, [shown[i].subject]),
+              onTap: () => openSubjectQuiz(context, shown[i].subject),
             ),
           ),
         ],
@@ -192,6 +193,7 @@ class _PlanTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scaled = MediaQuery.textScalerOf(context).scale(_textBlock);
+    final done = item.isDone;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -201,15 +203,18 @@ class _PlanTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: _tileBg,
           borderRadius: BorderRadius.circular(13),
-          border: Border.all(color: _tileBorder),
+          border: Border.all(color: done ? _doneBorder : _tileBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SubjectIcon(
-              subject: item.subject,
-              size: 27.5,
-              background: _iconSquare,
+            DoneBadgeIcon(
+              done: done,
+              child: SubjectIcon(
+                subject: item.subject,
+                size: 27.5,
+                background: _iconSquare,
+              ),
             ),
             const Spacer(),
             FitText(
@@ -218,8 +223,15 @@ class _PlanTile extends StatelessWidget {
             ),
             const SizedBox(height: 3),
             FitText(
-              'home.questions'.plural(item.questionCount),
-              style: homeText(11, color: HomeColors.textDim, height: 1.2),
+              dailyPlanItemCaption(item),
+              style: done
+                  ? homeText(
+                      11,
+                      weight: FontWeight.w700,
+                      color: _doneText,
+                      height: 1.2,
+                    )
+                  : homeText(11, color: HomeColors.textDim, height: 1.2),
             ),
             const SizedBox(height: 5.5),
           ],
@@ -230,8 +242,9 @@ class _PlanTile extends StatelessWidget {
 }
 
 class _StartButton extends StatelessWidget {
-  const _StartButton({required this.onTap});
+  const _StartButton({required this.label, required this.onTap});
 
+  final String label;
   final VoidCallback onTap;
 
   @override
@@ -247,9 +260,11 @@ class _StartButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                'home.start'.tr(),
-                style: homeText(13.5, weight: FontWeight.w600, height: 1.2),
+              Flexible(
+                child: FitText(
+                  label,
+                  style: homeText(13.5, weight: FontWeight.w600, height: 1.2),
+                ),
               ),
               const SizedBox(width: 10),
               const Icon(

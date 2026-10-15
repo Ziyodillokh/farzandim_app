@@ -1,0 +1,908 @@
+{
+  "subject": "native",
+  "questions": [
+    {
+      "id": "native-01",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "So‘z turkumlari",
+        "ru": "Части речи",
+        "en": "Parts of speech"
+      },
+      "question": {
+        "uz": "Qaysi so‘z ot so‘z turkumiga kiradi?",
+        "ru": "Какое слово в узбекском языке является существительным (ot)?",
+        "en": "Which Uzbek word is a noun (ot)?"
+      },
+      "options": [
+        {
+          "uz": "chiroyli",
+          "ru": "chiroyli",
+          "en": "chiroyli"
+        },
+        {
+          "uz": "kitob",
+          "ru": "kitob",
+          "en": "kitob"
+        },
+        {
+          "uz": "yugurmoq",
+          "ru": "yugurmoq",
+          "en": "yugurmoq"
+        },
+        {
+          "uz": "tez",
+          "ru": "tez",
+          "en": "tez"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Ot narsa yoki shaxsni bildiradi va “kim?”, “nima?” so‘roqlariga javob beradi: kitob — nima?",
+        "ru": "Существительное (ot) обозначает предмет и отвечает на вопросы kim? (кто?) и nima? (что?): kitob — «книга».",
+        "en": "A noun (ot) names a thing or person and answers kim? (who?) or nima? (what?): kitob means book."
+      }
+    },
+    {
+      "id": "native-02",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "So‘z turkumlari",
+        "ru": "Части речи",
+        "en": "Parts of speech"
+      },
+      "question": {
+        "uz": "Qaysi so‘z sifat so‘z turkumiga kiradi?",
+        "ru": "Какое узбекское слово является прилагательным (sifat)?",
+        "en": "Which Uzbek word is an adjective (sifat)?"
+      },
+      "options": [
+        {
+          "uz": "daraxt",
+          "ru": "daraxt",
+          "en": "daraxt"
+        },
+        {
+          "uz": "o‘qimoq",
+          "ru": "o‘qimoq",
+          "en": "o‘qimoq"
+        },
+        {
+          "uz": "biz",
+          "ru": "biz",
+          "en": "biz"
+        },
+        {
+          "uz": "baland",
+          "ru": "baland",
+          "en": "baland"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Sifat belgini bildiradi va “qanday?” so‘rog‘iga javob beradi: baland (qanday?).",
+        "ru": "Прилагательное (sifat) обозначает признак и отвечает на вопрос qanday? (какой?): baland — «высокий».",
+        "en": "An adjective (sifat) describes a quality and answers qanday? (what kind?): baland means tall."
+      }
+    },
+    {
+      "id": "native-03",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Antonimlar",
+        "ru": "Антонимы",
+        "en": "Antonyms"
+      },
+      "question": {
+        "uz": "“Issiq” so‘zining antonimini toping.",
+        "ru": "Найдите антоним к узбекскому слову «issiq».",
+        "en": "Find the antonym of the Uzbek word “issiq”."
+      },
+      "options": [
+        {
+          "uz": "sovuq",
+          "ru": "sovuq",
+          "en": "sovuq"
+        },
+        {
+          "uz": "iliq",
+          "ru": "iliq",
+          "en": "iliq"
+        },
+        {
+          "uz": "qaynoq",
+          "ru": "qaynoq",
+          "en": "qaynoq"
+        },
+        {
+          "uz": "yumshoq",
+          "ru": "yumshoq",
+          "en": "yumshoq"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Antonimlar qarama-qarshi ma’noli so‘zlardir: issiq — sovuq.",
+        "ru": "Антонимы — слова с противоположным значением: issiq («горячий») — sovuq («холодный»).",
+        "en": "Antonyms have opposite meanings: issiq (hot) — sovuq (cold)."
+      }
+    },
+    {
+      "id": "native-04",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Sinonimlar",
+        "ru": "Синонимы",
+        "en": "Synonyms"
+      },
+      "question": {
+        "uz": "“Chiroyli” so‘zining sinonimini toping.",
+        "ru": "Найдите синоним к узбекскому слову «chiroyli».",
+        "en": "Find the synonym of the Uzbek word “chiroyli”."
+      },
+      "options": [
+        {
+          "uz": "xunuk",
+          "ru": "xunuk",
+          "en": "xunuk"
+        },
+        {
+          "uz": "katta",
+          "ru": "katta",
+          "en": "katta"
+        },
+        {
+          "uz": "go‘zal",
+          "ru": "go‘zal",
+          "en": "go‘zal"
+        },
+        {
+          "uz": "aqlli",
+          "ru": "aqlli",
+          "en": "aqlli"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Sinonimlar ma’nosi yaqin so‘zlardir: “chiroyli” va “go‘zal” bir xil ma’noni bildiradi.",
+        "ru": "Синонимы близки по значению: chiroyli и go‘zal оба значат «красивый».",
+        "en": "Synonyms have similar meanings: chiroyli and go‘zal both mean beautiful."
+      }
+    },
+    {
+      "id": "native-05",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Imlo",
+        "ru": "Орфография",
+        "en": "Spelling"
+      },
+      "question": {
+        "uz": "Qaysi so‘z to‘g‘ri yozilgan?",
+        "ru": "Какое узбекское слово написано правильно?",
+        "en": "Which Uzbek word is spelled correctly?"
+      },
+      "options": [
+        {
+          "uz": "hayvon",
+          "ru": "hayvon",
+          "en": "hayvon"
+        },
+        {
+          "uz": "xayvon",
+          "ru": "xayvon",
+          "en": "xayvon"
+        },
+        {
+          "uz": "haybon",
+          "ru": "haybon",
+          "en": "haybon"
+        },
+        {
+          "uz": "xaywon",
+          "ru": "xaywon",
+          "en": "xaywon"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“Hayvon” so‘zi h harfi bilan yoziladi; h va x harflarini adashtirmang.",
+        "ru": "Слово hayvon («животное») пишется с буквой h; не путайте h и x.",
+        "en": "Hayvon (animal) is spelled with h; be careful not to mix up h and x."
+      }
+    },
+    {
+      "id": "native-06",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "So‘z turkumlari",
+        "ru": "Части речи",
+        "en": "Parts of speech"
+      },
+      "question": {
+        "uz": "Qaysi so‘z fe’l so‘z turkumiga kiradi?",
+        "ru": "Какое узбекское слово является глаголом (fe’l)?",
+        "en": "Which Uzbek word is a verb (fe’l)?"
+      },
+      "options": [
+        {
+          "uz": "ish",
+          "ru": "ish",
+          "en": "ish"
+        },
+        {
+          "uz": "ishchi",
+          "ru": "ishchi",
+          "en": "ishchi"
+        },
+        {
+          "uz": "ishchan",
+          "ru": "ishchan",
+          "en": "ishchan"
+        },
+        {
+          "uz": "ishlamoq",
+          "ru": "ishlamoq",
+          "en": "ishlamoq"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Fe’l harakatni bildiradi va “nima qilmoq?” so‘rog‘iga javob beradi: ishlamoq.",
+        "ru": "Глагол (fe’l) обозначает действие и отвечает на вопрос nima qilmoq? (что делать?): ishlamoq — «работать».",
+        "en": "A verb (fe’l) shows an action and answers nima qilmoq? (what to do?): ishlamoq means to work."
+      }
+    },
+    {
+      "id": "native-07",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "So‘z turkumlari",
+        "ru": "Части речи",
+        "en": "Parts of speech"
+      },
+      "question": {
+        "uz": "Qaysi so‘z son so‘z turkumiga kiradi?",
+        "ru": "Какое узбекское слово является числительным (son)?",
+        "en": "Which Uzbek word is a numeral (son)?"
+      },
+      "options": [
+        {
+          "uz": "yetmoq",
+          "ru": "yetmoq",
+          "en": "yetmoq"
+        },
+        {
+          "uz": "yetti",
+          "ru": "yetti",
+          "en": "yetti"
+        },
+        {
+          "uz": "yetuk",
+          "ru": "yetuk",
+          "en": "yetuk"
+        },
+        {
+          "uz": "yetim",
+          "ru": "yetim",
+          "en": "yetim"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Son narsaning miqdorini bildiradi va “necha?” so‘rog‘iga javob beradi: yetti.",
+        "ru": "Числительное (son) обозначает количество и отвечает на вопрос necha? (сколько?): yetti — «семь».",
+        "en": "A numeral (son) shows a number and answers necha? (how many?): yetti means seven."
+      }
+    },
+    {
+      "id": "native-08",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "So‘z turkumlari",
+        "ru": "Части речи",
+        "en": "Parts of speech"
+      },
+      "question": {
+        "uz": "Gapdagi olmoshni toping: “Biz ertaga bog‘ga boramiz.”",
+        "ru": "Найдите местоимение (olmosh) в предложении: «Biz ertaga bog‘ga boramiz.»",
+        "en": "Find the pronoun (olmosh) in the sentence: “Biz ertaga bog‘ga boramiz.”"
+      },
+      "options": [
+        {
+          "uz": "ertaga",
+          "ru": "ertaga",
+          "en": "ertaga"
+        },
+        {
+          "uz": "bog‘ga",
+          "ru": "bog‘ga",
+          "en": "bog‘ga"
+        },
+        {
+          "uz": "Biz",
+          "ru": "Biz",
+          "en": "Biz"
+        },
+        {
+          "uz": "boramiz",
+          "ru": "boramiz",
+          "en": "boramiz"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Olmosh ot o‘rnida qo‘llanadi: “biz” — kishilik olmoshi.",
+        "ru": "Местоимение заменяет существительное: biz («мы») — личное местоимение.",
+        "en": "A pronoun replaces a noun: biz (we) is a personal pronoun."
+      }
+    },
+    {
+      "id": "native-09",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Kelishiklar",
+        "ru": "Падежи",
+        "en": "Cases"
+      },
+      "question": {
+        "uz": "Qaysi so‘z chiqish kelishigida turibdi?",
+        "ru": "Какое узбекское слово стоит в исходном падеже (chiqish kelishigi)?",
+        "en": "Which Uzbek word is in the ablative case (chiqish kelishigi)?"
+      },
+      "options": [
+        {
+          "uz": "maktabdan",
+          "ru": "maktabdan",
+          "en": "maktabdan"
+        },
+        {
+          "uz": "maktabga",
+          "ru": "maktabga",
+          "en": "maktabga"
+        },
+        {
+          "uz": "maktabda",
+          "ru": "maktabda",
+          "en": "maktabda"
+        },
+        {
+          "uz": "maktabning",
+          "ru": "maktabning",
+          "en": "maktabning"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Chiqish kelishigi -dan qo‘shimchasi bilan yasaladi va “qayerdan?” so‘rog‘iga javob beradi.",
+        "ru": "Исходный падеж образуется суффиксом -dan и отвечает на вопрос qayerdan? (откуда?).",
+        "en": "The ablative case uses the suffix -dan and answers qayerdan? (from where?)."
+      }
+    },
+    {
+      "id": "native-10",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Tinish belgilari",
+        "ru": "Знаки препинания",
+        "en": "Punctuation"
+      },
+      "question": {
+        "uz": "Qaysi gap oxiriga so‘roq belgisi (?) qo‘yiladi?",
+        "ru": "В конце какого узбекского предложения ставится вопросительный знак (?)?",
+        "en": "Which Uzbek sentence should end with a question mark (?)?"
+      },
+      "options": [
+        {
+          "uz": "Bugun havo issiq",
+          "ru": "Bugun havo issiq",
+          "en": "Bugun havo issiq"
+        },
+        {
+          "uz": "Kitobni o‘qib chiqdim",
+          "ru": "Kitobni o‘qib chiqdim",
+          "en": "Kitobni o‘qib chiqdim"
+        },
+        {
+          "uz": "Qanday go‘zal kun",
+          "ru": "Qanday go‘zal kun",
+          "en": "Qanday go‘zal kun"
+        },
+        {
+          "uz": "Sen qachon kelasan",
+          "ru": "Sen qachon kelasan",
+          "en": "Sen qachon kelasan"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Bu “qachon” so‘roq so‘zi bilan berilgan savol, shuning uchun oxiriga “?” qo‘yiladi; “Qanday go‘zal kun!” esa undov gap.",
+        "ru": "Это вопрос со словом qachon («когда»), поэтому в конце ставится «?»; «Qanday go‘zal kun!» — восклицательное предложение.",
+        "en": "It is a question with qachon (when), so it ends with “?”; “Qanday go‘zal kun!” is an exclamation."
+      }
+    },
+    {
+      "id": "native-11",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Gap bo‘laklari",
+        "ru": "Члены предложения",
+        "en": "Parts of a sentence"
+      },
+      "question": {
+        "uz": "“Aziz kecha kutubxonaga bordi.” gapining kesimini toping.",
+        "ru": "Найдите сказуемое (kesim) в узбекском предложении: «Aziz kecha kutubxonaga bordi.»",
+        "en": "Find the predicate (kesim) in the Uzbek sentence: “Aziz kecha kutubxonaga bordi.”"
+      },
+      "options": [
+        {
+          "uz": "bordi",
+          "ru": "bordi",
+          "en": "bordi"
+        },
+        {
+          "uz": "Aziz",
+          "ru": "Aziz",
+          "en": "Aziz"
+        },
+        {
+          "uz": "kecha",
+          "ru": "kecha",
+          "en": "kecha"
+        },
+        {
+          "uz": "kutubxonaga",
+          "ru": "kutubxonaga",
+          "en": "kutubxonaga"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Kesim eganing harakatini bildiradi va “nima qildi?” so‘rog‘iga javob beradi: bordi.",
+        "ru": "Сказуемое обозначает действие подлежащего и отвечает на вопрос nima qildi? (что сделал?): bordi — «пошёл».",
+        "en": "The predicate shows what the subject did and answers nima qildi? (what did he do?): bordi means went."
+      }
+    },
+    {
+      "id": "native-12",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Maqollar",
+        "ru": "Пословицы",
+        "en": "Proverbs"
+      },
+      "question": {
+        "uz": "Maqolni to‘ldiring: “Bir yigitga yetmish ___ oz.”",
+        "ru": "Дополните узбекскую пословицу: «Bir yigitga yetmish ___ oz.»",
+        "en": "Complete the Uzbek proverb: “Bir yigitga yetmish ___ oz.”"
+      },
+      "options": [
+        {
+          "uz": "do‘st",
+          "ru": "do‘st",
+          "en": "do‘st"
+        },
+        {
+          "uz": "hunar",
+          "ru": "hunar",
+          "en": "hunar"
+        },
+        {
+          "uz": "kitob",
+          "ru": "kitob",
+          "en": "kitob"
+        },
+        {
+          "uz": "til",
+          "ru": "til",
+          "en": "til"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Maqol inson ko‘p hunar egallashi foydali ekanini anglatadi: “Bir yigitga yetmish hunar oz.”",
+        "ru": "Пословица означает, что человеку полезно владеть многими ремёслами (hunar — «ремесло»).",
+        "en": "The proverb means it is good for a person to master many skills (hunar means craft or skill)."
+      }
+    },
+    {
+      "id": "native-13",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "O‘zbek adabiyoti",
+        "ru": "Узбекская литература",
+        "en": "Uzbek literature"
+      },
+      "question": {
+        "uz": "“O‘tkan kunlar” romanining muallifi kim?",
+        "ru": "Кто автор романа «O‘tkan kunlar» («Минувшие дни»)?",
+        "en": "Who wrote the novel “O‘tkan kunlar” (Days Gone By)?"
+      },
+      "options": [
+        {
+          "uz": "Alisher Navoiy",
+          "ru": "Alisher Navoiy",
+          "en": "Alisher Navoiy"
+        },
+        {
+          "uz": "Abdulla Qodiriy",
+          "ru": "Abdulla Qodiriy",
+          "en": "Abdulla Qodiriy"
+        },
+        {
+          "uz": "Cho‘lpon",
+          "ru": "Cho‘lpon",
+          "en": "Cho‘lpon"
+        },
+        {
+          "uz": "G‘afur G‘ulom",
+          "ru": "G‘afur G‘ulom",
+          "en": "G‘afur G‘ulom"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "“O‘tkan kunlar”ni Abdulla Qodiriy yozgan; bu o‘zbek adabiyotidagi birinchi roman hisoblanadi.",
+        "ru": "«O‘tkan kunlar» написал Абдулла Кадыри; это первый роман в узбекской литературе.",
+        "en": "Abdulla Qodiriy wrote “O‘tkan kunlar”; it is considered the first Uzbek novel."
+      }
+    },
+    {
+      "id": "native-14",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "O‘zbek adabiyoti",
+        "ru": "Узбекская литература",
+        "en": "Uzbek literature"
+      },
+      "question": {
+        "uz": "“Xamsa” asarini kim yaratgan?",
+        "ru": "Кто создал произведение «Xamsa» («Хамса»)?",
+        "en": "Who created the work “Xamsa” (Khamsa)?"
+      },
+      "options": [
+        {
+          "uz": "Abdulla Qodiriy",
+          "ru": "Abdulla Qodiriy",
+          "en": "Abdulla Qodiriy"
+        },
+        {
+          "uz": "G‘afur G‘ulom",
+          "ru": "G‘afur G‘ulom",
+          "en": "G‘afur G‘ulom"
+        },
+        {
+          "uz": "Alisher Navoiy",
+          "ru": "Alisher Navoiy",
+          "en": "Alisher Navoiy"
+        },
+        {
+          "uz": "Cho‘lpon",
+          "ru": "Cho‘lpon",
+          "en": "Cho‘lpon"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "“Xamsa” — Alisher Navoiyning beshta dostondan iborat mashhur asari.",
+        "ru": "«Хамса» — знаменитое произведение Алишера Навои, состоящее из пяти поэм (дастанов).",
+        "en": "“Xamsa” is the famous work of Alisher Navoiy, made up of five epic poems (dostons)."
+      }
+    },
+    {
+      "id": "native-15",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "O‘zbek adabiyoti",
+        "ru": "Узбекская литература",
+        "en": "Uzbek literature"
+      },
+      "question": {
+        "uz": "“Shum bola” qissasining muallifi kim?",
+        "ru": "Кто автор повести «Shum bola» («Озорник»)?",
+        "en": "Who wrote the story “Shum bola” (The Mischievous Boy)?"
+      },
+      "options": [
+        {
+          "uz": "Cho‘lpon",
+          "ru": "Cho‘lpon",
+          "en": "Cho‘lpon"
+        },
+        {
+          "uz": "Alisher Navoiy",
+          "ru": "Alisher Navoiy",
+          "en": "Alisher Navoiy"
+        },
+        {
+          "uz": "Abdulla Qodiriy",
+          "ru": "Abdulla Qodiriy",
+          "en": "Abdulla Qodiriy"
+        },
+        {
+          "uz": "G‘afur G‘ulom",
+          "ru": "G‘afur G‘ulom",
+          "en": "G‘afur G‘ulom"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "“Shum bola” qissasini G‘afur G‘ulom yozgan; unda sho‘x bir bolaning sarguzashtlari hikoya qilinadi.",
+        "ru": "Повесть «Shum bola» написал Гафур Гулям; в ней рассказывается о приключениях озорного мальчика.",
+        "en": "G‘afur G‘ulom wrote “Shum bola”, a story about the adventures of a mischievous boy."
+      }
+    },
+    {
+      "id": "native-16",
+      "difficulty": 1,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Harflar",
+        "ru": "Буквы",
+        "en": "Letters"
+      },
+      "question": {
+        "uz": "Qaysi harf unli tovushni bildiradi?",
+        "ru": "Какая буква узбекского алфавита обозначает гласный звук?",
+        "en": "Which letter of the Uzbek alphabet is a vowel?"
+      },
+      "options": [
+        {
+          "uz": "b",
+          "ru": "b",
+          "en": "b"
+        },
+        {
+          "uz": "d",
+          "ru": "d",
+          "en": "d"
+        },
+        {
+          "uz": "a",
+          "ru": "a",
+          "en": "a"
+        },
+        {
+          "uz": "k",
+          "ru": "k",
+          "en": "k"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "O‘zbek tilida oltita unli bor: a, o, i, u, e, o‘.",
+        "ru": "В узбекском языке шесть гласных: a, o, i, u, e, o‘.",
+        "en": "Uzbek has six vowels: a, o, i, u, e, o‘."
+      }
+    },
+    {
+      "id": "native-17",
+      "difficulty": 1,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Antonimlar",
+        "ru": "Антонимы",
+        "en": "Antonyms"
+      },
+      "question": {
+        "uz": "“Katta” so‘zining teskarisini toping.",
+        "ru": "Найдите слово, противоположное узбекскому слову «katta».",
+        "en": "Find the opposite of the Uzbek word “katta”."
+      },
+      "options": [
+        {
+          "uz": "kichik",
+          "ru": "kichik",
+          "en": "kichik"
+        },
+        {
+          "uz": "baland",
+          "ru": "baland",
+          "en": "baland"
+        },
+        {
+          "uz": "uzun",
+          "ru": "uzun",
+          "en": "uzun"
+        },
+        {
+          "uz": "keng",
+          "ru": "keng",
+          "en": "keng"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“Katta” va “kichik” — qarama-qarshi ma’noli so‘zlar.",
+        "ru": "Katta («большой») и kichik («маленький») — противоположные по значению слова.",
+        "en": "Katta (big) and kichik (small) have opposite meanings."
+      }
+    },
+    {
+      "id": "native-18",
+      "difficulty": 1,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Ko‘plik qo‘shimchasi",
+        "ru": "Множественное число",
+        "en": "Plural forms"
+      },
+      "question": {
+        "uz": "“Olma” so‘zining ko‘plik shaklini toping.",
+        "ru": "Найдите форму множественного числа узбекского слова «olma».",
+        "en": "Find the plural form of the Uzbek word “olma”."
+      },
+      "options": [
+        {
+          "uz": "olmaning",
+          "ru": "olmaning",
+          "en": "olmaning"
+        },
+        {
+          "uz": "olmalar",
+          "ru": "olmalar",
+          "en": "olmalar"
+        },
+        {
+          "uz": "olmada",
+          "ru": "olmada",
+          "en": "olmada"
+        },
+        {
+          "uz": "olmaga",
+          "ru": "olmaga",
+          "en": "olmaga"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Ko‘plik -lar qo‘shimchasi bilan yasaladi: olma — olmalar.",
+        "ru": "Множественное число образуется суффиксом -lar: olma («яблоко») — olmalar («яблоки»).",
+        "en": "The plural is made with the suffix -lar: olma (apple) — olmalar (apples)."
+      }
+    },
+    {
+      "id": "native-19",
+      "difficulty": 1,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Ranglar",
+        "ru": "Цвета",
+        "en": "Colours"
+      },
+      "question": {
+        "uz": "Qor qanday rangda bo‘ladi?",
+        "ru": "Какого цвета снег? Выберите узбекское слово.",
+        "en": "What colour is snow? Choose the Uzbek word."
+      },
+      "options": [
+        {
+          "uz": "qora",
+          "ru": "qora",
+          "en": "qora"
+        },
+        {
+          "uz": "qizil",
+          "ru": "qizil",
+          "en": "qizil"
+        },
+        {
+          "uz": "sariq",
+          "ru": "sariq",
+          "en": "sariq"
+        },
+        {
+          "uz": "oq",
+          "ru": "oq",
+          "en": "oq"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Qor oppoq bo‘ladi, shuning uchun to‘g‘ri javob — “oq”.",
+        "ru": "Снег белый, а «белый» по-узбекски — oq.",
+        "en": "Snow is white, and white in Uzbek is oq."
+      }
+    },
+    {
+      "id": "native-20",
+      "difficulty": 1,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Hayvonlar",
+        "ru": "Животные",
+        "en": "Animals"
+      },
+      "question": {
+        "uz": "Qaysi hayvon “miyov” deydi?",
+        "ru": "Какое животное говорит «мяу»? Выберите узбекское слово.",
+        "en": "Which animal says “meow”? Choose the Uzbek word."
+      },
+      "options": [
+        {
+          "uz": "mushuk",
+          "ru": "mushuk",
+          "en": "mushuk"
+        },
+        {
+          "uz": "it",
+          "ru": "it",
+          "en": "it"
+        },
+        {
+          "uz": "sigir",
+          "ru": "sigir",
+          "en": "sigir"
+        },
+        {
+          "uz": "qo‘y",
+          "ru": "qo‘y",
+          "en": "qo‘y"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Mushuk “miyov-miyov” deb ovoz chiqaradi.",
+        "ru": "«Мяу» говорит кошка, а кошка по-узбекски — mushuk.",
+        "en": "A cat says meow, and cat in Uzbek is mushuk."
+      }
+    },
+    {
+      "id": "native-21",
+      "difficulty": 2,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Gap tuzish",
+        "ru": "Предложение",
+        "en": "Sentences"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: “Men maktabga ___.”",
+        "ru": "Дополните узбекское предложение: «Men maktabga ___.»",
+        "en": "Complete the Uzbek sentence: “Men maktabga ___.”"
+      },
+      "options": [
+        {
+          "uz": "borasan",
+          "ru": "borasan",
+          "en": "borasan"
+        },
+        {
+          "uz": "boradi",
+          "ru": "boradi",
+          "en": "boradi"
+        },
+        {
+          "uz": "boraman",
+          "ru": "boraman",
+          "en": "boraman"
+        },
+        {
+          "uz": "boramiz",
+          "ru": "boramiz",
+          "en": "boramiz"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "“Men” olmoshi bilan fe’l -man qo‘shimchasini oladi: men boraman.",
+        "ru": "С местоимением men («я») глагол получает окончание -man: men boraman («я иду»).",
+        "en": "With men (I), the verb takes the ending -man: men boraman (I go)."
+      }
+    }
+  ]
+}

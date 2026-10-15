@@ -1,12 +1,11 @@
 // "Haftalik rivojlanish" hero kartasi — umumiy o'sish, natija halqasi va
 // 3 ko'rsatkich (testlar, to'g'ri javoblar, ketma-ket muvaffaqiyat).
 
-import 'dart:math' as math;
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
 import 'package:farzandim_child/features/learning/domain/progress_models.dart';
+import 'package:farzandim_child/features/learning/presentation/widgets/score_ring.dart';
 import 'package:farzandim_child/features/progress/presentation/progress_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -23,9 +22,6 @@ const _tileBg = Color(0xFF0E1D2D);
 const _tileBorder = Color(0xFF10263D);
 const _tileSquare = Color(0xFF112F57);
 const _tileIcon = Color(0xFF86BBFF);
-const _ringStart = Color(0xFF1A72F2);
-const _ringEnd = Color(0xFF4AA6FF);
-const _ringTrack = Color(0xFF0E2238);
 
 class ProgressHeroCard extends StatelessWidget {
   const ProgressHeroCard({super.key, required this.progress});
@@ -232,96 +228,30 @@ class _OverallRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 112,
-      height: 112,
-      child: CustomPaint(
-        painter: _RingPainter(progress: percent.clamp(0, 100) / 100),
-        // Matn bloki markazdan biroz pastda (maketdagidek).
-        child: Padding(
-          padding: const EdgeInsets.only(top: 8.4),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('$percent%', style: homeDisplay(22.5, height: 1.1)),
-                const SizedBox(height: 5),
-                Text(
-                  'progress.overallResult'.tr(),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  style: homeText(12, color: HomeColors.textDim, height: 1.25),
-                ),
-              ],
-            ),
+    return ScoreRing(
+      percent: percent,
+      size: 112,
+      // Matn bloki markazdan biroz pastda (maketdagidek).
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8.4),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('$percent%', style: homeDisplay(22.5, height: 1.1)),
+              const SizedBox(height: 5),
+              Text(
+                'progress.overallResult'.tr(),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                style: homeText(12, color: HomeColors.textDim, height: 1.25),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
-}
-
-class _RingPainter extends CustomPainter {
-  const _RingPainter({required this.progress});
-
-  final double progress;
-  static const _stroke = 10.5;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(
-      _stroke / 2,
-      _stroke / 2,
-      size.width - _stroke,
-      size.height - _stroke,
-    );
-    canvas.drawArc(
-      rect,
-      0,
-      math.pi * 2,
-      false,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = _stroke
-        ..color = _ringTrack,
-    );
-    if (progress <= 0) return;
-    final sweep = math.pi * 2 * progress;
-    const start = -math.pi / 2;
-    final gradient = SweepGradient(
-      startAngle: 0,
-      endAngle: sweep,
-      colors: const [_ringStart, _ringEnd],
-      transform: const GradientRotation(start),
-    );
-    // Yumshoq nur.
-    canvas.drawArc(
-      rect,
-      start,
-      sweep,
-      false,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = _stroke
-        ..color = _ringStart.withValues(alpha: 0.45)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7),
-    );
-    canvas.drawArc(
-      rect,
-      start,
-      sweep,
-      false,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = _stroke
-        ..strokeCap = StrokeCap.round
-        ..shader = gradient.createShader(rect),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _RingPainter oldDelegate) =>
-      oldDelegate.progress != progress;
 }
 
 class _StatTile extends StatelessWidget {

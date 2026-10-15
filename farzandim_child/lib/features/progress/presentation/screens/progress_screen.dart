@@ -19,6 +19,7 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/home/des
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_header.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
+import 'package:farzandim_child/features/learning/presentation/learning_navigation.dart';
 import 'package:farzandim_child/features/learning/presentation/providers/progress_providers.dart';
 import 'package:farzandim_child/features/progress/presentation/widgets/progress_hero_card.dart';
 import 'package:farzandim_child/features/progress/presentation/widgets/progress_section.dart';
@@ -73,7 +74,7 @@ class ProgressScreen extends ConsumerWidget {
                   actions: [
                     HeaderIconButton(
                       semanticLabel: 'progress.calendar'.tr(),
-                      onTap: () => context.push('/streak-detail'),
+                      onTap: () => context.push(LearningRoutes.calendar),
                       child: const HomeSvgIcon(homeCalendarSvg, size: 22),
                     ),
                   ],
@@ -89,7 +90,15 @@ class ProgressScreen extends ConsumerWidget {
                     title: 'progress.strongSubjects'.tr(),
                     subtitle: 'progress.strongSubtitle'.tr(),
                     onSeeAll: () => context.push('/progress/subjects'),
-                    child: StrongSubjectsRow(scores: scores.take(3).toList()),
+                    // Eng yuqori natijali 3 fan.
+                    child: StrongSubjectsRow(
+                      scores:
+                          ([
+                                ...scores,
+                              ]..sort((a, b) => b.percent.compareTo(a.percent)))
+                              .take(3)
+                              .toList(),
+                    ),
                   ),
                 ],
                 if (results.isNotEmpty) ...[

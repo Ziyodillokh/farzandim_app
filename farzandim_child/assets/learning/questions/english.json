@@ -1,0 +1,908 @@
+{
+  "subject": "english",
+  "questions": [
+    {
+      "id": "english-01",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Hozirgi oddiy zamon",
+        "ru": "Present Simple",
+        "en": "Present Simple"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: She ___ to school every day.",
+        "ru": "Заполните пропуск: She ___ to school every day.",
+        "en": "Fill in the blank: She ___ to school every day."
+      },
+      "options": [
+        {
+          "uz": "go",
+          "ru": "go",
+          "en": "go"
+        },
+        {
+          "uz": "goes",
+          "ru": "goes",
+          "en": "goes"
+        },
+        {
+          "uz": "going",
+          "ru": "going",
+          "en": "going"
+        },
+        {
+          "uz": "gone",
+          "ru": "gone",
+          "en": "gone"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Present Simple zamonida he, she, it bilan fe’lga -s yoki -es qo‘shiladi: she goes.",
+        "ru": "В Present Simple с he, she, it к глаголу добавляется -s или -es: she goes.",
+        "en": "In the Present Simple, verbs take -s or -es after he, she and it: she goes."
+      }
+    },
+    {
+      "id": "english-02",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Artikllar",
+        "ru": "Артикли",
+        "en": "Articles"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: I have ___ umbrella.",
+        "ru": "Заполните пропуск: I have ___ umbrella.",
+        "en": "Fill in the blank: I have ___ umbrella."
+      },
+      "options": [
+        {
+          "uz": "some",
+          "ru": "some",
+          "en": "some"
+        },
+        {
+          "uz": "a",
+          "ru": "a",
+          "en": "a"
+        },
+        {
+          "uz": "two",
+          "ru": "two",
+          "en": "two"
+        },
+        {
+          "uz": "an",
+          "ru": "an",
+          "en": "an"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "“Umbrella” so‘zi unli tovush bilan boshlanadi, shuning uchun “an” artikli ishlatiladi.",
+        "ru": "Слово umbrella начинается с гласного звука, поэтому нужен артикль an.",
+        "en": "Umbrella starts with a vowel sound, so we use the article an."
+      }
+    },
+    {
+      "id": "english-03",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Ko‘plik shakli",
+        "ru": "Множественное число",
+        "en": "Plural nouns"
+      },
+      "question": {
+        "uz": "“child” so‘zining ko‘plik shaklini tanlang.",
+        "ru": "Выберите форму множественного числа слова “child”.",
+        "en": "Choose the plural form of “child”."
+      },
+      "options": [
+        {
+          "uz": "children",
+          "ru": "children",
+          "en": "children"
+        },
+        {
+          "uz": "childs",
+          "ru": "childs",
+          "en": "childs"
+        },
+        {
+          "uz": "childrens",
+          "ru": "childrens",
+          "en": "childrens"
+        },
+        {
+          "uz": "childes",
+          "ru": "childes",
+          "en": "childes"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“Child” qoidaga bo‘ysunmaydigan ot: uning ko‘plik shakli “children” bo‘ladi.",
+        "ru": "Child — исключение: его множественное число — children.",
+        "en": "Child is an irregular noun: its plural is children."
+      }
+    },
+    {
+      "id": "english-04",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Antonimlar",
+        "ru": "Антонимы",
+        "en": "Opposites"
+      },
+      "question": {
+        "uz": "“cheap” so‘zining antonimini tanlang.",
+        "ru": "Выберите антоним к слову “cheap”.",
+        "en": "Choose the opposite of “cheap”."
+      },
+      "options": [
+        {
+          "uz": "small",
+          "ru": "small",
+          "en": "small"
+        },
+        {
+          "uz": "easy",
+          "ru": "easy",
+          "en": "easy"
+        },
+        {
+          "uz": "poor",
+          "ru": "poor",
+          "en": "poor"
+        },
+        {
+          "uz": "expensive",
+          "ru": "expensive",
+          "en": "expensive"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "“Cheap” — arzon, “expensive” — qimmat degani, ular qarama-qarshi ma’noli so‘zlar.",
+        "ru": "Cheap значит «дешёвый», а expensive — «дорогой»; это антонимы.",
+        "en": "Cheap means low in price and expensive means high in price, so they are opposites."
+      }
+    },
+    {
+      "id": "english-05",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Predloglar",
+        "ru": "Предлоги",
+        "en": "Prepositions"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: My birthday is ___ May.",
+        "ru": "Заполните пропуск: My birthday is ___ May.",
+        "en": "Fill in the blank: My birthday is ___ May."
+      },
+      "options": [
+        {
+          "uz": "on",
+          "ru": "on",
+          "en": "on"
+        },
+        {
+          "uz": "at",
+          "ru": "at",
+          "en": "at"
+        },
+        {
+          "uz": "in",
+          "ru": "in",
+          "en": "in"
+        },
+        {
+          "uz": "to",
+          "ru": "to",
+          "en": "to"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Oylar nomi oldidan “in” predlogi ishlatiladi: in May, in June.",
+        "ru": "Перед названиями месяцев используется предлог in: in May, in June.",
+        "en": "We use in with months: in May, in June."
+      }
+    },
+    {
+      "id": "english-06",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "O‘tgan oddiy zamon",
+        "ru": "Past Simple",
+        "en": "Past Simple"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: Yesterday we ___ a great film.",
+        "ru": "Заполните пропуск: Yesterday we ___ a great film.",
+        "en": "Fill in the blank: Yesterday we ___ a great film."
+      },
+      "options": [
+        {
+          "uz": "saw",
+          "ru": "saw",
+          "en": "saw"
+        },
+        {
+          "uz": "see",
+          "ru": "see",
+          "en": "see"
+        },
+        {
+          "uz": "seen",
+          "ru": "seen",
+          "en": "seen"
+        },
+        {
+          "uz": "seeing",
+          "ru": "seeing",
+          "en": "seeing"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“Yesterday” o‘tgan zamonni bildiradi; “see” fe’lining Past Simple shakli — “saw”.",
+        "ru": "Yesterday указывает на прошлое; форма Past Simple глагола see — saw.",
+        "en": "Yesterday points to the past, and the Past Simple form of see is saw."
+      }
+    },
+    {
+      "id": "english-07",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Qiyosiy daraja",
+        "ru": "Сравнительная степень",
+        "en": "Comparatives"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: This book is ___ than that one.",
+        "ru": "Заполните пропуск: This book is ___ than that one.",
+        "en": "Fill in the blank: This book is ___ than that one."
+      },
+      "options": [
+        {
+          "uz": "interesting",
+          "ru": "interesting",
+          "en": "interesting"
+        },
+        {
+          "uz": "most interesting",
+          "ru": "most interesting",
+          "en": "most interesting"
+        },
+        {
+          "uz": "more interesting",
+          "ru": "more interesting",
+          "en": "more interesting"
+        },
+        {
+          "uz": "interestinger",
+          "ru": "interestinger",
+          "en": "interestinger"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Ko‘p bo‘g‘inli sifatlar “more” yordamida qiyoslanadi: more interesting than.",
+        "ru": "Длинные прилагательные образуют сравнительную степень с more: more interesting than.",
+        "en": "Long adjectives form the comparative with more: more interesting than."
+      }
+    },
+    {
+      "id": "english-08",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Hozirgi davomli zamon",
+        "ru": "Present Continuous",
+        "en": "Present Continuous"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: Look! The children ___ in the garden.",
+        "ru": "Заполните пропуск: Look! The children ___ in the garden.",
+        "en": "Fill in the blank: Look! The children ___ in the garden."
+      },
+      "options": [
+        {
+          "uz": "play",
+          "ru": "play",
+          "en": "play"
+        },
+        {
+          "uz": "plays",
+          "ru": "plays",
+          "en": "plays"
+        },
+        {
+          "uz": "played",
+          "ru": "played",
+          "en": "played"
+        },
+        {
+          "uz": "are playing",
+          "ru": "are playing",
+          "en": "are playing"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "“Look!” harakat ayni paytda bo‘layotganini ko‘rsatadi, shuning uchun Present Continuous kerak: are playing.",
+        "ru": "Look! показывает, что действие происходит сейчас, поэтому нужен Present Continuous: are playing.",
+        "en": "Look! shows the action is happening right now, so we need the Present Continuous: are playing."
+      }
+    },
+    {
+      "id": "english-09",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "So‘roq so‘zlari",
+        "ru": "Вопросительные слова",
+        "en": "Question words"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: ___ do you live? — In Tashkent.",
+        "ru": "Заполните пропуск: ___ do you live? — In Tashkent.",
+        "en": "Fill in the blank: ___ do you live? — In Tashkent."
+      },
+      "options": [
+        {
+          "uz": "What",
+          "ru": "What",
+          "en": "What"
+        },
+        {
+          "uz": "Where",
+          "ru": "Where",
+          "en": "Where"
+        },
+        {
+          "uz": "When",
+          "ru": "When",
+          "en": "When"
+        },
+        {
+          "uz": "Who",
+          "ru": "Who",
+          "en": "Who"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Javob joyni bildiradi (In Tashkent), joy haqida esa “Where” bilan so‘raladi.",
+        "ru": "Ответ называет место (In Tashkent), а о месте спрашивают словом Where.",
+        "en": "The answer names a place (In Tashkent), and we ask about places with Where."
+      }
+    },
+    {
+      "id": "english-10",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Orttirma daraja",
+        "ru": "Превосходная степень",
+        "en": "Superlatives"
+      },
+      "question": {
+        "uz": "“bad” sifatining orttirma darajasini tanlang.",
+        "ru": "Выберите превосходную степень прилагательного “bad”.",
+        "en": "Choose the superlative form of “bad”."
+      },
+      "options": [
+        {
+          "uz": "the worst",
+          "ru": "the worst",
+          "en": "the worst"
+        },
+        {
+          "uz": "worse",
+          "ru": "worse",
+          "en": "worse"
+        },
+        {
+          "uz": "the baddest",
+          "ru": "the baddest",
+          "en": "the baddest"
+        },
+        {
+          "uz": "the most bad",
+          "ru": "the most bad",
+          "en": "the most bad"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“Bad” qoidaga bo‘ysunmaydigan sifat: bad – worse – the worst.",
+        "ru": "Bad — исключение: bad – worse – the worst.",
+        "en": "Bad is irregular: bad – worse – the worst."
+      }
+    },
+    {
+      "id": "english-11",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Hozirgi tugallangan zamon",
+        "ru": "Present Perfect",
+        "en": "Present Perfect"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: She ___ here since 2020.",
+        "ru": "Заполните пропуск: She ___ here since 2020.",
+        "en": "Fill in the blank: She ___ here since 2020."
+      },
+      "options": [
+        {
+          "uz": "lives",
+          "ru": "lives",
+          "en": "lives"
+        },
+        {
+          "uz": "is living",
+          "ru": "is living",
+          "en": "is living"
+        },
+        {
+          "uz": "has lived",
+          "ru": "has lived",
+          "en": "has lived"
+        },
+        {
+          "uz": "lived",
+          "ru": "lived",
+          "en": "lived"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "“Since” o‘tmishda boshlanib hozirgacha davom etayotgan holatni bildiradi, bu Present Perfect: has lived.",
+        "ru": "Since обозначает действие, которое началось в прошлом и длится до сих пор, — это Present Perfect: has lived.",
+        "en": "Since describes something that started in the past and is still true, so we use the Present Perfect: has lived."
+      }
+    },
+    {
+      "id": "english-12",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Majhul nisbat",
+        "ru": "Страдательный залог",
+        "en": "Passive voice"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: This bridge ___ in 1990.",
+        "ru": "Заполните пропуск: This bridge ___ in 1990.",
+        "en": "Fill in the blank: This bridge ___ in 1990."
+      },
+      "options": [
+        {
+          "uz": "built",
+          "ru": "built",
+          "en": "built"
+        },
+        {
+          "uz": "was built",
+          "ru": "was built",
+          "en": "was built"
+        },
+        {
+          "uz": "has built",
+          "ru": "has built",
+          "en": "has built"
+        },
+        {
+          "uz": "is building",
+          "ru": "is building",
+          "en": "is building"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Ko‘prikni kimdir qurgan, shuning uchun o‘tgan zamon majhul nisbati kerak: was + V3 (was built).",
+        "ru": "Мост кто-то построил, поэтому нужен страдательный залог в прошедшем времени: was + V3 (was built).",
+        "en": "Someone built the bridge, so we need the past passive: was + V3 (was built)."
+      }
+    },
+    {
+      "id": "english-13",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Shart gaplar",
+        "ru": "Условные предложения",
+        "en": "Conditionals"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: If it ___ tomorrow, we will stay at home.",
+        "ru": "Заполните пропуск: If it ___ tomorrow, we will stay at home.",
+        "en": "Fill in the blank: If it ___ tomorrow, we will stay at home."
+      },
+      "options": [
+        {
+          "uz": "rains",
+          "ru": "rains",
+          "en": "rains"
+        },
+        {
+          "uz": "will rain",
+          "ru": "will rain",
+          "en": "will rain"
+        },
+        {
+          "uz": "rained",
+          "ru": "rained",
+          "en": "rained"
+        },
+        {
+          "uz": "raining",
+          "ru": "raining",
+          "en": "raining"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Birinchi tur shart gapda “if” qismida Present Simple ishlatiladi: If it rains, we will…",
+        "ru": "В условных предложениях первого типа после if используется Present Simple: If it rains, we will…",
+        "en": "In first conditional sentences, the if-part uses the Present Simple: If it rains, we will…"
+      }
+    },
+    {
+      "id": "english-14",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Gerundiy",
+        "ru": "Герундий",
+        "en": "Gerunds"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: I enjoy ___ books in the evening.",
+        "ru": "Заполните пропуск: I enjoy ___ books in the evening.",
+        "en": "Fill in the blank: I enjoy ___ books in the evening."
+      },
+      "options": [
+        {
+          "uz": "read",
+          "ru": "read",
+          "en": "read"
+        },
+        {
+          "uz": "to read",
+          "ru": "to read",
+          "en": "to read"
+        },
+        {
+          "uz": "reads",
+          "ru": "reads",
+          "en": "reads"
+        },
+        {
+          "uz": "reading",
+          "ru": "reading",
+          "en": "reading"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "“Enjoy” fe’lidan keyin keladigan fe’l -ing shaklini oladi: enjoy reading.",
+        "ru": "После глагола enjoy следующий глагол ставится в форму -ing: enjoy reading.",
+        "en": "After enjoy, the next verb takes the -ing form: enjoy reading."
+      }
+    },
+    {
+      "id": "english-15",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Noto‘g‘ri fe’llar",
+        "ru": "Неправильные глаголы",
+        "en": "Irregular verbs"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: They have already ___ their homework.",
+        "ru": "Заполните пропуск: They have already ___ their homework.",
+        "en": "Fill in the blank: They have already ___ their homework."
+      },
+      "options": [
+        {
+          "uz": "do",
+          "ru": "do",
+          "en": "do"
+        },
+        {
+          "uz": "done",
+          "ru": "done",
+          "en": "done"
+        },
+        {
+          "uz": "did",
+          "ru": "did",
+          "en": "did"
+        },
+        {
+          "uz": "doing",
+          "ru": "doing",
+          "en": "doing"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "“Have”dan keyin fe’lning uchinchi shakli (V3) keladi: do – did – done, demak “done”.",
+        "ru": "После have нужна третья форма глагола (V3): do – did – done, значит done.",
+        "en": "After have we need the third form (V3): do – did – done, so the answer is done."
+      }
+    },
+    {
+      "id": "english-16",
+      "difficulty": 1,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Ranglar",
+        "ru": "Цвета",
+        "en": "Colours"
+      },
+      "question": {
+        "uz": "Pishgan pomidor qanday rangda bo‘ladi? Inglizcha so‘zni tanlang.",
+        "ru": "Какого цвета спелый помидор? Выберите английское слово.",
+        "en": "What colour is a ripe tomato?"
+      },
+      "options": [
+        {
+          "uz": "blue",
+          "ru": "blue",
+          "en": "blue"
+        },
+        {
+          "uz": "green",
+          "ru": "green",
+          "en": "green"
+        },
+        {
+          "uz": "red",
+          "ru": "red",
+          "en": "red"
+        },
+        {
+          "uz": "white",
+          "ru": "white",
+          "en": "white"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Pishgan pomidor qizil bo‘ladi, inglizchada qizil — “red”.",
+        "ru": "Спелый помидор красный, а «красный» по-английски — red.",
+        "en": "A ripe tomato is red."
+      }
+    },
+    {
+      "id": "english-17",
+      "difficulty": 1,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Hayvonlar",
+        "ru": "Животные",
+        "en": "Animals"
+      },
+      "question": {
+        "uz": "Qaysi hayvon “mu-u” deb ovoz chiqaradi? Inglizcha so‘zni tanlang.",
+        "ru": "Какое животное говорит «му-у»? Выберите английское слово.",
+        "en": "Which animal says “moo”?"
+      },
+      "options": [
+        {
+          "uz": "cat",
+          "ru": "cat",
+          "en": "cat"
+        },
+        {
+          "uz": "dog",
+          "ru": "dog",
+          "en": "dog"
+        },
+        {
+          "uz": "duck",
+          "ru": "duck",
+          "en": "duck"
+        },
+        {
+          "uz": "cow",
+          "ru": "cow",
+          "en": "cow"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Sigir “mu-u” deydi; inglizchada sigir — “cow”.",
+        "ru": "«Му-у» говорит корова, а корова по-английски — cow.",
+        "en": "A cow says moo."
+      }
+    },
+    {
+      "id": "english-18",
+      "difficulty": 1,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Alifbo",
+        "ru": "Алфавит",
+        "en": "Alphabet"
+      },
+      "question": {
+        "uz": "Ingliz alifbosida “C” harfidan keyin qaysi harf keladi?",
+        "ru": "Какая буква идёт после “C” в английском алфавите?",
+        "en": "Which letter comes after “C” in the English alphabet?"
+      },
+      "options": [
+        {
+          "uz": "D",
+          "ru": "D",
+          "en": "D"
+        },
+        {
+          "uz": "B",
+          "ru": "B",
+          "en": "B"
+        },
+        {
+          "uz": "E",
+          "ru": "E",
+          "en": "E"
+        },
+        {
+          "uz": "F",
+          "ru": "F",
+          "en": "F"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Ingliz alifbosi shunday boshlanadi: A, B, C, D, E…",
+        "ru": "Английский алфавит начинается так: A, B, C, D, E…",
+        "en": "The English alphabet starts like this: A, B, C, D, E…"
+      }
+    },
+    {
+      "id": "english-19",
+      "difficulty": 1,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Antonimlar",
+        "ru": "Антонимы",
+        "en": "Opposites"
+      },
+      "question": {
+        "uz": "“big” so‘zining antonimini tanlang.",
+        "ru": "Выберите слово, противоположное по значению “big”.",
+        "en": "What is the opposite of “big”?"
+      },
+      "options": [
+        {
+          "uz": "tall",
+          "ru": "tall",
+          "en": "tall"
+        },
+        {
+          "uz": "long",
+          "ru": "long",
+          "en": "long"
+        },
+        {
+          "uz": "small",
+          "ru": "small",
+          "en": "small"
+        },
+        {
+          "uz": "old",
+          "ru": "old",
+          "en": "old"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "“Big” — katta, “small” — kichik; ular qarama-qarshi ma’noli so‘zlar.",
+        "ru": "Big — «большой», small — «маленький»; это противоположности.",
+        "en": "Big and small have opposite meanings."
+      }
+    },
+    {
+      "id": "english-20",
+      "difficulty": 2,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Ko‘plik shakli",
+        "ru": "Множественное число",
+        "en": "Plural nouns"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: one cat, two ___",
+        "ru": "Заполните пропуск: one cat, two ___",
+        "en": "Fill in the blank: one cat, two ___"
+      },
+      "options": [
+        {
+          "uz": "cat",
+          "ru": "cat",
+          "en": "cat"
+        },
+        {
+          "uz": "cats",
+          "ru": "cats",
+          "en": "cats"
+        },
+        {
+          "uz": "cates",
+          "ru": "cates",
+          "en": "cates"
+        },
+        {
+          "uz": "catts",
+          "ru": "catts",
+          "en": "catts"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Ko‘pchilik otlarning ko‘pligi oxiriga -s qo‘shish bilan yasaladi: cat — cats.",
+        "ru": "Множественное число большинства существительных образуется с помощью -s: cat — cats.",
+        "en": "Most nouns form the plural by adding -s: cat — cats."
+      }
+    },
+    {
+      "id": "english-21",
+      "difficulty": 2,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "“To be” fe’li",
+        "ru": "Глагол to be",
+        "en": "The verb “to be”"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: I ___ a pupil.",
+        "ru": "Заполните пропуск: I ___ a pupil.",
+        "en": "Fill in the blank: I ___ a pupil."
+      },
+      "options": [
+        {
+          "uz": "am",
+          "ru": "am",
+          "en": "am"
+        },
+        {
+          "uz": "is",
+          "ru": "is",
+          "en": "is"
+        },
+        {
+          "uz": "are",
+          "ru": "are",
+          "en": "are"
+        },
+        {
+          "uz": "be",
+          "ru": "be",
+          "en": "be"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“I” bilan “to be” fe’li “am” shaklida keladi: I am.",
+        "ru": "С местоимением I глагол to be имеет форму am: I am.",
+        "en": "With I, the verb to be becomes am: I am."
+      }
+    }
+  ]
+}

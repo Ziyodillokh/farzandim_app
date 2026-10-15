@@ -13,11 +13,15 @@ class InnerPageHeader extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.trailing,
+    this.fallbackRoute = '/contests',
   });
 
   final String title;
   final String? subtitle;
   final Widget? trailing;
+
+  /// Orqaga qaytib bo'lmasa (deep-link) ochiladigan sahifa.
+  final String fallbackRoute;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +30,7 @@ class InnerPageHeader extends StatelessWidget {
         HeaderIconButton(
           semanticLabel: 'common.back'.tr(),
           onTap: () =>
-              context.canPop() ? context.pop() : context.go('/contests'),
+              context.canPop() ? context.pop() : context.go(fallbackRoute),
           child: const HomeSvgIcon(homeBackSvg, size: 20),
         ),
         const SizedBox(width: 12),
