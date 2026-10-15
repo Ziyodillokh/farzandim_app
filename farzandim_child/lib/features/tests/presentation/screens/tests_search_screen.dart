@@ -1,9 +1,8 @@
 // Testlar qidiruvi — barcha testlar bo'yicha (sarlavha yoki fan nomi).
 // `/tests/search`. Apostrof turlari va registr e'tiborga olinmaydi.
 
-import 'dart:math' as math;
-
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/features/dashboard/presentation/widgets/home/design_scale.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_header.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
@@ -33,63 +32,69 @@ class _TestsSearchScreenState extends ConsumerState<TestsSearchScreen> {
   @override
   Widget build(BuildContext context) {
     final results = ref.watch(testSearchProvider(_query));
-    final insets = MediaQuery.paddingOf(context);
 
     return Scaffold(
       backgroundColor: HomeColors.bg,
-      body: CustomScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        slivers: [
-          SliverPadding(
-            padding: EdgeInsets.fromLTRB(
-              16,
-              math.max(12, insets.top - 6),
-              16,
-              16,
-            ),
-            sliver: SliverToBoxAdapter(
-              child: Row(
-                children: [
-                  HeaderIconButton(
-                    semanticLabel: 'common.back'.tr(),
-                    onTap: () => context.canPop()
-                        ? context.pop()
-                        : context.go('/contests'),
-                    child: const HomeSvgIcon(homeBackSvg, size: 20),
+      body: DesignScale(
+        child: Builder(
+          builder: (context) {
+            final insets = MediaQuery.paddingOf(context);
+            return CustomScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              slivers: [
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    growthTopInset(context),
+                    16,
+                    16,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _SearchField(
-                      controller: _controller,
-                      onChanged: _onChanged,
+                  sliver: SliverToBoxAdapter(
+                    child: Row(
+                      children: [
+                        HeaderIconButton(
+                          semanticLabel: 'common.back'.tr(),
+                          onTap: () => context.canPop()
+                              ? context.pop()
+                              : context.go('/contests'),
+                          child: const HomeSvgIcon(homeBackSvg, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _SearchField(
+                            controller: _controller,
+                            onChanged: _onChanged,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-          if (_query.trim().isEmpty || results.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(32, 0, 32, 120),
-                child: Center(
-                  child: Text(
-                    _query.trim().isEmpty
-                        ? 'tests.searchStart'.tr()
-                        : 'tests.searchEmpty'.tr(),
-                    textAlign: TextAlign.center,
-                    style: homeText(14, color: HomeColors.textDim),
-                  ),
                 ),
-              ),
-            )
-          else
-            SliverPadding(
-              padding: EdgeInsets.fromLTRB(16, 0, 16, insets.bottom + 24),
-              sliver: SliverTestsGrid(tests: results),
-            ),
-        ],
+                if (_query.trim().isEmpty || results.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(32, 0, 32, 120),
+                      child: Center(
+                        child: Text(
+                          _query.trim().isEmpty
+                              ? 'tests.searchStart'.tr()
+                              : 'tests.searchEmpty'.tr(),
+                          textAlign: TextAlign.center,
+                          style: homeText(14, color: HomeColors.textDim),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(16, 0, 16, insets.bottom + 24),
+                    sliver: SliverTestsGrid(tests: results),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

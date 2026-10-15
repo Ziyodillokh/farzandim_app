@@ -53,14 +53,14 @@ class LibrarySection extends ConsumerWidget {
                     children: [
                       HomeSectionTitle(
                         title: 'home.library'.tr(),
-                        titleSize: 19.5,
+                        titleSize: 20.5,
                       ),
                       const SizedBox(height: 3),
                       Text(
                         'home.librarySubtitle'.tr(),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: homeText(12.8, color: HomeColors.textDim),
+                        style: homeText(13.5, color: HomeColors.textDim),
                       ),
                     ],
                   ),
@@ -156,7 +156,7 @@ class _LibraryStrip extends StatelessWidget {
   final List<LibraryItem> items;
 
   static const _inset = 9.0;
-  static const _gap = 8.0;
+  static const _gap = 9.0;
   static const _visible = 3;
 
   @override

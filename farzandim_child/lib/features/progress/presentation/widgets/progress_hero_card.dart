@@ -171,7 +171,7 @@ class _Growth extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: homeText(
-            10,
+            11,
             weight: FontWeight.w400,
             color: _label,
             letterSpacing: 0.15,
@@ -217,7 +217,7 @@ class _Growth extends StatelessWidget {
           child: Text(
             'progress.vsLastWeek'.tr(),
             maxLines: 2,
-            style: homeText(10.6, color: HomeColors.textDim, height: 1.25),
+            style: homeText(12, color: HomeColors.textDim, height: 1.25),
           ),
         ),
       ],
@@ -244,13 +244,17 @@ class _OverallRing extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('$percent%', style: homeDisplay(18.5, height: 1.1)),
+                Text('$percent%', style: homeDisplay(19.5, height: 1.1)),
                 const SizedBox(height: 5),
                 Text(
                   'progress.overallResult'.tr(),
                   textAlign: TextAlign.center,
                   maxLines: 2,
-                  style: homeText(9.2, color: HomeColors.textDim, height: 1.25),
+                  style: homeText(
+                    10.5,
+                    color: HomeColors.textDim,
+                    height: 1.25,
+                  ),
                 ),
               ],
             ),
@@ -338,58 +342,56 @@ class _StatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minHeight: 55),
-      padding: const EdgeInsets.fromLTRB(5, 7.3, 2, 4),
+      padding: const EdgeInsets.fromLTRB(7, 7, 4, 8),
       decoration: BoxDecoration(
         color: _tileBg,
         borderRadius: BorderRadius.circular(11),
         border: Border.all(color: _tileBorder),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 31,
-            height: 30,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: _tileSquare,
-              borderRadius: BorderRadius.circular(9),
-            ),
-            child: icon,
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: _tileSquare,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: icon,
+              ),
+              const SizedBox(width: 9),
+              Flexible(
+                child: FitText(
+                  value,
+                  style: homeText(17, weight: FontWeight.w800, height: 1.2),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 9.5),
-          Expanded(
+          const SizedBox(height: 6),
+          // Yorliq butun plitka kengligida — o'qiladigan o'lchamda; qatorlar
+          // so'z o'rtasidan bo'linmaydi (tor joyda bir xil kichrayadi).
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  value,
-                  style: homeText(13, weight: FontWeight.w800, height: 1.2),
-                ),
-                const SizedBox(height: 2),
-                // Qatorlar so'z o'rtasidan bo'linmaydi; tor joyda ikkala qator
-                // bir xil nisbatda kichrayadi.
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (final line in label.split('\n'))
-                        Text(
-                          line,
-                          maxLines: 1,
-                          style: homeText(
-                            8.5,
-                            color: HomeColors.textDim,
-                            height: 1.25,
-                          ),
-                        ),
-                    ],
+                for (final line in label.split('\n'))
+                  Text(
+                    line,
+                    maxLines: 1,
+                    style: homeText(
+                      11.5,
+                      color: HomeColors.textDim,
+                      height: 1.25,
+                    ),
                   ),
-                ),
               ],
             ),
           ),

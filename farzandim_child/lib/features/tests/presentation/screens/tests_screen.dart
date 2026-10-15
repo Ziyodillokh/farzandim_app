@@ -10,11 +10,10 @@
 //
 // Pastga tortilsa testlar qayta yuklanadi.
 
-import 'dart:math' as math;
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/contests_providers.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
+import 'package:farzandim_child/features/dashboard/presentation/widgets/home/design_scale.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_header.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
@@ -40,74 +39,76 @@ class TestsScreen extends ConsumerWidget {
       backgroundColor: HomeColors.bg,
       extendBody: true,
       bottomNavigationBar: navigation,
-      body: Builder(
-        builder: (context) {
-          final insets = MediaQuery.paddingOf(context);
-          return RefreshIndicator(
-            color: HomeColors.primary,
-            backgroundColor: HomeColors.card,
-            edgeOffset: insets.top,
-            onRefresh: () async {
-              ref.invalidate(backendContestsProvider);
-              await ref.read(backendContestsProvider.future);
-            },
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.only(
-                top: math.max(12, insets.top - 6),
-                bottom: insets.bottom + 16,
-              ),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: PageHeader(
-                    title: 'nav.quizzes'.tr(),
-                    titleSize: 30,
-                    actions: [
-                      HeaderIconButton(
-                        semanticLabel: 'tests.searchLabel'.tr(),
-                        onTap: () => context.push('/tests/search'),
-                        child: const HomeSvgIcon(homeSearchSvg, size: 21),
-                      ),
-                      HeaderIconButton(
-                        semanticLabel: 'tests.favorites'.tr(),
-                        onTap: () => context.push('/liked-tests'),
-                        child: const Icon(
-                          SolarIconsBold.heart,
-                          size: 21,
-                          color: Colors.white,
+      body: DesignScale(
+        child: Builder(
+          builder: (context) {
+            final insets = MediaQuery.paddingOf(context);
+            return RefreshIndicator(
+              color: HomeColors.primary,
+              backgroundColor: HomeColors.card,
+              edgeOffset: insets.top,
+              onRefresh: () async {
+                ref.invalidate(backendContestsProvider);
+                await ref.read(backendContestsProvider.future);
+              },
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.only(
+                  top: growthTopInset(context),
+                  bottom: insets.bottom + 16,
+                ),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: PageHeader(
+                      title: 'nav.quizzes'.tr(),
+                      titleSize: 30,
+                      actions: [
+                        HeaderIconButton(
+                          semanticLabel: 'tests.searchLabel'.tr(),
+                          onTap: () => context.push('/tests/search'),
+                          child: const HomeSvgIcon(homeSearchSvg, size: 21),
                         ),
-                      ),
-                    ],
+                        HeaderIconButton(
+                          semanticLabel: 'tests.favorites'.tr(),
+                          onTap: () => context.push('/liked-tests'),
+                          child: const Icon(
+                            SolarIconsBold.heart,
+                            size: 21,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 13),
-                  child: TestsHeroCard(),
-                ),
-                const SizedBox(height: 8),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14),
-                  child: ResultsSummaryRow(),
-                ),
-                const SizedBox(height: 17.8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.5),
-                  child: Text(
-                    'tests.bySubjects'.tr(),
-                    style: homeDisplay(20.5, letterSpacing: -0.3),
+                  const SizedBox(height: 6),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 13),
+                    child: TestsHeroCard(),
                   ),
-                ),
-                const SizedBox(height: 9),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 15),
-                  child: SubjectGrid(),
-                ),
-              ],
-            ),
-          );
-        },
+                  const SizedBox(height: 8),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 14),
+                    child: ResultsSummaryRow(),
+                  ),
+                  const SizedBox(height: 17.8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.5),
+                    child: Text(
+                      'tests.bySubjects'.tr(),
+                      style: homeDisplay(20.5, letterSpacing: -0.3),
+                    ),
+                  ),
+                  const SizedBox(height: 9),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 15),
+                    child: SubjectGrid(),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

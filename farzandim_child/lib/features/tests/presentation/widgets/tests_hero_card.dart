@@ -186,8 +186,8 @@ class _PlanTile extends StatelessWidget {
 
   /// Maketdagi balandlik va matn bloki (nom + oraliq + savollar soni) —
   /// katta shrift masshtabida plitka shu farqqa o'sadi.
-  static const _baseHeight = 76.5;
-  static const _textBlock = 10.1 * 1.2 + 3 + 9.4 * 1.2;
+  static const _baseHeight = 82.0;
+  static const _textBlock = 11.5 * 1.2 + 3 + 11 * 1.2;
 
   @override
   Widget build(BuildContext context) {
@@ -212,18 +212,14 @@ class _PlanTile extends StatelessWidget {
               background: _iconSquare,
             ),
             const Spacer(),
-            Text(
+            FitText(
               item.subject.labelKey.tr(),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: homeText(10.1, weight: FontWeight.w600, height: 1.2),
+              style: homeText(11.5, weight: FontWeight.w600, height: 1.2),
             ),
             const SizedBox(height: 3),
-            Text(
+            FitText(
               'home.questions'.plural(item.questionCount),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: homeText(9.4, color: HomeColors.textDim, height: 1.2),
+              style: homeText(11, color: HomeColors.textDim, height: 1.2),
             ),
             const SizedBox(height: 5.5),
           ],
@@ -247,13 +243,13 @@ class _StartButton extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: SizedBox(
-          height: 35.5,
+          height: 42,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 'home.start'.tr(),
-                style: homeText(11.6, weight: FontWeight.w600, height: 1.2),
+                style: homeText(13.5, weight: FontWeight.w600, height: 1.2),
               ),
               const SizedBox(width: 10),
               const Icon(

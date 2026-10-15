@@ -5,12 +5,11 @@
 // ichkarida. Ekran (`ChildDashboardScreen`) faqat aylantirish, yangilash
 // va bannerlar bilan shug'ullanadi.
 
-import 'dart:math' as math;
-
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
+import 'package:farzandim_child/features/dashboard/presentation/widgets/home/design_scale.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_header.dart';
-import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_stat_cards.dart';
+import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/library_section.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/recent_results_card.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/today_tests_card.dart';
@@ -40,29 +39,31 @@ class HomeScaffold extends StatelessWidget {
       // Builder — Scaffold ichidagi MediaQuery: `extendBody` tufayli pastki
       // padding nav + mini-pleyer balandligini o'z ichiga oladi (pleyer
       // chiqqanda kontent uning ostida qolib ketmaydi).
-      body: Builder(
-        builder: (context) {
-          final insets = MediaQuery.paddingOf(context);
-          return RefreshIndicator(
-            color: HomeColors.primary,
-            backgroundColor: HomeColors.card,
-            edgeOffset: insets.top,
-            onRefresh: onRefresh,
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.only(
-                // Maketda header status-bar zonasiga yaqinroq turadi (−3pt) va
-                // header tugmalarining 44pt bosish maydoni uchun yana −3pt.
-                top: math.max(12, insets.top - 6),
-                bottom: insets.bottom + 16,
+      body: DesignScale(
+        child: Builder(
+          builder: (context) {
+            final insets = MediaQuery.paddingOf(context);
+            return RefreshIndicator(
+              color: HomeColors.primary,
+              backgroundColor: HomeColors.card,
+              edgeOffset: insets.top,
+              onRefresh: onRefresh,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.only(
+                  // Maketda header status-bar zonasiga yaqinroq turadi (−3pt) va
+                  // header tugmalarining 44pt bosish maydoni uchun yana −3pt.
+                  top: growthTopInset(context),
+                  bottom: insets.bottom + 16,
+                ),
+                children: [
+                  for (final banner in banners) _Padded(banner),
+                  const HomeFeed(),
+                ],
               ),
-              children: [
-                for (final banner in banners) _Padded(banner),
-                const HomeFeed(),
-              ],
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

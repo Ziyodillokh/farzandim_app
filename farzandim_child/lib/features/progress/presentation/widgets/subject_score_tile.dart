@@ -61,7 +61,7 @@ class SubjectScoreTile extends StatelessWidget {
                         score.subject.labelKey.tr(),
                         maxLines: 1,
                         style: homeText(
-                          9.6,
+                          12,
                           weight: FontWeight.w600,
                           height: 1.2,
                         ),
@@ -75,7 +75,7 @@ class SubjectScoreTile extends StatelessWidget {
                         '${score.percent}%',
                         maxLines: 1,
                         style: homeText(
-                          11.8,
+                          14,
                           weight: FontWeight.w700,
                           height: 1.2,
                         ),
@@ -108,8 +108,15 @@ class StrongSubjectsRow extends StatelessWidget {
   static const _chrome = 61.5;
 
   @override
-  Widget build(BuildContext context) {
-    final style = homeText(9.6, weight: FontWeight.w600, height: 1.2);
+  Widget build(BuildContext context) => ListenableBuilder(
+    // Shrift (google_fonts) yuklanib bo'lgach matn o'lchovlari qayta
+    // hisoblansin — aks holda kengliklar zaxira shriftda qolib ketadi.
+    listenable: PaintingBinding.instance.systemFonts,
+    builder: (context, _) => _layout(context),
+  );
+
+  Widget _layout(BuildContext context) {
+    final style = homeText(12, weight: FontWeight.w600, height: 1.2);
     final scaler = MediaQuery.textScalerOf(context);
     final direction = Directionality.of(context);
     double measure(String text) => (TextPainter(

@@ -1137,7 +1137,8 @@
     "audiobook": "Audiokitob",
     "save": "Saqlash",
     "saved": "Saqlandi",
-    "unsaved": "Saqlanganlardan olib tashlandi"
+    "unsaved": "Saqlanganlardan olib tashlandi",
+    "audioShort": "Audio"
   },
   "subjects": {
     "math": "Matematika",

@@ -49,7 +49,7 @@ class ProgressSection extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: homeText(
-                          16.3,
+                          17.5,
                           weight: FontWeight.w800,
                           height: 1.25,
                         ),
@@ -59,7 +59,7 @@ class ProgressSection extends StatelessWidget {
                         subtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: homeText(10.9, color: HomeColors.textDim),
+                        style: homeText(12.2, color: HomeColors.textDim),
                       ),
                     ],
                   ),
@@ -102,7 +102,7 @@ class _SeeAll extends StatelessWidget {
                   child: Text(
                     'progress.seeAll'.tr(),
                     style: homeText(
-                      9.9,
+                      12,
                       weight: FontWeight.w500,
                       color: progressLinkColor,
                     ),

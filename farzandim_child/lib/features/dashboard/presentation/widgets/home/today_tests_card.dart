@@ -53,14 +53,14 @@ class TodayTestsCard extends ConsumerWidget {
                     children: [
                       Text(
                         'home.todayTests'.tr(),
-                        style: homeDisplay(20, letterSpacing: -0.3),
+                        style: homeDisplay(20.5, letterSpacing: -0.3),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         'home.todayTestsReady'.tr(
                           namedArgs: {'count': '${plan.items.length}'},
                         ),
-                        style: homeText(13.8, color: HomeColors.textDim),
+                        style: homeText(14.2, color: HomeColors.textDim),
                       ),
                     ],
                   ),
@@ -127,9 +127,16 @@ class _SubjectTiles extends StatelessWidget {
   static const _chrome = 9.0 + _iconSize + 6 + 4 + 2;
 
   @override
-  Widget build(BuildContext context) {
-    final nameStyle = homeText(9.9, weight: FontWeight.w600, height: 1.25);
-    final countStyle = homeText(9.3, color: HomeColors.textDim, height: 1.25);
+  Widget build(BuildContext context) => ListenableBuilder(
+    // Shrift (google_fonts) yuklanib bo'lgach matn o'lchovlari qayta
+    // hisoblansin — aks holda kengliklar zaxira shriftda qolib ketadi.
+    listenable: PaintingBinding.instance.systemFonts,
+    builder: (context, _) => _layout(context),
+  );
+
+  Widget _layout(BuildContext context) {
+    final nameStyle = homeText(12, weight: FontWeight.w600, height: 1.25);
+    final countStyle = homeText(11, color: HomeColors.textDim, height: 1.25);
     final scaler = MediaQuery.textScalerOf(context);
     final direction = Directionality.of(context);
     final labels = [
@@ -171,7 +178,7 @@ class _SubjectTiles extends StatelessWidget {
           ),
         );
         // Juda siqilib qolsa (4+ fan) — tabiiy kenglikda gorizontal lenta.
-        if (scale < 0.85) {
+        if (scale < 0.85 && items.length > 3) {
           return SizedBox(
             height: _SubjectTile.height,
             child: ListView.separated(
@@ -210,7 +217,7 @@ class _SubjectTile extends StatelessWidget {
   final TextStyle nameStyle;
   final TextStyle countStyle;
 
-  static const height = 57.0;
+  static const height = 62.0;
 
   @override
   Widget build(BuildContext context) {
@@ -231,19 +238,9 @@ class _SubjectTile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: nameStyle,
-                ),
+                FitText(name, style: nameStyle),
                 const SizedBox(height: 3),
-                Text(
-                  count,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: countStyle,
-                ),
+                FitText(count, style: countStyle),
               ],
             ),
           ),
@@ -267,13 +264,13 @@ class _StartButton extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: SizedBox(
-          height: 35.5,
+          height: 42,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 'home.start'.tr(),
-                style: homeText(11.8, weight: FontWeight.w600, height: 1.2),
+                style: homeText(13.5, weight: FontWeight.w600, height: 1.2),
               ),
               const SizedBox(width: 10),
               const Icon(

@@ -24,6 +24,7 @@ import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/consent/presentation/providers/consent_provider.dart';
 import 'package:farzandim_child/features/consent/presentation/screens/consent_screen.dart';
 import 'package:farzandim_child/features/account/presentation/screens/account_edit_screen.dart';
+import 'package:farzandim_child/features/library/presentation/screens/library_screen.dart';
 import 'package:farzandim_child/features/settings/presentation/screens/settings_screen.dart';
 import 'package:farzandim_child/features/permissions/presentation/screens/ios_permission_setup_screen.dart';
 import 'package:farzandim_child/features/permissions/presentation/screens/permission_setup_screen.dart';
@@ -48,8 +49,6 @@ import 'package:farzandim_child/features/gamification/presentation/screens/profi
 import 'package:farzandim_child/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:farzandim_child/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:farzandim_child/features/analytics/presentation/screens/analytics_screen.dart';
-import 'package:farzandim_child/features/audiobooks/presentation/screens/audiobooks_feed_screen.dart';
-import 'package:farzandim_child/features/content/presentation/screens/content_hub_screen.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/contest_quiz_screen.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/liked_tests_screen.dart';
@@ -71,7 +70,6 @@ import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/presentation/screens/classic_video_player_screen.dart';
 import 'package:farzandim_child/features/videos/presentation/screens/reels_player_screen.dart';
 import 'package:farzandim_child/features/videos/presentation/screens/youtube_player_screen.dart';
-import 'package:farzandim_child/features/videos/presentation/screens/videos_feed_screen.dart';
 import 'package:farzandim_child/features/videos/presentation/screens/video_engagement_screens.dart';
 import 'package:farzandim_child/features/videos/data/repositories/video_engagement_repository.dart';
 import 'package:farzandim_child/features/video_message/presentation/screens/video_preview_screen.dart';
@@ -366,8 +364,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/videos',
-        pageBuilder: (context, state) =>
-            _slidePage(state, const VideosFeedScreen()),
+        pageBuilder: (context, state) => _slidePage(
+          state,
+          const LibraryScreen(initialTab: LibraryTab.videos),
+        ),
       ),
       GoRoute(
         path: '/video-player',
@@ -386,15 +386,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/audiobooks',
-        pageBuilder: (context, state) =>
-            _slidePage(state, const AudiobooksFeedScreen()),
+        pageBuilder: (context, state) => _slidePage(
+          state,
+          const LibraryScreen(initialTab: LibraryTab.audiobooks),
+        ),
       ),
       // Content hub — audiokitoblar + kitoblar + konkurslar bitta ekranda.
       // Bottom nav endi shu yagona tabga olib boradi (avval 2 ta alohida edi).
       GoRoute(
         path: '/content',
         pageBuilder: (context, state) =>
-            _slidePage(state, const ContentHubScreen()),
+            _slidePage(state, const LibraryScreen()),
       ),
       GoRoute(
         path: '/audiobook-detail',

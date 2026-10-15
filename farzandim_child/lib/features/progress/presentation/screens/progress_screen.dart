@@ -15,6 +15,7 @@ import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
+import 'package:farzandim_child/features/dashboard/presentation/widgets/home/design_scale.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_header.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
@@ -53,71 +54,73 @@ class ProgressScreen extends ConsumerWidget {
       backgroundColor: HomeColors.bg,
       extendBody: true,
       bottomNavigationBar: navigation,
-      body: Builder(
-        builder: (context) {
-          final insets = MediaQuery.paddingOf(context);
-          return ListView(
-            padding: EdgeInsets.fromLTRB(
-              16.5,
-              math.max(12, insets.top - 7.8),
-              16.5,
-              insets.bottom + 16,
-            ),
-            children: [
-              PageHeader(
-                title: 'progress.title'.tr(),
-                titleSize: 32,
-                titleLetterSpacing: -1.1,
-                actions: [
-                  HeaderIconButton(
-                    semanticLabel: 'progress.calendar'.tr(),
-                    onTap: () => context.push('/streak-detail'),
-                    child: const HomeSvgIcon(homeCalendarSvg, size: 22),
+      body: DesignScale(
+        child: Builder(
+          builder: (context) {
+            final insets = MediaQuery.paddingOf(context);
+            return ListView(
+              padding: EdgeInsets.fromLTRB(
+                16.5,
+                growthTopInset(context) - 1.8,
+                16.5,
+                insets.bottom + 16,
+              ),
+              children: [
+                PageHeader(
+                  title: 'progress.title'.tr(),
+                  titleSize: 32,
+                  titleLetterSpacing: -1.1,
+                  actions: [
+                    HeaderIconButton(
+                      semanticLabel: 'progress.calendar'.tr(),
+                      onTap: () => context.push('/streak-detail'),
+                      child: const HomeSvgIcon(homeCalendarSvg, size: 22),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4.8),
+                if (weekly == null)
+                  const _NoResults()
+                else
+                  ProgressHeroCard(progress: weekly),
+                if (scores.isNotEmpty) ...[
+                  const SizedBox(height: _sectionGap),
+                  ProgressSection(
+                    title: 'progress.strongSubjects'.tr(),
+                    subtitle: 'progress.strongSubtitle'.tr(),
+                    onSeeAll: () => context.push('/progress/subjects'),
+                    child: StrongSubjectsRow(scores: scores.take(3).toList()),
                   ),
                 ],
-              ),
-              const SizedBox(height: 4.8),
-              if (weekly == null)
-                const _NoResults()
-              else
-                ProgressHeroCard(progress: weekly),
-              if (scores.isNotEmpty) ...[
-                const SizedBox(height: _sectionGap),
-                ProgressSection(
-                  title: 'progress.strongSubjects'.tr(),
-                  subtitle: 'progress.strongSubtitle'.tr(),
-                  onSeeAll: () => context.push('/progress/subjects'),
-                  child: StrongSubjectsRow(scores: scores.take(3).toList()),
-                ),
-              ],
-              if (results.isNotEmpty) ...[
-                const SizedBox(height: _sectionGap),
-                ProgressSection(
-                  title: 'progress.recentResults'.tr(),
-                  subtitle: 'progress.recentSubtitle'.tr(),
-                  onSeeAll: () => context.push('/progress/results'),
-                  contentPadding: const EdgeInsets.fromLTRB(6.5, 0, 7, 4.5),
-                  child: Column(
-                    children: [
-                      for (
-                        var i = 0;
-                        i < math.min(_recentLimit, results.length);
-                        i++
-                      ) ...[
-                        if (i > 0) const SizedBox(height: 3.2),
-                        ResultRow(result: results[i]),
+                if (results.isNotEmpty) ...[
+                  const SizedBox(height: _sectionGap),
+                  ProgressSection(
+                    title: 'progress.recentResults'.tr(),
+                    subtitle: 'progress.recentSubtitle'.tr(),
+                    onSeeAll: () => context.push('/progress/results'),
+                    contentPadding: const EdgeInsets.fromLTRB(6.5, 0, 7, 4.5),
+                    child: Column(
+                      children: [
+                        for (
+                          var i = 0;
+                          i < math.min(_recentLimit, results.length);
+                          i++
+                        ) ...[
+                          if (i > 0) const SizedBox(height: 3.2),
+                          ResultRow(result: results[i]),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
+                ],
+                if (tip != null) ...[
+                  const SizedBox(height: _sectionGap),
+                  RecommendationCard(recommendation: tip),
+                ],
               ],
-              if (tip != null) ...[
-                const SizedBox(height: _sectionGap),
-                RecommendationCard(recommendation: tip),
-              ],
-            ],
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

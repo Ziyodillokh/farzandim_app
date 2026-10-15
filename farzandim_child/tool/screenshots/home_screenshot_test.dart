@@ -12,7 +12,7 @@
 //     --dart-define=SHOT_LOCALE=uz               # ixtiyoriy: uz | ru | en
 //     --dart-define=SHOT_WIDTH=393 --dart-define=SHOT_HEIGHT=852
 //     --dart-define=SHOT_TEXT_SCALE=1.0          # ixtiyoriy: shrift masshtabi
-//     --dart-define=SHOT_PAGE=home               # home | tests | progress
+//     --dart-define=SHOT_PAGE=home               # home | tests | progress | library | library_audio
 //
 // Ma'lumotlar namunaviy (provider override'lar), tarmoq yo'q.
 
@@ -30,6 +30,7 @@ import 'package:farzandim_child/features/contests/presentation/providers/contest
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_feed.dart';
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
+import 'package:farzandim_child/features/library/presentation/screens/library_screen.dart';
 import 'package:farzandim_child/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:farzandim_child/features/progress/presentation/screens/progress_screen.dart';
 import 'package:farzandim_child/features/tests/presentation/screens/tests_screen.dart';
@@ -54,8 +55,12 @@ const _height = String.fromEnvironment('SHOT_HEIGHT', defaultValue: '852');
 const _textScale = String.fromEnvironment('SHOT_TEXT_SCALE', defaultValue: '1');
 const _page = String.fromEnvironment('SHOT_PAGE', defaultValue: 'home');
 
-const _safeTop = 59.0;
-const _safeBottom = 34.0;
+// Android'dagidek tekshirish: SHOT_SAFE_TOP=32 SHOT_SAFE_BOTTOM=16.
+const _safeTopArg = String.fromEnvironment('SHOT_SAFE_TOP', defaultValue: '59');
+const _safeBottomArg = String.fromEnvironment(
+  'SHOT_SAFE_BOTTOM',
+  defaultValue: '34',
+);
 
 void main() {
   testWidgets('bosh sahifa skrinshoti', (tester) async {
@@ -69,8 +74,8 @@ void main() {
       ..physicalSize = logical * dpr
       ..devicePixelRatio = dpr
       ..padding = FakeViewPadding(
-        top: _safeTop * dpr,
-        bottom: _safeBottom * dpr,
+        top: double.parse(_safeTopArg) * dpr,
+        bottom: double.parse(_safeBottomArg) * dpr,
       );
     addTearDown(tester.view.reset);
 
@@ -78,6 +83,11 @@ void main() {
     // ishlaydi — test-only API bu yerda maqsadli.
     // ignore: invalid_use_of_visible_for_testing_member
     SharedPreferences.setMockInitialValues({});
+    // Rasm keshi (cached_network_image) vaqtinchalik papka so'raydi.
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      const MethodChannel('plugins.flutter.io/path_provider'),
+      (call) async => Directory.systemTemp.path,
+    );
     GoogleFonts.config.allowRuntimeFetching = false;
     await tester.runAsync(() async {
       await _loadManifestFonts();
@@ -118,6 +128,7 @@ Widget _app() {
     initialLocation: switch (_page) {
       'tests' => '/contests',
       'progress' => '/progress',
+      'library' || 'library_audio' => '/content',
       _ => '/dashboard',
     },
     routes: [
@@ -126,6 +137,14 @@ Widget _app() {
         builder: (_, __) => HomeScaffold(
           onRefresh: () async {},
           navigation: const ChildBottomNavigation(showMiniPlayer: false),
+        ),
+      ),
+      GoRoute(
+        path: '/content',
+        builder: (_, __) => LibraryScreen(
+          initialTab: _page == 'library_audio'
+              ? LibraryTab.audiobooks
+              : LibraryTab.videos,
         ),
       ),
       GoRoute(
@@ -164,10 +183,14 @@ Widget _app() {
         unreadNotificationsCountProvider.overrideWithValue(
           const AsyncValue.data(0),
         ),
-        topVideosProvider.overrideWithValue(_videos),
-        newestAudiobooksProvider.overrideWithValue(_books),
+        topVideosProvider.overrideWithValue(_pageVideos),
+        newestAudiobooksProvider.overrideWithValue(_pageBooks),
         favoriteVideoIdsProvider.overrideWith(_OfflineFavorites.new),
         backendContestsProvider.overrideWith((ref) async => _contests()),
+        backendVideosProvider.overrideWith(_FakeVideos.new),
+        backendAudiobooksProvider.overrideWith(_FakeAudiobooks.new),
+        // Debug'da mock kitoblar (haqiqiy URL bilan) qo'shilmasin.
+        effectiveAudiobooksProvider.overrideWithValue(_pageBooks),
       ],
       child: Builder(
         builder: (context) => MaterialApp.router(
@@ -183,24 +206,29 @@ Widget _app() {
   );
 }
 
-VideoModel _video(String id, String title, String category, String image) =>
-    VideoModel(
-      id: id,
-      title: title,
-      description: '',
-      thumbnailUrl: 'https://shot.local/$image.png',
-      duration: '10:00',
-      durationSeconds: 600,
-      videoUrl: '',
-      category: category,
-      soha: '',
-      yonalish: '',
-      yoshGuruhi: '',
-      hashtags: const [],
-      views: 1000,
-      thumbnailColor: const Color(0xFF173654),
-      xpReward: 50,
-    );
+VideoModel _video(
+  String id,
+  String title,
+  String category,
+  String image, {
+  int views = 1000,
+}) => VideoModel(
+  id: id,
+  title: title,
+  description: '',
+  thumbnailUrl: image.isEmpty ? '' : 'https://shot.local/$image.png',
+  duration: '10:00',
+  durationSeconds: 600,
+  videoUrl: '',
+  category: category,
+  soha: '',
+  yonalish: '',
+  yoshGuruhi: '',
+  hashtags: const [],
+  views: views,
+  thumbnailColor: const Color(0xFF173654),
+  xpReward: 50,
+);
 
 final _videos = [
   _video('v1', 'Muvaffaqiyat psixologiyasi', 'Abdulla Oripov', 'mountain'),
@@ -260,6 +288,45 @@ ContestBundle _contests() {
   );
 }
 
+/// Kutubxona (eski sahifalar) rasmni cached_network_image orqali yuklaydi —
+/// testda uning sqflite keshi yo'q, shuning uchun u yerda rasmsiz.
+bool get _noRemoteImages => _page.startsWith('library');
+
+List<VideoModel> get _pageVideos => [
+  for (final v in _videos)
+    _noRemoteImages ? _video(v.id, v.title, v.category, '', views: v.views) : v,
+];
+
+List<AudiobookModel> get _pageBooks => [
+  for (final b in _books)
+    _noRemoteImages
+        ? AudiobookModel(
+            id: b.id,
+            title: b.title,
+            author: b.author,
+            description: b.description,
+            coverUrl: '',
+            audioUrl: b.audioUrl,
+            durationSeconds: b.durationSeconds,
+            duration: b.duration,
+            category: 'Hikoya',
+            hashtags: b.hashtags,
+            listenCount: b.listenCount,
+            coverColor: b.coverColor,
+          )
+        : b,
+];
+
+class _FakeVideos extends VideosNotifier {
+  @override
+  Future<List<VideoModel>> build() async => _pageVideos;
+}
+
+class _FakeAudiobooks extends AudiobooksNotifier {
+  @override
+  Future<List<AudiobookModel>> build() async => _pageBooks;
+}
+
 /// Sevimlilar — backend so'rovisiz (test muhiti).
 class _OfflineFavorites extends FavoriteVideoIdsNotifier {
   @override
@@ -268,7 +335,26 @@ class _OfflineFavorites extends FavoriteVideoIdsNotifier {
 
 /// FontManifest'dagi barcha oilalar (Material, Solar ikonlari) — testda
 /// standart holatda yuklanmaydi.
+/// Eski sahifalar tizim shriftida (Roboto) — testda u yo'q, Flutter SDK'dan
+/// yuklanadi (aks holda kvadrat test-shrift bilan matn kengayib ketadi).
+Future<void> _loadSdkRoboto() async {
+  final root = Platform.environment['FLUTTER_ROOT'];
+  if (root == null) return;
+  final dir = '$root/bin/cache/artifacts/material_fonts';
+  final loader = FontLoader('Roboto');
+  for (final name in ['Regular', 'Medium', 'Bold', 'Black', 'Light']) {
+    final file = File('$dir/Roboto-$name.ttf');
+    if (file.existsSync()) {
+      loader.addFont(
+        Future.value(ByteData.sublistView(file.readAsBytesSync())),
+      );
+    }
+  }
+  await loader.load();
+}
+
 Future<void> _loadManifestFonts() async {
+  await _loadSdkRoboto();
   final manifest =
       json.decode(await rootBundle.loadString('FontManifest.json')) as List;
   for (final entry in manifest.cast<Map<String, dynamic>>()) {
@@ -299,7 +385,7 @@ Future<void> _preloadGoogleFonts() async {
 }
 
 Future<void> _precacheImages(WidgetTester tester) async {
-  if (_page == 'progress') return;
+  if (_page == 'progress' || _page.startsWith('library')) return;
   if (_page == 'tests') {
     await precacheImage(
       const AssetImage('assets/illustrations/tests_hero.png'),

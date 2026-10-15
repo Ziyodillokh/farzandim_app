@@ -95,11 +95,11 @@ class _StatCard extends StatelessWidget {
   final Widget? trailing;
 
   /// Maketdagi balandlik (shrift masshtabi 1.0 da).
-  static const _baseHeight = 85.0;
+  static const _baseHeight = 90.0;
 
   /// Qiymat + yorliq matn bloki balandligi (masshtab 1.0 da): 16×1.1 + 3 +
   /// 10.2×1.2. Katta shrift masshtabida karta shu farqqa o'sadi.
-  static const _textBlock = 16 * 1.1 + 3 + 10.2 * 1.2;
+  static const _textBlock = 17.5 * 1.1 + 3 + 12 * 1.2;
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +156,7 @@ class _StatCard extends StatelessWidget {
                           value,
                           maxLines: 1,
                           style: homeDisplay(
-                            16,
+                            17.5,
                             height: 1.1,
                             letterSpacing: -0.2,
                           ),
@@ -170,11 +170,9 @@ class _StatCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 3),
-                Text(
+                FitText(
                   label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: homeText(10.2, color: HomeColors.textDim, height: 1.2),
+                  style: homeText(12, color: HomeColors.textDim, height: 1.2),
                 ),
               ],
             ),

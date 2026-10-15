@@ -26,9 +26,28 @@ import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 /// Bola videolar feed ekrani — "Videolar".
-class VideosFeedScreen extends ConsumerWidget {
+class VideosFeedScreen extends StatelessWidget {
   /// `VideosFeedScreen` konstruktor.
   const VideosFeedScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: vBg,
+      extendBody: true,
+      bottomNavigationBar: ChildBottomNavigation(),
+      body: SafeArea(bottom: false, child: VideosFeedView()),
+    );
+  }
+}
+
+/// Feed tarkibi (sarlavha, qidiruv, chiplar, lenta) — alohida sahifada ham,
+/// Kutubxona ichida ham AYNAN bir xil.
+class VideosFeedView extends ConsumerWidget {
+  const VideosFeedView({super.key, this.headerTop = 20});
+
+  /// Sarlavha tepasidagi masofa.
+  final double headerTop;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -84,50 +103,42 @@ class VideosFeedScreen extends ConsumerWidget {
       );
     }
 
-    return Scaffold(
-      backgroundColor: vBg,
-      extendBody: true,
-      bottomNavigationBar: const ChildBottomNavigation(),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // Header status-bardan biroz pastroqda (sal pastga tushirilgan).
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 20, 16, 0),
-              child: _VideosHeader(),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ParvozSearchField(
-                queryProvider: videoFeedSearchProvider,
-                hintText: 'videos.feed.searchHint'.tr(),
-                accent: vBlue,
-              ),
-            ),
-            const SizedBox(height: 14),
-            // Qidiruv paytida kategoriya chiplari yashiriladi (qidiruv barcha
-            // videolardan qidiradi, kategoriya e'tiborsiz).
-            if (!searching && categories.isNotEmpty) ...[
-              _CategoryChips(categories: categories),
-              const SizedBox(height: 14),
-            ],
-            Expanded(
-              // Pastga torting → yangilash (admin yangi video qo'shsa darhol).
-              child: RefreshIndicator(
-                color: vBlue,
-                backgroundColor: vVideoBg,
-                onRefresh: () async {
-                  ref.invalidate(backendVideosProvider);
-                  await ref.read(backendVideosProvider.future);
-                },
-                child: content,
-              ),
-            ),
-          ],
+    return Column(
+      children: [
+        // Header status-bardan biroz pastroqda (sal pastga tushirilgan).
+        Padding(
+          padding: EdgeInsets.fromLTRB(16, headerTop, 16, 0),
+          child: const _VideosHeader(),
         ),
-      ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ParvozSearchField(
+            queryProvider: videoFeedSearchProvider,
+            hintText: 'videos.feed.searchHint'.tr(),
+            accent: vBlue,
+          ),
+        ),
+        const SizedBox(height: 14),
+        // Qidiruv paytida kategoriya chiplari yashiriladi (qidiruv barcha
+        // videolardan qidiradi, kategoriya e'tiborsiz).
+        if (!searching && categories.isNotEmpty) ...[
+          _CategoryChips(categories: categories),
+          const SizedBox(height: 14),
+        ],
+        Expanded(
+          // Pastga torting → yangilash (admin yangi video qo'shsa darhol).
+          child: RefreshIndicator(
+            color: vBlue,
+            backgroundColor: vVideoBg,
+            onRefresh: () async {
+              ref.invalidate(backendVideosProvider);
+              await ref.read(backendVideosProvider.future);
+            },
+            child: content,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -356,9 +367,7 @@ class _FeedVideoCard extends ConsumerWidget {
               backgroundColor: vVideoBg,
               duration: const Duration(milliseconds: 1400),
               content: Text(
-                added
-                    ? 'videos.liked.added'.tr()
-                    : 'videos.liked.removed'.tr(),
+                added ? 'videos.liked.added'.tr() : 'videos.liked.removed'.tr(),
                 style: vPop(13, w: FontWeight.w500),
               ),
             ),

@@ -1,9 +1,8 @@
 // "Barchasini ko‘rish" sahifalari: fanlar bo'yicha natija va barcha natijalar.
 // `/progress/subjects`, `/progress/results`.
 
-import 'dart:math' as math;
-
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/features/dashboard/presentation/widgets/home/design_scale.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
 import 'package:farzandim_child/features/learning/presentation/providers/progress_providers.dart';
 import 'package:farzandim_child/features/progress/presentation/widgets/result_row.dart';
@@ -20,31 +19,37 @@ class _ListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final insets = MediaQuery.paddingOf(context);
     return Scaffold(
       backgroundColor: HomeColors.bg,
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          16,
-          math.max(12, insets.top - 6),
-          16,
-          insets.bottom + 24,
-        ),
-        children: [
-          InnerPageHeader(title: title),
-          const SizedBox(height: 16),
-          if (children.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 80),
-              child: Text(
-                'progress.noResults'.tr(),
-                textAlign: TextAlign.center,
-                style: homeText(14, color: HomeColors.textDim),
+      body: DesignScale(
+        child: Builder(
+          builder: (context) {
+            final insets = MediaQuery.paddingOf(context);
+            return ListView(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                growthTopInset(context),
+                16,
+                insets.bottom + 24,
               ),
-            )
-          else
-            ...children,
-        ],
+              children: [
+                InnerPageHeader(title: title),
+                const SizedBox(height: 16),
+                if (children.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 80),
+                    child: Text(
+                      'progress.noResults'.tr(),
+                      textAlign: TextAlign.center,
+                      style: homeText(14, color: HomeColors.textDim),
+                    ),
+                  )
+                else
+                  ...children,
+              ],
+            );
+          },
+        ),
       ),
     );
   }

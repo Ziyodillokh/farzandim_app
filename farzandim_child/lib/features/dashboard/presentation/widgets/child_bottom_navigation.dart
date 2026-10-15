@@ -16,6 +16,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/feature_flags.dart';
+import 'package:farzandim_child/features/dashboard/presentation/widgets/home/design_scale.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
 import 'package:farzandim_child/features/progress/presentation/progress_icons.dart';
@@ -134,30 +135,38 @@ class ChildBottomNavigation extends StatelessWidget {
       children: [
         if (showMiniPlayer) const MiniAudioPlayer(),
         Padding(
-          padding: EdgeInsets.fromLTRB(9, 0, 9, childNavBottomGap(context)),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(
-                height: kChildNavBarHeight,
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                decoration: BoxDecoration(
-                  color: _navBg,
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: _navBorder),
-                ),
-                child: Row(
-                  children: [
-                    for (final tab in _tabs)
-                      Expanded(
-                        child: _NavItem(
-                          tab: tab,
-                          active: tab.isActive(location),
-                          onTap: () => go(tab.path),
-                        ),
-                      ),
-                  ],
+          padding: EdgeInsets.only(bottom: childNavBottomGap(context)),
+          // Growth sahifalari kabi ekran kengligiga mutanosib (hamma
+          // telefonda bir xil ko'rinadi).
+          child: DesignScaleRow(
+            height: kChildNavBarHeight,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 9),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                  child: Container(
+                    height: kChildNavBarHeight,
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    decoration: BoxDecoration(
+                      color: _navBg,
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: _navBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        for (final tab in _tabs)
+                          Expanded(
+                            child: _NavItem(
+                              tab: tab,
+                              active: tab.isActive(location),
+                              onTap: () => go(tab.path),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -206,7 +215,7 @@ class _NavItem extends StatelessWidget {
                 tab.labelKey.tr(),
                 maxLines: 1,
                 style: homeText(
-                  10.2,
+                  11.5,
                   weight: active ? FontWeight.w600 : FontWeight.w400,
                   color: active ? Colors.white : _inactive,
                   height: 1.15,

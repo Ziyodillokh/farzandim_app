@@ -32,6 +32,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:farzandim_child/core/theme/app_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> main() async {
@@ -92,6 +93,7 @@ Future<void> main() async {
     // Locale data — DateFormat('d MMMM','uz') uchun (LocaleDataException oldini).
     initializeDateFormatting('uz_UZ', null),
     initializeDateFormatting('ru_RU', null),
+    preloadAppFonts(),
   ]);
 
   // ── Crashlytics (faqat Firebase muvaffaqiyatli bo'lganda) ──────────

@@ -36,9 +36,12 @@ const _sheetBg = Color(0xFF0C1622);
   ),
 };
 
-/// "12 fev, 2026" — joriy tildagi qisqa oy nomi bilan.
-String formatResultDate(DateTime d) =>
-    '${d.day} ${monthNameFrom('common.monthsShort'.tr(), d.month)}, ${d.year}';
+/// "12 fev" — joriy yilda yilsiz; boshqa yil uchun "12 fev, 2024".
+String formatResultDate(DateTime d, {DateTime? now}) {
+  final month = monthNameFrom('common.monthsShort'.tr(), d.month);
+  final sameYear = d.year == (now ?? DateTime.now()).year;
+  return sameYear ? '${d.day} $month' : '${d.day} $month, ${d.year}';
+}
 
 /// Fan + mavzu: "Matematika. Arifmetika".
 String resultTitle(TestResult r) => '${r.subject.labelKey.tr()}. ${r.topic}';
@@ -56,7 +59,7 @@ class ResultRow extends ConsumerWidget {
         onTap: () => showResultSheet(context, ref, result),
         behavior: HitTestBehavior.opaque,
         child: Container(
-          constraints: const BoxConstraints(minHeight: 43.8),
+          constraints: const BoxConstraints(minHeight: 50),
           padding: const EdgeInsets.fromLTRB(6.5, 4.5, 6, 4.5),
           decoration: BoxDecoration(
             color: _rowBg,
@@ -80,11 +83,7 @@ class ResultRow extends ConsumerWidget {
                       resultTitle(result),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: homeText(
-                        9.9,
-                        weight: FontWeight.w600,
-                        height: 1.2,
-                      ),
+                      style: homeText(12, weight: FontWeight.w600, height: 1.2),
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -92,7 +91,7 @@ class ResultRow extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: homeText(
-                        9.3,
+                        11,
                         color: HomeColors.textDim,
                         height: 1.25,
                       ),
@@ -102,16 +101,16 @@ class ResultRow extends ConsumerWidget {
               ),
               const SizedBox(width: 6),
               ScorePill(result: result),
-              const SizedBox(width: 19),
+              const SizedBox(width: 14),
               SizedBox(
                 // Shrift masshtabi bilan kengayadi (sana kesilmasin).
-                width: MediaQuery.textScalerOf(context).scale(60),
+                width: MediaQuery.textScalerOf(context).scale(46),
                 child: Text(
                   formatResultDate(result.date),
                   maxLines: 1,
                   overflow: TextOverflow.fade,
                   softWrap: false,
-                  style: homeText(9.2, color: HomeColors.textDim),
+                  style: homeText(11, color: HomeColors.textDim),
                 ),
               ),
               const SizedBox(width: 13),
@@ -130,7 +129,7 @@ class ResultRow extends ConsumerWidget {
 
 /// "9/10" — daraja rangida chegarali pill.
 class ScorePill extends StatelessWidget {
-  const ScorePill({super.key, required this.result, this.fontSize = 11.2});
+  const ScorePill({super.key, required this.result, this.fontSize = 13});
 
   final TestResult result;
   final double fontSize;

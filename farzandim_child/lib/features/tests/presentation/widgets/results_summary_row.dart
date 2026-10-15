@@ -36,7 +36,7 @@ class ResultsSummaryRow extends ConsumerWidget {
         onTap: () => context.push('/progress'),
         behavior: HitTestBehavior.opaque,
         child: Container(
-          height: 66,
+          height: 72,
           padding: const EdgeInsets.only(left: 12, right: 11),
           decoration: BoxDecoration(
             color: _rowBg,
@@ -70,7 +70,7 @@ class ResultsSummaryRow extends ConsumerWidget {
                       'home.recentResults'.tr(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: homeDisplay(14.5, letterSpacing: -0.2),
+                      style: homeDisplay(16, letterSpacing: -0.2),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -79,7 +79,7 @@ class ResultsSummaryRow extends ConsumerWidget {
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: homeText(10.8, color: HomeColors.textDim),
+                      style: homeText(12.5, color: HomeColors.textDim),
                     ),
                   ],
                 ),

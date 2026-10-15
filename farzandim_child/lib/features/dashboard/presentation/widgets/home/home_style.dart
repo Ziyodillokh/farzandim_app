@@ -10,6 +10,7 @@
 //   • Montserrat 700/800 — sarlavhalar va katta raqamlar
 //   • Plus Jakarta Sans 400–800 — qolgan matnlar
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -93,3 +94,31 @@ BoxDecoration homeCardDecoration({double radius = 22}) => BoxDecoration(
   borderRadius: BorderRadius.circular(radius),
   border: Border.all(color: HomeColors.cardBorder),
 );
+
+/// Sahifa sarlavhasi tepasidagi masofa — status bar ostida.
+///
+/// iOS'da xavfsiz zona allaqachon status bar ostidagi bo'shliqni o'z ichiga
+/// oladi (maketdagidek); Android'da status bar balandligi faqat ikonlar
+/// qatori — sarlavha unga yopishib qolmasligi uchun qo'shimcha bo'shliq.
+double growthTopInset(BuildContext context) {
+  final top = MediaQuery.paddingOf(context).top;
+  final isIOS = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+  return isIOS ? top - 2 : top + 8;
+}
+
+/// Bir qatorli matn — joy yetmasa kesilmaydi, sig'guncha kichrayadi.
+class FitText extends StatelessWidget {
+  const FitText(this.text, {super.key, required this.style});
+
+  final String text;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Text(text, maxLines: 1, style: style),
+    );
+  }
+}

@@ -37,7 +37,7 @@ class RecommendationCard extends ConsumerWidget {
       },
     );
     final parts = template.split(_subjectMark);
-    final dim = homeText(9.8, color: HomeColors.textDim, height: 1.45);
+    final dim = homeText(12, color: HomeColors.textDim, height: 1.45);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 11, 10.5, 11),
@@ -71,7 +71,7 @@ class RecommendationCard extends ConsumerWidget {
               children: [
                 Text(
                   'progress.recommendation'.tr(),
-                  style: homeText(16, weight: FontWeight.w800, height: 1.25),
+                  style: homeText(18, weight: FontWeight.w800, height: 1.25),
                 ),
                 const SizedBox(height: 2),
                 Text.rich(
@@ -85,7 +85,7 @@ class RecommendationCard extends ConsumerWidget {
                             // copyWith(fontWeight) bundle'dagi SemiBold faylni
                             // yuklamaydi — alohida stil kerak.
                             style: homeText(
-                              9.8,
+                              12,
                               weight: FontWeight.w600,
                               color: Colors.white,
                               height: 1.45,
@@ -145,13 +145,13 @@ class _DoTestButton extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14.5),
             child: SizedBox(
-              height: 36,
+              height: 40,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     'progress.doTest'.tr(),
-                    style: homeText(10.3, weight: FontWeight.w600, height: 1.2),
+                    style: homeText(13, weight: FontWeight.w600, height: 1.2),
                   ),
                   const SizedBox(width: 7),
                   const Icon(

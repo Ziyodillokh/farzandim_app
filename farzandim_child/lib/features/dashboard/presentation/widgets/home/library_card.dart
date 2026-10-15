@@ -42,7 +42,7 @@ class LibraryItem {
 class LibraryCard extends StatelessWidget {
   const LibraryCard({super.key, required this.item, required this.width});
 
-  static const height = 145.0;
+  static const height = 158.0;
 
   final LibraryItem item;
 
@@ -116,7 +116,7 @@ class LibraryCard extends StatelessWidget {
                     item.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: homeText(11.4, weight: FontWeight.w700, height: 1.2),
+                    style: homeText(12, weight: FontWeight.w700, height: 1.2),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -124,7 +124,7 @@ class LibraryCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: homeText(
-                      9.8,
+                      11,
                       color: HomeColors.textDim,
                       height: 1.25,
                     ),
@@ -205,9 +205,10 @@ class _KindBadge extends StatelessWidget {
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Text(
-                (isVideo ? 'home.video' : 'home.audiobook').tr(),
+                // Tor kartada qisqa yorliq ("Audio") — o'qiladigan o'lchamda qoladi.
+                (isVideo ? 'home.video' : 'home.audioShort').tr(),
                 maxLines: 1,
-                style: homeText(9.5, weight: FontWeight.w600, height: 1.2),
+                style: homeText(10.5, weight: FontWeight.w600, height: 1.2),
               ),
             ),
           ),
@@ -280,14 +281,14 @@ class _RewardRow extends StatelessWidget {
           Text(
             '+$reward',
             style: homeText(
-              13.5,
+              14.5,
               weight: FontWeight.w600,
               color: HomeColors.green,
               height: 1.1,
             ),
           ),
           const SizedBox(width: 5),
-          const DonBadge(fontSize: 8.6),
+          const DonBadge(fontSize: 9.5),
         ],
       ),
     );

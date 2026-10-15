@@ -93,7 +93,7 @@ class HomeSectionTitle extends StatelessWidget {
     super.key,
     required this.title,
     this.padding = EdgeInsets.zero,
-    this.titleSize = 18,
+    this.titleSize = 19.5,
   });
 
   final String title;
@@ -134,7 +134,7 @@ class _Tile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minHeight: 92),
+      constraints: const BoxConstraints(minHeight: 104),
       padding: padding ?? const EdgeInsets.fromLTRB(12, 13, 8, 9),
       decoration: BoxDecoration(
         color: HomeColors.tile,
@@ -160,18 +160,14 @@ class _AverageTile extends StatelessWidget {
         children: [
           _ProgressRing(percent: summary.averagePercent),
           const SizedBox(height: 2),
-          Text(
+          FitText(
             'home.averageResult'.tr(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: homeText(10.2, weight: FontWeight.w600, height: 1.2),
+            style: homeText(12, weight: FontWeight.w600, height: 1.2),
           ),
           const SizedBox(height: 1),
-          Text(
+          FitText(
             'home.lastTests'.plural(summary.recentTestCount),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: homeText(9.8, color: HomeColors.textDim, height: 1.2),
+            style: homeText(11.5, color: HomeColors.textDim, height: 1.2),
           ),
         ],
       ),
@@ -201,25 +197,19 @@ class _InsightTile extends StatelessWidget {
         children: [
           icon,
           const SizedBox(height: 7),
-          Text(
+          FitText(
             caption,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: homeText(9.8, color: HomeColors.textDim, height: 1.2),
+            style: homeText(11.5, color: HomeColors.textDim, height: 1.2),
           ),
           const SizedBox(height: 3),
-          Text(
+          FitText(
             title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: homeText(12.8, weight: FontWeight.w700, height: 1.2),
+            style: homeText(15, weight: FontWeight.w700, height: 1.2),
           ),
           const SizedBox(height: 3),
-          Text(
+          FitText(
             footer,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: homeText(9.8, color: HomeColors.textDim, height: 1.2),
+            style: homeText(11.5, color: HomeColors.textDim, height: 1.2),
           ),
         ],
       ),
@@ -236,12 +226,12 @@ class _ProgressRing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 52,
-      height: 52,
+      width: 58,
+      height: 58,
       child: CustomPaint(
         painter: _RingPainter(progress: percent.clamp(0, 100) / 100),
         child: Center(
-          child: Text('$percent%', style: homeDisplay(12.7, height: 1)),
+          child: Text('$percent%', style: homeDisplay(14, height: 1)),
         ),
       ),
     );

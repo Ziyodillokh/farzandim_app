@@ -39,8 +39,30 @@ const _chipInactiveBorder = Color(0xFF2A323D);
 const _textMuted = Color(0xFF9CA3AF);
 const _iconMuted = Color(0xFFB6BCC5);
 
-class AudiobooksFeedScreen extends ConsumerWidget {
+class AudiobooksFeedScreen extends StatelessWidget {
   const AudiobooksFeedScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: audiobooksPageBg,
+      extendBody: true,
+      body: SafeArea(bottom: false, child: AudiobooksFeedView()),
+      bottomNavigationBar: ChildBottomNavigation(),
+    );
+  }
+}
+
+/// Audiokitoblar sahifasi foni (Kutubxona ham shu fonni ishlatadi).
+const audiobooksPageBg = _pageBg;
+
+/// Feed tarkibi (sarlavha, qidiruv, yangi kitoblar, chiplar, grid) —
+/// alohida sahifada ham, Kutubxona ichida ham AYNAN bir xil.
+class AudiobooksFeedView extends ConsumerWidget {
+  const AudiobooksFeedView({super.key, this.titleTop = 8});
+
+  /// Sarlavha tepasidagi masofa.
+  final double titleTop;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -63,94 +85,81 @@ class AudiobooksFeedScreen extends ConsumerWidget {
       for (final b in all) b.category,
     }.toList(growable: false);
 
-    return Scaffold(
-      backgroundColor: _pageBg,
-      extendBody: true,
-      body: SafeArea(
-        bottom: false,
-        child: RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(backendAudiobooksProvider);
-            await ref.read(backendAudiobooksProvider.future);
-          },
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
-            slivers: [
-              const SliverPadding(
-                padding: EdgeInsets.fromLTRB(20, 8, 20, 16),
-                sliver: SliverToBoxAdapter(child: _KitoblarTitle()),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                sliver: SliverToBoxAdapter(
-                  child: ParvozSearchField(
-                    queryProvider: audiobookFeedSearchProvider,
-                    hintText: 'audiobooks.feed.searchHint'.tr(),
-                    accent: _blue,
-                  ),
-                ),
-              ),
-              // Qidiruv paytida hero + kategoriya chiplari yashiriladi
-              // (qidiruv barcha kitoblardan qidiradi).
-              if (!searching && newest.isNotEmpty)
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                  sliver: SliverToBoxAdapter(
-                    child: _YangiKitoblarHero(books: newest),
-                  ),
-                ),
-              if (!searching)
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  sliver: SliverToBoxAdapter(
-                    child: _CategoryChips(
-                      categories: categories,
-                      selected: selectedCategory,
-                      onSelected: (cat) =>
-                          ref
-                                  .read(
-                                    audiobookCategoryFilterProvider.notifier,
-                                  )
-                                  .state =
-                              cat,
-                    ),
-                  ),
-                ),
-              if (feed.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: searching
-                      ? const _NoSearchResults()
-                      : loadState.hasError
-                          ? _ErrorState(
-                              onRetry: () =>
-                                  ref.invalidate(backendAudiobooksProvider),
-                            )
-                          : const _EmptyState(),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 200),
-                  sliver: SliverGrid.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 22,
-                      crossAxisSpacing: 14,
-                      // Karta: cover (3:4) + title (2 satr) + meta = W*1.6+68
-                      // childAspectRatio = W / H → 1 / 1.62 ≈ 0.62
-                      childAspectRatio: 0.62,
-                    ),
-                    itemCount: feed.length,
-                    itemBuilder: (_, i) => _GridBookCard(series: feed[i]),
-                  ),
-                ),
-            ],
-          ),
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(backendAudiobooksProvider);
+        await ref.read(backendAudiobooksProvider.future);
+      },
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
         ),
+        slivers: [
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(20, titleTop, 20, 16),
+            sliver: const SliverToBoxAdapter(child: _KitoblarTitle()),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            sliver: SliverToBoxAdapter(
+              child: ParvozSearchField(
+                queryProvider: audiobookFeedSearchProvider,
+                hintText: 'audiobooks.feed.searchHint'.tr(),
+                accent: _blue,
+              ),
+            ),
+          ),
+          // Qidiruv paytida hero + kategoriya chiplari yashiriladi
+          // (qidiruv barcha kitoblardan qidiradi).
+          if (!searching && newest.isNotEmpty)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+              sliver: SliverToBoxAdapter(
+                child: _YangiKitoblarHero(books: newest),
+              ),
+            ),
+          if (!searching)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              sliver: SliverToBoxAdapter(
+                child: _CategoryChips(
+                  categories: categories,
+                  selected: selectedCategory,
+                  onSelected: (cat) =>
+                      ref.read(audiobookCategoryFilterProvider.notifier).state =
+                          cat,
+                ),
+              ),
+            ),
+          if (feed.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: searching
+                  ? const _NoSearchResults()
+                  : loadState.hasError
+                  ? _ErrorState(
+                      onRetry: () => ref.invalidate(backendAudiobooksProvider),
+                    )
+                  : const _EmptyState(),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 200),
+              sliver: SliverGrid.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 22,
+                  crossAxisSpacing: 14,
+                  // Karta: cover (3:4) + title (2 satr) + meta = W*1.6+68
+                  // childAspectRatio = W / H → 1 / 1.62 ≈ 0.62
+                  childAspectRatio: 0.62,
+                ),
+                itemCount: feed.length,
+                itemBuilder: (_, i) => _GridBookCard(series: feed[i]),
+              ),
+            ),
+        ],
       ),
-      bottomNavigationBar: const ChildBottomNavigation(),
     );
   }
 }
@@ -432,9 +441,7 @@ class _GridBookCard extends StatelessWidget {
                   style: TextStyle(color: _textMuted, fontSize: 11),
                 ),
                 const SizedBox(width: 6),
-                Flexible(
-                  child: _DonRewardPill(reward: series.cover.xpReward),
-                ),
+                Flexible(child: _DonRewardPill(reward: series.cover.xpReward)),
               ],
             ],
           ),

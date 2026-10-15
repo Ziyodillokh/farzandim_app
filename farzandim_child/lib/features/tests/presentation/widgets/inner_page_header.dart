@@ -47,7 +47,7 @@ class InnerPageHeader extends StatelessWidget {
                   subtitle!,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: homeText(12, color: HomeColors.textDim),
+                  style: homeText(13, color: HomeColors.textDim),
                 ),
               ],
             ],

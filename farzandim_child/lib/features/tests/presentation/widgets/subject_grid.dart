@@ -16,11 +16,11 @@ import 'package:go_router/go_router.dart';
 const _cardBg = Color(0xFF11161F);
 const _cardBorder = Color(0xFF232838);
 const _gap = 9.4;
-const _cardHeight = 98.5;
+const _cardHeight = 106.0;
 
 /// Shrift masshtabiga moslashgan karta balandligi.
 double _cardExtent(BuildContext context) {
-  const text = 13 * 1.25 + 4 + 10.8 * 1.25; // nom + oraliq + test soni
+  const text = 15 * 1.25 + 4 + 12.5 * 1.25; // nom + oraliq + test soni
   final scaled = MediaQuery.textScalerOf(context).scale(text);
   return _cardHeight + (scaled - text).clamp(0, 50);
 }
@@ -173,7 +173,7 @@ class SubjectCard extends StatelessWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: homeText(
-                                    13,
+                                    15,
                                     weight: FontWeight.w700,
                                     height: 1.25,
                                   ),
@@ -184,7 +184,7 @@ class SubjectCard extends StatelessWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: homeText(
-                                    10.8,
+                                    12.5,
                                     color: HomeColors.textDim,
                                     height: 1.25,
                                   ),
@@ -228,10 +228,10 @@ class _Reward extends StatelessWidget {
         children: [
           Text(
             formatHomeNumber(reward),
-            style: homeDisplay(13.4, height: 1.1, letterSpacing: -0.2),
+            style: homeDisplay(14.5, height: 1.1, letterSpacing: -0.2),
           ),
           const SizedBox(width: 4.5),
-          const DonBadge(fontSize: 8.6),
+          const DonBadge(fontSize: 9.5),
         ],
       ),
     );
@@ -305,7 +305,7 @@ class _Notice extends StatelessWidget {
             Text(
               subtitle!,
               textAlign: TextAlign.center,
-              style: homeText(12, color: HomeColors.textDim),
+              style: homeText(13, color: HomeColors.textDim),
             ),
           ],
           if (action != null) ...[const SizedBox(height: 4), action!],
