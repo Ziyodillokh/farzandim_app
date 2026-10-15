@@ -70,19 +70,7 @@ class LibrarySection extends ConsumerWidget {
               if (items.isEmpty)
                 const _LibraryEmpty()
               else
-                SizedBox(
-                  height: LibraryCard.height,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.only(
-                      left: homePagePadding + 9.5,
-                      right: homePagePadding,
-                    ),
-                    itemCount: items.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (_, i) => LibraryCard(item: items[i]),
-                  ),
-                ),
+                _LibraryStrip(items: items),
             ],
           ),
         ),
@@ -157,6 +145,44 @@ class LibrarySection extends ConsumerWidget {
           behavior: SnackBarBehavior.floating,
         ),
       );
+  }
+}
+
+/// Kartalar lentasi — katta karta ICHIDA qoladi (chetidan chiqmaydi):
+/// 3 ta karta to'liq sig'adigan kenglikda, ko'prog'i karta ichida suriladi.
+class _LibraryStrip extends StatelessWidget {
+  const _LibraryStrip({required this.items});
+
+  final List<LibraryItem> items;
+
+  static const _inset = 9.0;
+  static const _gap = 8.0;
+  static const _visible = 3;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      // Karta chegarasi (1pt) ichida kesiladi.
+      padding: const EdgeInsets.symmetric(horizontal: homePagePadding + 1),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final cardWidth =
+              (constraints.maxWidth - _inset * 2 - _gap * (_visible - 1)) /
+              _visible;
+          return SizedBox(
+            height: LibraryCard.height,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: _inset),
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(width: _gap),
+              itemBuilder: (_, i) =>
+                  LibraryCard(item: items[i], width: cardWidth),
+            ),
+          );
+        },
+      ),
+    );
   }
 }
 

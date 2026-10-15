@@ -40,12 +40,14 @@ class LibraryItem {
 }
 
 class LibraryCard extends StatelessWidget {
-  const LibraryCard({super.key, required this.item});
+  const LibraryCard({super.key, required this.item, required this.width});
 
-  static const width = 115.0;
   static const height = 145.0;
 
   final LibraryItem item;
+
+  /// Lenta hisoblaydi (3 ta karta katta karta ichiga sig'adi).
+  final double width;
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +90,16 @@ class LibraryCard extends StatelessWidget {
                 ),
               ),
             ),
-            Positioned(left: 4, top: 4, child: _KindBadge(kind: item.kind)),
+            // Belgi saqlash tugmasigacha (23pt + chekka) joyga sig'adi.
+            Positioned(
+              left: 4,
+              top: 4,
+              right: 31,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: _KindBadge(kind: item.kind),
+              ),
+            ),
             Positioned(
               right: 0,
               top: 0,
@@ -188,10 +199,17 @@ class _KindBadge extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          const SizedBox(width: 6),
-          Text(
-            (isVideo ? 'home.video' : 'home.audiobook').tr(),
-            style: homeText(9.5, weight: FontWeight.w600, height: 1.2),
+          const SizedBox(width: 5),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                (isVideo ? 'home.video' : 'home.audiobook').tr(),
+                maxLines: 1,
+                style: homeText(9.5, weight: FontWeight.w600, height: 1.2),
+              ),
+            ),
           ),
         ],
       ),
