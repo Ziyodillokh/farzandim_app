@@ -20,3 +20,13 @@
 /// `false` bo'lganda yuqoridagi route'lar /dashboard'ga redirect bo'ladi
 /// va bottom navigation bar yashirinadi (mock data dead-end'lardan saqlash).
 const bool kEnableContentLibrary = true;
+
+/// Daily Learning (kunlik testlar, natijalar xulosasi) — NAMUNAVIY ma'lumot.
+///
+/// Growth yangi konsepsiyasining dizayn bosqichi: backend (savollar banki,
+/// kunlik reja, natijalar) hali yo'q, shuning uchun bosh sahifadagi
+/// "Bugungi testlar", "So'nggi natijalar" va "Yechilgan savol" namunaviy
+/// qiymatlarni ko'rsatadi (`learning_providers.dart`).
+///
+/// ⚠️ Release'dan oldin backend ulanadi va bu bayroq `false` qilinadi.
+const bool kLearningPreviewData = true;

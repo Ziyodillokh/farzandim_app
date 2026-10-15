@@ -50,7 +50,9 @@
     "videos": "Videos",
     "quizzes": "Quizzes",
     "audiobooks": "Audiobooks",
-    "profile": "Profile"
+    "profile": "Profile",
+    "library": "Library",
+    "results": "Results"
   },
   "welcome": {
     "appName": "Parvoz",
@@ -1108,5 +1110,47 @@
     "bannerAuthBody": "Turn on Parvoz → Screen Time together with your parents — otherwise their limits don't work.",
     "bannerLocationTitle": "Location isn't set to “Always”",
     "bannerLocationBody": "Set location to “Always” in Settings so the app keeps working when closed."
+  },
+  "home": {
+    "streak": "Day streak",
+    "solved": "Questions solved",
+    "balance": "Balance",
+    "todayTests": "Today's tests",
+    "todayTestsReady": "{count} tests are ready for you today",
+    "questions": {
+      "one": "{} question",
+      "other": "{} questions"
+    },
+    "start": "Start",
+    "recentResults": "Recent results",
+    "averageResult": "Average score",
+    "lastTests": {
+      "one": "Last test",
+      "other": "Last {} tests"
+    },
+    "strongSubject": "Strongest subject",
+    "averagePercent": "Average {percent}%",
+    "recommendation": "Tip",
+    "workOnIt": "Practice more",
+    "library": "Library",
+    "librarySubtitle": "Video lessons and audiobooks in one place",
+    "libraryEmpty": "The library is empty for now — new lessons are coming soon",
+    "video": "Video",
+    "audiobook": "Audiobook",
+    "save": "Save",
+    "saved": "Saved",
+    "unsaved": "Removed from saved"
+  },
+  "subjects": {
+    "math": "Math",
+    "english": "English",
+    "native": "Native language",
+    "history": "History",
+    "biology": "Biology",
+    "geography": "Geography",
+    "physics": "Physics",
+    "chemistry": "Chemistry",
+    "informatics": "Computer science",
+    "russian": "Russian"
   }
 }

@@ -50,7 +50,9 @@
     "videos": "Videolar",
     "quizzes": "Testlar",
     "audiobooks": "Audiokitoblar",
-    "profile": "Profil"
+    "profile": "Profil",
+    "library": "Kutubxona",
+    "results": "Natijalar"
   },
   "welcome": {
     "appName": "Parvoz",
@@ -1108,5 +1110,45 @@
     "bannerAuthBody": "Ota-onangiz bilan Parvoz → Ekran vaqti'ni yoqing — aks holda ularning cheklovlari ishlamaydi.",
     "bannerLocationTitle": "Joylashuv «Har doim» emas",
     "bannerLocationBody": "Sozlamalarda joylashuvni «Har doim» qiling — ilova yopiq bo'lsa ham ishlashi uchun."
+  },
+  "home": {
+    "streak": "Ketma-ket",
+    "solved": "Yechilgan savol",
+    "balance": "Balans",
+    "todayTests": "Bugungi testlar",
+    "todayTestsReady": "Bugun siz uchun {count} ta test tayyor",
+    "questions": {
+      "other": "{} ta savol"
+    },
+    "start": "Boshlash",
+    "recentResults": "So‘nggi natijalar",
+    "averageResult": "O‘rtacha natija",
+    "lastTests": {
+      "other": "So‘nggi {} test"
+    },
+    "strongSubject": "Kuchli yo‘nalish",
+    "averagePercent": "O‘rtacha {percent}%",
+    "recommendation": "Tavsiya",
+    "workOnIt": "Ustida ishlang",
+    "library": "Kutubxona",
+    "librarySubtitle": "Video darslar va audiokitoblar bir joyda",
+    "libraryEmpty": "Kutubxona hozircha bo‘sh — tez orada yangi darslar qo‘shiladi",
+    "video": "Video",
+    "audiobook": "Audiokitob",
+    "save": "Saqlash",
+    "saved": "Saqlandi",
+    "unsaved": "Saqlanganlardan olib tashlandi"
+  },
+  "subjects": {
+    "math": "Matematika",
+    "english": "Ingliz tili",
+    "native": "Ona tili",
+    "history": "Tarix",
+    "biology": "Biologiya",
+    "geography": "Geografiya",
+    "physics": "Fizika",
+    "chemistry": "Kimyo",
+    "informatics": "Informatika",
+    "russian": "Rus tili"
   }
 }
