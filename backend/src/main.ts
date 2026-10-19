@@ -3,11 +3,10 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { configureApp } from './bootstrap/configure-app';
 import { EnvConfig } from './common/config/env.schema';
 import { resolveTrustProxy } from './common/helpers/trust-proxy';
 
@@ -26,143 +25,8 @@ async function bootstrap() {
     }),
   );
 
-  // Fastify default JSON parser bo'sh body bo'lganda 400 qaytaradi —
-  // ko'plab DELETE so'rovlari (DELETE /users/me kabi) Content-Type:
-  // application/json yuboradi lekin body bo'sh. Standart Dio/Axios
-  // klienti yo'lda kerak qilinmagan Content-Type qo'shadi. NestJS
-  // FastifyAdapter'ning `useBodyParser` orqali default JSON parser'ni
-  // bo'sh body'ni undefined sifatida qabul qiladigan versiya bilan
-  // almashtiramiz.
-  app.useBodyParser(
-    'application/json',
-    { bodyLimit: 100 * 1024 * 1024 },
-    (_req: unknown, body: Buffer, done: (err: Error | null, body?: unknown) => void) => {
-      if (!body || body.length === 0) {
-        return done(null, undefined);
-      }
-      try {
-        done(null, JSON.parse(body.toString('utf8')));
-      } catch (err) {
-        done(err as Error);
-      }
-    },
-  );
-
-  // application/x-www-form-urlencoded — TO'LOV WEBHOOK'lari uchun MAJBURIY.
-  // Click (va Payme'ning ba'zi chaqiruvlari) Prepare/Complete so'rovini
-  // shu Content-Type bilan yuboradi. Avval hech qanday parser yo'q edi →
-  // Fastify 415 (Unsupported Media Type) qaytarardi → Click to'lovni
-  // tasdiqlay olmasdi (obuna faollashmasdi). Endi string body
-  // URLSearchParams orqali obyektga aylantiriladi (@Body() / req.body oladi).
-  app.useBodyParser(
-    'application/x-www-form-urlencoded',
-    { bodyLimit: 100 * 1024 * 1024 },
-    (
-      _req: unknown,
-      body: Buffer,
-      done: (err: Error | null, body?: unknown) => void,
-    ) => {
-      if (!body || body.length === 0) {
-        return done(null, {});
-      }
-      try {
-        done(
-          null,
-          Object.fromEntries(new URLSearchParams(body.toString('utf8'))),
-        );
-      } catch (err) {
-        done(err as Error);
-      }
-    },
-  );
-
+  await configureApp(app);
   const config = app.get(ConfigService<EnvConfig, true>);
-
-  // ── Global prefix ──
-  app.setGlobalPrefix('api');
-
-  // ── Global validation pipe ──
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
-
-  // ── Global exception filter ──
-  app.useGlobalFilters(new GlobalExceptionFilter());
-
-  // ── Swagger ──
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Farzandim API')
-    .setVersion('2.0.0')
-    .addBearerAuth(
-      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
-      'consumer-jwt',
-    )
-    .addBearerAuth(
-      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
-      'admin-jwt',
-    )
-    .build();
-
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document);
-
-  // ── Fastify plugins ──
-  await app.register(
-    await import('@fastify/helmet').then((m) => m.default),
-    { contentSecurityPolicy: false },
-  );
-
-  await app.register(
-    await import('@fastify/cookie').then((m) => m.default),
-  );
-
-  // Multipart/form-data — Fastify adapter ostida Multer (platform-express)
-  // ISHLAMAYDI. Shu plugin avatar/video/voice/photo upload'larini parse qiladi.
-  // req.file() / req.parts() orqali fayllar o'qiladi. fileSize bodyLimit bilan
-  // mos (100 MB); har endpoint o'z service'ida kichikroq cheklov qo'yadi.
-  await app.register(
-    await import('@fastify/multipart').then((m) => m.default),
-    { limits: { fileSize: 100 * 1024 * 1024 } },
-  );
-
-  // Eslatma: application/x-www-form-urlencoded parser yuqorida qo'lda
-  // qo'shildi (Click webhook uchun). NestJS Fastify adapter uni O'ZI
-  // registratsiya QILMAYDI — busiz webhook 415 qaytarardi.
-
-  // ── CORS ──
-  const corsOrigins = config
-    .get('CORS_ORIGINS', { infer: true })
-    .split(',')
-    .map((o: string) => o.trim())
-    .filter(Boolean);
-
-  // Lokal/LAN origin'lar (localhost + xususiy IP diapazonlari) — dev/preview
-  // uchun istalgan portda ruxsat etiladi. Shu sabab telefon hotspoti yoki
-  // router IP'si o'zgarsa ham CORS qayta sozlanmaydi.
-  const lanOriginRegex =
-    /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
-
-  app.enableCors({
-    origin: (origin, cb) => {
-      if (
-        !origin ||
-        corsOrigins.includes(origin) ||
-        lanOriginRegex.test(origin)
-      ) {
-        cb(null, true);
-      } else {
-        cb(null, false);
-      }
-    },
-    credentials: true,
-    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    exposedHeaders: ['Content-Disposition'],
-  });
 
   // ── Shutdown hooks ──
   app.enableShutdownHooks();

@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
+import { ChildProfile, Prisma, XpEvent } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
@@ -67,43 +68,21 @@ export class GamificationService {
       );
     }
 
-    const profile = await this.getOrCreateProfile(childId);
-    const { newStreak } = calculateNewStreak(
-      profile.lastActivityDate,
-      profile.streakDays,
+    const result = await this.prisma.$transaction((tx) =>
+      this.applyAward(tx, childId, {
+        type: dto.type as XpEventType,
+        xpDelta: dto.xpDelta,
+        donDelta: dto.donDelta ?? 0,
+        relatedId: dto.relatedId,
+        source: dto.source as object | undefined,
+        dedupe: false,
+        touchStreak: true,
+      }),
     );
+    // dedupe=false — natija har doim bor va ledger yozuvi yaratiladi.
+    const { event, profile: updatedProfile } = result!;
 
-    const donDelta = dto.donDelta ?? 0;
-    const newXp = profile.xp + dto.xpDelta;
-    const newDon = profile.donBalance + donDelta;
-    const newLevel = levelForXp(newXp);
-    const newStatus = statusForXp(newXp);
-
-    const [event, updatedProfile] = await this.prisma.$transaction([
-      this.prisma.xpEvent.create({
-        data: {
-          childId,
-          type: dto.type,
-          xpDelta: dto.xpDelta,
-          donDelta,
-          relatedId: dto.relatedId,
-          source: dto.source as object | undefined,
-        },
-      }),
-      this.prisma.childProfile.update({
-        where: { childId },
-        data: {
-          xp: newXp,
-          donBalance: newDon,
-          level: newLevel,
-          status: newStatus,
-          streakDays: newStreak,
-          lastActivityDate: new Date(),
-        },
-      }),
-    ]);
-
-    await this.audit.log(userId, 'xp_event', 'CREATE', event.id, dto, request);
+    await this.audit.log(userId, 'xp_event', 'CREATE', event!.id, dto, request);
     this.realtime.emitToChild(childId, 'profile:updated', updatedProfile);
 
     return { event, profile: updatedProfile };
@@ -127,49 +106,115 @@ export class GamificationService {
     // Bo'sh chaqiruvni to'xtatamiz, lekin DON-only (xpDelta=0, donDelta>0)
     // ruxsat — video to'liq ko'rilganda XP bermay faqat don beramiz.
     if (opts.xpDelta <= 0 && (opts.donDelta ?? 0) <= 0) return;
-    if (opts.relatedId) {
-      const existing = await this.prisma.xpEvent.findFirst({
-        where: { childId, type: opts.type, relatedId: opts.relatedId },
+    const result = await this.prisma.$transaction((tx) =>
+      this.applyAward(tx, childId, {
+        type: opts.type,
+        xpDelta: opts.xpDelta,
+        donDelta: opts.donDelta ?? 0,
+        relatedId: opts.relatedId,
+        dedupe: true,
+        touchStreak: true,
+      }),
+    );
+    if (result) this.notifyProfileUpdated(childId, result.profile);
+  }
+
+  /**
+   * Tashqi tranzaksiya ICHIDA mukofot (masalan kunlik test yakuni bilan
+   * birga — "test yakunlandi" va "DON berildi" bir butun). Idempotent:
+   * `relatedId` bo'yicha bir marta; takror bo'lsa `null`. Tranzaksiya
+   * commit bo'lgach chaqiruvchi `notifyProfileUpdated` ni chaqiradi.
+   */
+  async awardInTx(
+    tx: Prisma.TransactionClient,
+    childId: string,
+    opts: {
+      type: XpEventType;
+      xpDelta: number;
+      donDelta: number;
+      relatedId: string;
+    },
+  ): Promise<AwardResult | null> {
+    if (opts.xpDelta <= 0 && opts.donDelta <= 0) return null;
+    return this.applyAward(tx, childId, {
+      ...opts,
+      dedupe: true,
+      touchStreak: true,
+    });
+  }
+
+  /** `profile:updated` — bola ilovasi balans / streakni darhol yangilaydi. */
+  notifyProfileUpdated(childId: string, profile: ChildProfile): void {
+    this.realtime.emitToChild(childId, 'profile:updated', profile);
+  }
+
+  /**
+   * YAGONA mukofot yadrosi — barcha XP / DON yozuvlari shu yerdan o'tadi.
+   *
+   * - Bola bo'yicha tranzaksion advisory lock: parallel so'rovlar navbat
+   *   bilan bajariladi → `relatedId` takror tekshiruvi ishonchli.
+   * - Balans `increment` bilan (o'qib-yozish emas) — yo'qolgan yangilanish yo'q.
+   * - Streak Toshkent kunida (`calculateNewStreak`).
+   */
+  private async applyAward(
+    tx: Prisma.TransactionClient,
+    childId: string,
+    input: AwardInput,
+  ): Promise<AwardResult | null> {
+    await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(hashtextextended(${`xp:${childId}`}, 0))`;
+
+    if (input.dedupe && input.relatedId && input.type) {
+      const existing = await tx.xpEvent.findFirst({
+        where: { childId, type: input.type, relatedId: input.relatedId },
         select: { id: true },
       });
-      if (existing) return; // allaqachon berilgan — qayta bermaymiz
+      if (existing) return null; // allaqachon berilgan — qayta bermaymiz
     }
 
-    const profile = await this.getOrCreateProfile(childId);
-    const { newStreak } = calculateNewStreak(
-      profile.lastActivityDate,
-      profile.streakDays,
-    );
-    const donDelta = opts.donDelta ?? 0;
-    const newXp = profile.xp + opts.xpDelta;
-    const newDon = profile.donBalance + donDelta;
-    const newLevel = levelForXp(newXp);
-    const newStatus = statusForXp(newXp);
+    const now = new Date();
+    const profile = await tx.childProfile.upsert({
+      where: { childId },
+      create: { childId },
+      update: {},
+    });
+    const streak = input.touchStreak
+      ? calculateNewStreak(profile.lastActivityDate, profile.streakDays, now)
+      : null;
 
-    const [, updatedProfile] = await this.prisma.$transaction([
-      this.prisma.xpEvent.create({
-        data: {
-          childId,
-          type: opts.type,
-          xpDelta: opts.xpDelta,
-          donDelta,
-          relatedId: opts.relatedId,
-        },
-      }),
-      this.prisma.childProfile.update({
+    const event =
+      input.type && (input.xpDelta !== 0 || input.donDelta !== 0)
+        ? await tx.xpEvent.create({
+            data: {
+              childId,
+              type: input.type,
+              xpDelta: input.xpDelta,
+              donDelta: input.donDelta,
+              relatedId: input.relatedId,
+              source: input.source,
+            },
+          })
+        : null;
+
+    let updated = await tx.childProfile.update({
+      where: { childId },
+      data: {
+        xp: { increment: input.xpDelta },
+        donBalance: { increment: input.donDelta },
+        ...(streak && {
+          streakDays: streak.newStreak,
+          lastActivityDate: now,
+        }),
+      },
+    });
+    const level = levelForXp(updated.xp);
+    const status = statusForXp(updated.xp);
+    if (level !== updated.level || status !== updated.status) {
+      updated = await tx.childProfile.update({
         where: { childId },
-        data: {
-          xp: newXp,
-          donBalance: newDon,
-          level: newLevel,
-          status: newStatus,
-          streakDays: newStreak,
-          lastActivityDate: new Date(),
-        },
-      }),
-    ]);
-
-    this.realtime.emitToChild(childId, 'profile:updated', updatedProfile);
+        data: { level, status },
+      });
+    }
+    return { event, profile: updated };
   }
 
   /**
@@ -216,42 +261,19 @@ export class GamificationService {
   ): Promise<void> {
     if (donDelta <= 0 && !activeToday) return;
 
-    const profile = await this.getOrCreateProfile(childId);
-
-    // Yurish = faollik: bugun 1000+ qadam bo'lsa streak yangilanadi.
-    let streakDays = profile.streakDays;
-    let lastActivityDate = profile.lastActivityDate;
-    if (activeToday) {
-      const { newStreak } = calculateNewStreak(
-        profile.lastActivityDate,
-        profile.streakDays,
-      );
-      streakDays = newStreak;
-      lastActivityDate = new Date();
-    }
-
     const add = Math.max(0, donDelta);
-    const newDon = profile.donBalance + add;
-
-    const ops: any[] = [];
-    // Faqat haqiqiy don berilganda ledger yozuvi (audit izi).
-    if (add > 0) {
-      ops.push(
-        this.prisma.xpEvent.create({
-          data: { childId, type: 'DAILY_GOAL', xpDelta: 0, donDelta: add },
-        }),
-      );
-    }
-    ops.push(
-      this.prisma.childProfile.update({
-        where: { childId },
-        data: { donBalance: newDon, streakDays, lastActivityDate },
+    const result = await this.prisma.$transaction((tx) =>
+      this.applyAward(tx, childId, {
+        // Faqat haqiqiy don berilganda ledger yozuvi (audit izi).
+        type: add > 0 ? XpEventType.DAILY_GOAL : null,
+        xpDelta: 0,
+        donDelta: add,
+        dedupe: false,
+        // Yurish = faollik: bugun 1000+ qadam bo'lsa streak yangilanadi.
+        touchStreak: activeToday,
       }),
     );
-
-    const results = await this.prisma.$transaction(ops);
-    const updatedProfile = results[results.length - 1];
-    this.realtime.emitToChild(childId, 'profile:updated', updatedProfile);
+    if (result) this.notifyProfileUpdated(childId, result.profile);
   }
 
   async listXpEvents(
@@ -364,4 +386,22 @@ export class GamificationService {
       steps,
     };
   }
+}
+
+interface AwardInput {
+  /** `null` — ledger yozuvisiz (faqat streak yangilanishi). */
+  type: XpEventType | null;
+  xpDelta: number;
+  donDelta: number;
+  relatedId?: string;
+  source?: object;
+  /** `relatedId` bo'yicha takroriy mukofotni o'tkazib yuborish. */
+  dedupe: boolean;
+  /** Faollik — streak va `lastActivityDate` yangilanadi. */
+  touchStreak: boolean;
+}
+
+export interface AwardResult {
+  event: XpEvent | null;
+  profile: ChildProfile;
 }

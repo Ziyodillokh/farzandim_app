@@ -26,10 +26,18 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         typeof exResponse === 'string'
           ? exResponse
           : (exResponse as object);
-    } else if (this.isPrismaNotFound(exception)) {
+    } else if (prismaCode(exception) === 'P2025') {
       // Prisma P2025 — record not found
       status = HttpStatus.NOT_FOUND;
       message = 'Resource not found';
+    } else if (prismaCode(exception) === 'P2002') {
+      // Unique cheklov buzildi (parallel so'rov / takroriy yozuv) — 500 emas.
+      status = HttpStatus.CONFLICT;
+      message = 'Resource already exists';
+    } else if (prismaCode(exception) === 'P2003') {
+      // Bog'langan yozuv (foreign key) mavjud emas.
+      status = HttpStatus.BAD_REQUEST;
+      message = 'Related resource not found';
     } else {
       // Unexpected error — log full details
       this.logger.error(
@@ -45,16 +53,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     response.status(status).send(body);
   }
+}
 
-  private isPrismaNotFound(exception: unknown): boolean {
-    if (
-      exception &&
-      typeof exception === 'object' &&
-      'code' in exception &&
-      (exception as { code: string }).code === 'P2025'
-    ) {
-      return true;
-    }
-    return false;
+/** Prisma xatosi kodi (`P2002` …) yoki `undefined`. */
+function prismaCode(exception: unknown): string | undefined {
+  if (exception && typeof exception === 'object' && 'code' in exception) {
+    const code = (exception as { code: unknown }).code;
+    return typeof code === 'string' && code.startsWith('P') ? code : undefined;
   }
+  return undefined;
 }

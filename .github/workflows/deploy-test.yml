@@ -128,9 +128,54 @@ jobs:
         working-directory: Farzandim
         run: flutter test
 
+  # ─────────────────────────── SIFAT DARVOZASI (backend) ───────────────────────────
+  # Unit + e2e (haqiqiy Postgres'da, barcha migratsiyalar bo'sh bazaga
+  # qo'llanadi). Yiqilsa backend deploy ISHGA TUSHMAYDI.
+  backend-quality:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' || github.event.inputs.component == 'backend' || github.event.inputs.component == 'all' }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: farzandim
+          POSTGRES_PASSWORD: farzandim
+          POSTGRES_DB: farzandim_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U farzandim -d farzandim_test"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      E2E_DATABASE_URL: postgresql://farzandim:farzandim@localhost:5432/farzandim_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install + prisma generate + typecheck
+        working-directory: backend
+        run: |
+          npm ci
+          npx prisma generate
+          npx tsc --noEmit -p tsconfig.json
+
+      - name: Unit testlar
+        working-directory: backend
+        run: npx jest --ci
+
+      - name: E2E testlar (Postgres)
+        working-directory: backend
+        run: npm run test:e2e -- --ci
+
   # ─────────────────────────── BACKEND (NestJS) ───────────────────────────
   backend:
-    needs: changes
+    needs: [changes, backend-quality]
     if: ${{ needs.changes.outputs.backend == 'true' || github.event.inputs.component == 'backend' || github.event.inputs.component == 'all' }}
     runs-on: ubuntu-22.04
     # Osilib qolgan ish concurrency navbatini 6 soat (GitHub default) band

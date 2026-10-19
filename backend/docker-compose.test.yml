@@ -1,0 +1,18 @@
+# E2E testlar uchun vaqtinchalik Postgres (ma'lumot xotirada — har ishga
+# tushishda toza). Ishga tushirish: npm run test:db:up
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: farzandim
+      POSTGRES_PASSWORD: farzandim
+      POSTGRES_DB: farzandim_test
+    ports:
+      - '54329:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U farzandim -d farzandim_test']
+      interval: 2s
+      timeout: 3s
+      retries: 20
