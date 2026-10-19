@@ -203,6 +203,38 @@ const T: Record<string, Record<NotifLang, string>> = {
     en: 'The {plan} plan is now free for {days} days. Enjoy all the features!',
   },
 
+  // ── Growth: haftalik o'qish hisoboti (ota-onaga) ──
+  'learningWeekly.title': {
+    uz: '{name} — haftalik o\'qish hisoboti',
+    ru: '{name} — отчёт об учёбе за неделю',
+    en: '{name} — weekly learning report',
+  },
+  'learningWeekly.body': {
+    uz: 'Bu hafta {tests} ta test yechdi, o\'rtacha natija {percent}%.',
+    ru: 'Тестов за неделю: {tests}, средний результат {percent}%.',
+    en: 'Solved {tests} tests this week with an average score of {percent}%.',
+  },
+  'learningWeekly.strong': {
+    uz: 'Kuchli fan: {subject}.',
+    ru: 'Сильный предмет: {subject}.',
+    en: 'Strongest subject: {subject}.',
+  },
+  'learningWeekly.focus': {
+    uz: 'Ko\'proq mashq kerak: {subject}.',
+    ru: 'Стоит подтянуть: {subject}.',
+    en: 'Needs more practice: {subject}.',
+  },
+  'subject.math': { uz: 'Matematika', ru: 'Математика', en: 'Math' },
+  'subject.english': { uz: 'Ingliz tili', ru: 'Английский язык', en: 'English' },
+  'subject.native': { uz: 'Ona tili', ru: 'Родной язык', en: 'Native language' },
+  'subject.history': { uz: 'Tarix', ru: 'История', en: 'History' },
+  'subject.biology': { uz: 'Biologiya', ru: 'Биология', en: 'Biology' },
+  'subject.geography': { uz: 'Geografiya', ru: 'География', en: 'Geography' },
+  'subject.physics': { uz: 'Fizika', ru: 'Физика', en: 'Physics' },
+  'subject.chemistry': { uz: 'Kimyo', ru: 'Химия', en: 'Chemistry' },
+  'subject.informatics': { uz: 'Informatika', ru: 'Информатика', en: 'Computer science' },
+  'subject.russian': { uz: 'Rus tili', ru: 'Русский язык', en: 'Russian' },
+
   // ── Admin ogohlantirishi (matn admin tomonidan yoziladi) ──
   'adminWarning.title': {
     uz: 'Ogohlantirish',

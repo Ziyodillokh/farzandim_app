@@ -33,6 +33,7 @@ export class NotificationsService {
     NotificationType.PERMISSION_CHANGED,
     NotificationType.UNLOCK_REQUEST,
     NotificationType.GEO_ZONE,
+    NotificationType.LEARNING_REPORT,
   ];
 
   async listByChild(userId: string, childId: string, query: ListNotificationsDto) {

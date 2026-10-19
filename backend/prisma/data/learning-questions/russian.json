@@ -1,0 +1,908 @@
+{
+  "subject": "russian",
+  "questions": [
+    {
+      "id": "russian-01",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Otlarning jinsi",
+        "ru": "Род существительных",
+        "en": "Noun gender"
+      },
+      "question": {
+        "uz": "Qaysi ruscha ot ayol jinsiga (женский род) kiradi?",
+        "ru": "Какое существительное женского рода?",
+        "en": "Which Russian noun is feminine (женский род)?"
+      },
+      "options": [
+        {
+          "uz": "стол",
+          "ru": "стол",
+          "en": "стол"
+        },
+        {
+          "uz": "окно",
+          "ru": "окно",
+          "en": "окно"
+        },
+        {
+          "uz": "книга",
+          "ru": "книга",
+          "en": "книга"
+        },
+        {
+          "uz": "дом",
+          "ru": "дом",
+          "en": "дом"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "“Книга” -а bilan tugaydi va uni “она” olmoshi bilan almashtirish mumkin, demak u ayol jinsida.",
+        "ru": "Слово «книга» оканчивается на -а и заменяется местоимением «она», значит, это женский род.",
+        "en": "Книга ends in -а and can be replaced by она (she), so it is feminine."
+      }
+    },
+    {
+      "id": "russian-02",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Antonimlar",
+        "ru": "Антонимы",
+        "en": "Antonyms"
+      },
+      "question": {
+        "uz": "“Высокий” so‘zining antonimini toping.",
+        "ru": "Подберите антоним к слову «высокий».",
+        "en": "Find the antonym of the Russian word “высокий”."
+      },
+      "options": [
+        {
+          "uz": "большой",
+          "ru": "большой",
+          "en": "большой"
+        },
+        {
+          "uz": "низкий",
+          "ru": "низкий",
+          "en": "низкий"
+        },
+        {
+          "uz": "длинный",
+          "ru": "длинный",
+          "en": "длинный"
+        },
+        {
+          "uz": "широкий",
+          "ru": "широкий",
+          "en": "широкий"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "“Высокий” — baland, “низкий” — past degani; ular qarama-qarshi ma’noli so‘zlar.",
+        "ru": "Высокий и низкий — слова с противоположным значением.",
+        "en": "Высокий means tall or high and низкий means low, so they are opposites."
+      }
+    },
+    {
+      "id": "russian-03",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "So‘z turkumlari",
+        "ru": "Части речи",
+        "en": "Parts of speech"
+      },
+      "question": {
+        "uz": "Qaysi ruscha so‘z fe’l (глагол)?",
+        "ru": "Какое слово является глаголом?",
+        "en": "Which Russian word is a verb (глагол)?"
+      },
+      "options": [
+        {
+          "uz": "бег",
+          "ru": "бег",
+          "en": "бег"
+        },
+        {
+          "uz": "бегун",
+          "ru": "бегун",
+          "en": "бегун"
+        },
+        {
+          "uz": "быстрый",
+          "ru": "быстрый",
+          "en": "быстрый"
+        },
+        {
+          "uz": "бегать",
+          "ru": "бегать",
+          "en": "бегать"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Fe’l harakatni bildiradi va “что делать?” so‘rog‘iga javob beradi: бегать.",
+        "ru": "Глагол обозначает действие и отвечает на вопрос «что делать?»: бегать.",
+        "en": "A verb shows an action and answers “что делать?” (what to do?): бегать means to run."
+      }
+    },
+    {
+      "id": "russian-04",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Ko‘plik shakli",
+        "ru": "Множественное число",
+        "en": "Plural nouns"
+      },
+      "question": {
+        "uz": "“Друг” so‘zining ko‘plik shaklini toping.",
+        "ru": "Выберите форму множественного числа слова «друг».",
+        "en": "Choose the plural form of the Russian word “друг”."
+      },
+      "options": [
+        {
+          "uz": "друзья",
+          "ru": "друзья",
+          "en": "друзья"
+        },
+        {
+          "uz": "друга",
+          "ru": "друга",
+          "en": "друга"
+        },
+        {
+          "uz": "другы",
+          "ru": "другы",
+          "en": "другы"
+        },
+        {
+          "uz": "друзи",
+          "ru": "друзи",
+          "en": "друзи"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“Друг” so‘zining ko‘pligi qoidadan tashqari yasaladi: друг — друзья.",
+        "ru": "Слово «друг» образует множественное число особым способом: друг — друзья.",
+        "en": "Друг has an irregular plural: друг — друзья."
+      }
+    },
+    {
+      "id": "russian-05",
+      "difficulty": 1,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Sinonimlar",
+        "ru": "Синонимы",
+        "en": "Synonyms"
+      },
+      "question": {
+        "uz": "“Смелый” so‘zining sinonimini toping.",
+        "ru": "Подберите синоним к слову «смелый».",
+        "en": "Find the synonym of the Russian word “смелый”."
+      },
+      "options": [
+        {
+          "uz": "трусливый",
+          "ru": "трусливый",
+          "en": "трусливый"
+        },
+        {
+          "uz": "весёлый",
+          "ru": "весёлый",
+          "en": "весёлый"
+        },
+        {
+          "uz": "храбрый",
+          "ru": "храбрый",
+          "en": "храбрый"
+        },
+        {
+          "uz": "сильный",
+          "ru": "сильный",
+          "en": "сильный"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "“Смелый” va “храбрый” — ikkalasi ham jasur degani.",
+        "ru": "Смелый и храбрый близки по значению: оба значат «не боящийся опасности».",
+        "en": "Смелый and храбрый both mean brave."
+      }
+    },
+    {
+      "id": "russian-06",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Kelishiklar",
+        "ru": "Падежи",
+        "en": "Cases"
+      },
+      "question": {
+        "uz": "Rus tilida родительный падеж qaysi so‘roqlarga javob beradi?",
+        "ru": "На какие вопросы отвечает родительный падеж?",
+        "en": "Which questions does the Russian genitive case (родительный падеж) answer?"
+      },
+      "options": [
+        {
+          "uz": "кто? что?",
+          "ru": "кто? что?",
+          "en": "кто? что?"
+        },
+        {
+          "uz": "кого? чего?",
+          "ru": "кого? чего?",
+          "en": "кого? чего?"
+        },
+        {
+          "uz": "кому? чему?",
+          "ru": "кому? чему?",
+          "en": "кому? чему?"
+        },
+        {
+          "uz": "кем? чем?",
+          "ru": "кем? чем?",
+          "en": "кем? чем?"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Родительный падеж “кого? чего?” so‘roqlariga javob beradi: нет (чего?) книги.",
+        "ru": "Родительный падеж отвечает на вопросы «кого? чего?»: нет (чего?) книги.",
+        "en": "The genitive case answers “кого? чего?” (of whom? of what?), as in нет книги."
+      }
+    },
+    {
+      "id": "russian-07",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Fe’l tuslanishi",
+        "ru": "Спряжение глаголов",
+        "en": "Verb conjugation"
+      },
+      "question": {
+        "uz": "Qaysi ruscha fe’l II tuslanishga (II спряжение) kiradi?",
+        "ru": "Какой глагол относится ко II спряжению?",
+        "en": "Which Russian verb belongs to the 2nd conjugation (II спряжение)?"
+      },
+      "options": [
+        {
+          "uz": "читать",
+          "ru": "читать",
+          "en": "читать"
+        },
+        {
+          "uz": "писать",
+          "ru": "писать",
+          "en": "писать"
+        },
+        {
+          "uz": "петь",
+          "ru": "петь",
+          "en": "петь"
+        },
+        {
+          "uz": "говорить",
+          "ru": "говорить",
+          "en": "говорить"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "-ить bilan tugaydigan fe’llar (istisnolardan tashqari) II tuslanishga kiradi: говорить — говорит, говорят.",
+        "ru": "Глаголы на -ить (кроме исключений) относятся ко II спряжению: говорить — говорит, говорят.",
+        "en": "Verbs ending in -ить (apart from a few exceptions) are 2nd conjugation: говорить — говорит, говорят."
+      }
+    },
+    {
+      "id": "russian-08",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Imlo",
+        "ru": "Орфография",
+        "en": "Spelling"
+      },
+      "question": {
+        "uz": "Tushib qolgan harfni toping: г_ра (tog‘).",
+        "ru": "Вставьте пропущенную букву: г_ра.",
+        "en": "Fill in the missing letter in the Russian word: г_ра (mountain)."
+      },
+      "options": [
+        {
+          "uz": "о",
+          "ru": "о",
+          "en": "о"
+        },
+        {
+          "uz": "а",
+          "ru": "а",
+          "en": "а"
+        },
+        {
+          "uz": "е",
+          "ru": "е",
+          "en": "е"
+        },
+        {
+          "uz": "и",
+          "ru": "и",
+          "en": "и"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Urg‘usiz unlini urg‘uli shakl bilan tekshiramiz: гОры — demak, гора.",
+        "ru": "Безударную гласную проверяем ударением: гОры — значит, гора.",
+        "en": "Check the unstressed vowel with a stressed form: гОры (mountains), so it is гора."
+      }
+    },
+    {
+      "id": "russian-09",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Kelishiklar",
+        "ru": "Падежи",
+        "en": "Cases"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: «Я живу в ___.»",
+        "ru": "Дополните предложение: «Я живу в ___.»",
+        "en": "Complete the Russian sentence: «Я живу в ___.»"
+      },
+      "options": [
+        {
+          "uz": "Ташкент",
+          "ru": "Ташкент",
+          "en": "Ташкент"
+        },
+        {
+          "uz": "Ташкента",
+          "ru": "Ташкента",
+          "en": "Ташкента"
+        },
+        {
+          "uz": "Ташкенте",
+          "ru": "Ташкенте",
+          "en": "Ташкенте"
+        },
+        {
+          "uz": "Ташкентом",
+          "ru": "Ташкентом",
+          "en": "Ташкентом"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "“Где?” (qayerda?) so‘rog‘ida “в” predlogidan keyin предложный падеж ishlatiladi: в Ташкенте.",
+        "ru": "На вопрос «где?» после предлога «в» используется предложный падеж: в Ташкенте.",
+        "en": "To say where (где?), в is followed by the prepositional case: в Ташкенте."
+      }
+    },
+    {
+      "id": "russian-10",
+      "difficulty": 2,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "O‘zakdosh so‘zlar",
+        "ru": "Однокоренные слова",
+        "en": "Word roots"
+      },
+      "question": {
+        "uz": "Qaysi so‘z “лес” (o‘rmon) so‘zi bilan o‘zakdosh?",
+        "ru": "Какое слово является однокоренным к слову «лес»?",
+        "en": "Which Russian word has the same root as “лес” (forest)?"
+      },
+      "options": [
+        {
+          "uz": "лестница",
+          "ru": "лестница",
+          "en": "лестница"
+        },
+        {
+          "uz": "лесник",
+          "ru": "лесник",
+          "en": "лесник"
+        },
+        {
+          "uz": "лезть",
+          "ru": "лезть",
+          "en": "лезть"
+        },
+        {
+          "uz": "лесть",
+          "ru": "лесть",
+          "en": "лесть"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "“Лесник” — o‘rmonni qo‘riqlovchi kishi, o‘zagi “лес”; “лестница” (narvon) esa unga faqat tashqi tomondan o‘xshaydi.",
+        "ru": "Лесник — тот, кто охраняет лес, корень у слов общий; «лестница» лишь похожа внешне.",
+        "en": "Лесник (forester) shares the root of лес; лестница (staircase) only looks similar."
+      }
+    },
+    {
+      "id": "russian-11",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Urg‘u",
+        "ru": "Ударение",
+        "en": "Word stress"
+      },
+      "question": {
+        "uz": "Qaysi so‘zda urg‘u to‘g‘ri qo‘yilgan? (Urg‘uli unli bosh harf bilan berilgan.)",
+        "ru": "В каком слове ударение поставлено верно? (Ударная гласная выделена заглавной буквой.)",
+        "en": "In which Russian word is the stress marked correctly? (The stressed vowel is a capital letter.)"
+      },
+      "options": [
+        {
+          "uz": "звОнит",
+          "ru": "звОнит",
+          "en": "звОнит"
+        },
+        {
+          "uz": "тортЫ",
+          "ru": "тортЫ",
+          "en": "тортЫ"
+        },
+        {
+          "uz": "щАвель",
+          "ru": "щАвель",
+          "en": "щАвель"
+        },
+        {
+          "uz": "красИвее",
+          "ru": "красИвее",
+          "en": "красИвее"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "To‘g‘ri talaffuz: красИвее; qolganlari звонИт, тОрты, щавЕль deb aytiladi.",
+        "ru": "Верно: красИвее; в остальных словах ударение такое: звонИт, тОрты, щавЕль.",
+        "en": "The correct one is красИвее; the others are stressed звонИт, тОрты, щавЕль."
+      }
+    },
+    {
+      "id": "russian-12",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Imlo",
+        "ru": "Орфография",
+        "en": "Spelling"
+      },
+      "question": {
+        "uz": "Qaysi ruscha so‘z to‘g‘ri yozilgan?",
+        "ru": "Какое слово написано правильно?",
+        "en": "Which Russian word is spelled correctly?"
+      },
+      "options": [
+        {
+          "uz": "мячь",
+          "ru": "мячь",
+          "en": "мячь"
+        },
+        {
+          "uz": "дочь",
+          "ru": "дочь",
+          "en": "дочь"
+        },
+        {
+          "uz": "врачь",
+          "ru": "врачь",
+          "en": "врачь"
+        },
+        {
+          "uz": "ключь",
+          "ru": "ключь",
+          "en": "ключь"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Shipilovchi undoshlardan keyin ь faqat ayol jinsidagi otlarda yoziladi: дочь; мяч, врач, ключ — erkak jinsida.",
+        "ru": "После шипящих ь пишется только у существительных женского рода: дочь; мяч, врач, ключ — мужского рода.",
+        "en": "After ж, ш, ч, щ the letter ь is written only in feminine nouns: дочь; мяч, врач and ключ are masculine."
+      }
+    },
+    {
+      "id": "russian-13",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Kelishiklar",
+        "ru": "Падежи",
+        "en": "Cases"
+      },
+      "question": {
+        "uz": "«Я написал письмо другу» gapida “другу” so‘zi qaysi kelishikda turibdi?",
+        "ru": "В каком падеже стоит слово «другу» в предложении «Я написал письмо другу»?",
+        "en": "Which case is “другу” in the Russian sentence «Я написал письмо другу»?"
+      },
+      "options": [
+        {
+          "uz": "родительный",
+          "ru": "родительный",
+          "en": "родительный"
+        },
+        {
+          "uz": "винительный",
+          "ru": "винительный",
+          "en": "винительный"
+        },
+        {
+          "uz": "дательный",
+          "ru": "дательный",
+          "en": "дательный"
+        },
+        {
+          "uz": "творительный",
+          "ru": "творительный",
+          "en": "творительный"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "“Другу” so‘zi “кому?” so‘rog‘iga javob beradi, bu дательный падеж.",
+        "ru": "Слово «другу» отвечает на вопрос «кому?» — это дательный падеж.",
+        "en": "Другу answers “кому?” (to whom?), which is the dative case (дательный)."
+      }
+    },
+    {
+      "id": "russian-14",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "So‘z turkumlari",
+        "ru": "Части речи",
+        "en": "Parts of speech"
+      },
+      "question": {
+        "uz": "Qaysi ruscha so‘z ravish (наречие)?",
+        "ru": "Какое слово является наречием?",
+        "en": "Which Russian word is an adverb (наречие)?"
+      },
+      "options": [
+        {
+          "uz": "вчера",
+          "ru": "вчера",
+          "en": "вчера"
+        },
+        {
+          "uz": "вчерашний",
+          "ru": "вчерашний",
+          "en": "вчерашний"
+        },
+        {
+          "uz": "вечер",
+          "ru": "вечер",
+          "en": "вечер"
+        },
+        {
+          "uz": "вечерний",
+          "ru": "вечерний",
+          "en": "вечерний"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Ravish harakat belgisini bildiradi va o‘zgarmaydi: вчера (когда?) — kecha.",
+        "ru": "Наречие обозначает признак действия, не изменяется и отвечает здесь на вопрос «когда?»: вчера.",
+        "en": "An adverb describes an action, never changes its form and here answers “когда?” (when?): вчера means yesterday."
+      }
+    },
+    {
+      "id": "russian-15",
+      "difficulty": 3,
+      "grades": [5, 9],
+      "topic": {
+        "uz": "Iboralar",
+        "ru": "Фразеологизмы",
+        "en": "Idioms"
+      },
+      "question": {
+        "uz": "“Бить баклуши” iborasi nimani anglatadi?",
+        "ru": "Что означает фразеологизм «бить баклуши»?",
+        "en": "What does the Russian idiom “бить баклуши” mean?"
+      },
+      "options": [
+        {
+          "uz": "много работать",
+          "ru": "много работать",
+          "en": "много работать"
+        },
+        {
+          "uz": "громко спорить",
+          "ru": "громко спорить",
+          "en": "громко спорить"
+        },
+        {
+          "uz": "быстро бегать",
+          "ru": "быстро бегать",
+          "en": "быстро бегать"
+        },
+        {
+          "uz": "бездельничать",
+          "ru": "бездельничать",
+          "en": "бездельничать"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "“Бить баклуши” — bekorchilik qilmoq, ya’ni hech ish qilmay vaqt o‘tkazish degani.",
+        "ru": "«Бить баклуши» значит бездельничать, проводить время без пользы.",
+        "en": "“Бить баклуши” means to idle about and do nothing useful."
+      }
+    },
+    {
+      "id": "russian-16",
+      "difficulty": 1,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Alifbo",
+        "ru": "Алфавит",
+        "en": "Alphabet"
+      },
+      "question": {
+        "uz": "Rus alifbosida “Б” harfidan keyin qaysi harf keladi?",
+        "ru": "Какая буква идёт после «Б» в алфавите?",
+        "en": "Which letter comes after “Б” in the Russian alphabet?"
+      },
+      "options": [
+        {
+          "uz": "А",
+          "ru": "А",
+          "en": "А"
+        },
+        {
+          "uz": "Г",
+          "ru": "Г",
+          "en": "Г"
+        },
+        {
+          "uz": "В",
+          "ru": "В",
+          "en": "В"
+        },
+        {
+          "uz": "Д",
+          "ru": "Д",
+          "en": "Д"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Rus alifbosi shunday boshlanadi: А, Б, В, Г, Д…",
+        "ru": "Алфавит начинается так: А, Б, В, Г, Д…",
+        "en": "The Russian alphabet starts like this: А, Б, В, Г, Д…"
+      }
+    },
+    {
+      "id": "russian-17",
+      "difficulty": 1,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Unli harflar",
+        "ru": "Гласные буквы",
+        "en": "Vowels"
+      },
+      "question": {
+        "uz": "Qaysi ruscha harf unli tovushni bildiradi?",
+        "ru": "Какая буква обозначает гласный звук?",
+        "en": "Which Russian letter is a vowel?"
+      },
+      "options": [
+        {
+          "uz": "м",
+          "ru": "м",
+          "en": "м"
+        },
+        {
+          "uz": "т",
+          "ru": "т",
+          "en": "т"
+        },
+        {
+          "uz": "р",
+          "ru": "р",
+          "en": "р"
+        },
+        {
+          "uz": "о",
+          "ru": "о",
+          "en": "о"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "“О” — unli harf, “м”, “т”, “р” esa undosh harflar.",
+        "ru": "О — гласная буква, а м, т, р — согласные.",
+        "en": "О is a vowel; м, т and р are consonants."
+      }
+    },
+    {
+      "id": "russian-18",
+      "difficulty": 1,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Hayvonlar",
+        "ru": "Животные",
+        "en": "Animals"
+      },
+      "question": {
+        "uz": "Mushukning bolasi rus tilida qanday ataladi?",
+        "ru": "Как называется детёныш кошки?",
+        "en": "What is a baby cat called in Russian?"
+      },
+      "options": [
+        {
+          "uz": "щенок",
+          "ru": "щенок",
+          "en": "щенок"
+        },
+        {
+          "uz": "котёнок",
+          "ru": "котёнок",
+          "en": "котёнок"
+        },
+        {
+          "uz": "телёнок",
+          "ru": "телёнок",
+          "en": "телёнок"
+        },
+        {
+          "uz": "цыплёнок",
+          "ru": "цыплёнок",
+          "en": "цыплёнок"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Mushuk bolasi — котёнок; щенок — kuchukcha, телёнок — buzoq, цыплёнок — jo‘ja.",
+        "ru": "Детёныш кошки — котёнок; щенок — у собаки, телёнок — у коровы, цыплёнок — у курицы.",
+        "en": "A baby cat is котёнок; щенок is a puppy, телёнок is a calf and цыплёнок is a chick."
+      }
+    },
+    {
+      "id": "russian-19",
+      "difficulty": 1,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Ranglar",
+        "ru": "Цвета",
+        "en": "Colours"
+      },
+      "question": {
+        "uz": "Pishgan limon qanday rangda? Ruscha so‘zni tanlang.",
+        "ru": "Какого цвета спелый лимон?",
+        "en": "What colour is a ripe lemon? Choose the Russian word."
+      },
+      "options": [
+        {
+          "uz": "жёлтый",
+          "ru": "жёлтый",
+          "en": "жёлтый"
+        },
+        {
+          "uz": "синий",
+          "ru": "синий",
+          "en": "синий"
+        },
+        {
+          "uz": "чёрный",
+          "ru": "чёрный",
+          "en": "чёрный"
+        },
+        {
+          "uz": "фиолетовый",
+          "ru": "фиолетовый",
+          "en": "фиолетовый"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Pishgan limon sariq bo‘ladi, rus tilida sariq — “жёлтый”.",
+        "ru": "Спелый лимон жёлтого цвета.",
+        "en": "A ripe lemon is yellow, and yellow in Russian is жёлтый."
+      }
+    },
+    {
+      "id": "russian-20",
+      "difficulty": 1,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Antonimlar",
+        "ru": "Антонимы",
+        "en": "Antonyms"
+      },
+      "question": {
+        "uz": "“День” so‘zining teskarisini toping.",
+        "ru": "Подберите слово, противоположное по значению слову «день».",
+        "en": "Find the opposite of the Russian word “день” (day)."
+      },
+      "options": [
+        {
+          "uz": "ночь",
+          "ru": "ночь",
+          "en": "ночь"
+        },
+        {
+          "uz": "утро",
+          "ru": "утро",
+          "en": "утро"
+        },
+        {
+          "uz": "вечер",
+          "ru": "вечер",
+          "en": "вечер"
+        },
+        {
+          "uz": "солнце",
+          "ru": "солнце",
+          "en": "солнце"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“День” — kun, “ночь” — tun; ular qarama-qarshi ma’noli so‘zlar.",
+        "ru": "День и ночь — слова с противоположным значением.",
+        "en": "День (day) and ночь (night) are opposites."
+      }
+    },
+    {
+      "id": "russian-21",
+      "difficulty": 2,
+      "grades": [1, 4],
+      "topic": {
+        "uz": "Ko‘plik shakli",
+        "ru": "Множественное число",
+        "en": "Plural nouns"
+      },
+      "question": {
+        "uz": "“Кот” so‘zining ko‘plik shaklini toping.",
+        "ru": "Выберите форму множественного числа слова «кот».",
+        "en": "Choose the plural form of the Russian word “кот”."
+      },
+      "options": [
+        {
+          "uz": "кота",
+          "ru": "кота",
+          "en": "кота"
+        },
+        {
+          "uz": "коты",
+          "ru": "коты",
+          "en": "коты"
+        },
+        {
+          "uz": "коту",
+          "ru": "коту",
+          "en": "коту"
+        },
+        {
+          "uz": "котом",
+          "ru": "котом",
+          "en": "котом"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Ko‘plikda “кот” so‘ziga -ы qo‘shimchasi qo‘shiladi: кот — коты.",
+        "ru": "Во множественном числе слово «кот» получает окончание -ы: коты.",
+        "en": "In the plural, кот takes the ending -ы: коты."
+      }
+    }
+  ]
+}

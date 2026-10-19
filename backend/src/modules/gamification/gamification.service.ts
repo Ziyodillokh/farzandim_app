@@ -4,7 +4,12 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { ChildProfile, Prisma, XpEvent } from '@prisma/client';
+import {
+  ChildProfile,
+  Prisma,
+  XpEvent,
+  XpEventType as LedgerType,
+} from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
@@ -129,7 +134,7 @@ export class GamificationService {
     tx: Prisma.TransactionClient,
     childId: string,
     opts: {
-      type: XpEventType;
+      type: LedgerType;
       xpDelta: number;
       donDelta: number;
       relatedId: string;
@@ -390,7 +395,7 @@ export class GamificationService {
 
 interface AwardInput {
   /** `null` — ledger yozuvisiz (faqat streak yangilanishi). */
-  type: XpEventType | null;
+  type: LedgerType | XpEventType | null;
   xpDelta: number;
   donDelta: number;
   relatedId?: string;

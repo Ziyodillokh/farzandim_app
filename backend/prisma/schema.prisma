@@ -197,6 +197,9 @@ model Child {
   categoryBlocks         CategoryBlock[]
   notificationPreference NotificationPreference?
   aiMessages             AiMessage[]
+  learningProfile        LearningProfile?
+  learningAttempts       LearningAttempt[]
+  learningReports        LearningReportDispatch[]
 
   // Sprint 5.4 — admin Olympiad attempts
   olympiadAttempts OlympiadAttempt[]
@@ -491,6 +494,8 @@ enum NotificationType {
   STUDY_NUDGE
   HEALTH_NUDGE
   CONTENT_REMINDER
+  // Growth: ota-onaga haftalik o'qish hisoboti (faqat ota-ona ko'radi).
+  LEARNING_REPORT
 }
 
 // ============================================
@@ -682,6 +687,8 @@ enum XpEventType {
   STREAK_WEEKLY
   CONTENT_POST
   OTHER
+  // Growth: kunlik test (fan bo'yicha kunlik birinchi urinish).
+  DAILY_LEARNING
 }
 
 // --- Photo requests ---
@@ -1534,4 +1541,129 @@ model StoreVersion {
 
   @@unique([app, platform])
   @@map("store_versions")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Growth — Daily Learning (kunlik fan testlari)
+// ─────────────────────────────────────────────────────────────────────
+
+enum LearningSubject {
+  MATH
+  ENGLISH
+  NATIVE
+  HISTORY
+  BIOLOGY
+  GEOGRAPHY
+  PHYSICS
+  CHEMISTRY
+  INFORMATICS
+  RUSSIAN
+}
+
+enum LearningQuestionStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum LearningAttemptStatus {
+  IN_PROGRESS
+  COMPLETED
+  // Boshqa kunda yakunlanmay qolgan urinish (yangi kun boshlanganda).
+  ABANDONED
+}
+
+/// Bolaning o'quv profili — sinf va kunlik testlar uchun fanlar.
+model LearningProfile {
+  childId   String            @id @map("child_id")
+  grade     Int
+  subjects  LearningSubject[]
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @updatedAt @map("updated_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("learning_profiles")
+}
+
+/// Savollar banki. Matnlar `{uz, ru, en}` JSON; `externalId` — import
+/// (masalan "math-01") uchun barqaror kalit.
+model LearningQuestion {
+  id          String                 @id @default(uuid())
+  externalId  String?                @unique @map("external_id")
+  subject     LearningSubject
+  difficulty  Int
+  minGrade    Int                    @map("min_grade")
+  maxGrade    Int                    @map("max_grade")
+  topic       Json
+  prompt      Json
+  options     Json
+  answerIndex Int                    @map("answer_index")
+  explanation Json
+  status      LearningQuestionStatus @default(ACTIVE)
+  createdBy   String?                @map("created_by")
+  createdAt   DateTime               @default(now()) @map("created_at")
+  updatedAt   DateTime               @updatedAt @map("updated_at")
+
+  answers LearningAnswer[]
+
+  @@index([subject, status])
+  @@map("learning_questions")
+}
+
+/// Bitta test urinishi (fan bo'yicha). `day` — Toshkent kuni (YYYY-MM-DD);
+/// `isDaily` — fan bo'yicha kunning birinchi urinishi (DON shunga beriladi).
+model LearningAttempt {
+  id          String                @id @default(uuid())
+  childId     String                @map("child_id")
+  subject     LearningSubject
+  day         String
+  isDaily     Boolean               @map("is_daily")
+  status      LearningAttemptStatus @default(IN_PROGRESS)
+  questionIds String[]              @map("question_ids")
+  topic       Json?
+  correct     Int                   @default(0)
+  total       Int
+  xpEarned    Int                   @default(0) @map("xp_earned")
+  donEarned   Int                   @default(0) @map("don_earned")
+  startedAt   DateTime              @default(now()) @map("started_at")
+  completedAt DateTime?             @map("completed_at")
+
+  child   Child            @relation(fields: [childId], references: [id], onDelete: Cascade)
+  answers LearningAnswer[]
+
+  @@index([childId, day])
+  @@index([childId, status, completedAt(sort: Desc)])
+  @@map("learning_attempts")
+}
+
+/// Savolga javob — bitta savolga bir marta (o'zgartirib bo'lmaydi).
+model LearningAnswer {
+  id            String   @id @default(uuid())
+  attemptId     String   @map("attempt_id")
+  questionId    String   @map("question_id")
+  position      Int
+  selectedIndex Int      @map("selected_index")
+  isCorrect     Boolean  @map("is_correct")
+  answeredAt    DateTime @default(now()) @map("answered_at")
+
+  attempt  LearningAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question LearningQuestion @relation(fields: [questionId], references: [id], onDelete: Restrict)
+
+  @@unique([attemptId, questionId])
+  @@index([questionId])
+  @@map("learning_answers")
+}
+
+/// Haftalik hisobot yuborilganligi (bola + hafta) — takror yuborilmaydi.
+model LearningReportDispatch {
+  id        String   @id @default(uuid())
+  childId   String   @map("child_id")
+  weekStart String   @map("week_start")
+  sentAt    DateTime @default(now()) @map("sent_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, weekStart])
+  @@map("learning_report_dispatches")
 }

@@ -68,3 +68,30 @@ export async function createChild(
     token: consumerToken(user.id, 'CHILD'),
   };
 }
+
+export interface TestModerator {
+  id: string;
+  token: string;
+}
+
+/** Admin panel moderatori va uning access tokeni. */
+export async function createModerator(
+  prisma: PrismaClient,
+  permissions: string[],
+  role = 'custom',
+): Promise<TestModerator> {
+  const moderator = await prisma.moderator.create({
+    data: {
+      name: 'Moderator',
+      email: `mod-${randomUUID()}@e2e.test`,
+      passwordHash: 'x',
+      moderatorRoleKey: role,
+      permissions,
+    },
+  });
+  const token = new JwtService({
+    secret: process.env.ADMIN_JWT_ACCESS_SECRET,
+    signOptions: { audience: 'admin-panel', issuer: 'farzandim-backend', expiresIn: '1h' },
+  }).sign({ sub: moderator.id, email: moderator.email, role, tokenVersion: 0 });
+  return { id: moderator.id, token };
+}
