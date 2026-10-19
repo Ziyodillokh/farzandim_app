@@ -188,7 +188,6 @@ flutter:
     - assets/illustrations/ # Growth sahifalari illyustratsiyalari (maketdan)
     - assets/default_avatars/ # jins+yoshga mos default avatar (rasm yo'q bo'lsa)
     - assets/translations/  # uz.json, ru.json, en.json — easy_localization
-    - assets/learning/questions/  # Daily Learning savollar banki (fan bo'yicha JSON)
     - assets/videos/        # sample.mp4 — mock video placeholder (offline)
     # Shriftlar BUNDLE (2026-08-12). google_fonts paketi shu papkadagi
     # `<Oila>-<Variant>.ttf` fayllarni asset manifest orqali topadi va

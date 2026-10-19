@@ -3,8 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────
 //
 // Har savol: savol matni, variantlar (to'g'ri — yashil, bolaning xato
-// javobi — qizil) va izoh. Savollar bankdan id bo'yicha olinadi; bank
-// yangilanib savol topilmasa — qisqa izoh.
+// javobi — qizil) va izoh — serverdan (`attemptReviewProvider`).
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/design_scale.dart';
@@ -26,7 +25,7 @@ class QuizReviewScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bank = ref.watch(questionBankProvider(result.subject));
+    final review = ref.watch(attemptReviewProvider(result.id));
     final lang = context.locale.languageCode;
 
     return Scaffold(
@@ -35,7 +34,7 @@ class QuizReviewScreen extends ConsumerWidget {
         child: Builder(
           builder: (context) {
             final insets = MediaQuery.paddingOf(context);
-            final questions = bank.valueOrNull;
+            final items = review.valueOrNull?.items;
             return ListView(
               padding: EdgeInsets.fromLTRB(
                 16,
@@ -52,9 +51,13 @@ class QuizReviewScreen extends ConsumerWidget {
                   fallbackRoute: '/progress',
                 ),
                 const SizedBox(height: 18),
-                if (!result.canReview)
-                  _Note(text: 'learn.reviewUnavailable'.tr())
-                else if (questions == null)
+                if (review.hasError)
+                  _Note(
+                    text: 'learn.loadError'.tr(),
+                    onRetry: () =>
+                        ref.invalidate(attemptReviewProvider(result.id)),
+                  )
+                else if (items == null)
                   const Padding(
                     padding: EdgeInsets.only(top: 80),
                     child: Center(
@@ -64,14 +67,9 @@ class QuizReviewScreen extends ConsumerWidget {
                     ),
                   )
                 else
-                  for (var i = 0; i < result.answers.length; i++) ...[
+                  for (var i = 0; i < items.length; i++) ...[
                     if (i > 0) const SizedBox(height: 14),
-                    _ReviewItem(
-                      number: i + 1,
-                      answer: result.answers[i],
-                      question: questions[result.answers[i].questionId],
-                      lang: lang,
-                    ),
+                    _ReviewItemCard(number: i + 1, item: items[i], lang: lang),
                   ],
               ],
             );
@@ -82,22 +80,20 @@ class QuizReviewScreen extends ConsumerWidget {
   }
 }
 
-class _ReviewItem extends StatelessWidget {
-  const _ReviewItem({
+class _ReviewItemCard extends StatelessWidget {
+  const _ReviewItemCard({
     required this.number,
-    required this.answer,
-    required this.question,
+    required this.item,
     required this.lang,
   });
 
   final int number;
-  final QuizAnswer answer;
-  final QuizQuestion? question;
+  final ReviewItem item;
   final String lang;
 
   @override
   Widget build(BuildContext context) {
-    final q = question;
+    final q = item.question;
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: homeCardDecoration(),
@@ -113,35 +109,28 @@ class _ReviewItem extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          if (q == null)
-            Text(
-              'learn.reviewMissing'.tr(),
-              style: homeText(14, color: HomeColors.textDim),
-            )
-          else ...[
-            Text(
-              q.prompt.of(lang),
-              style: homeText(16, weight: FontWeight.w700, height: 1.4),
-            ),
-            const SizedBox(height: 12),
-            for (var i = 0; i < q.options.length; i++) ...[
-              if (i > 0) const SizedBox(height: 8),
-              QuizOptionTile(
-                index: i,
-                text: q.options[i].of(lang),
-                state: i == q.answerIndex
-                    ? OptionState.correct
-                    : i == answer.selectedIndex
-                    ? OptionState.wrong
-                    : OptionState.dimmed,
-              ),
-            ],
-            const SizedBox(height: 12),
-            QuizFeedbackCard(
-              isCorrect: answer.isCorrect,
-              explanation: q.explanation.of(lang),
+          Text(
+            q.prompt.of(lang),
+            style: homeText(16, weight: FontWeight.w700, height: 1.4),
+          ),
+          const SizedBox(height: 12),
+          for (var i = 0; i < q.options.length; i++) ...[
+            if (i > 0) const SizedBox(height: 8),
+            QuizOptionTile(
+              index: i,
+              text: q.options[i].of(lang),
+              state: i == item.correctIndex
+                  ? OptionState.correct
+                  : i == item.selectedIndex
+                  ? OptionState.wrong
+                  : OptionState.dimmed,
             ),
           ],
+          const SizedBox(height: 12),
+          QuizFeedbackCard(
+            isCorrect: item.isCorrect,
+            explanation: item.explanation.of(lang),
+          ),
         ],
       ),
     );
@@ -149,18 +138,35 @@ class _ReviewItem extends StatelessWidget {
 }
 
 class _Note extends StatelessWidget {
-  const _Note({required this.text});
+  const _Note({required this.text, this.onRetry});
 
   final String text;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 60),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: homeText(14.5, color: HomeColors.textDim, height: 1.4),
+      child: Column(
+        children: [
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: homeText(14.5, color: HomeColors.textDim, height: 1.4),
+          ),
+          if (onRetry != null)
+            TextButton(
+              onPressed: onRetry,
+              child: Text(
+                'common.retry'.tr(),
+                style: homeText(
+                  14,
+                  weight: FontWeight.w700,
+                  color: HomeColors.primary,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

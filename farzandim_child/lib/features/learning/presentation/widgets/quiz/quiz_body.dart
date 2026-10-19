@@ -60,11 +60,12 @@ class _QuizBodyState extends State<QuizBody> {
 
   OptionState _stateOf(int i) {
     final s = widget.session;
-    if (s.phase == QuizPhase.answering) {
+    final feedback = s.currentFeedback;
+    if (feedback == null) {
       return s.selectedIndex == i ? OptionState.selected : OptionState.idle;
     }
-    if (i == s.current.answerIndex) return OptionState.correct;
-    if (i == s.answers.last.selectedIndex) return OptionState.wrong;
+    if (i == feedback.correctIndex) return OptionState.correct;
+    if (i == feedback.selectedIndex) return OptionState.wrong;
     return OptionState.dimmed;
   }
 
@@ -73,7 +74,7 @@ class _QuizBodyState extends State<QuizBody> {
     final s = widget.session;
     final lang = context.locale.languageCode;
     final q = s.current;
-    final answer = s.currentAnswer;
+    final feedback = s.currentFeedback;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Column(
@@ -103,16 +104,16 @@ class _QuizBodyState extends State<QuizBody> {
                 duration: const Duration(milliseconds: 260),
                 curve: Curves.easeOutCubic,
                 alignment: Alignment.topCenter,
-                child: answer == null
+                child: feedback == null
                     ? const SizedBox(width: double.infinity)
                     : Padding(
                         padding: const EdgeInsets.only(top: 14),
                         child: QuizFeedbackCard(
-                          isCorrect: answer.isCorrect,
-                          explanation: q.explanation.of(lang),
-                          correctAnswer: answer.isCorrect
+                          isCorrect: feedback.isCorrect,
+                          explanation: feedback.explanation.of(lang),
+                          correctAnswer: feedback.isCorrect
                               ? null
-                              : q.options[q.answerIndex].of(lang),
+                              : q.options[feedback.correctIndex].of(lang),
                         ),
                       ),
               ),
@@ -127,11 +128,12 @@ class _QuizBodyState extends State<QuizBody> {
           ),
           child: _MainButton(
             label: switch (s.phase) {
-              QuizPhase.answering => 'learn.check'.tr(),
+              QuizPhase.answering || QuizPhase.checking => 'learn.check'.tr(),
               _ when s.isLast => 'learn.seeResult'.tr(),
               _ => 'learn.nextQuestion'.tr(),
             },
-            enabled: s.phase != QuizPhase.answering || s.selectedIndex != null,
+            busy: s.phase == QuizPhase.checking,
+            enabled: s.phase == QuizPhase.checked || s.selectedIndex != null,
             onTap: s.phase == QuizPhase.answering
                 ? widget.onCheck
                 : widget.onNext,
@@ -147,42 +149,57 @@ class _MainButton extends StatelessWidget {
     required this.label,
     required this.enabled,
     required this.onTap,
+    this.busy = false,
   });
 
   final String label;
   final bool enabled;
   final VoidCallback onTap;
 
+  /// Server javobi kutilmoqda — spinner, bosilmaydi.
+  final bool busy;
+
   @override
   Widget build(BuildContext context) {
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 160),
-      opacity: enabled ? 1 : 0.45,
+      opacity: enabled || busy ? 1 : 0.45,
       child: Material(
         color: HomeColors.primary,
         shape: const StadiumBorder(),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: enabled ? onTap : null,
+          onTap: enabled && !busy ? onTap : null,
           child: SizedBox(
             height: 52,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Flexible(
-                  child: FitText(
-                    label,
-                    style: homeText(15.5, weight: FontWeight.w700),
+            child: busy
+                ? const Center(
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.4,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: FitText(
+                          label,
+                          style: homeText(15.5, weight: FontWeight.w700),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Icon(
+                        SolarIconsOutline.arrowRight,
+                        size: 19,
+                        color: Colors.white,
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 10),
-                const Icon(
-                  SolarIconsOutline.arrowRight,
-                  size: 19,
-                  color: Colors.white,
-                ),
-              ],
-            ),
           ),
         ),
       ),
@@ -190,55 +207,56 @@ class _MainButton extends StatelessWidget {
   }
 }
 
-/// Savollar yuklanmoqda / yo'q / xato.
+/// Savollar yuklanmoqda / natija hisoblanmoqda / xabar (+ tugma).
 class QuizStatus extends StatelessWidget {
   const QuizStatus({
     super.key,
-    required this.loading,
-    required this.failed,
-    required this.onRetry,
+    this.loading = false,
+    this.message,
+    this.icon = SolarIconsOutline.dangerCircle,
+    this.actionLabel,
+    this.onAction,
   });
 
   final bool loading;
-  final bool failed;
-  final VoidCallback onRetry;
+
+  /// Yuklanayotganda — izoh (masalan "Natija hisoblanmoqda…").
+  final String? message;
+  final IconData icon;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
-    if (loading) {
-      return const Center(
-        child: CircularProgressIndicator(color: HomeColors.primary),
-      );
-    }
+    final message = this.message;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              failed
-                  ? SolarIconsOutline.dangerCircle
-                  : SolarIconsOutline.hourglass,
-              size: 44,
-              color: HomeColors.textDim,
-            ),
-            const SizedBox(height: 14),
-            Text(
-              (failed ? 'learn.loadError' : 'learn.noQuestions').tr(),
-              textAlign: TextAlign.center,
-              style: homeText(15, color: HomeColors.textDim, height: 1.4),
-            ),
-            if (failed) ...[
+            if (loading)
+              const CircularProgressIndicator(color: HomeColors.primary)
+            else
+              Icon(icon, size: 44, color: HomeColors.textDim),
+            if (message != null) ...[
+              const SizedBox(height: 14),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: homeText(15, color: HomeColors.textDim, height: 1.4),
+              ),
+            ],
+            if (!loading && actionLabel != null && onAction != null) ...[
               const SizedBox(height: 16),
               FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: HomeColors.primary,
                   shape: const StadiumBorder(),
                 ),
-                onPressed: onRetry,
+                onPressed: onAction,
                 child: Text(
-                  'common.retry'.tr(),
+                  actionLabel!,
                   style: homeText(14.5, weight: FontWeight.w600),
                 ),
               ),

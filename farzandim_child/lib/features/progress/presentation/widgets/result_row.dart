@@ -1,21 +1,17 @@
 // So'nggi natija qatori — fan ikoni, mavzu, ball "pill"i, sana, chevron.
-// Bosilsa natija oynasi (ball, foiz, sana, "Yana ishlash").
+// Bosilsa javoblar tahlili.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/utils/localized_date.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
 import 'package:farzandim_child/features/learning/domain/progress_models.dart';
 import 'package:farzandim_child/features/learning/presentation/widgets/subject_icon.dart';
-import 'package:farzandim_child/features/progress/presentation/widgets/subject_score_tile.dart';
 import 'package:farzandim_child/features/learning/presentation/learning_navigation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:solar_icons/solar_icons.dart';
 
 const _rowBg = Color(0xFF0D1A27);
 const _rowBorder = Color(0x0FFFFFFF);
 const _square = Color(0xFF1559C9);
-const _sheetBg = Color(0xFF0C1622);
 
 /// Ball darajasi ranglari: (matn, chegara, fon).
 (Color, Color, Color) scoreColors(ScoreLevel level) => switch (level) {
@@ -50,19 +46,17 @@ String resultTitle(BuildContext context, TestResult r) {
   return topic.isEmpty ? subject : '$subject. $topic';
 }
 
-class ResultRow extends ConsumerWidget {
+class ResultRow extends StatelessWidget {
   const ResultRow({super.key, required this.result});
 
   final TestResult result;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Semantics(
       button: true,
       child: GestureDetector(
-        onTap: () => result.canReview
-            ? openResultReview(context, result)
-            : showResultSheet(context, ref, result),
+        onTap: () => openResultReview(context, result),
         behavior: HitTestBehavior.opaque,
         child: Container(
           constraints: const BoxConstraints(minHeight: 58),
@@ -167,101 +161,4 @@ class ScorePill extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Natija oynasi — ball, foiz, sana va "Yana ishlash".
-Future<void> showResultSheet(
-  BuildContext context,
-  WidgetRef ref,
-  TestResult result,
-) {
-  return showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: Colors.transparent,
-    builder: (sheetContext) => Container(
-      margin: const EdgeInsets.all(12),
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-      decoration: BoxDecoration(
-        color: _sheetBg,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: HomeColors.cardBorder),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'progress.resultTitle'.tr(),
-              style: homeText(13, color: HomeColors.textDim),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                SubjectIcon(
-                  subject: result.subject,
-                  size: 42,
-                  background: _square,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        resultTitle(context, result),
-                        style: homeText(14.5, weight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        formatResultDate(result.date),
-                        style: homeText(13, color: HomeColors.textDim),
-                      ),
-                    ],
-                  ),
-                ),
-                ScorePill(result: result, fontSize: 14),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Text(
-                  'progress.correctOf'.tr(
-                    namedArgs: {
-                      'correct': '${result.correct}',
-                      'total': '${result.total}',
-                    },
-                  ),
-                  style: homeText(12.5, weight: FontWeight.w500),
-                ),
-                const Spacer(),
-                Text('${result.percent}%', style: homeDisplay(16)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ProgressLine(value: result.percent / 100, height: 7),
-            const SizedBox(height: 18),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: HomeColors.primary,
-                minimumSize: const Size.fromHeight(46),
-                shape: const StadiumBorder(),
-              ),
-              onPressed: () {
-                Navigator.of(sheetContext).pop();
-                openSubjectQuiz(context, result.subject);
-              },
-              icon: const Icon(SolarIconsOutline.restart, size: 18),
-              label: Text(
-                'progress.retry'.tr(),
-                style: homeText(14.5, weight: FontWeight.w600),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
 }

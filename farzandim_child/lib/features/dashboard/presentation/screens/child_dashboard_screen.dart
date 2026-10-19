@@ -32,6 +32,7 @@ import 'package:farzandim_child/features/screen_time/data/screen_time_channel.da
 import 'package:farzandim_child/features/screen_time/presentation/providers/screen_time_providers.dart';
 import 'package:farzandim_child/features/screen_time/presentation/widgets/ios_setup_banner.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:farzandim_child/features/learning/presentation/providers/learning_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -133,6 +134,7 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     ref
       ..invalidate(todayStepsProvider)
       ..invalidate(backendContestsProvider);
+    unawaited(refreshLearning(ref));
     // Deaktivatsiya (ota-ona o'chirsa) darhol; faollashtirish dialogi YO'Q
     // (loop bo'lmasin — dialog faqat app ochilganda, initState'da).
     unawaited(_syncUninstallProtection(allowPrompt: false));

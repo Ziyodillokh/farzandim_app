@@ -9,8 +9,8 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/home/des
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
 import 'package:farzandim_child/features/learning/domain/localized_text.dart';
 import 'package:farzandim_child/features/learning/domain/progress_models.dart';
-import 'package:farzandim_child/features/learning/domain/quiz_session.dart';
-import 'package:farzandim_child/features/learning/domain/subject.dart';
+import 'package:farzandim_child/features/learning/domain/learning_models.dart';
+import 'package:farzandim_child/features/learning/domain/quiz_models.dart';
 import 'package:farzandim_child/features/learning/presentation/providers/learning_providers.dart';
 import 'package:farzandim_child/features/learning/presentation/screens/daily_quiz_screen.dart';
 import 'package:farzandim_child/features/learning/presentation/screens/learning_calendar_screen.dart';
@@ -26,6 +26,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../test/features/learning/fake_learning_repository.dart';
 
 const shotState = String.fromEnvironment('SHOT_STATE', defaultValue: 'fresh');
 
@@ -53,69 +55,83 @@ String? learningLocation(String page) => switch (page) {
 
 DateTime get _today => DateTime.now();
 
-TestResult _result(
-  Subject s,
-  int correct, {
-  int hoursAgo = 1,
-  List<QuizAnswer> answers = const [],
-}) {
+const _topic = LocalizedText({
+  'uz': 'Kasrlar',
+  'ru': 'Дроби',
+  'en': 'Fractions',
+});
+
+TestResult _result(Subject s, int correct, {int daysAgo = 0, int hour = 10}) {
   final now = _today;
   return TestResult(
-    id: 'shot-${s.name}',
+    id: 'shot-${s.name}-$daysAgo',
     subject: s,
-    topic: const LocalizedText({
-      'uz': 'Kasrlar',
-      'ru': 'Дроби',
-      'en': 'Fractions',
-    }),
+    topic: _topic,
     correct: correct,
     total: 10,
-    date: DateTime(now.year, now.month, now.day, 9 + hoursAgo),
-    answers: answers,
-    donEarned: donFor(correct, 10),
+    date: DateTime(now.year, now.month, now.day - daysAgo, hour),
+    donEarned: correct * 2,
     durationSeconds: 155,
   );
 }
 
-final _mathAnswers = [
-  for (var i = 1; i <= 6; i++)
-    QuizAnswer(
-      questionId: 'math-0$i',
-      selectedIndex: i == 3 ? 3 : -1,
-      isCorrect: i != 3,
-    ),
-];
-
-/// Ko'rib chiqish uchun: javob indekslari bankdagi to'g'ri javobga moslanadi.
-TestResult reviewResult(Map<String, int> correctById) => _result(
-  Subject.math,
-  5,
-  answers: [
-    for (final a in _mathAnswers)
-      QuizAnswer(
-        questionId: a.questionId,
-        selectedIndex: a.isCorrect
-            ? correctById[a.questionId] ?? 0
-            : ((correctById[a.questionId] ?? 0) + 1) % 4,
-        isCorrect: a.isCorrect,
-      ),
-  ],
+const _profile = LearningProfile(
+  grade: 7,
+  subjects: [Subject.math, Subject.english, Subject.native],
 );
 
-List<TestResult> _storedFor(String state) => switch (state) {
-  'partial' => [_result(Subject.math, 9, answers: _mathAnswers)],
+/// Namunaviy tarix (oxirgi 2 hafta, har 7-kunda dam olish).
+List<TestResult> _history() => [
+  for (var d = 1; d <= 14; d++)
+    if (d % 7 != 4)
+      for (final (i, s) in _profile.subjects.indexed)
+        _result(
+          s,
+          [9, 6, 8][i] - (d ~/ 7) + (d * 3 + i) % 3 - 1,
+          daysAgo: d,
+          hour: 17 + i,
+        ),
+];
+
+List<TestResult> _todayFor(String state) => switch (state) {
+  'partial' => [_result(Subject.math, 9)],
   'done' => [
-    _result(Subject.math, 9, answers: _mathAnswers),
-    _result(Subject.english, 7, hoursAgo: 2),
-    _result(Subject.native, 8, hoursAgo: 3),
+    _result(Subject.math, 9),
+    _result(Subject.english, 7, hour: 11),
+    _result(Subject.native, 8, hour: 12),
   ],
   _ => const [],
 };
 
-class _FixedResults extends LearningResultsNotifier {
-  @override
-  Future<List<TestResult>> build() async => _storedFor(shotState);
-}
+FakeLearningRepository _repository() => FakeLearningRepository(
+  profile: shotState == 'nosetup' ? null : _profile,
+  results: [..._todayFor(shotState), ..._history()]
+    ..sort((a, b) => b.date.compareTo(a.date)),
+);
+
+AttemptReview _review() => AttemptReview(
+  result: _result(Subject.math, 5),
+  items: [
+    for (var i = 0; i < 4; i++)
+      ReviewItem(
+        question: QuizQuestion(
+          id: 'q$i',
+          difficulty: 1,
+          topic: _topic,
+          prompt: LocalizedText.same('${i + 1}/4 + 1/8 = ?'),
+          options: [
+            for (final o in ['3/8', '5/8', '7/8', '1']) LocalizedText.same(o),
+          ],
+        ),
+        correctIndex: i % 4,
+        explanation: LocalizedText.same(
+          'Kasrlarni umumiy maxrajga keltiramiz.',
+        ),
+        selectedIndex: i == 2 ? 3 : i % 4,
+        isCorrect: i != 2,
+      ),
+  ],
+);
 
 /// Ulangan bola (Profil uchun).
 class _FakePairing extends StateNotifier<AppPairingState>
@@ -141,11 +157,8 @@ List<Override> learningOverrides() => [
     (ref, key) async => <String, dynamic>{'gender': 'female', 'age': 12},
   ),
   todayStepsProvider.overrideWith((ref) async => 6842),
-  storedResultsProvider.overrideWith(_FixedResults.new),
-  if (shotState == 'nosetup') ...[
-    learningProfileProvider.overrideWithValue(null),
-    needsLearningSetupProvider.overrideWithValue(true),
-  ],
+  learningRepositoryProvider.overrideWithValue(_repository()),
+  attemptReviewProvider.overrideWith((ref, id) async => _review()),
 ];
 
 List<RouteBase> learningShotRoutes() => [
@@ -158,16 +171,14 @@ List<RouteBase> learningShotRoutes() => [
     builder: (_, __) => Scaffold(
       backgroundColor: HomeColors.bg,
       body: DesignScale(
-        child: QuizResultView(
-          result: _result(Subject.math, 8, answers: _mathAnswers),
-          saving: false,
-          saveFailed: false,
-          onRetrySave: () {},
-        ),
+        child: QuizResultView(result: _result(Subject.math, 8)),
       ),
     ),
   ),
-  GoRoute(path: '/review', builder: (_, __) => const _ReviewLoader()),
+  GoRoute(
+    path: '/review',
+    builder: (_, __) => QuizReviewScreen(result: _result(Subject.math, 5)),
+  ),
   GoRoute(
     path: '/setup',
     builder: (_, __) => const LearningSetupScreen(isOnboarding: true),
@@ -184,22 +195,6 @@ List<RouteBase> learningShotRoutes() => [
   ),
 ];
 
-/// Bank yuklangach to'g'ri javob indekslari bilan natija quriladi.
-class _ReviewLoader extends ConsumerWidget {
-  const _ReviewLoader();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final bank = ref.watch(questionBankProvider(Subject.math)).valueOrNull;
-    if (bank == null) return const SizedBox.shrink();
-    return QuizReviewScreen(
-      result: reviewResult({
-        for (final e in bank.entries) e.key: e.value.answerIndex,
-      }),
-    );
-  }
-}
-
 /// Sahifa chizilgandan keyingi harakatlar (variant tanlash va h.k.).
 Future<void> performLearningActions(WidgetTester tester, String page) async {
   Future<void> settle() async {
@@ -214,7 +209,10 @@ Future<void> performLearningActions(WidgetTester tester, String page) async {
       await settle();
     case 'quiz_checked':
       final body = tester.widget<QuizBody>(find.byType(QuizBody));
-      final wrong = (body.session.current.answerIndex + 1) % 4;
+      final correct = FakeLearningRepository.correctIndexOf(
+        body.session.current.id,
+      );
+      final wrong = (correct + 1) % 4;
       await tester.tap(find.byType(QuizOptionTile).at(wrong));
       await settle();
       await tester.tap(find.text('learn.check'.tr()));

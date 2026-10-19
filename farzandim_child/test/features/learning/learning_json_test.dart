@@ -1,7 +1,6 @@
-// Saqlanadigan modellar JSON'i: profil, natija, savollar banki.
+// Model JSON'i: profil, server natijasi, urinish va tahlil.
 
 import 'package:farzandim_child/features/learning/domain/learning_models.dart';
-import 'package:farzandim_child/features/learning/domain/localized_text.dart';
 import 'package:farzandim_child/features/learning/domain/progress_models.dart';
 import 'package:farzandim_child/features/learning/domain/quiz_models.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -65,38 +64,42 @@ void main() {
     });
   });
 
-  group('TestResult JSON', () {
-    test('to\'liq qaytadi', () {
-      final r = TestResult(
-        id: 'r1',
-        subject: Subject.english,
-        topic: const LocalizedText({'uz': 'Lug‘at', 'en': 'Vocabulary'}),
-        correct: 7,
-        total: 10,
-        date: DateTime(2026, 10, 15, 18, 30),
-        answers: const [
-          QuizAnswer(
-            questionId: 'english-01',
-            selectedIndex: 2,
-            isCorrect: true,
-          ),
-        ],
-        donEarned: 14,
-        durationSeconds: 95,
-      );
-      final back = TestResult.tryFromJson(r.toJson())!;
-      expect(back.id, 'r1');
-      expect(back.subject, Subject.english);
-      expect(back.topic, r.topic);
-      expect(back.topic.of('ru'), 'Lug‘at');
-      expect((back.correct, back.total), (7, 10));
-      expect(back.date, r.date);
-      expect(back.answers.single.selectedIndex, 2);
-      expect(back.donEarned, 14);
-      expect(back.durationSeconds, 95);
+  group('TestResult JSON (API)', () {
+    test('server natijasi o\'qiladi', () {
+      final r = TestResult.tryFromJson({
+        'id': 'r1',
+        'subject': 'english',
+        'topic': {'uz': 'Lug‘at', 'ru': 'Лексика', 'en': 'Vocabulary'},
+        'correct': 7,
+        'total': 10,
+        'percent': 70,
+        'isDaily': false,
+        'xpEarned': 0,
+        'donEarned': 0,
+        'date': '2026-10-19T13:30:00.000Z',
+        'durationSeconds': 95,
+      })!;
+      expect(r.subject, Subject.english);
+      expect(r.topic.of('ru'), 'Лексика');
+      expect((r.correct, r.total, r.percent), (7, 10, 70));
+      expect(r.isDaily, isFalse);
+      expect(r.date.isUtc, isFalse);
+      expect(r.date.toUtc(), DateTime.utc(2026, 10, 19, 13, 30));
+      expect(r.durationSeconds, 95);
     });
 
-    test('buzilgan yozuv — null', () {
+    test('mavzusiz natija ham o\'qiladi; buzilgan — null', () {
+      expect(
+        TestResult.tryFromJson({
+          'id': 'x',
+          'subject': 'math',
+          'topic': null,
+          'correct': 1,
+          'total': 2,
+          'date': '2026-10-19T10:00:00Z',
+        })?.topic.of('uz'),
+        '',
+      );
       expect(TestResult.tryFromJson({'id': 'x'}), isNull);
       expect(
         TestResult.tryFromJson({
@@ -111,37 +114,71 @@ void main() {
     });
   });
 
-  group('QuizQuestion', () {
-    Map<String, Object> raw({int answer = 1}) => {
-      'id': 'math-01',
+  group('urinish JSON (API)', () {
+    Map<String, Object> question(String id) => {
+      'id': id,
       'difficulty': 2,
-      'grades': [5, 9],
       'topic': {'uz': 'Kasrlar', 'ru': 'Дроби', 'en': 'Fractions'},
-      'question': {'uz': '1/2 + 1/4 = ?', 'ru': '1/2 + 1/4 = ?', 'en': '?'},
+      'prompt': {'uz': '1/2 + 1/4 = ?', 'ru': '1/2 + 1/4 = ?', 'en': '?'},
       'options': [
         for (final o in ['1/6', '3/4', '2/6', '1']) {'uz': o, 'ru': o, 'en': o},
       ],
-      'answer': answer,
-      'explanation': {'uz': 'a', 'ru': 'b', 'en': 'c'},
     };
 
-    test('bank yozuvi o\'qiladi', () {
-      final q = QuizQuestion.fromJson(Subject.math, raw());
-      expect(q.difficulty, 2);
-      expect(q.fitsGrade(5), isTrue);
-      expect(q.fitsGrade(10), isFalse);
-      expect(q.gradeDistance(11), 2);
-      expect(q.options[q.answerIndex].of('uz'), '3/4');
-      expect(q.topic.of('ru'), 'Дроби');
+    test('urinish: savollar to\'g\'ri javobsiz, oldingi javoblar bilan', () {
+      final attempt = QuizAttempt.fromJson({
+        'id': 'a1',
+        'subject': 'math',
+        'status': 'IN_PROGRESS',
+        'isDaily': true,
+        'questions': [question('q1'), question('q2')],
+        'answers': [
+          {
+            'questionId': 'q1',
+            'selectedIndex': 0,
+            'isCorrect': false,
+            'correctIndex': 1,
+            'explanation': {'uz': 'a', 'ru': 'b', 'en': 'c'},
+          },
+        ],
+      });
+      expect(attempt.questions, hasLength(2));
+      expect(attempt.questions.first.options[1].of('en'), '3/4');
+      expect(attempt.answers.single.correctIndex, 1);
+      expect(attempt.answers.single.explanation.of('ru'), 'b');
     });
 
-    test('javob indeksi variantlardan tashqarida — xato', () {
+    test('tahlil', () {
+      final review = AttemptReview.fromJson({
+        'result': {
+          'id': 'a1',
+          'subject': 'math',
+          'topic': null,
+          'correct': 1,
+          'total': 1,
+          'date': '2026-10-19T10:00:00Z',
+        },
+        'items': [
+          {
+            'question': {
+              ...question('q1'),
+              'correctIndex': 1,
+              'explanation': {'uz': 'a', 'ru': 'b', 'en': 'c'},
+            },
+            'selectedIndex': 1,
+            'isCorrect': true,
+          },
+        ],
+      });
+      expect(review.result.correct, 1);
+      expect(review.items.single.correctIndex, 1);
+      expect(review.items.single.selectedIndex, 1);
+    });
+
+    test('buzilgan savol — FormatException', () {
       expect(
-        () => QuizQuestion.fromJson(Subject.math, raw(answer: 4)),
-        throwsFormatException,
-      );
-      expect(
-        () => parseQuestionBank(Subject.math, {'questions': 'x'}),
+        () =>
+            QuizQuestion.fromJson({'id': 'q', 'difficulty': 1, 'options': []}),
         throwsFormatException,
       );
     });

@@ -22,6 +22,7 @@ import 'package:farzandim_child/features/tests/presentation/widgets/latest_tests
 import 'package:farzandim_child/features/tests/presentation/widgets/results_summary_row.dart';
 import 'package:farzandim_child/features/tests/presentation/widgets/subject_grid.dart';
 import 'package:farzandim_child/features/tests/presentation/widgets/tests_hero_card.dart';
+import 'package:farzandim_child/features/learning/presentation/providers/learning_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -51,7 +52,10 @@ class TestsScreen extends ConsumerWidget {
               edgeOffset: insets.top,
               onRefresh: () async {
                 ref.invalidate(backendContestsProvider);
-                await ref.read(backendContestsProvider.future);
+                await Future.wait([
+                  ref.read(backendContestsProvider.future),
+                  refreshLearning(ref),
+                ]);
               },
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),

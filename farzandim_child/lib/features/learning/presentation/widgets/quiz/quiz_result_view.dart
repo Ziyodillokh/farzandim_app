@@ -19,18 +19,9 @@ import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 class QuizResultView extends ConsumerStatefulWidget {
-  const QuizResultView({
-    super.key,
-    required this.result,
-    required this.saving,
-    required this.saveFailed,
-    required this.onRetrySave,
-  });
+  const QuizResultView({super.key, required this.result});
 
   final TestResult result;
-  final bool saving;
-  final bool saveFailed;
-  final VoidCallback onRetrySave;
 
   @override
   ConsumerState<QuizResultView> createState() => _QuizResultViewState();
@@ -59,8 +50,7 @@ class _QuizResultViewState extends ConsumerState<QuizResultView> {
   Widget build(BuildContext context) {
     final r = widget.result;
     final plan = ref.watch(dailyPlanProvider);
-    // Saqlash tugaguncha reja bu natijani hali ko'rmasligi mumkin — joriy
-    // fan "keyingi" deb taklif qilinmaydi.
+    // Joriy fan "keyingi" deb taklif qilinmaydi (amaliyot urinishida ham).
     DailyPlanItem? next;
     for (final item in plan.items) {
       if (!item.isDone && item.subject != r.subject) {
@@ -182,9 +172,9 @@ class _QuizResultViewState extends ConsumerState<QuizResultView> {
               const SizedBox(height: 10),
               _RewardCard(don: r.donEarned),
             ],
-            if (widget.saveFailed) ...[
+            if (!r.isDaily) ...[
               const SizedBox(height: 10),
-              _SaveFailed(onRetry: widget.onRetrySave),
+              const _PracticeNote(),
             ],
             const SizedBox(height: 18),
             if (planComplete) ...[
@@ -196,29 +186,26 @@ class _QuizResultViewState extends ConsumerState<QuizResultView> {
                 label: 'learn.nextSubject'.tr(
                   namedArgs: {'subject': next.subject.labelKey.tr()},
                 ),
-                onTap: widget.saving
-                    ? null
-                    : () => context.pushReplacement(
-                        LearningRoutes.quiz,
-                        extra: next!.subject,
-                      ),
+                onTap: () => context.pushReplacement(
+                  LearningRoutes.quiz,
+                  extra: next!.subject,
+                ),
               )
             else
               _PrimaryButton(
                 label: 'learn.toResults'.tr(),
-                onTap: widget.saving ? null : () => context.go('/progress'),
+                onTap: () => context.go('/progress'),
               ),
             const SizedBox(height: 10),
             Row(
               children: [
-                if (r.canReview)
-                  Expanded(
-                    child: _SecondaryButton(
-                      label: 'learn.reviewAnswers'.tr(),
-                      onTap: () => openResultReview(context, r),
-                    ),
+                Expanded(
+                  child: _SecondaryButton(
+                    label: 'learn.reviewAnswers'.tr(),
+                    onTap: () => openResultReview(context, r),
                   ),
-                if (r.canReview) const SizedBox(width: 10),
+                ),
+                const SizedBox(width: 10),
                 Expanded(
                   child: _SecondaryButton(
                     label: 'learn.toHome'.tr(),
@@ -367,37 +354,27 @@ class _PlanDoneBanner extends StatelessWidget {
   }
 }
 
-class _SaveFailed extends StatelessWidget {
-  const _SaveFailed({required this.onRetry});
-
-  final VoidCallback onRetry;
+/// Amaliyot urinishi — DON faqat fan bo'yicha kunlik birinchi testga.
+class _PracticeNote extends StatelessWidget {
+  const _PracticeNote();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 8, 6, 8),
-      decoration: BoxDecoration(
-        color: QuizColors.badBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: QuizColors.badBorder),
-      ),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: homeCardDecoration(),
       child: Row(
         children: [
+          const Icon(
+            SolarIconsOutline.infoCircle,
+            size: 22,
+            color: HomeColors.textDim,
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'learn.saveFailed'.tr(),
-              style: homeText(13.5, height: 1.3),
-            ),
-          ),
-          TextButton(
-            onPressed: onRetry,
-            child: Text(
-              'common.retry'.tr(),
-              style: homeText(
-                13.5,
-                weight: FontWeight.w700,
-                color: QuizColors.bad,
-              ),
+              'learn.practiceNote'.tr(),
+              style: homeText(13.5, color: HomeColors.textDim, height: 1.4),
             ),
           ),
         ],
@@ -410,7 +387,7 @@ class _PrimaryButton extends StatelessWidget {
   const _PrimaryButton({required this.label, required this.onTap});
 
   final String label;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {

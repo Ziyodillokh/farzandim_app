@@ -11,7 +11,7 @@ TestResult result(
   DateTime date, {
   int total = 10,
   String? id,
-  List<QuizAnswer> answers = const [],
+  bool isDaily = true,
 }) => TestResult(
   id: id ?? '${subject.name}-${date.toIso8601String()}',
   subject: subject,
@@ -19,26 +19,29 @@ TestResult result(
   correct: correct,
   total: total,
   date: date,
-  answers: answers,
+  isDaily: isDaily,
 );
 
 QuizQuestion question(
   String id, {
-  Subject subject = Subject.math,
   int difficulty = 1,
-  int minGrade = 5,
-  int maxGrade = 9,
-  int answer = 0,
   String topic = 'Mavzu',
 }) => QuizQuestion(
   id: id,
-  subject: subject,
   difficulty: difficulty,
-  minGrade: minGrade,
-  maxGrade: maxGrade,
   topic: LocalizedText.same(topic),
   prompt: LocalizedText.same('Savol $id'),
   options: [for (var i = 0; i < 4; i++) LocalizedText.same('$id-$i')],
-  answerIndex: answer,
-  explanation: LocalizedText.same('Izoh'),
+);
+
+AnswerFeedback feedback(
+  String questionId, {
+  required int selected,
+  int correct = 0,
+}) => AnswerFeedback(
+  questionId: questionId,
+  selectedIndex: selected,
+  isCorrect: selected == correct,
+  correctIndex: correct,
+  explanation: LocalizedText.same('Izoh $questionId'),
 );

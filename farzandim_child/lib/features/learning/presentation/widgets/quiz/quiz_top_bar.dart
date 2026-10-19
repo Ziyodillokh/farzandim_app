@@ -4,7 +4,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_header.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
-import 'package:farzandim_child/features/learning/domain/progress_models.dart';
 import 'package:farzandim_child/features/learning/presentation/widgets/quiz/quiz_palette.dart';
 import 'package:farzandim_child/features/learning/presentation/widgets/subject_icon.dart';
 import 'package:farzandim_child/features/learning/domain/subject.dart';
@@ -17,7 +16,7 @@ class QuizTopBar extends StatelessWidget {
     required this.onClose,
     this.current,
     this.total,
-    this.answers = const [],
+    this.outcomes = const [],
   });
 
   final Subject subject;
@@ -26,7 +25,9 @@ class QuizTopBar extends StatelessWidget {
   /// Joriy savol (1 dan) va jami — `null` bo'lsa progress ko'rsatilmaydi.
   final int? current;
   final int? total;
-  final List<QuizAnswer> answers;
+
+  /// Savol tartibida natija: to'g'ri / xato / `null` (javobsiz).
+  final List<bool?> outcomes;
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +75,7 @@ class QuizTopBar extends StatelessWidget {
         ),
         if (current != null && total != null) ...[
           const SizedBox(height: 16),
-          _Segments(current: current, total: total, answers: answers),
+          _Segments(current: current, total: total, outcomes: outcomes),
         ],
       ],
     );
@@ -85,19 +86,18 @@ class _Segments extends StatelessWidget {
   const _Segments({
     required this.current,
     required this.total,
-    required this.answers,
+    required this.outcomes,
   });
 
   final int current;
   final int total;
-  final List<QuizAnswer> answers;
+  final List<bool?> outcomes;
 
   @override
   Widget build(BuildContext context) {
     Color colorAt(int i) {
-      if (i < answers.length) {
-        return answers[i].isCorrect ? QuizColors.good : QuizColors.bad;
-      }
+      final outcome = i < outcomes.length ? outcomes[i] : null;
+      if (outcome != null) return outcome ? QuizColors.good : QuizColors.bad;
       if (i == current - 1) return QuizColors.selected;
       return QuizColors.segmentTrack;
     }

@@ -20,6 +20,7 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/home/hom
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
 import 'package:farzandim_child/features/learning/presentation/learning_navigation.dart';
+import 'package:farzandim_child/features/learning/presentation/providers/learning_providers.dart';
 import 'package:farzandim_child/features/learning/presentation/providers/progress_providers.dart';
 import 'package:farzandim_child/features/progress/presentation/widgets/progress_hero_card.dart';
 import 'package:farzandim_child/features/progress/presentation/widgets/progress_section.dart';
@@ -59,74 +60,81 @@ class ProgressScreen extends ConsumerWidget {
         child: Builder(
           builder: (context) {
             final insets = MediaQuery.paddingOf(context);
-            return ListView(
-              padding: EdgeInsets.fromLTRB(
-                16.5,
-                growthTopInset(context) - 1.8,
-                16.5,
-                insets.bottom + 16,
-              ),
-              children: [
-                PageHeader(
-                  title: 'progress.title'.tr(),
-                  titleSize: 32,
-                  titleLetterSpacing: -1.1,
-                  actions: [
-                    HeaderIconButton(
-                      semanticLabel: 'progress.calendar'.tr(),
-                      onTap: () => context.push(LearningRoutes.calendar),
-                      child: const HomeSvgIcon(homeCalendarSvg, size: 22),
+            return RefreshIndicator(
+              color: HomeColors.primary,
+              backgroundColor: HomeColors.card,
+              edgeOffset: insets.top,
+              onRefresh: () => refreshLearning(ref),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(
+                  16.5,
+                  growthTopInset(context) - 1.8,
+                  16.5,
+                  insets.bottom + 16,
+                ),
+                children: [
+                  PageHeader(
+                    title: 'progress.title'.tr(),
+                    titleSize: 32,
+                    titleLetterSpacing: -1.1,
+                    actions: [
+                      HeaderIconButton(
+                        semanticLabel: 'progress.calendar'.tr(),
+                        onTap: () => context.push(LearningRoutes.calendar),
+                        child: const HomeSvgIcon(homeCalendarSvg, size: 22),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4.8),
+                  if (weekly == null)
+                    const _NoResults()
+                  else
+                    ProgressHeroCard(progress: weekly),
+                  if (scores.isNotEmpty) ...[
+                    const SizedBox(height: _sectionGap),
+                    ProgressSection(
+                      title: 'progress.strongSubjects'.tr(),
+                      subtitle: 'progress.strongSubtitle'.tr(),
+                      onSeeAll: () => context.push('/progress/subjects'),
+                      // Eng yuqori natijali 3 fan.
+                      child: StrongSubjectsRow(
+                        scores:
+                            ([...scores]..sort(
+                                  (a, b) => b.percent.compareTo(a.percent),
+                                ))
+                                .take(3)
+                                .toList(),
+                      ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 4.8),
-                if (weekly == null)
-                  const _NoResults()
-                else
-                  ProgressHeroCard(progress: weekly),
-                if (scores.isNotEmpty) ...[
-                  const SizedBox(height: _sectionGap),
-                  ProgressSection(
-                    title: 'progress.strongSubjects'.tr(),
-                    subtitle: 'progress.strongSubtitle'.tr(),
-                    onSeeAll: () => context.push('/progress/subjects'),
-                    // Eng yuqori natijali 3 fan.
-                    child: StrongSubjectsRow(
-                      scores:
-                          ([
-                                ...scores,
-                              ]..sort((a, b) => b.percent.compareTo(a.percent)))
-                              .take(3)
-                              .toList(),
-                    ),
-                  ),
-                ],
-                if (results.isNotEmpty) ...[
-                  const SizedBox(height: _sectionGap),
-                  ProgressSection(
-                    title: 'progress.recentResults'.tr(),
-                    subtitle: 'progress.recentSubtitle'.tr(),
-                    onSeeAll: () => context.push('/progress/results'),
-                    contentPadding: const EdgeInsets.fromLTRB(6.5, 0, 7, 4.5),
-                    child: Column(
-                      children: [
-                        for (
-                          var i = 0;
-                          i < math.min(_recentLimit, results.length);
-                          i++
-                        ) ...[
-                          if (i > 0) const SizedBox(height: 3.2),
-                          ResultRow(result: results[i]),
+                  if (results.isNotEmpty) ...[
+                    const SizedBox(height: _sectionGap),
+                    ProgressSection(
+                      title: 'progress.recentResults'.tr(),
+                      subtitle: 'progress.recentSubtitle'.tr(),
+                      onSeeAll: () => context.push('/progress/results'),
+                      contentPadding: const EdgeInsets.fromLTRB(6.5, 0, 7, 4.5),
+                      child: Column(
+                        children: [
+                          for (
+                            var i = 0;
+                            i < math.min(_recentLimit, results.length);
+                            i++
+                          ) ...[
+                            if (i > 0) const SizedBox(height: 3.2),
+                            ResultRow(result: results[i]),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
+                  if (tip != null) ...[
+                    const SizedBox(height: _sectionGap),
+                    RecommendationCard(recommendation: tip),
+                  ],
                 ],
-                if (tip != null) ...[
-                  const SizedBox(height: _sectionGap),
-                  RecommendationCard(recommendation: tip),
-                ],
-              ],
+              ),
             );
           },
         ),

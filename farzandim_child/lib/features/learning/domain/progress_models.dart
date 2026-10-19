@@ -68,39 +68,7 @@ enum ScoreLevel {
   }
 }
 
-/// Bitta savolga berilgan javob.
-class QuizAnswer {
-  const QuizAnswer({
-    required this.questionId,
-    required this.selectedIndex,
-    required this.isCorrect,
-  });
-
-  static QuizAnswer? tryFromJson(Object? json) {
-    if (json is! Map) return null;
-    final id = json['q'];
-    final selected = json['s'];
-    final correct = json['c'];
-    if (id is! String || selected is! int || correct is! bool) return null;
-    return QuizAnswer(
-      questionId: id,
-      selectedIndex: selected,
-      isCorrect: correct,
-    );
-  }
-
-  final String questionId;
-  final int selectedIndex;
-  final bool isCorrect;
-
-  Map<String, Object> toJson() => {
-    'q': questionId,
-    's': selectedIndex,
-    'c': isCorrect,
-  };
-}
-
-/// Yechilgan bitta test natijasi.
+/// Yechilgan bitta test natijasi (server `ResultView`).
 class TestResult {
   const TestResult({
     required this.id,
@@ -109,12 +77,12 @@ class TestResult {
     required this.correct,
     required this.total,
     required this.date,
-    this.answers = const [],
+    this.isDaily = true,
     this.donEarned = 0,
     this.durationSeconds = 0,
   });
 
-  /// JSON'dan; buzilgan yozuv bo'lsa `null` (o'tkazib yuboriladi).
+  /// API JSON'idan; buzilgan yozuv bo'lsa `null` (o'tkazib yuboriladi).
   static TestResult? tryFromJson(Object? json) {
     if (json case {
       'id': final String id,
@@ -124,7 +92,7 @@ class TestResult {
       'date': final String rawDate,
     }) {
       final subject = Subject.fromName(subjectName);
-      final date = DateTime.tryParse(rawDate);
+      final date = DateTime.tryParse(rawDate)?.toLocal();
       if (subject == null ||
           date == null ||
           total <= 0 ||
@@ -138,9 +106,8 @@ class TestResult {
       } on FormatException {
         topic = LocalizedText.same('');
       }
-      final rawAnswers = json['answers'];
-      final don = json['don'];
-      final seconds = json['seconds'];
+      final don = json['donEarned'];
+      final seconds = json['durationSeconds'];
       return TestResult(
         id: id,
         subject: subject,
@@ -148,10 +115,7 @@ class TestResult {
         correct: correct,
         total: total,
         date: date,
-        answers: [
-          if (rawAnswers is List)
-            for (final a in rawAnswers) ?QuizAnswer.tryFromJson(a),
-        ],
+        isDaily: json['isDaily'] != false,
         donEarned: don is int ? don : 0,
         durationSeconds: seconds is int ? seconds : 0,
       );
@@ -170,8 +134,8 @@ class TestResult {
   /// Yakunlangan vaqt (mahalliy).
   final DateTime date;
 
-  /// Savolma-savol javoblar (ko'rib chiqish uchun); eski yozuvlarda bo'sh.
-  final List<QuizAnswer> answers;
+  /// Fan bo'yicha kunlik birinchi urinish (amaliyot emas).
+  final bool isDaily;
 
   /// Shu test uchun berilgan DON.
   final int donEarned;
@@ -181,19 +145,6 @@ class TestResult {
 
   int get percent => total <= 0 ? 0 : (correct * 100 / total).round();
   ScoreLevel get level => ScoreLevel.of(correct, total);
-  bool get canReview => answers.isNotEmpty;
-
-  Map<String, Object> toJson() => {
-    'id': id,
-    'subject': subject.name,
-    'topic': topic.toJson(),
-    'correct': correct,
-    'total': total,
-    'date': date.toIso8601String(),
-    'answers': [for (final a in answers) a.toJson()],
-    'don': donEarned,
-    'seconds': durationSeconds,
-  };
 }
 
 /// Bugungi tavsiya — qaysi fandan nechta savol ishlash.

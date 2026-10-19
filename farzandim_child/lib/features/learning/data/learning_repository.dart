@@ -1,23 +1,50 @@
-// Daily Learning ma'lumot manbai interfeysi. Hozircha lokal amalga oshirish
-// (`LocalLearningRepository`); backend tayyor bo'lgach API'ga ulangan
-// amalga oshirish shu interfeys orqali almashtiriladi — UI va providerlar
-// o'zgarmaydi.
+// Daily Learning ma'lumot manbai interfeysi — server (`/api/learning`).
+// Javob serverda tekshiriladi, DON / XP yakunda serverda beriladi.
 
 import 'package:farzandim_child/features/learning/domain/learning_models.dart';
 import 'package:farzandim_child/features/learning/domain/progress_models.dart';
 import 'package:farzandim_child/features/learning/domain/quiz_models.dart';
 
 abstract interface class LearningRepository {
-  /// Saqlangan o'quv profili (`null` — hali tanlanmagan).
+  /// O'quv profili (`null` — hali tanlanmagan).
   Future<LearningProfile?> loadProfile();
 
-  Future<void> saveProfile(LearningProfile profile);
+  Future<LearningProfile> saveProfile(LearningProfile profile);
 
   /// Yechilgan testlar — yangisi birinchi.
-  Future<List<TestResult>> loadResults();
+  Future<List<TestResult>> loadResults({int limit});
 
-  Future<void> saveResult(TestResult result);
+  /// Fan testini boshlash yoki bugungi yarim qolganini davom ettirish.
+  Future<QuizAttempt> startAttempt(Subject subject);
 
-  /// Fan savollari banki.
-  Future<List<QuizQuestion>> loadQuestions(Subject subject);
+  Future<AnswerFeedback> submitAnswer({
+    required String attemptId,
+    required String questionId,
+    required int selectedIndex,
+  });
+
+  /// Yakunlash (idempotent) — natija va DON.
+  Future<TestResult> completeAttempt(String attemptId);
+
+  Future<AttemptReview> loadReview(String resultId);
+}
+
+/// Server xato kodlari (UI tegishli matnni tanlaydi).
+enum LearningErrorCode {
+  profileRequired,
+  noQuestions,
+  attemptClosed,
+  network,
+  unknown,
+}
+
+class LearningException implements Exception {
+  const LearningException(this.code, [this.message]);
+
+  final LearningErrorCode code;
+  final String? message;
+
+  @override
+  String toString() =>
+      'LearningException($code${message == null ? '' : ': $message'})';
 }

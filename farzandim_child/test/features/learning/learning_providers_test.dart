@@ -1,47 +1,19 @@
-// Providerlar: profil, natija qo'shish → reja va xulosa yangilanadi,
-// adaptiv savollar.
+// Providerlar: server profili / natijalari → reja, xulosa; sozlash kartasi
+// faqat "profil yo'q" bo'lganda (tarmoq xatosida emas).
 
-import 'package:farzandim_child/core/feature_flags.dart';
 import 'package:farzandim_child/features/learning/data/learning_repository.dart';
 import 'package:farzandim_child/features/learning/domain/learning_models.dart';
-import 'package:farzandim_child/features/learning/domain/learning_stats.dart';
-import 'package:farzandim_child/features/learning/domain/progress_models.dart';
-import 'package:farzandim_child/features/learning/domain/quiz_models.dart';
 import 'package:farzandim_child/features/learning/presentation/providers/learning_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'fake_learning_repository.dart';
 import 'learning_fixtures.dart';
 
-class _MemoryRepository implements LearningRepository {
-  LearningProfile? profile;
-  final results = <TestResult>[];
-
-  @override
-  Future<LearningProfile?> loadProfile() async => profile;
-
-  @override
-  Future<void> saveProfile(LearningProfile profile) async =>
-      this.profile = profile;
-
-  @override
-  Future<List<TestResult>> loadResults() async => List.of(results);
-
-  @override
-  Future<void> saveResult(TestResult result) async => results.insert(0, result);
-
-  @override
-  Future<List<QuizQuestion>> loadQuestions(Subject subject) async => [
-    for (var d = 1; d <= 3; d++)
-      for (var i = 0; i < 5; i++)
-        question('${subject.name}-$d$i', subject: subject, difficulty: d),
-  ];
-}
-
 void main() {
-  final now = DateTime(2026, 10, 15, 18);
+  final now = DateTime(2026, 10, 19, 18);
 
-  ProviderContainer container(_MemoryRepository repo) {
+  ProviderContainer container(FakeLearningRepository repo) {
     final c = ProviderContainer(
       overrides: [
         learningRepositoryProvider.overrideWithValue(repo),
@@ -52,70 +24,90 @@ void main() {
     return c;
   }
 
+  /// Profil va natijalar yuklanishini kutish (xato bo'lsa ham).
   Future<void> load(ProviderContainer c) async {
-    await c.read(savedLearningProfileProvider.future);
+    try {
+      await c.read(savedLearningProfileProvider.future);
+    } on LearningException {
+      // Tarmoq xatosi testi — holat provider'da tekshiriladi.
+    }
     await c.read(storedResultsProvider.future);
   }
 
-  test('profil saqlansa reja shu fanlardan tuziladi', () async {
-    final repo = _MemoryRepository();
+  test('profil va natijalardan reja va xulosa', () async {
+    final repo = FakeLearningRepository(
+      profile: const LearningProfile(
+        grade: 7,
+        subjects: [Subject.math, Subject.english],
+      ),
+      results: [
+        result(Subject.math, 9, now.subtract(const Duration(hours: 2))),
+      ],
+    );
     final c = container(repo);
     await load(c);
+
+    final plan = c.read(dailyPlanProvider);
+    expect(plan.items.map((i) => i.subject), [Subject.math, Subject.english]);
+    expect(plan.itemFor(Subject.math)?.isDone, isTrue);
+    expect(plan.nextItem?.subject, Subject.english);
+    expect(c.read(learningSummaryProvider).solvedQuestions, 10);
+    expect(c.read(needsLearningSetupProvider), isFalse);
+  });
+
+  test('profil saqlansa reja yangilanadi', () async {
+    final repo = FakeLearningRepository();
+    final c = container(repo);
+    await load(c);
+    expect(c.read(needsLearningSetupProvider), isTrue);
+    expect(c.read(dailyPlanProvider).isEmpty, isTrue);
 
     await c
         .read(savedLearningProfileProvider.notifier)
-        .save(
-          const LearningProfile(
-            grade: 8,
-            subjects: [Subject.physics, Subject.math],
-          ),
-        );
-
-    expect(repo.profile?.grade, 8);
+        .save(const LearningProfile(grade: 6, subjects: [Subject.physics]));
+    expect(repo.profile?.grade, 6);
     expect(c.read(needsLearningSetupProvider), isFalse);
-    expect(c.read(dailyPlanProvider).items.map((i) => i.subject), [
-      Subject.physics,
-      Subject.math,
-    ]);
+    expect(c.read(dailyPlanProvider).items.single.subject, Subject.physics);
   });
 
-  test('natija qo\'shilsa reja va xulosa yangilanadi', () async {
-    final repo = _MemoryRepository()
-      ..profile = const LearningProfile(
-        grade: 7,
-        subjects: [Subject.math, Subject.english],
-      );
+  test('tarmoq xatosida sozlash kartasi chiqmaydi', () async {
+    final repo = FakeLearningRepository()
+      ..failNext = const LearningException(LearningErrorCode.network);
     final c = container(repo);
     await load(c);
-    final before = c.read(learningSummaryProvider).solvedQuestions;
-
-    await c
-        .read(storedResultsProvider.notifier)
-        .add(result(Subject.math, 9, now, id: 'today'));
-
-    final plan = c.read(dailyPlanProvider);
-    expect(plan.itemFor(Subject.math)?.isDone, isTrue);
-    expect(plan.nextItem?.subject, Subject.english);
-    expect(c.read(learningSummaryProvider).solvedQuestions, before + 10);
-    expect(repo.results.single.id, 'today');
+    expect(c.read(savedLearningProfileProvider).hasError, isTrue);
+    expect(c.read(needsLearningSetupProvider), isFalse);
   });
 
-  test('profil yo\'q: preview o\'chiq bo\'lsa sozlash so\'raladi', () async {
-    final c = container(_MemoryRepository());
-    await load(c);
-    expect(c.read(needsLearningSetupProvider), !kLearningPreviewData);
-    expect(c.read(dailyPlanProvider).isEmpty, !kLearningPreviewData);
-  });
-
-  test('kunlik savollar — kerakli son, osondan qiyinga', () async {
-    final repo = _MemoryRepository()
-      ..profile = const LearningProfile(grade: 7, subjects: [Subject.math]);
+  test('yakunlangan natija ro\'yxat boshiga qo\'shiladi (takrorsiz)', () async {
+    final repo = FakeLearningRepository(
+      profile: const LearningProfile(grade: 7, subjects: [Subject.math]),
+    );
     final c = container(repo);
     await load(c);
+    final notifier = c.read(storedResultsProvider.notifier);
+    final r = result(Subject.math, 8, now, id: 'r1');
+    notifier
+      ..add(r)
+      ..add(r);
+    expect(c.read(learningResultsProvider).map((x) => x.id), ['r1']);
+    expect(c.read(dailyPlanProvider).isComplete, isTrue);
+  });
 
-    final questions = await c.read(dailyQuestionsProvider(Subject.math).future);
-    expect(questions, hasLength(kDailyQuestionCount));
-    final difficulties = questions.map((q) => q.difficulty).toList();
-    expect(difficulties, [...difficulties]..sort());
+  test('test urinishi repository orqali (davom ettirish bilan)', () async {
+    final repo = FakeLearningRepository(
+      profile: const LearningProfile(grade: 7, subjects: [Subject.math]),
+    );
+    final c = container(repo);
+    final first = await c.read(quizAttemptProvider(Subject.math).future);
+    await repo.submitAnswer(
+      attemptId: first.id,
+      questionId: first.questions.first.id,
+      selectedIndex: 0,
+    );
+    c.invalidate(quizAttemptProvider(Subject.math));
+    final resumed = await c.read(quizAttemptProvider(Subject.math).future);
+    expect(resumed.id, first.id);
+    expect(resumed.answers, hasLength(1));
   });
 }
