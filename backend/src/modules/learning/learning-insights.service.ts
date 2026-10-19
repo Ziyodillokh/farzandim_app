@@ -28,6 +28,8 @@ import { LearningSummary, StatResult, summarizeLearning } from './domain/learnin
 /** Streak hisobi uchun ko'rib chiqiladigan tarix. */
 const HISTORY_DAYS = 120;
 const REPORT_PERIOD_DAYS = 7;
+/** Bir vaqtda yuboriladigan hisobotlar. */
+const REPORT_CONCURRENCY = 10;
 
 export interface ChildLearningSummary extends LearningSummary {
   profile: { grade: number; subjects: string[] } | null;
@@ -82,12 +84,21 @@ export class LearningInsightsService {
     });
 
     let sent = 0;
-    for (const { childId } of active) {
-      try {
-        if (await this.sendReport(childId, weekStart, now)) sent++;
-      } catch (e) {
-        this.logger.error(`haftalik hisobot yuborilmadi (child ${childId})`, e as Error);
-      }
+    for (let i = 0; i < active.length; i += REPORT_CONCURRENCY) {
+      const chunk = active.slice(i, i + REPORT_CONCURRENCY);
+      const results = await Promise.allSettled(
+        chunk.map(({ childId }) => this.sendReport(childId, weekStart, now)),
+      );
+      results.forEach((r, j) => {
+        if (r.status === 'fulfilled') {
+          if (r.value) sent++;
+        } else {
+          this.logger.error(
+            `haftalik hisobot yuborilmadi (child ${chunk[j].childId})`,
+            r.reason as Error,
+          );
+        }
+      });
     }
     if (active.length > 0) {
       this.logger.log(`haftalik hisobot: ${sent}/${active.length} yuborildi`);
@@ -106,6 +117,18 @@ export class LearningInsightsService {
       throw e;
     }
 
+    try {
+      return await this.deliverReport(childId, weekStart, now);
+    } catch (e) {
+      // Yuborilmadi — "egallash" bekor qilinadi, keyingi ishga tushishda qayta.
+      await this.prisma.learningReportDispatch
+        .delete({ where: { childId_weekStart: { childId, weekStart } } })
+        .catch(() => undefined);
+      throw e;
+    }
+  }
+
+  private async deliverReport(childId: string, weekStart: DayKey, now: Date): Promise<boolean> {
     const child = await this.prisma.child.findUniqueOrThrow({
       where: { id: childId },
       select: { name: true, parentId: true },
@@ -149,7 +172,13 @@ export class LearningInsightsService {
         },
       },
     });
-    await this.fcm.sendPushToUser(child.parentId, { title, body, data });
+    // Bildirishnoma saqlangan — push xatosi hisobotni qayta yubormaydi
+    // (lentada bor; takroriy yozuv bo'lmasin).
+    try {
+      await this.fcm.sendPushToUser(child.parentId, { title, body, data });
+    } catch (e) {
+      this.logger.warn(`haftalik hisobot push'i yuborilmadi (child ${childId}): ${String(e)}`);
+    }
     return true;
   }
 

@@ -57,6 +57,12 @@ import {
 const RECENT_RESULTS = 5;
 /** Shu kunlar ichida berilgan savollar iloji boricha takrorlanmaydi. */
 const RECENTLY_SEEN_DAYS = 3;
+/**
+ * Sinfga mos savollar shuncha yoki ko'p bo'lsa — FAQAT ular beriladi (2-sinf
+ * bolasiga 5-sinf savoli tushmasin; test qisqaroq bo'lishi mumkin). Kam
+ * bo'lsa — eng yaqin sinf savollari bilan to'ldiriladi.
+ */
+const MIN_IN_GRADE_QUESTIONS = 5;
 const DEFAULT_RESULTS_LIMIT = 30;
 
 @Injectable()
@@ -176,7 +182,9 @@ export class LearningService {
           childId,
           subject,
           day: today,
-          isDaily: !todays.some((a) => a.isDaily),
+          // Kunlik (DON) urinish — faqat profil fanlari bo'yicha; boshqa fan
+          // (masalan eski natijadagi tavsiya) — amaliyot.
+          isDaily: profile.subjects.includes(subject) && !todays.some((a) => a.isDaily),
           questionIds: picked.map((q) => q.id),
           topic: mainTopic(picked) as unknown as Prisma.InputJsonValue,
           total: picked.length,
@@ -332,7 +340,7 @@ export class LearningService {
         childId,
         status: LearningAttemptStatus.COMPLETED,
         ...(subject && { subject }),
-        ...(query.before && { completedAt: { lt: new Date(query.before) } }),
+        ...(query.before && { completedAt: { lt: query.before } }),
       },
       orderBy: { completedAt: 'desc' },
       take: limit + 1,
@@ -428,8 +436,9 @@ export class LearningService {
       },
       select: { questionId: true },
     });
+    const inGrade = pool.filter((q) => grade >= q.minGrade && grade <= q.maxGrade);
     const picked = pickQuestions({
-      pool,
+      pool: inGrade.length >= MIN_IN_GRADE_QUESTIONS ? inGrade : pool,
       grade,
       count: DAILY_QUESTION_COUNT,
       recentPercent:

@@ -121,6 +121,19 @@ describe('Learning API', () => {
       expect(resumed.answers[0]).toHaveProperty('correctIndex');
     });
 
+    it('kichik sinf — faqat sinfga mos savollar (test qisqaroq bo\'lishi mumkin)', async () => {
+      await setProfile(2, ['math']);
+      const attempt = (await call(child.token, 'POST', '/learning/attempts', { subject: 'math' })).json();
+      const stored = await t.prisma.learningQuestion.findMany({
+        where: { id: { in: attempt.questions.map((q: { id: string }) => q.id) } },
+      });
+      const inGrade = await t.prisma.learningQuestion.count({
+        where: { subject: 'MATH', minGrade: { lte: 2 }, maxGrade: { gte: 2 } },
+      });
+      expect(stored.every((q) => q.minGrade <= 2 && q.maxGrade >= 2)).toBe(true);
+      expect(attempt.total).toBe(Math.min(10, inGrade));
+    });
+
     it('javob: to\'g\'ri javob va izoh qaytadi, qayta yuborish natijani o\'zgartirmaydi', async () => {
       await setProfile();
       const attempt = (await call(child.token, 'POST', '/learning/attempts', { subject: 'english' })).json();

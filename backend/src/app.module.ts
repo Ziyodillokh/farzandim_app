@@ -44,6 +44,7 @@ import { LeaderboardModule } from './modules/leaderboard/leaderboard.module';
 import { ConsumerContentModule } from './modules/consumer-content/consumer-content.module';
 import { ConsumerOlympiadsModule } from './modules/consumer-olympiads/consumer-olympiads.module';
 import { LearningModule } from './modules/learning/learning.module';
+import { SchoolModule } from './school/school.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { RetentionModule } from './modules/retention/retention.module';
 
@@ -121,6 +122,7 @@ import { AppController } from './app.controller';
     ConsumerContentModule,
     ConsumerOlympiadsModule,
     LearningModule,
+    SchoolModule,
     PaymentsModule,
     RetentionModule,
 

@@ -7,7 +7,7 @@ import {
   IsArray,
   IsIn,
   IsInt,
-  IsISO8601,
+  IsDate,
   IsOptional,
   IsUUID,
   Max,
@@ -68,8 +68,9 @@ export class ListResultsQueryDto {
 
   @ApiPropertyOptional({ description: 'Shu vaqtdan oldingilar (kursor, ISO 8601)' })
   @IsOptional()
-  @IsISO8601()
-  before?: string;
+  @Type(() => Date)
+  @IsDate()
+  before?: Date;
 
   @ApiPropertyOptional({ enum: API_SUBJECTS })
   @IsOptional()

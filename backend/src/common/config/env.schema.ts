@@ -27,6 +27,13 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRES: z.string().default('15m'),
   JWT_REFRESH_EXPIRES: z.string().default('30d'),
 
+  // Maktab paneli JWT kaliti (ixtiyoriy — yo'q bo'lsa JWT_ACCESS_SECRET'dan
+  // hosila olinadi; audience boshqa bo'lgani uchun tokenlar aralashmaydi).
+  SCHOOL_JWT_SECRET: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().min(32).optional(),
+  ),
+
   ADMIN_JWT_ACCESS_SECRET: z.string().min(32),
   ADMIN_JWT_REFRESH_SECRET: z.string().min(32),
   ADMIN_JWT_ACCESS_EXPIRES: z.string().default('15m'),

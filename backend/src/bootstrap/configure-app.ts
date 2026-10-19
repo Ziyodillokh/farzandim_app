@@ -155,6 +155,10 @@ function setupSwagger(app: NestFastifyApplication): void {
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
       'admin-jwt',
     )
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'school-jwt',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

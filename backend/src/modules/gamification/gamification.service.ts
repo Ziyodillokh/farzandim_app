@@ -166,7 +166,7 @@ export class GamificationService {
     childId: string,
     input: AwardInput,
   ): Promise<AwardResult | null> {
-    await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(hashtextextended(${`xp:${childId}`}, 0))`;
+    await this.lockChildAwards(tx, childId);
 
     if (input.dedupe && input.relatedId && input.type) {
       const existing = await tx.xpEvent.findFirst({
@@ -186,8 +186,9 @@ export class GamificationService {
       ? calculateNewStreak(profile.lastActivityDate, profile.streakDays, now)
       : null;
 
-    const event =
-      input.type && (input.xpDelta !== 0 || input.donDelta !== 0)
+    // Tur berilgan bo'lsa ledger yozuvi doim (ota-onaning 0/0 yozuvi ham —
+    // avvalgi xatti-harakat); `null` — faqat streak (qadam, don 0).
+    const event = input.type
         ? await tx.xpEvent.create({
             data: {
               childId,
@@ -264,21 +265,39 @@ export class GamificationService {
     donDelta: number,
     activeToday: boolean,
   ): Promise<void> {
-    if (donDelta <= 0 && !activeToday) return;
-
-    const add = Math.max(0, donDelta);
     const result = await this.prisma.$transaction((tx) =>
-      this.applyAward(tx, childId, {
-        // Faqat haqiqiy don berilganda ledger yozuvi (audit izi).
-        type: add > 0 ? XpEventType.DAILY_GOAL : null,
-        xpDelta: 0,
-        donDelta: add,
-        dedupe: false,
-        // Yurish = faollik: bugun 1000+ qadam bo'lsa streak yangilanadi.
-        touchStreak: activeToday,
-      }),
+      this.awardStepDonInTx(tx, childId, donDelta, activeToday),
     );
     if (result) this.notifyProfileUpdated(childId, result.profile);
+  }
+
+  /**
+   * Qadam mukofoti tashqi tranzaksiya ICHIDA — chaqiruvchi (qadam sync)
+   * `lockChildAwards` bilan qulfni oldin oladi, shunda "allaqachon berilgan"
+   * hisobini o'qish va mukofot bir butun (parallel sync ikki marta bermaydi).
+   */
+  async awardStepDonInTx(
+    tx: Prisma.TransactionClient,
+    childId: string,
+    donDelta: number,
+    activeToday: boolean,
+  ): Promise<AwardResult | null> {
+    if (donDelta <= 0 && !activeToday) return null;
+    const add = Math.max(0, donDelta);
+    return this.applyAward(tx, childId, {
+      // Faqat haqiqiy don berilganda ledger yozuvi (audit izi).
+      type: add > 0 ? XpEventType.DAILY_GOAL : null,
+      xpDelta: 0,
+      donDelta: add,
+      dedupe: false,
+      // Yurish = faollik: bugun 1000+ qadam bo'lsa streak yangilanadi.
+      touchStreak: activeToday,
+    });
+  }
+
+  /** Bola mukofotlari qulfi (tranzaksiya oxirigacha; qayta olish xavfsiz). */
+  async lockChildAwards(tx: Prisma.TransactionClient, childId: string): Promise<void> {
+    await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(hashtextextended(${`xp:${childId}`}, 0))`;
   }
 
   async listXpEvents(

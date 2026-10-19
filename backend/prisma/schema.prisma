@@ -68,6 +68,8 @@ model User {
   // 2-qurilma limit — 3-qurilma kirish so'rovlari
   sessionAccessRequests SessionAccessRequest[]
 
+  schoolGuardians SchoolGuardian[]
+
   @@map("users")
 }
 
@@ -200,6 +202,7 @@ model Child {
   learningProfile        LearningProfile?
   learningAttempts       LearningAttempt[]
   learningReports        LearningReportDispatch[]
+  schoolStudents         SchoolStudent[]
 
   // Sprint 5.4 — admin Olympiad attempts
   olympiadAttempts OlympiadAttempt[]
@@ -1634,6 +1637,7 @@ model LearningAttempt {
 
   @@index([childId, day])
   @@index([childId, status, completedAt(sort: Desc)])
+  @@index([day, status])
   @@map("learning_attempts")
 }
 
@@ -1666,4 +1670,452 @@ model LearningReportDispatch {
 
   @@unique([childId, weekStart])
   @@map("learning_report_dispatches")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Parvoz School — maktab paneli (1-to'lqin: tuzilma, xodimlar, o'quvchilar,
+// vasiylar, davomat). Har jadvalda `schoolId` — tenant izolyatsiyasi.
+// Sana — Toshkent kuni ("YYYY-MM-DD"), vaqt — "HH:MM".
+// ─────────────────────────────────────────────────────────────────────
+
+enum SchoolStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum SchoolStaffRole {
+  DIRECTOR
+  ADMIN
+  HOMEROOM
+  PSYCHOLOGIST
+  DUTY
+  TEACHER
+}
+
+enum SchoolGender {
+  MALE
+  FEMALE
+}
+
+enum SchoolDeviceOs {
+  IOS
+  ANDROID
+  NONE
+}
+
+enum GuardianRelation {
+  MOTHER
+  FATHER
+  GRANDPARENT
+  OTHER
+}
+
+enum GuardianLinkStatus {
+  NOT_INVITED
+  INVITED
+  LINKED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  ABSENT
+  LEFT_EARLY
+  EXCUSED
+}
+
+enum AttendanceSource {
+  QR
+  KIOSK
+  MANUAL
+  SYSTEM
+}
+
+enum AttendanceEventKind {
+  IN
+  OUT
+}
+
+enum EarlyExitStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ParentNoticeKind {
+  ARRIVED
+  LEFT
+  ABSENT
+  EARLY_EXIT
+}
+
+/// Maktab (tenant). `code` — panelga kirishda kiritiladigan kod.
+model School {
+  id               String       @id @default(uuid())
+  code             String       @unique
+  name             String
+  shortName        String       @map("short_name")
+  city             String       @default("")
+  address          String       @default("")
+  phone            String       @default("")
+  /// data:image/... (≤ 350 KB) yoki null.
+  logo             String?
+  academicYear     String       @map("academic_year")
+  lateAfterMinutes Int          @default(10) @map("late_after_minutes")
+  /// [{ no, start, end }] — o'quv choraklari.
+  quarters         Json         @default("[]")
+  /// Kiosk QR kodlarini imzolash kaliti (har maktabga alohida).
+  kioskSecret      String       @map("kiosk_secret")
+  status           SchoolStatus @default(ACTIVE)
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  shifts        SchoolShift[]
+  holidays      SchoolHoliday[]
+  classes       SchoolClass[]
+  staff         SchoolStaff[]
+  audit         SchoolAuditLog[]
+  students      SchoolStudent[]
+  guardians     SchoolGuardian[]
+  attendance    SchoolAttendance[]
+  events        SchoolAttendanceEvent[]
+  earlyExits    SchoolEarlyExit[]
+  parentNotices SchoolParentNotice[]
+  studentNotes  SchoolStudentNote[]
+  staffSessions SchoolStaffSession[]
+
+  @@map("schools")
+}
+
+/// Smena: boshlanish / tugash, hafta kunlari va qo'ng'iroqlar jadvali.
+model SchoolShift {
+  id        String   @id @default(uuid())
+  schoolId  String   @map("school_id")
+  name      String
+  start     String
+  end       String
+  weekdays  Int[]
+  /// [{ no, start, end, kind: LESSON | BREAK }]
+  periods   Json     @default("[]")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  school  School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classes SchoolClass[]
+
+  @@index([schoolId])
+  @@map("school_shifts")
+}
+
+model SchoolHoliday {
+  id       String @id @default(uuid())
+  schoolId String @map("school_id")
+  date     String
+  name     String
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, date])
+  @@map("school_holidays")
+}
+
+model SchoolClass {
+  id              String   @id @default(uuid())
+  schoolId        String   @map("school_id")
+  grade           Int
+  letter          String
+  /// "7-A" — maktab ichida takrorlanmaydi.
+  name            String
+  shiftId         String   @map("shift_id")
+  homeroomStaffId String?  @map("homeroom_staff_id")
+  room            String   @default("")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  school   School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  shift    SchoolShift        @relation(fields: [shiftId], references: [id], onDelete: Restrict)
+  homeroom SchoolStaff?       @relation("ClassHomeroom", fields: [homeroomStaffId], references: [id], onDelete: SetNull)
+  staff    SchoolStaffClass[]
+  students SchoolStudent[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId, grade])
+  @@map("school_classes")
+}
+
+/// Maktab xodimi. `username` + `passwordHash` bo'lsa — panelga kira oladi.
+model SchoolStaff {
+  id                 String          @id @default(uuid())
+  schoolId           String          @map("school_id")
+  fullName           String          @map("full_name")
+  position           String          @default("")
+  role               SchoolStaffRole
+  phone              String          @default("")
+  email              String          @default("")
+  /// data:image/... (≤ 120 KB) yoki null.
+  photo              String?
+  portrait           String?
+  active             Boolean         @default(true)
+  username           String?
+  passwordHash       String?         @map("password_hash")
+  mustChangePassword Boolean         @default(false) @map("must_change_password")
+  tokenVersion       Int             @default(0) @map("token_version")
+  failedLogins       Int             @default(0) @map("failed_logins")
+  lockedUntil        DateTime?       @map("locked_until")
+  lastLoginAt        DateTime?       @map("last_login_at")
+  totpSecret         String?         @map("totp_secret")
+  totpEnabled        Boolean         @default(false) @map("totp_enabled")
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+
+  school     School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classes    SchoolStaffClass[]
+  homeroomOf SchoolClass[]        @relation("ClassHomeroom")
+  sessions   SchoolStaffSession[]
+
+  @@unique([schoolId, username])
+  @@index([schoolId, role])
+  @@map("school_staff")
+}
+
+/// Sinf doirasi (sinf rahbari / o'qituvchi).
+model SchoolStaffClass {
+  staffId String @map("staff_id")
+  classId String @map("class_id")
+
+  staff SchoolStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  class SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@id([staffId, classId])
+  @@index([classId])
+  @@map("school_staff_classes")
+}
+
+/// Panel sessiyasi — refresh token (faqat xeshi saqlanadi), rotatsiya bilan.
+model SchoolStaffSession {
+  id         String    @id @default(uuid())
+  schoolId   String    @map("school_id")
+  staffId    String    @map("staff_id")
+  tokenHash  String    @unique @map("token_hash")
+  userAgent  String?   @map("user_agent")
+  ip         String?
+  createdAt  DateTime  @default(now()) @map("created_at")
+  lastUsedAt DateTime  @default(now()) @map("last_used_at")
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+
+  school School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  staff  SchoolStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId])
+  @@map("school_staff_sessions")
+}
+
+/// Har o'zgarish — kim, nima, qachon, oldin / keyin.
+model SchoolAuditLog {
+  id        String   @id @default(uuid())
+  schoolId  String   @map("school_id")
+  at        DateTime @default(now())
+  actorId   String?  @map("actor_id")
+  actorName String   @map("actor_name")
+  module    String
+  action    String
+  entityId  String?  @map("entity_id")
+  summary   String
+  params    Json?
+  before    Json?
+  after     Json?
+  ip        String?
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, at(sort: Desc)])
+  @@index([schoolId, module, at(sort: Desc)])
+  @@map("school_audit_logs")
+}
+
+model SchoolStudent {
+  id          String         @id @default(uuid())
+  schoolId    String         @map("school_id")
+  classId     String?        @map("class_id")
+  lastName    String         @map("last_name")
+  firstName   String         @map("first_name")
+  middleName  String         @default("") @map("middle_name")
+  gender      SchoolGender
+  birthDate   String         @map("birth_date")
+  /// Telefoni (xodim belgilaydi; Parvoz bilan bog'langanda ham shu).
+  device      SchoolDeviceOs @default(NONE)
+  /// Kiosk / QR uchun qisqa kod ("P-4821").
+  studentCode String         @map("student_code")
+  enrolledAt  String         @map("enrolled_at")
+  archived    Boolean        @default(false)
+  archivedAt  DateTime?      @map("archived_at")
+  /// Parvoz bola ilovasi (ota-ona bog'laganda).
+  childId     String?        @unique @map("child_id")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  school     School                  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class      SchoolClass?            @relation(fields: [classId], references: [id], onDelete: SetNull)
+  child      Child?                  @relation(fields: [childId], references: [id], onDelete: SetNull)
+  guardians  SchoolStudentGuardian[]
+  attendance SchoolAttendance[]
+  notes      SchoolStudentNote[]
+
+  @@unique([schoolId, studentCode])
+  @@index([schoolId, classId])
+  @@map("school_students")
+}
+
+model SchoolGuardian {
+  id              String             @id @default(uuid())
+  schoolId        String             @map("school_id")
+  fullName        String             @map("full_name")
+  phone           String
+  relation        GuardianRelation
+  linkStatus      GuardianLinkStatus @default(NOT_INVITED) @map("link_status")
+  inviteCode      String?            @unique @map("invite_code")
+  inviteExpiresAt DateTime?          @map("invite_expires_at")
+  linkedAt        DateTime?          @map("linked_at")
+  /// Parvoz Parents foydalanuvchisi (taklif kodi kiritilganda).
+  userId          String?            @map("user_id")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  school   School                  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user     User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  students SchoolStudentGuardian[]
+
+  @@index([schoolId, phone])
+  @@index([userId])
+  @@map("school_guardians")
+}
+
+model SchoolStudentGuardian {
+  studentId  String @map("student_id")
+  guardianId String @map("guardian_id")
+
+  student  SchoolStudent  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  guardian SchoolGuardian @relation(fields: [guardianId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, guardianId])
+  @@index([guardianId])
+  @@map("school_student_guardians")
+}
+
+/// Xodim eslatmasi (auditga matn yozilmaydi).
+model SchoolStudentNote {
+  id        String   @id @default(uuid())
+  schoolId  String   @map("school_id")
+  studentId String   @map("student_id")
+  classId   String?  @map("class_id")
+  at        DateTime @default(now())
+  byStaffId String   @map("by_staff_id")
+  text      String
+
+  school  School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student SchoolStudent @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId, at(sort: Desc)])
+  @@map("school_student_notes")
+}
+
+/// Kunlik davomat (o'quvchi + kun bo'yicha bitta yozuv).
+model SchoolAttendance {
+  id             String           @id @default(uuid())
+  schoolId       String           @map("school_id")
+  date           String
+  studentId      String           @map("student_id")
+  classId        String?          @map("class_id")
+  status         AttendanceStatus
+  inAt           String?          @map("in_at")
+  outAt          String?          @map("out_at")
+  source         AttendanceSource
+  parentNotified Boolean          @default(false) @map("parent_notified")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  school      School                       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student     SchoolStudent                @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  corrections SchoolAttendanceCorrection[]
+
+  @@unique([studentId, date])
+  @@index([schoolId, date])
+  @@map("school_attendance")
+}
+
+model SchoolAttendanceCorrection {
+  id           String           @id @default(uuid())
+  attendanceId String           @map("attendance_id")
+  at           DateTime         @default(now())
+  byStaffId    String           @map("by_staff_id")
+  from         AttendanceStatus
+  to           AttendanceStatus
+  reason       String
+
+  attendance SchoolAttendance @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
+
+  @@index([attendanceId])
+  @@map("school_attendance_corrections")
+}
+
+/// Kirish / chiqish hodisasi (QR, kiosk, qo'lda).
+model SchoolAttendanceEvent {
+  id        String              @id @default(uuid())
+  schoolId  String              @map("school_id")
+  at        DateTime            @default(now())
+  date      String
+  studentId String              @map("student_id")
+  classId   String?             @map("class_id")
+  kind      AttendanceEventKind
+  source    AttendanceSource
+  late      Boolean             @default(false)
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, date, at(sort: Desc)])
+  @@index([studentId, date])
+  @@map("school_attendance_events")
+}
+
+/// Erta ketish so'rovi (ota-ona yoki xodim kiritadi, xodim qaror qiladi).
+model SchoolEarlyExit {
+  id                String          @id @default(uuid())
+  schoolId          String          @map("school_id")
+  studentId         String          @map("student_id")
+  classId           String?         @map("class_id")
+  date              String
+  time              String
+  reason            String
+  pickupBy          String          @map("pickup_by")
+  status            EarlyExitStatus @default(PENDING)
+  requestedAt       DateTime        @default(now()) @map("requested_at")
+  requestedByUserId String?         @map("requested_by_user_id")
+  decidedByStaffId  String?         @map("decided_by_staff_id")
+  decidedAt         DateTime?       @map("decided_at")
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, date])
+  @@index([schoolId, status])
+  @@map("school_early_exits")
+}
+
+/// Ota-onaga yuborilgan davomat xabari (keldi / ketdi / kelmadi / erta ketdi).
+model SchoolParentNotice {
+  id         String           @id @default(uuid())
+  schoolId   String           @map("school_id")
+  at         DateTime         @default(now())
+  date       String
+  studentId  String           @map("student_id")
+  guardianId String           @map("guardian_id")
+  kind       ParentNoticeKind
+  delivered  Boolean          @default(false)
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, date, kind, guardianId])
+  @@index([schoolId, at(sort: Desc)])
+  @@map("school_parent_notices")
 }

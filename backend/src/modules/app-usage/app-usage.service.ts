@@ -409,57 +409,67 @@ export class AppUsageService {
     const child = await this.validateChildAccess(childId, userId);
 
     const todayKey = tashkentDayKey();
-    let totalDonDelta = 0;
-    let activeToday = false;
-    // Bugungi saqlangan (clamp qilingan) qadam — real-time push uchun.
-    let todaySteps: number | null = null;
 
-    for (const e of entries) {
-      const dateObj = new Date(`${e.date}T00:00:00.000Z`);
-      const incoming = Math.max(0, Math.min(200000, Math.round(e.steps)));
+    // Butun sync BITTA tranzaksiyada va bola mukofot qulfi ostida: parallel
+    // so'rovlar "allaqachon berilgan" donni bir vaqtda o'qib, deltani ikki
+    // marta bera olmaydi.
+    const { totalDonDelta, todaySteps, profile } = await this.prisma.$transaction(
+      async (tx) => {
+        await this.gamification.lockChildAwards(tx, childId);
+        let donDelta = 0;
+        let activeToday = false;
+        // Bugungi saqlangan (clamp qilingan) qadam — real-time push uchun.
+        let today: number | null = null;
 
-      // Shu kun uchun allaqachon saqlangan qadam + berilgan don.
-      const existing = await this.prisma.childStepDaily.findUnique({
-        where: { childId_date: { childId, date: dateObj } },
-        select: { donAwarded: true, steps: true },
-      });
-      const prevAwarded = existing?.donAwarded ?? 0;
-      const prevSteps = existing?.steps ?? 0;
-      // ⚠️ Transient NOL eski to'g'ri qiymatni o'chirmasin (Samsung Health
-      // Connect glitch / reboot chekka holati) — 0 kelsa saqlanganini qoldiramiz.
-      //
-      // Lekin MUSBAT qiymat har doim qabul qilinadi, hatto oldingisidan KICHIK
-      // bo'lsa ham. Avval bu yerda `Math.max(prevSteps, incoming)` turardi va u
-      // bolaning "telefondagi songa moslash" tuzatishini SERVERDA bloklardi:
-      // pedometer bir marta oshib ketsa (Samsung Health filtrlaydi, xom sensor
-      // esa yo'q), Health Connect'ning to'g'ri, kichikroq soni hech qachon
-      // yozilmasdi va ota-ona kun bo'yi noto'g'ri sonni ko'rardi.
-      // DON himoyasi pastdagi `Math.max(prevAwarded, ...)` bilan saqlanadi —
-      // ya'ni qadam tuzatilsa ham berilgan mukofot qaytarib olinmaydi.
-      const steps = incoming > 0 ? incoming : prevSteps;
-      if (e.date === todayKey) todaySteps = steps;
-      const earnedDon =
-        Math.floor(steps / STEPS_PER_DON_UNIT) * DON_PER_UNIT;
-      // Faqat yangi qism (qadam kamaymaydi; reboot chekka holatda 0'ga clamp).
-      const delta = Math.max(0, earnedDon - prevAwarded);
-      const newAwarded = Math.max(prevAwarded, earnedDon);
+        for (const e of entries) {
+          const dateObj = new Date(`${e.date}T00:00:00.000Z`);
+          const incoming = Math.max(0, Math.min(200000, Math.round(e.steps)));
 
-      await this.prisma.childStepDaily.upsert({
-        where: { childId_date: { childId, date: dateObj } },
-        update: { steps, donAwarded: newAwarded },
-        create: { childId, date: dateObj, steps, donAwarded: newAwarded },
-      });
+          // Shu kun uchun allaqachon saqlangan qadam + berilgan don.
+          const existing = await tx.childStepDaily.findUnique({
+            where: { childId_date: { childId, date: dateObj } },
+            select: { donAwarded: true, steps: true },
+          });
+          const prevAwarded = existing?.donAwarded ?? 0;
+          const prevSteps = existing?.steps ?? 0;
+          // ⚠️ Transient NOL eski to'g'ri qiymatni o'chirmasin (Samsung Health
+          // Connect glitch / reboot chekka holati) — 0 kelsa saqlanganini qoldiramiz.
+          //
+          // Lekin MUSBAT qiymat har doim qabul qilinadi, hatto oldingisidan KICHIK
+          // bo'lsa ham: pedometer bir marta oshib ketsa, Health Connect'ning
+          // to'g'ri, kichikroq soni yozilishi kerak (ota-ona to'g'ri sonni ko'rsin).
+          // DON himoyasi pastdagi `Math.max(prevAwarded, ...)` bilan saqlanadi —
+          // ya'ni qadam tuzatilsa ham berilgan mukofot qaytarib olinmaydi.
+          const steps = incoming > 0 ? incoming : prevSteps;
+          if (e.date === todayKey) today = steps;
+          const earnedDon = Math.floor(steps / STEPS_PER_DON_UNIT) * DON_PER_UNIT;
+          // Faqat yangi qism (qadam kamaymaydi; reboot chekka holatda 0'ga clamp).
+          const delta = Math.max(0, earnedDon - prevAwarded);
+          const newAwarded = Math.max(prevAwarded, earnedDon);
 
-      totalDonDelta += delta;
-      if (e.date === todayKey && steps >= STEPS_PER_DON_UNIT) {
-        activeToday = true;
-      }
-    }
+          await tx.childStepDaily.upsert({
+            where: { childId_date: { childId, date: dateObj } },
+            update: { steps, donAwarded: newAwarded },
+            create: { childId, date: dateObj, steps, donAwarded: newAwarded },
+          });
 
-    // Profilga don qo'shish + streak yangilash (real, backend'da).
-    if (totalDonDelta > 0 || activeToday) {
-      await this.gamification.awardStepDon(childId, totalDonDelta, activeToday);
-    }
+          donDelta += delta;
+          if (e.date === todayKey && steps >= STEPS_PER_DON_UNIT) {
+            activeToday = true;
+          }
+        }
+
+        // Profilga don qo'shish + streak yangilash (real, backend'da).
+        const award = await this.gamification.awardStepDonInTx(
+          tx,
+          childId,
+          donDelta,
+          activeToday,
+        );
+        return { totalDonDelta: donDelta, todaySteps: today, profile: award?.profile ?? null };
+      },
+    );
+    if (profile) this.gamification.notifyProfileUpdated(childId, profile);
 
     // ── Real-time: bugungi qadamni ota-onaga (va bola boshqa qurilmalariga)
     // socket orqali darhol yuboramiz (location:updated bilan bir xil pattern).

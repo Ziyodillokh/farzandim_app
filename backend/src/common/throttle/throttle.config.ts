@@ -21,6 +21,7 @@ export const THROTTLER_NAMES = {
   childPairCode: 'childPairCode',
   checkout: 'checkout',
   adminLogin: 'adminLogin',
+  schoolLogin: 'schoolLogin',
 } as const;
 
 const TEN_MINUTES_MS = 600_000;
@@ -37,6 +38,12 @@ export const CHILD_PAIR_CODE_LIMIT = { limit: 10, ttl: TEN_MINUTES_MS };
 export const CHECKOUT_LIMIT = { limit: 5, ttl: TEN_MINUTES_MS };
 /** Admin panel parolini brute-force qilishga qarshi (IP + email). */
 export const ADMIN_LOGIN_LIMIT = { limit: 5, ttl: TEN_MINUTES_MS };
+/**
+ * Maktab paneli kirishi (IP bo'yicha). Bitta maktabda ko'p xodim bitta
+ * IP (NAT) orqali kirishi mumkin — limit kengroq; hisob darajasida esa
+ * ketma-ket xatolardan keyin vaqtincha bloklanadi (SchoolAuthService).
+ */
+export const SCHOOL_LOGIN_LIMIT = { limit: 30, ttl: TEN_MINUTES_MS };
 
 const THROTTLER_LIMIT_KEY = 'THROTTLER:LIMIT';
 const reflector = new Reflector();
@@ -99,6 +106,11 @@ export function buildThrottlers(): ThrottlerOptions[] {
       name: THROTTLER_NAMES.adminLogin,
       ...ADMIN_LOGIN_LIMIT,
       skipIf: onlyWhereDeclared(THROTTLER_NAMES.adminLogin),
+    },
+    {
+      name: THROTTLER_NAMES.schoolLogin,
+      ...SCHOOL_LOGIN_LIMIT,
+      skipIf: onlyWhereDeclared(THROTTLER_NAMES.schoolLogin),
     },
   ];
 }

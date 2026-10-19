@@ -133,11 +133,18 @@ export class AdminLearningService {
     return this.row(updated);
   }
 
-  /** Javob berilgan savol arxivlanadi, aks holda o'chiriladi. */
+  /**
+   * Biror urinishga tushgan (javob berilgan yoki hali ochiq) savol
+   * arxivlanadi — aks holda o'chiriladi (ochiq urinish "yetim" qolmasin).
+   */
   async remove(id: string, staffId: string, req: Req) {
     const existing = await this.prisma.learningQuestion.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException('Question not found');
-    const inUse = (await this.prisma.learningAnswer.count({ where: { questionId: id } })) > 0;
+    const [answers, attempts] = await Promise.all([
+      this.prisma.learningAnswer.count({ where: { questionId: id } }),
+      this.prisma.learningAttempt.count({ where: { questionIds: { has: id } } }),
+    ]);
+    const inUse = answers + attempts > 0;
     if (inUse) {
       await this.prisma.learningQuestion.update({
         where: { id },

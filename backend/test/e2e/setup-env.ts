@@ -55,6 +55,13 @@ const disabled = [
   'SMTP_PASS',
 ];
 
+// Testlar har fayldan oldin BARCHA jadvallarni tozalaydi — faqat lokal /
+// CI'dagi `*_test` bazasiga ruxsat (tasodifan boshqa bazani o'chirmasin).
+const target = new URL(required.DATABASE_URL);
+if (!['localhost', '127.0.0.1'].includes(target.hostname) || !target.pathname.endsWith('_test')) {
+  throw new Error(`E2E: faqat lokal *_test bazasi (berilgan: ${target.hostname}${target.pathname})`);
+}
+
 for (const [key, value] of Object.entries(required)) process.env[key] = value;
 for (const key of disabled) process.env[key] = '';
 for (const key of unset) delete process.env[key];
