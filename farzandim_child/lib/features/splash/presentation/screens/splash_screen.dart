@@ -38,7 +38,6 @@ import 'package:farzandim_child/features/permissions/presentation/screens/ios_pe
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -128,8 +127,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SvgPicture.asset(
-              'assets/icons/parvoz_logo_mark.svg',
+            Image.asset(
+              'assets/icons/growth_logo.png',
               width: 112,
               height: 112,
             ),

@@ -18,7 +18,6 @@ import 'package:farzandim_child/features/dashboard/presentation/providers/child_
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 /// Logo + avatar diametri. Tugmalar bilan deyarli teng — vizual balans.
@@ -76,8 +75,8 @@ class DashboardTopHeader extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          SvgPicture.asset(
-            'assets/icons/parvoz_logo_mark.svg',
+          Image.asset(
+            'assets/icons/growth_logo.png',
             height: _kHeaderSize,
             width: _kHeaderSize,
           ),
