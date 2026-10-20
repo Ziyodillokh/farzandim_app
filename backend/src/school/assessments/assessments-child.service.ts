@@ -91,22 +91,20 @@ export class AssessmentsChildService {
       if (await this.submitted(tx, assignment.id, student.id)) throw alreadySubmitted();
       const vector = toAnswerVector(test, input.answers);
       const now = new Date();
-      await tx.schoolPsychResult.create({
-        data: {
-          schoolId: student.schoolId,
-          studentId: student.id,
-          classId: student.classId,
-          grade: student.grade,
-          ageBand: ageBandOf(ageOn(student.birthDate, tashkentDay(now))),
-          testId: test.id,
-          version: test.version,
-          assignmentId: assignment.id,
-          takenAt: now,
-          origin: 'APP',
-          raw: rawScores(test, vector),
-          answersEnc: this.crypto.encrypt(encodeAnswers(test, vector)),
-          durationSec: input.durationSec ?? null,
-        },
+      await this.insertResult(tx, {
+        schoolId: student.schoolId,
+        studentId: student.id,
+        classId: student.classId,
+        grade: student.grade,
+        ageBand: ageBandOf(ageOn(student.birthDate, tashkentDay(now))),
+        testId: test.id,
+        version: test.version,
+        assignmentId: assignment.id,
+        takenAt: now,
+        origin: 'APP',
+        raw: rawScores(test, vector),
+        answersEnc: this.crypto.encrypt(encodeAnswers(test, vector)),
+        durationSec: input.durationSec ?? null,
       });
       await this.notifyCompleted(tx, student.schoolId, assignment, test, now);
     });
@@ -126,6 +124,16 @@ export class AssessmentsChildService {
     const graceMs = typeof grace === 'function' ? grace(test) : grace;
     if (!isOpenAt(assignment, Date.now(), graceMs)) throw notOpen();
     return { assignment, test };
+  }
+
+  /** Unikal indeks (tayinlash, o'quvchi) — qulfdan tashqari ham takror natija saqlanmaydi. */
+  private async insertResult(tx: Tx, data: Prisma.SchoolPsychResultUncheckedCreateInput): Promise<void> {
+    try {
+      await tx.schoolPsychResult.create({ data });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') throw alreadySubmitted();
+      throw err;
+    }
   }
 
   private async submitted(db: Tx | PrismaService, assignmentId: string, studentId: string): Promise<boolean> {

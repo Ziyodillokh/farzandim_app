@@ -1617,20 +1617,24 @@ model LearningQuestion {
 /// Bitta test urinishi (fan bo'yicha). `day` — Toshkent kuni (YYYY-MM-DD);
 /// `isDaily` — fan bo'yicha kunning birinchi urinishi (DON shunga beriladi).
 model LearningAttempt {
-  id          String                @id @default(uuid())
-  childId     String                @map("child_id")
-  subject     LearningSubject
-  day         String
-  isDaily     Boolean               @map("is_daily")
-  status      LearningAttemptStatus @default(IN_PROGRESS)
-  questionIds String[]              @map("question_ids")
-  topic       Json?
-  correct     Int                   @default(0)
-  total       Int
-  xpEarned    Int                   @default(0) @map("xp_earned")
-  donEarned   Int                   @default(0) @map("don_earned")
-  startedAt   DateTime              @default(now()) @map("started_at")
-  completedAt DateTime?             @map("completed_at")
+  id            String                @id @default(uuid())
+  childId       String                @map("child_id")
+  subject       LearningSubject
+  day           String
+  isDaily       Boolean               @map("is_daily")
+  status        LearningAttemptStatus @default(IN_PROGRESS)
+  questionIds   String[]              @map("question_ids")
+  topic         Json?
+  correct       Int                   @default(0)
+  total         Int
+  xpEarned      Int                   @default(0) @map("xp_earned")
+  donEarned     Int                   @default(0) @map("don_earned")
+  startedAt     DateTime              @default(now()) @map("started_at")
+  completedAt   DateTime?             @map("completed_at")
+  /// Yakunlash paytida bola bog'langan maktab sinfi (snapshot). Maktab hisobotlari
+  /// shu bo'yicha: o'quvchini ko'chirish / uzish tarixni o'zgartirmaydi, bog'lashdan
+  /// oldingi faollik maktabga ko'rinmaydi.
+  schoolClassId String?               @map("school_class_id")
 
   child   Child            @relation(fields: [childId], references: [id], onDelete: Cascade)
   answers LearningAnswer[]
@@ -1638,6 +1642,7 @@ model LearningAttempt {
   @@index([childId, day])
   @@index([childId, status, completedAt(sort: Desc)])
   @@index([day, status])
+  @@index([schoolClassId, day])
   @@map("learning_attempts")
 }
 
@@ -2465,6 +2470,8 @@ model SchoolPsychResult {
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
+  /// Tayinlash bo'yicha o'quvchiga bitta natija (CSV importdagi tayinlashsiz natija — NULL, cheklanmaydi).
+  @@unique([assignmentId, studentId])
   @@index([schoolId, testId])
   @@index([studentId, takenAt(sort: Desc)])
   @@map("school_psych_results")

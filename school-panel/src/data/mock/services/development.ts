@@ -15,7 +15,7 @@ import { roleHas } from '@/auth/permissions';
 import { CARE_MIN_GROUP as K, maskSmallCount } from '@/lib/k-anon';
 import { ageBandOf, ageOn } from '@/lib/psych/scoring';
 import { termOf } from '@/lib/psych/terms';
-import { percent } from '@/lib/utils';
+import { sharePercent } from '@/lib/utils';
 import { addDays, isSchoolDay, toIsoDate } from '../calendar';
 import { clockToday } from '../clock';
 import { type Actor, assertCan, assertClassInScope, currentActor, latency } from '../context';
@@ -36,11 +36,12 @@ import {
   termEnd,
 } from './development-aggregate';
 import { computeAttention } from './development-attention';
+import { lastClosedWeek, learningTotals } from './learning';
 
 /**
  * Rivojlanish servisi.
  * - `studentProfile`, `classOverview` — `development.individual` (psixolog: butun maktab;
- *   sinf rahbari: faqat o'z sinfi, javoblarsiz va xom ballarsiz, hissiy holat — faqat daraja).
+ *   sinf rahbari: faqat o'z sinfi, javoblarsiz va xom ballarsiz, hissiy holat — faqat daraja, o'rtachasiz).
  * - `schoolOverview`, `termOptions` — `development.view`; direktor/admin uchun k-anonim yashirish.
  * - `attentionList` — `assessments.manage` (faqat psixolog).
  */
@@ -74,12 +75,18 @@ function latestOf(entries: readonly Entry[]): DomainMap {
   return entries.reduce<DomainMap>((acc, e) => ({ ...acc, ...e.domains }), {});
 }
 
-/** Sinfdoshlar o'rtachasi (o'quvchining o'zisiz), faqat n ≥ K bo'lgan sohalar. */
-function classmatesAverage(t: Tables, idx: DevIndex, student: Student): StudentDevProfile['classAverage'] {
+/**
+ * Sinf o'rtachalari sohalari: hissiy holat — faqat psixologga (backend bilan bir xil). Aks holda sinf
+ * rahbari sinf o'rtachasidan sinfdoshlar o'rtachasini ayirib, o'quvchining yashirin hissiy indeksini topardi.
+ */
+const averageDomains = (full: boolean): readonly DevDomain[] => (full ? DEV_DOMAINS : DEV_DOMAINS.filter((d) => d !== 'EMOTIONAL'));
+
+/** Sinfdoshlar o'rtachasi (o'quvchining o'zisiz), faqat n ≥ K bo'lgan sohalar; psixologdan boshqaga — hissiy holatsiz. */
+function classmatesAverage(t: Tables, idx: DevIndex, student: Student, full: boolean): StudentDevProfile['classAverage'] {
   const mates = t.students.filter((s) => !s.archived && s.classId === student.classId && s.id !== student.id);
   const latest = mates.map((s) => latestOf(idx.byStudent.get(s.id) ?? []));
   const out: StudentDevProfile['classAverage'] = {};
-  for (const d of DEV_DOMAINS) {
+  for (const d of averageDomains(full)) {
     const xs = latest.map((m) => m[d]?.index).filter((x): x is number => typeof x === 'number');
     if (xs.length >= K) out[d] = Math.round(xs.reduce((a, b) => a + b, 0) / xs.length);
   }
@@ -150,12 +157,17 @@ function attendance30(t: Tables, student: Student, today: IsoDate): StudentDevPr
   return { rate: decided > 0 ? attendedRate(counts) : null, late: counts.late, absent: counts.absent };
 }
 
-/** Sinfning Growth Learning faolligi — eng so'nggi hafta. */
-function classLearning(t: Tables, classId: string): StudentDevProfile['context']['classLearning'] {
-  const latest = t.activity.filter((a) => a.classId === classId).sort((a, b) => b.weekStart.localeCompare(a.weekStart))[0];
-  if (!latest) return null;
+/**
+ * Sinfning Growth Learning faolligi — oxirgi YOPIQ hafta (joriy hafta natijasi ko'rsatilmaydi, backend
+ * bilan bir xil); ball K=5 qoidasi bilan (`learningTotals`).
+ */
+function classLearning(t: Tables, classId: string, today: IsoDate): StudentDevProfile['context']['classLearning'] {
+  const week = lastClosedWeek(today);
+  const cell = t.activity.find((a) => a.classId === classId && a.weekStart === week);
+  if (!cell) return null;
   const size = t.students.filter((s) => !s.archived && s.classId === classId).length;
-  return { activeRate: percent(latest.activeStudents, size), avgScore: Math.round(latest.avgScore) };
+  const { avgScore, suppressed } = learningTotals([cell]);
+  return { activeRate: sharePercent(cell.activeStudents, size), avgScore, suppressed };
 }
 
 export function buildProfile(t: Tables, actor: Actor, student: Student, today: IsoDate): StudentDevProfile {
@@ -176,13 +188,13 @@ export function buildProfile(t: Tables, actor: Actor, student: Student, today: I
   return {
     student: { id: student.id, name: studentName(student), className: cls?.name ?? '—', grade: cls?.grade ?? 0, ageBand: ageBandOf(ageOn(student.birthDate, today)) },
     latest,
-    classAverage: classmatesAverage(t, idx, student),
+    classAverage: classmatesAverage(t, idx, student, full),
     timeline: timeline(entries, full),
     career: careerOf(entries),
     results: [...entries].reverse().map((e) => ({ ...(full ? e.result : protectResult(e, idx)), testTitle: e.testTitle })),
     context: {
       attendance30: actor.role === 'HOMEROOM' ? attendance30(t, student, today) : null,
-      classLearning: classLearning(t, student.classId),
+      classLearning: classLearning(t, student.classId, today),
     },
     canSeeRaw: full,
   };
@@ -212,7 +224,10 @@ export function buildClassOverview(t: Tables, actor: Actor, cls: SchoolClass, te
       }
       return { studentId: s.id, name: studentName(s), assessedAt: st?.lastTakenAt ?? null, domains, attention: flagged.has(s.id) };
     });
+  // Psixologdan boshqaga hissiy holat o'rtachasi yo'q (index null) — `averageDomains`.
+  const shown = new Set(averageDomains(full));
   const domainAverages = DEV_DOMAINS.map((domain) => {
+    if (!shown.has(domain)) return { domain, index: null };
     const xs = rows.map((r) => snap?.get(r.studentId)?.domains[domain]?.index).filter((x): x is number => typeof x === 'number');
     return { domain, index: xs.length >= K ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null };
   });

@@ -25,6 +25,7 @@ import { computeCareAggregate, defaultSurvey } from './care-aggregate';
 import { nextOccurrence } from './comms-reminders';
 import { audienceTouchesScope, localIso } from './comms-shared';
 import { developmentSummary } from './development-summary';
+import { lastClosedWeek, learningTotals } from './learning';
 import { openRequests } from './notifications';
 import { exceptionStatus } from './school-mode-model';
 
@@ -79,7 +80,19 @@ export type DashboardOverview = {
     meetingsToday: number;
     recent: Array<{ id: string; studentName: string; className: string; topic: CareTopicTag; urgency: CareUrgency; status: CareRequestStatus; createdAt: string }>;
   } | null;
-  learning: { activeStudents: number; totalStudents: number; completedTasks: number; avgScore: number; dueThisWeek: number } | null;
+  /**
+   * Growth Learning, oxirgi YOPIQ hafta (`weekStart` — uning dushanbasi): natijalar — faqat ≥ 5 faolli
+   * sinflardan (K=5, `learningTotals`). `dueThisWeek` — bugundan 7 kun ichidagi muddatlar.
+   */
+  learning: {
+    weekStart: IsoDate;
+    activeStudents: number;
+    totalStudents: number;
+    completedTasks: number | null;
+    avgScore: number | null;
+    suppressed: boolean;
+    dueThisWeek: number;
+  } | null;
 };
 
 const EMPTY: DayCounts = { present: 0, late: 0, absent: 0, leftEarly: 0, excused: 0, pending: 0, total: 0 };
@@ -173,16 +186,21 @@ function careAggregate(tables: Tables, today: IsoDate): DashboardOverview['care'
   return { participation: agg.participationRate, wellbeing: agg.overall.WELLBEING ?? null, requestsThisWeek: agg.requestsThisWeek };
 }
 
+/**
+ * /learning bilan bir xil hisob (`learningTotals`): o'rtacha ball faollar soni bo'yicha tortilgan;
+ * faqat oxirgi yopiq hafta — joriy hafta natijalari hech qachon ko'rsatilmaydi.
+ */
 function learningSummary(tables: Tables, classIds: Set<string>, totalStudents: number, today: IsoDate): DashboardOverview['learning'] {
-  const latestWeek = tables.activity.reduce((max, a) => (a.weekStart > max ? a.weekStart : max), '');
-  const rows = tables.activity.filter((a) => a.weekStart === latestWeek && classIds.has(a.classId));
-  const activeStudents = rows.reduce((s, a) => s + a.activeStudents, 0);
+  const week = lastClosedWeek(today);
+  const totals = learningTotals(tables.activity.filter((a) => a.weekStart === week && classIds.has(a.classId)));
   const weekEnd = addDays(today, 7);
   return {
-    activeStudents,
+    weekStart: week,
+    activeStudents: totals.activeStudents,
     totalStudents,
-    completedTasks: rows.reduce((s, a) => s + a.completedTasks, 0),
-    avgScore: rows.length ? Math.round(rows.reduce((s, a) => s + a.avgScore, 0) / rows.length) : 0,
+    completedTasks: totals.completedTasks,
+    avgScore: totals.avgScore,
+    suppressed: totals.suppressed,
     dueThisWeek: tables.assignments.filter((a) => a.dueDate >= today && a.dueDate <= weekEnd && a.classIds.some((c) => classIds.has(c))).length,
   };
 }

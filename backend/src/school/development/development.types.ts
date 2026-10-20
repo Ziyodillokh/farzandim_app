@@ -37,7 +37,7 @@ export type StudentDevProfile = {
   results: ProfileResult[];
   context: {
     attendance30: { rate: number | null; late: number; absent: number } | null;
-    classLearning: { activeRate: number; avgScore: number } | null;
+    classLearning: { activeRate: number; avgScore: number | null; suppressed: boolean } | null;
   };
   canSeeRaw: boolean;
 };

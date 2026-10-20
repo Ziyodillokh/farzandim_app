@@ -11,12 +11,18 @@ import type { ClassDevOverview, LiveClass, LiveStudent, ProfileResult, Roster, S
 
 const average = (xs: readonly number[]) => Math.round(xs.reduce((a, b) => a + b, 0) / xs.length);
 
+/**
+ * Hissiy indeks o'rtachasi ham faqat psixologga: sinf o'rtachasi va sinfdoshlar
+ * o'rtachasini ayirib, sinf rahbari o'quvchining yashirin indeksini tiklardi.
+ */
+export const averagedDomains = (full: boolean) => (full ? DEV_DOMAINS : DEV_DOMAINS.filter((d) => d !== 'EMOTIONAL'));
+
 /** Sinfdoshlar o'rtachasi (o'quvchining o'zisiz), faqat n ≥ K bo'lgan sohalar. */
-function classmatesAverage(idx: DevIndex, roster: Roster, student: LiveStudent): StudentDevProfile['classAverage'] {
+function classmatesAverage(idx: DevIndex, roster: Roster, student: LiveStudent, full: boolean): StudentDevProfile['classAverage'] {
   const mates = roster.students.filter((s) => !s.archived && s.classId === student.classId && s.id !== student.id);
   const latest = mates.map((s) => latestDomains(idx.byStudent.get(s.id) ?? []));
   const out: StudentDevProfile['classAverage'] = {};
-  for (const d of DEV_DOMAINS) {
+  for (const d of averagedDomains(full)) {
     const xs = latest.map((m) => m[d]?.index).filter((x): x is number => typeof x === 'number');
     if (xs.length >= K) out[d] = average(xs);
   }
@@ -112,7 +118,7 @@ export function buildProfile(input: ProfileInput): StudentDevProfile {
       ageBand: ageBandOf(ageOn(student.birthDate, input.today)),
     },
     latest,
-    classAverage: classmatesAverage(idx, input.roster, student),
+    classAverage: classmatesAverage(idx, input.roster, student, full),
     timeline: timeline(entries, full),
     career: careerOf(entries, full),
     results: [...entries].reverse().map((e) => (full ? fullResult(e, input.answers.get(e.result.id)) : protectedResult(e, idx))),
@@ -149,9 +155,10 @@ export function buildClassOverview(input: {
     }
     return { studentId: s.id, name: studentName(s), assessedAt: st?.lastTakenAt ?? null, domains, attention: input.flagged.has(s.id) };
   });
+  const shown = new Set(averagedDomains(full));
   const domainAverages = DEV_DOMAINS.map((domain) => {
     const xs = roster.map((s) => snap?.get(s.id)?.domains[domain]?.index).filter((x): x is number => typeof x === 'number');
-    return { domain, index: xs.length >= K ? average(xs) : null };
+    return { domain, index: shown.has(domain) && xs.length >= K ? average(xs) : null };
   });
   return {
     classId: cls.id,

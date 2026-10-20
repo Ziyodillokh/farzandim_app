@@ -150,11 +150,23 @@ export function MessagesSection({ data, print }: { data: Section<'messages'> } &
 export function LearningSection({ data, print }: { data: Section<'learning'> } & PrintFlag) {
   const { t, formatNumber } = useI18n();
   return (
-    <SectionCard icon={icon(print, <BookOpen />)} title={t('reports.learning.title')} className="break-inside-avoid">
-      <Metric label={t('reports.learning.active')} value={data.avgActiveStudents} />
-      <Metric label={t('reports.learning.tasks')} value={formatNumber(data.completedTasks)} />
-      <Metric label={t('reports.learning.score')} value={`${data.avgScore}%`} />
+    <SectionCard icon={icon(print, <BookOpen />)} title={t('reports.learning.title')} description={t('reports.learning.closedWeeks')} className="break-inside-avoid">
+      <Metric label={t('reports.learning.active')} value={data.weeks === 0 ? '—' : data.avgActiveStudents} />
+      <Metric label={t('reports.learning.tasks')} value={data.weeks === 0 || data.completedTasks === null ? '—' : formatNumber(data.completedTasks)} />
+      <Metric label={t('reports.learning.score')} value={data.avgScore === null ? '—' : `${data.avgScore}%`} />
       <Metric label={t('reports.learning.assignments')} value={data.assignments} />
+      {data.weeks === 0 && (
+        <p className="mt-4 flex items-start gap-2 text-xs text-muted-foreground">
+          <Lock className="mt-0.5 h-3 w-3 shrink-0" />
+          {t('reports.learning.noClosedWeek')}
+        </p>
+      )}
+      {data.suppressed && (
+        <p className="mt-4 flex items-start gap-2 text-xs text-muted-foreground">
+          <Lock className="mt-0.5 h-3 w-3 shrink-0" />
+          {t('reports.learning.suppressed')}
+        </p>
+      )}
     </SectionCard>
   );
 }

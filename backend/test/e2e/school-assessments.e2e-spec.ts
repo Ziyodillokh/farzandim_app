@@ -124,6 +124,9 @@ describe('School assessments — ruxsatlar va oqim', () => {
     const a = (await api(w.psych, 'POST', '/assignments', { testId: draft.id, target: { kind: 'GRADES', grades: [7] }, ...openWindow(), consent: true })).json();
     expect(a.testVersion).toBe(1);
     await child(w.kids7a[0]!, 'POST', `/${a.id}/submit`, { answers: { q1: 'a' } });
+    // Faol tayinlash davomida savollar o'zgarmaydi — avval yopiladi (natija saqlanadi).
+    expect((await api(w.psych, 'PUT', `/tests/${draft.id}`, sampleInput({ title: L('Yangi nom') }))).statusCode).toBe(409);
+    expect((await api(w.psych, 'POST', `/assignments/${a.id}/close`)).statusCode).toBeLessThan(300);
     const bumped = (await api(w.psych, 'PUT', `/tests/${draft.id}`, sampleInput({ title: L('Yangi nom') }))).json();
     expect(bumped).toMatchObject({ version: 2, status: 'PUBLISHED' });
     const again = (await api(w.psych, 'PUT', `/tests/${draft.id}`, sampleInput({ title: L('Uchinchi nom') }))).json();

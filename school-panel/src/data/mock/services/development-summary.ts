@@ -51,9 +51,10 @@ function classSummary(t: Tables, idx: DevIndex, actor: Actor): DevelopmentSummar
   const term = idx.terms.filter((key) => [...(idx.snapshot.get(key)?.keys() ?? [])].some((id) => ids.has(id))).at(-1);
   const snap = term ? idx.snapshot.get(term) : undefined;
   const assessed = roster.filter((s) => snap?.has(s.id)).length;
+  // Backend bilan bir xil: jonli o'rtacha har yangi natijada o'zgaradi — hissiy indeks (sinf rahbariga yashirin) chiqmaydi.
   const domains = DEV_DOMAINS.map((domain) => {
     const xs = roster.map((s) => snap?.get(s.id)?.domains[domain]?.index).filter((x): x is number => typeof x === 'number');
-    return { domain, index: xs.length >= K ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null };
+    return { domain, index: domain !== 'EMOTIONAL' && xs.length >= K ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null };
   });
   return { mode: 'CLASS', classId: cls.id, className: cls.name, assessed, total: roster.length, domains };
 }

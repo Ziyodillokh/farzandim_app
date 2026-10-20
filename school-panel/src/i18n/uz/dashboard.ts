@@ -64,9 +64,11 @@ export const dashboard = {
   myClass: { title: '{name} — bugun', titleFallback: 'Mening sinfim', subtitle: 'O\'quvchilar va kelgan vaqti' },
   learning: {
     title: 'Growth Learning',
-    active: 'Shu hafta faol o\'quvchilar',
+    week: '{date} haftasi (yakunlangan)',
+    active: 'Faol o\'quvchilar',
     tasks: 'Bajarilgan topshiriqlar',
     score: 'O\'rtacha natija',
-    due: 'Shu hafta muddati tugaydigan: {count}',
+    due: 'Keyingi 7 kunda muddati tugaydigan: {count}',
+    suppressed: 'Natija yashirilgan: har bir sinfda 5 nafardan kam faol o\'quvchi',
   },
 };

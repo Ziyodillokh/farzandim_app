@@ -49,10 +49,13 @@ export const reports = {
   },
   learning: {
     title: 'Growth Learning',
+    closedWeeks: 'Faollik va natijalar — faqat yakunlangan haftalar bo\'yicha (dushanbasi shu oyda)',
+    noClosedWeek: 'Bu oyda hali yakunlangan hafta yo\'q — natijalar birinchi hafta yakunlangach chiqadi',
     active: 'Haftalik faol o\'quvchilar',
     tasks: 'Bajarilgan topshiriqlar',
     score: 'O\'rtacha natija',
     assignments: 'Berilgan topshiriqlar',
+    suppressed: 'Natijalar yashirilgan: sinflarda 5 nafardan kam faol o\'quvchi bo\'lgan',
   },
   csv: { filename: 'davomat-{month}' },
 };

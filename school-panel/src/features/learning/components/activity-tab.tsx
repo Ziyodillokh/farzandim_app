@@ -1,6 +1,6 @@
 'use client';
 
-import { Award, BarChart3, CircleCheck, Minus, TrendingDown, TrendingUp, Users } from 'lucide-react';
+import { Award, BarChart3, CalendarCheck, CircleCheck, Hourglass, Info, Minus, TrendingDown, TrendingUp, Users } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { DataTable, type Column } from '@/components/common/data-table';
@@ -10,9 +10,10 @@ import { StatCard } from '@/components/common/stat-card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { ClassActivityRow } from '@/data/mock/services/learning';
+import type { ClassActivityRow, LearningActivity } from '@/data/mock/services/learning';
+import { isHttpMode } from '@/data/source';
 import { useI18n } from '@/i18n';
-import { cn, percent } from '@/lib/utils';
+import { cn, sharePercent } from '@/lib/utils';
 import { useLearningActivity } from '../hooks';
 import { ClassRateChart, WeeklyActivityChart } from './activity-charts';
 import { InterestsCard } from './interests-card';
@@ -29,6 +30,47 @@ function Delta({ value, label }: { value: number; label: string }) {
 }
 
 const signed = (n: number) => (n > 0 ? `+${n}` : String(n));
+
+const DASH = '—';
+/** Natija bo'lmasa (yashirin yoki 0 faol) — null, aks holda formatlangan qiymat. */
+const maybe = (n: number | null | undefined, format: (n: number) => string): string | null => (typeof n === 'number' ? format(n) : null);
+
+/** Natija katagi (K=5): 5 nafardan kam faol — xira chiziqcha va izoh; 0 faol — oddiy chiziqcha. */
+function ResultCell({ value, suppressed }: { value: string | null; suppressed: boolean }) {
+  const { t } = useI18n();
+  if (!suppressed) return <>{value ?? DASH}</>;
+  const hint = t('learning.activity.suppressed');
+  return (
+    <span className="cursor-help text-muted-foreground/70" title={hint}>
+      <span aria-hidden>{DASH}</span>
+      <span className="sr-only">{hint}</span>
+    </span>
+  );
+}
+
+/**
+ * Natijalar — oxirgi YAKUNLANGAN hafta (backend: joriy hafta katagi har yakunlashda o'zgaradi, ikki
+ * o'qishdan bitta bolaning natijasi topilmasin); joriy hafta — faqat faollar soni.
+ */
+function WeekHeader({ data }: { data: LearningActivity }) {
+  const { t, formatDate, formatNumber } = useI18n();
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
+      {data.latestWeek && (
+        <p className="flex items-center gap-2 text-sm font-medium">
+          <CalendarCheck className="h-4 w-4 shrink-0 text-primary" />
+          {t('learning.activity.closedWeek', { date: formatDate(data.latestWeek, 'd MMMM') })}
+        </p>
+      )}
+      {data.current && (
+        <p className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Hourglass className="h-3.5 w-3.5 shrink-0" />
+          {t('learning.activity.currentWeek', { count: formatNumber(data.current.activeStudents) })}
+        </p>
+      )}
+    </div>
+  );
+}
 
 /** Sinf darajasidagi faollik (shaxsiy reyting yo'q). Sinf rahbari — faqat o'z sinfi. */
 export function ActivityTab() {
@@ -63,9 +105,9 @@ export function ActivityTab() {
           </div>
         ),
       },
-      { key: 'tasks', header: t('learning.activity.columns.tasks'), className: 'tabular-nums', cell: (r) => formatNumber(r.completedTasks) },
-      { key: 'score', header: t('learning.activity.columns.score'), className: 'tabular-nums', cell: (r) => r.avgScore },
-      { key: 'don', header: t('learning.activity.columns.don'), className: 'tabular-nums', cell: (r) => formatNumber(r.donPoints) },
+      { key: 'tasks', header: t('learning.activity.columns.tasks'), className: 'tabular-nums', cell: (r) => <ResultCell value={maybe(r.completedTasks, formatNumber)} suppressed={r.suppressed} /> },
+      { key: 'score', header: t('learning.activity.columns.score'), className: 'tabular-nums', cell: (r) => <ResultCell value={maybe(r.avgScore, String)} suppressed={r.suppressed} /> },
+      { key: 'don', header: t('learning.activity.columns.don'), className: 'tabular-nums', cell: (r) => <ResultCell value={maybe(r.donPoints, formatNumber)} suppressed={r.suppressed} /> },
       {
         key: 'delta',
         header: t('learning.activity.columns.delta'),
@@ -77,14 +119,23 @@ export function ActivityTab() {
   );
 
   if (activity.error) return <ErrorState error={activity.error} onRetry={() => void activity.refetch()} />;
-  if (!activity.isLoading && !last) return <EmptyState icon={<BarChart3 />} title={t('learning.activity.empty')} />;
+  if (!activity.isLoading && !last) {
+    const current = data?.current ? t('learning.activity.currentWeek', { count: formatNumber(data.current.activeStudents) }) : undefined;
+    return <EmptyState icon={<BarChart3 />} title={t('learning.activity.empty')} description={current} />;
+  }
 
   const loading = activity.isLoading;
-  const deltaLabel = (cur: number, before: number | undefined) =>
-    before === undefined ? undefined : <Delta value={cur - before} label={t('learning.activity.vsLastWeek', { delta: signed(cur - before) })} />;
+  // Hafta farqi — faqat ikkala hafta qiymati ham bor bo'lsa (yashirin hafta bilan solishtirilmaydi).
+  const deltaLabel = (cur: number | null | undefined, before: number | null | undefined) =>
+    typeof cur === 'number' && typeof before === 'number' ? <Delta value={cur - before} label={t('learning.activity.vsLastWeek', { delta: signed(cur - before) })} /> : undefined;
+  // Hafta jami (bir nechta sinf) yashiriladi — faqat birorta sinfda ham 5 nafar faol bo'lmasa (jami 5 dan ko'p bo'lishi mumkin).
+  const suppressedHint = last?.suppressed ? t('learning.activity.suppressedTotal') : undefined;
+  // K=5 izohi: http rejimida doim; demoda — faqat biror natija yashirilganda (demo ko'rinishi o'zgarmasin).
+  const showK5Note = isHttpMode || Boolean(data?.classes.some((c) => c.suppressed) || data?.weeks.some((w) => w.suppressed));
 
   return (
     <div className="space-y-6">
+      {loading || !data ? <Skeleton className="h-5 w-72 max-w-full rounded-md" /> : <WeekHeader data={data} />}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={<Users />}
@@ -92,8 +143,9 @@ export function ActivityTab() {
           value={formatNumber(last?.activeStudents ?? 0)}
           hint={
             <span className="flex flex-col gap-0.5">
-              {t('learning.activity.activeHint', { rate: percent(last?.activeStudents ?? 0, totalSize) })}
-              {last && deltaLabel(last.activeStudents, prev?.activeStudents)}
+              {/* Faollar (o'tgan hafta) sinfning bugungi tarkibidan ko'p bo'lishi mumkin — 100% dan oshmaydi. */}
+              {t('learning.activity.activeHint', { rate: sharePercent(last?.activeStudents ?? 0, totalSize) })}
+              {deltaLabel(last?.activeStudents, prev?.activeStudents)}
             </span>
           }
           loading={loading}
@@ -102,24 +154,24 @@ export function ActivityTab() {
           icon={<CircleCheck />}
           tone="success"
           label={t('learning.activity.completedTasks')}
-          value={formatNumber(last?.completedTasks ?? 0)}
-          hint={last && deltaLabel(last.completedTasks, prev?.completedTasks)}
+          value={maybe(last?.completedTasks, formatNumber) ?? DASH}
+          hint={suppressedHint ?? deltaLabel(last?.completedTasks, prev?.completedTasks)}
           loading={loading}
         />
         <StatCard
           icon={<BarChart3 />}
           tone="info"
           label={t('learning.activity.avgScore')}
-          value={`${last?.avgScore ?? 0}`}
-          hint={last && deltaLabel(last.avgScore, prev?.avgScore)}
+          value={maybe(last?.avgScore, String) ?? DASH}
+          hint={suppressedHint ?? deltaLabel(last?.avgScore, prev?.avgScore)}
           loading={loading}
         />
         <StatCard
           icon={<Award />}
           tone="warning"
           label={t('learning.activity.donPoints')}
-          value={formatNumber(last?.donPoints ?? 0)}
-          hint={t('learning.activity.donHint')}
+          value={maybe(last?.donPoints, formatNumber) ?? DASH}
+          hint={suppressedHint ?? t('learning.activity.donHint')}
           loading={loading}
         />
       </div>
@@ -139,6 +191,12 @@ export function ActivityTab() {
       <section>
         <h2 className="mb-3 text-[0.95rem] font-semibold">{t('learning.activity.tableTitle')}</h2>
         <DataTable columns={columns} rows={data?.classes} rowKey={(r) => r.classId} loading={loading} skeletonRows={6} />
+        {showK5Note && (
+          <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            {t('learning.activity.k5Note')}
+          </p>
+        )}
       </section>
 
       <InterestsCard />

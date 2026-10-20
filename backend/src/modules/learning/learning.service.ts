@@ -23,7 +23,7 @@ import {
   Prisma,
 } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
-import { addDays, tashkentDay } from '../../common/time/tashkent';
+import { addDays, isoWeekday, tashkentDay } from '../../common/time/tashkent';
 import { GamificationService } from '../gamification/gamification.service';
 import { LocalizedText } from './domain/localized';
 import { attemptSeed, pickQuestions } from './domain/question-picker';
@@ -289,6 +289,8 @@ export class LearningService {
           correct,
           xpEarned: xp,
           donEarned: don,
+          // Yakunlangan hafta maktab hisobotida o'zgarmaydi: o'tgan haftada boshlangan urinish — snapshot'siz.
+          schoolClassId: weekStartOf(current.day) === weekStartOf(tashkentDay(now)) ? await schoolClassOf(tx, childId) : null,
         },
       });
       const award = await this.gamification.awardInTx(tx, childId, {
@@ -452,6 +454,23 @@ export class LearningService {
     const byId = new Map(full.map((q) => [q.id, q]));
     return picked.map((q) => byId.get(q.id)!);
   }
+}
+
+/** Hafta dushanbasi (Toshkent kuni). */
+function weekStartOf(day: string): string {
+  return addDays(day, 1 - isoWeekday(day));
+}
+
+/**
+ * Maktab hisobotlari uchun snapshot: yakunlash paytida bola bog'langan faol
+ * maktabdagi sinf (bog'lanmagan / arxivlangan — null, maktabga ko'rinmaydi).
+ */
+async function schoolClassOf(tx: Prisma.TransactionClient, childId: string): Promise<string | null> {
+  const link = await tx.schoolStudent.findUnique({
+    where: { childId },
+    select: { classId: true, archived: true, school: { select: { status: true } } },
+  });
+  return link && !link.archived && link.school.status === 'ACTIVE' ? link.classId : null;
 }
 
 /** Bola bo'yicha tranzaksion qulf (boshlash / yakunlash navbat bilan). */

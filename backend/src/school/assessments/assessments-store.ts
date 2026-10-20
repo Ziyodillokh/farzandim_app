@@ -6,11 +6,14 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { notFound } from '../common/school-errors';
+import { isAssignmentFinal } from './assessments-view';
 import { isTemplateId, templateTest, TEMPLATE_IDS, toPsychTest } from './psych/catalog';
 import type { PsychTest } from './psych/types';
 import { ScoredResult, scoreStoredResult } from './results-view';
 
 export type Db = Prisma.TransactionClient | PrismaService;
+/** Panel tarjima kaliti (409) — faol tayinlash bor: savol / shkala o'zgarmaydi, arxivlanmaydi. */
+export const OPEN_ASSIGNMENTS = 'assessments.validation.openAssignments';
 export type ClassRow = { id: string; name: string; grade: number; letter: string };
 
 @Injectable()
@@ -91,6 +94,13 @@ export class AssessmentsStore {
       const test = byId.get(r.testId);
       return test ? [scoreStoredResult(test, r)] : [];
     });
+  }
+
+  /** Bola hali yechishi yoki yuborishi mumkin bo'lgan tayinlash bormi (OPEN, muddat + qo'shimcha vaqt o'tmagan). */
+  async hasLiveAssignments(schoolId: string, test: Pick<PsychTest, 'id' | 'timeLimitMin'>, db: Db = this.prisma): Promise<boolean> {
+    const rows = await db.schoolPsychAssignment.findMany({ where: { schoolId, testId: test.id, status: 'OPEN' }, select: { status: true, closesAt: true } });
+    const nowMs = Date.now();
+    return rows.some((a) => !isAssignmentFinal(a, test, nowMs));
   }
 
   /** Tranzaksiya ichida kalit bo'yicha navbat (parallel yozuvlar bir-birini buzmasin). */

@@ -1,7 +1,7 @@
 // Bosh sahifa kartasi uchun rolga mos rivojlanish xulosasi (panel
 // `development-summary.ts`; dashboard `development.view` bo'lsa chaqiradi):
 // - DIRECTOR / ADMIN → AGGREGATE: qamrov + soha indekslari (K=5, faqat e'lon qilingan natijalar);
-// - HOMEROOM → CLASS: o'z sinfi o'rtachalari (n ≥ K);
+// - HOMEROOM → CLASS: o'z sinfi o'rtachalari (n ≥ K, hissiy indekssiz);
 // - PSYCHOLOGIST → faol tayinlashlar, shu hafta yakunlanganlar, e'tibor ro'yxati soni;
 // - boshqalar → null.
 
@@ -16,6 +16,7 @@ import { computeAttention } from './development-attention';
 import { cellsOf, K, schoolDomainValues } from './development-cells';
 import { DevelopmentDataService } from './development-data.service';
 import { DEV_DOMAINS, DevIndex } from './development-index';
+import { averagedDomains } from './development-profile';
 import type { DevelopmentSummary, DomainIndexValue, Roster } from './development.types';
 
 const emptyDomains = (): DomainIndexValue[] => DEV_DOMAINS.map((domain) => ({ domain, index: null }));
@@ -72,9 +73,11 @@ export class DevelopmentSummaryService {
     const ids = new Set(members.map((s) => s.id));
     const term = idx.terms.filter((key) => [...(idx.snapshot.get(key)?.keys() ?? [])].some((id) => ids.has(id))).at(-1);
     const snap = term ? idx.snapshot.get(term) : undefined;
+    // Jonli o'rtacha har yangi natijada o'zgaradi — hissiy indeks (sinf rahbariga yashirin) chiqmaydi.
+    const shown = new Set(averagedDomains(false));
     const domains = DEV_DOMAINS.map((domain) => {
       const xs = members.map((s) => snap?.get(s.id)?.domains[domain]?.index).filter((x): x is number => typeof x === 'number');
-      return { domain, index: xs.length >= K ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null };
+      return { domain, index: shown.has(domain) && xs.length >= K ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null };
     });
     return { mode: 'CLASS', classId: cls.id, className: cls.name, assessed: members.filter((s) => snap?.has(s.id)).length, total: members.length, domains };
   }

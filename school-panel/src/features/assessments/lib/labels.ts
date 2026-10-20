@@ -76,7 +76,7 @@ const VALIDATION_KEY = /assessments\.validation\.[A-Za-z]+|errors\.form\.[A-Za-z
 
 /** Servis xatosi → tarjima kaliti (`assessments.validation.*` ham). */
 export function psychErrorKey(error: unknown): TKey {
-  if (error instanceof ServiceError && error.code === 'VALIDATION') {
+  if (error instanceof ServiceError && (error.code === 'VALIDATION' || error.code === 'CONFLICT')) {
     const match = VALIDATION_KEY.exec(error.message)?.[0];
     if (match) return match as TKey;
   }

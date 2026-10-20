@@ -195,8 +195,38 @@ Xavfsizlik ko'rigi (1-bosqich): HIGH / MEDIUM topilmalar tuzatilgan,
 regressiya testlari — `school-review-fixes.e2e-spec.ts`. Vaqtinchalik parol
 almashtirilguncha server boshqa so'rovlarni 403 qiladi.
 
+Xavfsizlik ko'rigi (2-bosqich: S6, S7b, S7c, S8) — hammasi tuzatilgan,
+regressiya testlari — `school-review-fixes-2.e2e-spec.ts`:
+- **Himoyalangan rollar** (psixolog): direktor ularni yarata, ularga ko'tara
+  yoki ularning login / parolini o'rnata olmaydi — faqat operator
+  (`scripts/school/create-staff.ts`). Pasaytirish va hisobni o'chirish mumkin.
+  Rol tekshiruvi qulflangan qatorda (`FOR UPDATE`) — parallel so'rovlar bilan
+  chetlab o'tilmaydi. O'z hisobiga `setAccount` yo'q: o'z paroli faqat joriy
+  parol bilan (profil).
+- **So'rov hajmi:** JSON / urlencoded ≤ 5 MB (avval 100 MB, auth'dan oldin
+  o'qilardi). Kattaroq kerak bo'lsa — endpointda `@BodyLimit` (bola
+  qurilmasining ilovalar ro'yxati: 48 MB). Fayllar (multipart) — o'z chegarasi.
+- **Growth K=5:** natijalar (topshiriq, ball, DON) faqat ≥5 faol bolali
+  (sinf, hafta) kataklaridan va faqat YAKUNLANGAN haftalardan; kichik guruh
+  `suppressed`. Davom etayotgan hafta — faqat faollar soni (`current`): jonli
+  katak har urinishda o'zgarib, ikki o'qish farqi bolaning natijasini ochardi.
+  Jami, sinf filtri, oylik hisobot (dushanbasi shu oyda bo'lgan yakunlangan
+  haftalar), bosh sahifa va profil konteksti bir xil bo'linishda — ayirib
+  tiklab bo'lmaydi. Sinf — urinish yakunlangan paytdagi snapshot
+  (`learning_attempts.school_class_id`, faqat o'sha haftada boshlangan
+  urinishga): o'quvchini ko'chirish yoki uzish o'tgan haftalarni
+  o'zgartirmaydi, bog'lashdan oldingi faollik maktabga ko'rinmaydi.
+  Qiziqishlarda 5 nafardan kam bolali daraja ko'rsatilmaydi.
+- **Rivojlanish:** sinf rahbariga hissiy soha o'rtachalari ham yo'q (sinf va
+  sinfdoshlar o'rtachasini ayirib yashirin indeks tiklanardi).
+- **Kichiklari:** ota-onani uzish — sinf rahbari faqat hamma faol farzandi
+  o'z doirasida bo'lsa; test natijalari — o'quvchining bugungi sinfi
+  (arxivlanganlar yo'q); faol tayinlashli testda savol / shkala o'zgarmaydi va
+  arxivlanmaydi (409; vaqt chegarasi uzaytirilsa — kattasi bo'yicha); erta
+  ketish lentasi — tarix ruxsatisiz faqat bugungi, sabab faqat
+  `attendance.earlyExit` egasiga; natija (tayinlash, o'quvchi) unikal indeksi.
+
 **Qolgan ishlar:**
-- Xavfsizlik ko'rigi (2-bosqich: S6, S7b, S7c, S8) topilmalari.
 - Parvoz Parents ilovasi: taklif kodi, e'lonlar, davomat, erta ketish, to'lovlar.
 - Parvoz Growth ilovasi: kiosk QR skaner, so'rovnoma va murojaat, psixologik
   test, maktab topshiriqlari.
@@ -217,11 +247,17 @@ web). Faqat egasining ruxsati bilan.
    - `SCHOOL_JWT_SECRET` (ixtiyoriy, ≥ 32 belgi) — yo'q bo'lsa
      `JWT_ACCESS_SECRET`dan hosila olinadi.
    - `CORS_ORIGINS` — panel boshqa domenda bo'lsa, shu domen.
-2. **Migratsiyalar** — 8 ta, hammasi qo'shuvchi (DROP / RENAME / DELETE
-   yo'q): learning (4), school core / wave2 / session grace, savollar 2-to'lqin.
+2. **Migratsiyalar** — 10 ta, hammasi qo'shuvchi (DROP / RENAME / DELETE
+   yo'q): learning (4), school core / wave2 / session grace, savollar
+   2-to'lqin, psixologik natija unikal indeksi va Growth urinishi sinf
+   snapshot'i (nullable ustun + indeks) — ikkalasi shu tarmoqdagi jadvallarda.
 3. **Maktab yaratish:** `npx tsx scripts/school/create-school.ts` — kod,
    nom va direktor; vaqtinchalik parol chiqadi (birinchi kirishda
-   almashtirish majburiy).
+   almashtirish majburiy). Psixolog — faqat operator:
+   `npx tsx scripts/school/create-staff.ts --school <kod> --role PSYCHOLOGIST
+   --name "F.I.Sh." --username <login>`. Parolni tiklash: `--reset`
+   (2FA ham: `--reset-2fa`); direktor hisobni o'chirgan bo'lsa — o'sha xodimga
+   `--reset --id <xodim-id> --username <login>`.
 4. **Haqiqiy panel:** `NEXT_PUBLIC_DATA_SOURCE=http NEXT_PUBLIC_API_BASE=/api
    PANEL_BASE_PATH=/maktab npm run build` → `out/` statik fayllar. Demo
    (`/school`) mock rejimda qoladi. Refresh cookie `/api/school/auth` yo'lida,

@@ -53,6 +53,8 @@ export class AssessmentsAssignService {
     assertCan(actor, 'assessments.manage');
     const data = parseOrThrow(assignInputSchema, input);
     return this.prisma.$transaction(async (tx) => {
+      // Test tahriri / arxivi bilan bir navbatda — tayinlash eskirgan versiyaga bog'lanmasin.
+      await this.store.lock(tx, `psych-test:${data.testId}`);
       const test = await this.store.requireTest(actor.schoolId, data.testId, tx);
       if (test.status !== 'PUBLISHED' || test.items.length === 0) throw conflict('test not assignable');
       const classIds = resolveClasses(await this.store.classes(actor.schoolId, tx), data.target, test);

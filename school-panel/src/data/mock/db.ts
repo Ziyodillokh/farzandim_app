@@ -4,6 +4,7 @@ import { toIsoDate } from './calendar';
 import { clockNow } from './clock';
 import { buildPsychSeed } from './psych/seed';
 import { generateSeed } from './seed';
+import { buildActivity, CLOSED_WEEKS } from './seed/learning';
 import { buildNotifications } from './seed/notifications';
 import type { DbSnapshot, Tables } from './tables';
 
@@ -80,7 +81,15 @@ function withStaffTables(db: DbSnapshot): DbSnapshot {
   };
 }
 
-const MIGRATIONS: readonly Migration[] = [withPortraits, withAssessments, withStaffTables];
+/** Growth faolligi: 6 yakunlangan hafta + davom etayotgan hafta (avvalgi saqlangan bazada 6 hafta edi). */
+function withActivityWeeks(db: DbSnapshot): DbSnapshot {
+  if (new Set(db.tables.activity.map((a) => a.weekStart)).size > CLOSED_WEEKS) return db;
+  const sizes = new Map<string, number>();
+  for (const s of db.tables.students) sizes.set(s.classId, (sizes.get(s.classId) ?? 0) + 1);
+  return { ...db, tables: { ...db.tables, activity: buildActivity(db.tables.classes, sizes, db.baseDate) } };
+}
+
+const MIGRATIONS: readonly Migration[] = [withPortraits, withAssessments, withStaffTables, withActivityWeeks];
 
 export function migrate(db: DbSnapshot): DbSnapshot {
   return MIGRATIONS.reduce((current, step) => step(current), db);

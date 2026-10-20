@@ -4,11 +4,12 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
-import { addDays, isoWeekday, tashkentDay } from '../../common/time/tashkent';
+import { addDays, tashkentDay } from '../../common/time/tashkent';
 import { loadHolidays } from '../attendance/attendance-lookups';
 import { isSchoolDay } from '../attendance/attendance-time';
 import { addCount, attendedRate, EMPTY_COUNTS, percent } from '../attendance/attendance-view';
 import { SchoolCryptoService } from '../common/school-crypto.service';
+import { buildCells, mondayOf, totalsOf } from '../learning/learning-cells';
 import type { LiveStudent, StudentDevProfile } from './development.types';
 
 const ATTENDANCE_DAYS = 30;
@@ -49,20 +50,20 @@ export class DevelopmentContextService {
     return { rate: decided > 0 ? attendedRate(counts) : null, late: counts.late, absent: counts.absent };
   }
 
-  /** Sinf faolligi (joriy hafta): Parvoz'ga ulangan bola bo'lmasa — null. */
+  /**
+   * Sinf faolligi (oxirgi YAKUNLANGAN hafta): Parvoz'ga ulangan bola bo'lmasa — null.
+   * Growth faollik jadvalidagi katak bilan bir xil (5 nafardan kam faol — yashiriladi).
+   */
   async classLearning(schoolId: string, classId: string): Promise<StudentDevProfile['context']['classLearning']> {
     const students = await this.prisma.schoolStudent.findMany({ where: { schoolId, classId, archived: false }, select: { childId: true } });
-    const children = students.flatMap((s) => (s.childId ? [s.childId] : []));
-    if (children.length === 0) return null;
-    const today = tashkentDay();
-    const monday = addDays(today, 1 - isoWeekday(today));
+    if (!students.some((s) => s.childId)) return null;
+    const lastWeek = addDays(mondayOf(tashkentDay()), -7);
     const attempts = await this.prisma.learningAttempt.findMany({
-      where: { childId: { in: children }, status: 'COMPLETED', day: { gte: monday } },
-      select: { childId: true, correct: true, total: true },
+      where: { schoolClassId: classId, status: 'COMPLETED', day: { gte: lastWeek, lte: addDays(lastWeek, 6) } },
+      select: { childId: true, schoolClassId: true, day: true, correct: true, total: true, donEarned: true },
     });
-    const active = new Set(attempts.map((a) => a.childId)).size;
-    const avgScore = attempts.length ? Math.round(attempts.reduce((sum, a) => sum + percent(a.correct, a.total), 0) / attempts.length) : 0;
-    return { activeRate: percent(active, students.length), avgScore };
+    const totals = totalsOf([...buildCells(attempts).values()]);
+    return { activeRate: Math.min(100, percent(totals.activeStudents, students.length)), avgScore: totals.avgScore, suppressed: totals.suppressed };
   }
 
   /** Psixolog profili: o'quvchi natijalarining javoblar varag'i (ixcham kod). */

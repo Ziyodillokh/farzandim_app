@@ -1,6 +1,6 @@
 import type { ClassActivity, LearningAssignment, LearningMaterial, SchoolClass } from '@/data/contracts';
 import { unitHash } from '@/lib/rng';
-import { addDays, weekStart } from '../calendar';
+import { addDays, isoWeekday, weekStart } from '../calendar';
 import { FIXED_STAFF } from './people';
 
 export function buildMaterials(): LearningMaterial[] {
@@ -38,15 +38,23 @@ export function buildAssignments(baseIso: string): LearningAssignment[] {
   ];
 }
 
+/** Yopiq (yakshanbasi o'tgan) haftalar soni; ularga joriy, tugallanmagan hafta qo'shiladi. */
+export const CLOSED_WEEKS = 6;
+
+/**
+ * 6 yopiq hafta + joriy (tugallanmagan) hafta. Joriy hafta faollari — o'tgan kunlar ulushida
+ * (dushanba — eng kam); uning natijalari panelda ko'rsatilmaydi, faqat faollar soni.
+ */
 export function buildActivity(classes: SchoolClass[], sizes: Map<string, number>, baseIso: string): ClassActivity[] {
   const out: ClassActivity[] = [];
   const thisWeek = weekStart(baseIso);
-  for (let w = 5; w >= 0; w--) {
+  const weekProgress = isoWeekday(baseIso) / 7;
+  for (let w = CLOSED_WEEKS; w >= 0; w--) {
     const start = addDays(thisWeek, -7 * w);
     for (const cls of classes) {
       const size = sizes.get(cls.id) ?? 25;
-      const engagement = 0.45 + unitHash(cls.id, 'eng') * 0.35 + (5 - w) * 0.015;
-      const active = Math.round(size * Math.min(0.95, engagement));
+      const engagement = 0.45 + unitHash(cls.id, 'eng') * 0.35 + (CLOSED_WEEKS - w) * 0.015;
+      const active = Math.round(size * Math.min(0.95, engagement) * (w === 0 ? weekProgress : 1));
       out.push({
         classId: cls.id,
         weekStart: start,

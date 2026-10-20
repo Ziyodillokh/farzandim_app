@@ -67,9 +67,11 @@ export const dashboard: DeepString<typeof uz> = {
   myClass: { title: '{name} — сегодня', titleFallback: 'Мой класс', subtitle: 'Ученики и время прихода' },
   learning: {
     title: 'Growth Learning',
+    week: 'Неделя с {date} (завершена)',
     active: 'Активные ученики за неделю',
     tasks: 'Выполнено заданий',
     score: 'Средний результат',
-    due: 'Срок на этой неделе: {count}',
+    due: 'Срок в ближайшие 7 дней: {count}',
+    suppressed: 'Результат скрыт: в каждом классе меньше 5 активных учеников',
   },
 };

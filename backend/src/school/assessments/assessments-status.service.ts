@@ -11,7 +11,7 @@ import { conflict, invalid } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
 import { normsBodySchema } from './assessments-inputs.schemas';
 import { parseTestNorms } from './assessments-parse';
-import { AssessmentsStore } from './assessments-store';
+import { AssessmentsStore, OPEN_ASSIGNMENTS } from './assessments-store';
 import { definitionOf, isTemplateId, portableTest } from './psych/catalog';
 import type { PsychTest, PsychTestStatus } from './psych/types';
 
@@ -72,6 +72,7 @@ export class AssessmentsStatusService {
       const test = await this.store.requireTest(actor.schoolId, id, tx);
       if (!from.includes(test.status)) throw conflict(`status ${test.status}`);
       if (to === 'PUBLISHED' && test.source !== 'EXTERNAL' && test.items.length === 0) throw invalid('items: assessments.validation.noItems');
+      if (to === 'ARCHIVED' && (await this.store.hasLiveAssignments(actor.schoolId, test, tx))) throw conflict(OPEN_ASSIGNMENTS);
       if (isTemplateId(id)) {
         await tx.schoolPsychTemplateState.upsert({
           where: { schoolId_templateId: { schoolId: actor.schoolId, templateId: id } },

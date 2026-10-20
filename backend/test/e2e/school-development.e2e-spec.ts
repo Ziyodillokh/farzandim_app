@@ -76,7 +76,7 @@ describe('School development — ruxsatlar va ko\'rinish', () => {
     await seedTerms();
     const p = (await api(w.psych, `/students/${w.pupils7a[0]!.id}/profile`)).json();
     expect(p).toMatchObject({ canSeeRaw: true, student: { name: 'Alfaov Alfa0', className: '7-A', grade: 7, ageBand: 'A13_14' } });
-    expect(p.context).toEqual({ attendance30: null, classLearning: { activeRate: 0, avgScore: 0 } });
+    expect(p.context).toEqual({ attendance30: null, classLearning: { activeRate: 0, avgScore: null, suppressed: false } });
     expect(p.results).toHaveLength(5);
     expect(p.results[0]).toMatchObject({ testId: 'tpl-career', answers: '0123', durationSec: 200, raw: { I: 5 }, testTitle: { uz: 'Kasbiy qiziqishlar' } });
     expect(p.latest.find((d: { domain: string }) => d.domain === 'EMOTIONAL').index).not.toBeNull();
@@ -101,6 +101,9 @@ describe('School development — ruxsatlar va ko\'rinish', () => {
     const emotional = p.latest.find((d: { domain: string }) => d.domain === 'EMOTIONAL');
     expect(emotional.index).toBeNull();
     expect(emotional.band).not.toBeNull();
+    // Sinfdoshlar va sinf o'rtachasini ayirib yashirin hissiy indeks tiklanmasin.
+    expect(p.classAverage.EMOTIONAL).toBeUndefined();
+    expect(p.classAverage.REASONING).toEqual(expect.any(Number));
     expect(p.timeline.every((x: { values: Record<string, number> }) => x.values.EMOTIONAL === undefined)).toBe(true);
     expect(p.career).toMatchObject({ topCodes: 'IAC', raw: {} });
     for (const r of p.results) {
@@ -120,6 +123,12 @@ describe('School development — ruxsatlar va ko\'rinish', () => {
     expect(own).toMatchObject({ className: '7-A', termKey: termAt(now), assessed: 6, total: 6 });
     expect(own.rows.every((r: { attention: boolean; domains: { EMOTIONAL?: { index: unknown } } }) => !r.attention && (r.domains.EMOTIONAL?.index ?? null) === null)).toBe(true);
     expect(own.domainAverages.find((d: { domain: string }) => d.domain === 'REASONING').index).toEqual(expect.any(Number));
+    expect(own.domainAverages.find((d: { domain: string }) => d.domain === 'EMOTIONAL').index).toBeNull();
+    // Bosh sahifa kartasi (jonli o'rtacha) ham hissiy indekssiz.
+    const card = (await t.app.inject({ method: 'GET', url: '/api/school/dashboard/overview', headers: { authorization: `Bearer ${w.homeroom.token}` } })).json().development;
+    expect(card).toMatchObject({ mode: 'CLASS', className: '7-A' });
+    expect(card.domains.find((d: { domain: string }) => d.domain === 'EMOTIONAL').index).toBeNull();
+    expect(card.domains.find((d: { domain: string }) => d.domain === 'REASONING').index).toEqual(expect.any(Number));
     expect(Object.keys(own.schoolAverages)).toEqual(expect.arrayContaining(['REASONING', 'EMOTIONAL']));
     const past = (await api(w.homeroom, `/classes/${w.classes.c7a}/overview?termKey=${encodeURIComponent(termAt(prev))}`)).json();
     expect(past.termKey).toBe(termAt(prev));
@@ -128,6 +137,7 @@ describe('School development — ruxsatlar va ko\'rinish', () => {
     const flagged = full.rows.find((r: { studentId: string }) => r.studentId === w.pupils7a[0]!.id);
     expect(flagged.attention).toBe(true);
     expect(flagged.domains.EMOTIONAL.index).toEqual(expect.any(Number));
+    expect(full.domainAverages.find((d: { domain: string }) => d.domain === 'EMOTIONAL').index).toEqual(expect.any(Number));
   });
 
   it('e\'tibor ro\'yxati — faqat psixolog; sinf tanlovi va choraklar rolga mos', async () => {

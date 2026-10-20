@@ -11,13 +11,20 @@ import { conflict, notFound } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
 import { importBodySchema } from './assessments-inputs.schemas';
 import { parseTestFile, parseTestInput } from './assessments-parse';
-import { AssessmentsStore } from './assessments-store';
+import { AssessmentsStore, OPEN_ASSIGNMENTS } from './assessments-store';
+import { submitGraceMs } from './assessments-view';
 import { canonicalJson, definitionOf, isTemplateId, portableTest, toPsychTest } from './psych/catalog';
 import type { PsychTest, PsychTestInputShape, PsychTestSource } from './psych/types';
 
 type Tx = Prisma.TransactionClient;
 
 const COPY_SUFFIX = { uz: ' (nusxa)', ru: ' (копия)' } as const;
+
+/** Ikki vaqt chegarasining kattasi (`null` — standart qo'shimcha vaqt, `submitGraceMs`). */
+function longerLimit(a: number | null, b: number | null): number | null {
+  const grace = (min: number | null) => submitGraceMs({ timeLimitMin: min });
+  return grace(a) >= grace(b) ? a : b;
+}
 const TITLE_MAX = 120;
 
 @Injectable()
@@ -55,6 +62,7 @@ export class AssessmentsEditorService {
       const test = toPsychTest(row);
       if (test.status === 'ARCHIVED' || test.source === 'EXTERNAL') throw conflict(`${test.source}/${test.status}`);
       const changed = canonicalJson(test.items) !== canonicalJson(data.items) || canonicalJson(test.scales) !== canonicalJson(data.scales);
+      if (test.status === 'PUBLISHED') await this.assertEditableWhileLive(tx, actor.schoolId, test, data, changed);
       const version = test.status === 'PUBLISHED' && changed ? test.version + 1 : test.version;
       const next = toPsychTest(
         await tx.schoolPsychTest.update({
@@ -108,6 +116,19 @@ export class AssessmentsEditorService {
       });
       return test;
     });
+  }
+
+  /**
+   * Faol tayinlash paytida: savol / shkala o'zgarmaydi (javoblar boshqa versiya bo'yicha
+   * baholanardi; qo'shimcha vaqt — eski va yangi chegaraning kattasi, uzaytirish yopilganni
+   * qayta ochmasin) va vaqt chegarasi o'zgarmaydi (qisqartirib, keyingi tahrirda tekshiruvni
+   * chetlab o'tmasin; yechayotgan bola yubora olmay qolmasin).
+   */
+  private async assertEditableWhileLive(tx: Tx, schoolId: string, test: PsychTest, data: PsychTestInputShape, changed: boolean): Promise<void> {
+    const limitChanged = (data.timeLimitMin ?? null) !== (test.timeLimitMin ?? null);
+    if (!changed && !limitChanged) return;
+    const grace = { id: test.id, timeLimitMin: changed ? longerLimit(test.timeLimitMin, data.timeLimitMin ?? null) : test.timeLimitMin };
+    if (await this.store.hasLiveAssignments(schoolId, grace, tx)) throw conflict(OPEN_ASSIGNMENTS);
   }
 
   private async insert(tx: Tx, actor: SchoolActor, body: PsychTestInputShape, source: PsychTestSource, basedOn: string | null): Promise<PsychTest> {

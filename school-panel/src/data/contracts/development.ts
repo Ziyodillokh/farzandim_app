@@ -7,7 +7,7 @@ export type DomainValue = { domain: DevDomain; index: number | null; band: Score
 export type StudentDevProfile = {
   student: { id: Id; name: string; className: string; grade: number; ageBand: AgeBand };
   latest: DomainValue[];
-  /** Sinfdoshlar o'rtachasi (n ≥ K bo'lsa). */
+  /** Sinfdoshlar o'rtachasi (n ≥ K bo'lsa); psixologdan boshqaga EMOTIONAL yo'q. */
   classAverage: Partial<Record<DevDomain, number>>;
   timeline: Array<{ termKey: string; date: IsoDate; values: Partial<Record<DevDomain, number>> }>;
   career: { topCodes: string; raw: Record<string, number>; takenAt: IsoDateTime } | null;
@@ -15,7 +15,8 @@ export type StudentDevProfile = {
   results: Array<ScoredResult & { testTitle: Localized }>;
   context: {
     attendance30: { rate: number | null; late: number; absent: number } | null;
-    classLearning: { activeRate: number; avgScore: number } | null;
+    /** Oxirgi YOPIQ (yakunlangan) hafta; 5 nafardan kam faol bo'lsa ball yashiriladi (`suppressed`, avgScore = null). */
+    classLearning: { activeRate: number; avgScore: number | null; suppressed: boolean } | null;
   };
   canSeeRaw: boolean;
 };
@@ -59,6 +60,7 @@ export type ClassDevOverview = {
   termKey: string;
   assessed: number;
   total: number;
+  /** Psixologdan boshqaga EMOTIONAL yo'q (index null yoki umuman qaytmaydi). */
   domainAverages: Array<{ domain: DevDomain; index: number | null }>;
   schoolAverages: Partial<Record<DevDomain, number>>;
   rows: ClassDevRow[];

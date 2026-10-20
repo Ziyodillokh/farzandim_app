@@ -209,6 +209,15 @@ export class GuardiansService {
     assertCan(actor, 'guardians.link');
     return this.prisma.$transaction(async (tx) => {
       const guardian = await this.scopedGuardian(tx, actor, guardianId);
+      // Uzish ota-onaning BARCHA farzandlariga ta'sir qiladi — sinf rahbari faqat
+      // hamma faol farzandi o'z doirasida bo'lsa uza oladi (boshqa sinf buzilmasin).
+      const allowed = allowedClassIds(actor);
+      if (allowed) {
+        const outside = await tx.schoolStudentGuardian.count({
+          where: { guardianId, student: { archived: false, OR: [{ classId: null }, { classId: { notIn: allowed } }] } },
+        });
+        if (outside > 0) throw forbidden(guardianId);
+      }
       if (guardian.linkStatus !== 'LINKED' || !guardian.userId) throw conflict('not linked');
       const userId = guardian.userId;
       const updated = await tx.schoolGuardian.update({

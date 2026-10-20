@@ -118,15 +118,16 @@ export function AssignmentsTab({ onAssign, testId }: { onAssign: () => void; tes
                 <Play />
               </IconAction>
             )}
+            {/* Yopish — status OPEN bo'lsa doim (muddati o'tgan, ENDED ko'rinsa ham): ochiq tayinlash testni tahrirlash va arxivlashni qulflaydi. */}
+            {a.status === 'OPEN' && (
+              <IconAction label={t('assessments.assignments.close')} onClick={() => setPending({ kind: 'close', row: a })}>
+                <CircleStop />
+              </IconAction>
+            )}
             {a.status === 'OPEN' && a.state !== 'ENDED' && (
-              <>
-                <IconAction label={t('assessments.assignments.close')} onClick={() => setPending({ kind: 'close', row: a })}>
-                  <CircleStop />
-                </IconAction>
-                <IconAction label={t('assessments.assignments.cancel')} onClick={() => setPending({ kind: 'cancel', row: a })}>
-                  <XCircle />
-                </IconAction>
-              </>
+              <IconAction label={t('assessments.assignments.cancel')} onClick={() => setPending({ kind: 'cancel', row: a })}>
+                <XCircle />
+              </IconAction>
             )}
           </div>
         ),

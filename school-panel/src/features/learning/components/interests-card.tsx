@@ -7,6 +7,7 @@ import { SectionCard } from '@/components/common/section-card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SUBJECTS } from '@/data/schemas/learning';
+import { isHttpMode } from '@/data/source';
 import { useI18n } from '@/i18n';
 import { useLearningInterests } from '../hooks';
 
@@ -18,7 +19,10 @@ function cellStyle(percent: number) {
   return { background: `hsl(var(--primary) / ${alpha.toFixed(2)})` };
 }
 
-/** Qiziqishlar taqsimoti — sinf darajasi bo'yicha TAXMINIY baho (demo, shaxsiy ma'lumotsiz). */
+/**
+ * Qiziqishlar taqsimoti — sinf darajasi bo'yicha, shaxsiy ma'lumotsiz. Demo: TAXMINIY baho;
+ * http: bolalar tanlagan fanlar (5 nafardan kam bolali darajalar backend'dan kelmaydi — ro'yxat bo'sh bo'lishi mumkin).
+ */
 export function InterestsCard() {
   const { t } = useI18n();
   const interests = useLearningInterests();
@@ -28,10 +32,10 @@ export function InterestsCard() {
       title={
         <span className="flex flex-wrap items-center gap-2">
           {t('learning.interests.title')}
-          <Badge variant="info" size="sm">{t('learning.interests.estimate')}</Badge>
+          {!isHttpMode && <Badge variant="info" size="sm">{t('learning.interests.estimate')}</Badge>}
         </span>
       }
-      description={t('learning.interests.hint')}
+      description={t(isHttpMode ? 'learning.interests.hintLive' : 'learning.interests.hint')}
       icon={<Sparkles />}
       bodyClassName="p-0"
     >
@@ -41,6 +45,8 @@ export function InterestsCard() {
         <div className="p-5">
           <Skeleton className="h-48 w-full rounded-lg" />
         </div>
+      ) : !interests.data?.length ? (
+        <p className="px-5 py-8 text-center text-sm text-muted-foreground">{t('learning.interests.empty')}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] border-separate border-spacing-1 p-3 text-sm">

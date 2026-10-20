@@ -2,7 +2,7 @@ import { roleHas } from '@/auth/permissions';
 import type { Localized, NotificationItem, NotificationKind, NotificationTone, OpenRequests, StaffNotification } from '@/data/contracts';
 import { enums as ruEnums } from '@/i18n/ru/enums';
 import { enums as uzEnums } from '@/i18n/uz/enums';
-import { toLocalIso } from '../calendar';
+import { toIsoDate, toLocalIso } from '../calendar';
 import { clockNow } from '../clock';
 import { type Actor, allowedClassIds, assertCan, currentActor, inScope, latency } from '../context';
 import { getTables } from '../db';
@@ -64,11 +64,15 @@ function storedItems(t: Tables, actor: Actor): NotificationItem[] {
   return notificationsFor(t, actor).map(fromStored);
 }
 
-function earlyExitItems(t: Tables, actor: Actor): NotificationItem[] {
+/** Backend bilan bir xil: tarix ruxsatisiz (navbatchi) — faqat bugungi; sabab — faqat `attendance.earlyExit` egasiga. */
+function earlyExitItems(t: Tables, actor: Actor, now: Date): NotificationItem[] {
   if (!roleHas(actor.role, 'attendance.view')) return [];
+  const onlyToday = !roleHas(actor.role, 'attendance.history');
+  const showReason = roleHas(actor.role, 'attendance.earlyExit');
+  const today = toIsoDate(now);
   const classes = classNames(t);
   const students = new Map(t.students.map((s) => [s.id, s]));
-  return inScope(actor, t.earlyExits.filter((e) => e.status === 'PENDING')).map((e) => {
+  return inScope(actor, t.earlyExits.filter((e) => e.status === 'PENDING' && (!onlyToday || e.date === today))).map((e) => {
     const student = students.get(e.studentId);
     return {
       id: `exit:${e.id}`,
@@ -76,7 +80,7 @@ function earlyExitItems(t: Tables, actor: Actor): NotificationItem[] {
       at: e.requestedAt,
       tone: NOTIFICATION_TONES.EARLY_EXIT_PENDING,
       params: { name: student ? studentName(student) : '—', className: classes.get(e.classId) ?? '', time: e.time },
-      subject: plain(e.reason),
+      subject: showReason ? plain(e.reason) : null,
       href: '/attendance/early-exit',
     };
   });
@@ -154,7 +158,7 @@ export function buildFeed(t: Tables, actor: Actor, now: Date): NotificationItem[
   const nowMs = now.getTime();
   const all: NotificationItem[] = [
     ...storedItems(t, actor),
-    ...earlyExitItems(t, actor),
+    ...earlyExitItems(t, actor, now),
     ...verificationItems(t, actor),
     ...careItems(t, actor),
     ...messageItems(t, actor, nowMs),

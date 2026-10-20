@@ -168,12 +168,13 @@ export const assessmentsResultsService = {
     const t = getTables();
     const test = findTest(t, testId);
     if (!test) throw new ServiceError('NOT_FOUND', testId);
-    const filtered = allResults(t).filter(
-      (r) => r.testId === testId && (!f.assignmentId || r.assignmentId === f.assignmentId) && (!f.classId || r.classId === f.classId),
-    );
+    // Doira — o'quvchining BUGUNGI sinfi (backend bilan bir xil): boshqa sinfga o'tgan
+    // yoki arxivlangan o'quvchi eski sinf rahbariga ko'rinmaydi.
+    const current = new Map(inScope(actor, t.students.filter((s) => !s.archived && (!f.classId || s.classId === f.classId))).map((s) => [s.id, s]));
+    const filtered = allResults(t).filter((r) => r.testId === testId && current.has(r.studentId) && (!f.assignmentId || r.assignmentId === f.assignmentId));
     const names = new Map(t.students.map((s) => [s.id, `${s.lastName} ${s.firstName}`]));
     const classNames = new Map(t.classes.map((c) => [c.id, c.name]));
-    const rows = latestPerStudent(inScope(actor, filtered)).flatMap((r) => toRow(t, r, bandsOnly, names, classNames) ?? []);
+    const rows = latestPerStudent(filtered).flatMap((r) => toRow(t, r, bandsOnly, names, classNames) ?? []);
     const scaleKey = distributionScale(test, f.scale);
     const needsNorms = scaleKey !== null && !(test.norms[scaleKey]?.length);
     return {

@@ -42,21 +42,27 @@ export class AssessmentsResultsService {
     const filter = parseOrThrow(resultsFilterSchema, query ?? {});
     if (filter.classId) assertClassInScope(actor, filter.classId);
     const test = await this.store.requireTest(actor.schoolId, testId);
-    const allowed = allowedClassIds(actor);
-    const classWhere = filter.classId ? { classId: filter.classId } : allowed ? { classId: { in: allowed } } : {};
-    const stored: StoredResult[] = await this.prisma.schoolPsychResult.findMany({
-      where: { schoolId: actor.schoolId, testId, ...(filter.assignmentId && { assignmentId: filter.assignmentId }), ...classWhere },
-      orderBy: [{ takenAt: 'asc' }, { id: 'asc' }],
-      select: RESULT_SELECT,
-    });
-    const latest = latestPerStudent(stored);
+    // Doira — o'quvchining BUGUNGI sinfi (taqqoslash: "taklif qilinganlar" ham shunday):
+    // boshqa sinfga o'tgan yoki arxivlangan o'quvchi eski sinf rahbariga ko'rinmaydi.
+    const scopeIds = filter.classId ? [filter.classId] : allowedClassIds(actor);
     const [students, classes] = await Promise.all([
       this.prisma.schoolStudent.findMany({
-        where: { schoolId: actor.schoolId, id: { in: latest.map((r) => r.studentId) } },
+        where: { schoolId: actor.schoolId, archived: false, ...(scopeIds && { classId: { in: scopeIds } }) },
         select: { id: true, lastName: true, firstName: true },
       }),
       this.store.classes(actor.schoolId),
     ]);
+    const stored: StoredResult[] = await this.prisma.schoolPsychResult.findMany({
+      where: {
+        schoolId: actor.schoolId,
+        testId,
+        studentId: { in: students.map((s) => s.id) },
+        ...(filter.assignmentId && { assignmentId: filter.assignmentId }),
+      },
+      orderBy: [{ takenAt: 'asc' }, { id: 'asc' }],
+      select: RESULT_SELECT,
+    });
+    const latest = latestPerStudent(stored);
     const lookups = {
       names: new Map(students.map((s) => [s.id, `${s.lastName} ${s.firstName}`])),
       classNames: new Map(classes.map((c) => [c.id, c.name])),

@@ -52,10 +52,13 @@ export const reports: DeepString<typeof uz> = {
   },
   learning: {
     title: 'Growth Learning',
+    closedWeeks: 'Активность и результаты — только по завершённым неделям, начавшимся в этом месяце',
+    noClosedWeek: 'В этом месяце ещё нет завершённых недель — данные появятся после первой из них',
     active: 'Активных учеников в неделю',
     tasks: 'Выполнено заданий',
     score: 'Средний результат',
     assignments: 'Выдано заданий',
+    suppressed: 'Результаты скрыты: в классах было меньше 5 активных учеников',
   },
   csv: { filename: 'poseshchaemost-{month}' },
 };

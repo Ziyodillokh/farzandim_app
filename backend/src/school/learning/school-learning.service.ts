@@ -13,12 +13,15 @@ import { compareClasses, matchesSearch } from '../common/list-query';
 import { SchoolAuditService } from '../common/school-audit.service';
 import { forbidden, invalid, notFound } from '../common/school-errors';
 import { isoDateSchema, msg, optionalText, parseOrThrow } from '../common/school-zod';
+import { buildCells, cellKey, LEARNING_MIN_COHORT, LearningCell, mondayOf, totalsOf } from './learning-cells';
 import { loadCatalog, PANEL_SUBJECT } from './school-learning-catalog';
 
-/** Faollik grafigi — oxirgi shuncha hafta. */
-const ACTIVITY_WEEKS = 8;
+/** Faollik grafigi — oxirgi shuncha hafta (panel: "oxirgi 6 hafta"). */
+const ACTIVITY_WEEKS = 6;
 const percent = (part: number, total: number) => (total > 0 ? Math.round((part / total) * 100) : 0);
-const mondayOf = (day: string) => addDays(day, 1 - isoWeekday(day));
+/** Kunga teng yoki undan keyingi birinchi dushanba. */
+const mondayOnOrAfter = (day: string) => (isoWeekday(day) === 1 ? day : addDays(mondayOf(day), 7));
+
 
 const materialFilterSchema = z.object({
   kind: z.enum(['AUDIOBOOK', 'VIDEO', 'TEST']).optional(),
@@ -52,7 +55,12 @@ export class SchoolLearningService {
     private readonly audit: SchoolAuditService,
   ) {}
 
-  /** Sinflar bo'yicha haftalik faollik (oxirgi 8 hafta) va oxirgi hafta jadvali. */
+  /**
+   * Sinflar bo'yicha haftalik faollik: oxirgi 6 YAKUNLANGAN hafta va oxirgisining
+   * sinflar jadvali. Natijalar (topshiriq, ball, DON) — faqat ≥5 faol bolali
+   * kataklardan (learning-cells). Davom etayotgan hafta — faqat faollar soni:
+   * jonli katak har yangi urinishda o'zgarib, ikki o'qish farqi bolaning natijasini ochardi.
+   */
   async activity(actor: SchoolActor, query: unknown) {
     assertCan(actor, 'learning.view');
     const { classId } = parseOrThrow(z.object({ classId: z.string().min(1).optional() }), query ?? {});
@@ -61,66 +69,37 @@ export class SchoolLearningService {
     const ids = classes.map((c) => c.id);
     const students = await this.prisma.schoolStudent.findMany({
       where: { schoolId: actor.schoolId, archived: false, classId: { in: ids } },
-      select: { id: true, classId: true, childId: true },
+      select: { classId: true },
     });
-    const thisWeek = mondayOf(tashkentDay());
-    const from = addDays(thisWeek, -7 * (ACTIVITY_WEEKS - 1));
-    const childClass = new Map(students.flatMap((s) => (s.childId && s.classId ? [[s.childId, s.classId] as const] : [])));
-    const attempts = childClass.size
-      ? await this.prisma.learningAttempt.findMany({
-          where: { childId: { in: [...childClass.keys()] }, status: 'COMPLETED', day: { gte: from } },
-          select: { childId: true, day: true, correct: true, total: true, donEarned: true },
-        })
-      : [];
-    type Cell = { active: Set<string>; tasks: number; scoreSum: number; don: number };
-    const cells = new Map<string, Cell>();
-    for (const a of attempts) {
-      const cls = childClass.get(a.childId);
-      if (!cls) continue;
-      const key = `${cls}|${mondayOf(a.day)}`;
-      const cell = cells.get(key) ?? { active: new Set<string>(), tasks: 0, scoreSum: 0, don: 0 };
-      cell.active.add(a.childId);
-      cell.tasks += 1;
-      cell.scoreSum += percent(a.correct, a.total);
-      cell.don += a.donEarned;
-      cells.set(key, cell);
-    }
-    const weekKeys = Array.from({ length: ACTIVITY_WEEKS }, (_, i) => addDays(from, 7 * i));
-    const cellOf = (cls: string, week: string) => cells.get(`${cls}|${week}`);
-    const weeks = weekKeys.map((week) => {
-      const own = ids.map((id) => cellOf(id, week)).filter((c): c is Cell => Boolean(c));
-      const tasks = own.reduce((n, c) => n + c.tasks, 0);
-      return {
-        weekStart: week,
-        activeStudents: own.reduce((n, c) => n + c.active.size, 0),
-        completedTasks: tasks,
-        avgScore: tasks ? Math.round(own.reduce((n, c) => n + c.scoreSum, 0) / tasks) : 0,
-        donPoints: own.reduce((n, c) => n + c.don, 0),
-      };
-    });
+    const currentWeek = mondayOf(tashkentDay());
+    const latestWeek = addDays(currentWeek, -7);
+    const from = addDays(latestWeek, -7 * (ACTIVITY_WEEKS - 1));
+    const cells = await this.loadCells(ids, from);
+    const cellOf = (cls: string, week: string) => cells.get(cellKey(cls, week));
     const sizes = new Map<string, number>();
     for (const s of students) if (s.classId) sizes.set(s.classId, (sizes.get(s.classId) ?? 0) + 1);
-    const prevWeek = addDays(thisWeek, -7);
+    const prevWeek = addDays(latestWeek, -7);
     return {
-      latestWeek: thisWeek,
-      weeks,
+      latestWeek,
+      weeks: Array.from({ length: ACTIVITY_WEEKS }, (_, i) => addDays(from, 7 * i)).map((week) => ({
+        weekStart: week,
+        ...totalsOf(ids.map((id) => cellOf(id, week))),
+      })),
       classes: classes.map((c) => {
-        const cell = cellOf(c.id, thisWeek);
+        const totals = totalsOf([cellOf(c.id, latestWeek)]);
         const size = sizes.get(c.id) ?? 0;
-        const active = cell?.active.size ?? 0;
         return {
           classId: c.id,
           className: c.name,
           grade: c.grade,
           size,
-          activeStudents: active,
-          activeRate: percent(active, size),
-          completedTasks: cell?.tasks ?? 0,
-          avgScore: cell?.tasks ? Math.round(cell.scoreSum / cell.tasks) : 0,
-          donPoints: cell?.don ?? 0,
-          activeDelta: active - (cellOf(c.id, prevWeek)?.active.size ?? 0),
+          ...totals,
+          // Snapshot faollar (o'sha haftada boshqa sinfdan kelgan ham) — 100% dan oshmaydi.
+          activeRate: Math.min(100, percent(totals.activeStudents, size)),
+          activeDelta: totals.activeStudents - (cellOf(c.id, prevWeek)?.active.size ?? 0),
         };
       }),
+      current: { weekStart: currentWeek, activeStudents: ids.reduce((n, id) => n + (cellOf(id, currentWeek)?.active.size ?? 0), 0) },
     };
   }
 
@@ -133,26 +112,31 @@ export class SchoolLearningService {
       select: { classId: true, child: { select: { learningProfile: { select: { subjects: true } } } } },
     });
     const gradeOf = new Map(classes.map((c) => [c.id, c.grade]));
-    const counts = new Map<number, Map<string, number>>();
+    const byGrade = new Map<number, { children: number; subjects: Map<string, number> }>();
     for (const s of students) {
       const grade = s.classId ? gradeOf.get(s.classId) : undefined;
       const subjects = s.child?.learningProfile?.subjects ?? [];
       if (grade === undefined || subjects.length === 0) continue;
-      const byGrade = counts.get(grade) ?? new Map<string, number>();
+      const entry = byGrade.get(grade) ?? { children: 0, subjects: new Map<string, number>() };
+      entry.children += 1;
       for (const subject of subjects) {
         const key = PANEL_SUBJECT[subject as LearningSubject];
-        byGrade.set(key, (byGrade.get(key) ?? 0) + 1);
+        entry.subjects.set(key, (entry.subjects.get(key) ?? 0) + 1);
       }
-      counts.set(grade, byGrade);
+      byGrade.set(grade, entry);
     }
-    return [...counts.keys()].sort((a, b) => a - b).map((grade) => {
-      const entries = [...(counts.get(grade) ?? new Map<string, number>()).entries()];
-      const shares = toPercents(entries.map(([, n]) => n));
-      return {
-        grade,
-        shares: entries.map(([subject], i) => ({ subject, percent: shares[i] ?? 0 })).sort((a, b) => b.percent - a.percent),
-      };
-    });
+    // 5 nafardan kam bolali daraja ko'rsatilmaydi — ulushlardan bolaning tanlovi tiklanmasin.
+    return [...byGrade.entries()]
+      .filter(([, e]) => e.children >= LEARNING_MIN_COHORT)
+      .sort(([a], [b]) => a - b)
+      .map(([grade, e]) => {
+        const entries = [...e.subjects.entries()];
+        const shares = toPercents(entries.map(([, n]) => n));
+        return {
+          grade,
+          shares: entries.map(([subject], i) => ({ subject, percent: shares[i] ?? 0 })).sort((a, b) => b.percent - a.percent),
+        };
+      });
   }
 
   async materials(actor: SchoolActor, query: unknown) {
@@ -220,52 +204,51 @@ export class SchoolLearningService {
     });
   }
 
-  /** Bosh sahifa: joriy hafta faolligi va 7 kun ichidagi topshiriqlar. */
+  /** Bosh sahifa: oxirgi yakunlangan hafta faolligi va 7 kun ichidagi topshiriqlar. */
   async summary(actor: SchoolActor) {
     const act = await this.activity(actor, {});
-    const latest = act.weeks.at(-1);
+    const latest = act.weeks.at(-1) ?? totalsOf([]);
     const allowed = allowedClassIds(actor);
     const today = tashkentDay();
     const dueThisWeek = await this.prisma.schoolLearningAssignment.count({
       where: { schoolId: actor.schoolId, dueDate: { gte: today, lte: addDays(today, 7) }, ...(allowed && { classIds: { hasSome: allowed } }) },
     });
     return {
-      activeStudents: latest?.activeStudents ?? 0,
+      weekStart: act.latestWeek,
+      activeStudents: latest.activeStudents,
       totalStudents: act.classes.reduce((n, c) => n + c.size, 0),
-      completedTasks: latest?.completedTasks ?? 0,
-      avgScore: latest?.avgScore ?? 0,
+      completedTasks: latest.completedTasks,
+      avgScore: latest.avgScore,
+      suppressed: latest.suppressed,
       dueThisWeek,
     };
   }
 
-  /** Oylik hisobot: haftalik o'rtacha faollar, yakunlangan testlar, o'rtacha natija, topshiriqlar. */
+  /**
+   * Oylik hisobot: haftalik o'rtacha faollar, yakunlangan testlar, o'rtacha natija, topshiriqlar.
+   * Hafta — dushanbasi shu oyga tushgan, YAKUNLANGAN butun hafta: natijalar faollik
+   * grafigidagi kataklar bilan bir xil bo'linishda (ayirib kichik guruh tiklanmaydi).
+   */
   async monthSummary(actor: SchoolActor, first: string, last: string) {
-    const students = await this.prisma.schoolStudent.findMany({
-      where: { schoolId: actor.schoolId, archived: false, childId: { not: null } },
-      select: { childId: true },
-    });
-    const childIds = students.flatMap((s) => (s.childId ? [s.childId] : []));
-    const [attempts, assignments] = await Promise.all([
-      childIds.length
-        ? this.prisma.learningAttempt.findMany({
-            where: { childId: { in: childIds }, status: 'COMPLETED', day: { gte: first, lte: last } },
-            select: { childId: true, day: true, correct: true, total: true },
-          })
-        : [],
+    const currentWeek = mondayOf(tashkentDay());
+    const weeks: string[] = [];
+    for (let week = mondayOnOrAfter(first); week <= last && week < currentWeek; week = addDays(week, 7)) weeks.push(week);
+    const [classes, assignments] = await Promise.all([
+      this.prisma.schoolClass.findMany({ where: { schoolId: actor.schoolId }, select: { id: true } }),
       this.prisma.schoolLearningAssignment.count({
         where: { schoolId: actor.schoolId, createdAt: { gte: tashkentDayStart(first), lt: tashkentDayStart(addDays(last, 1)) } },
       }),
     ]);
-    const weekly = new Map<string, Set<string>>();
-    for (const a of attempts) {
-      const week = mondayOf(a.day);
-      weekly.set(week, (weekly.get(week) ?? new Set<string>()).add(a.childId));
-    }
-    const weeks = [...weekly.values()];
+    const ids = classes.map((c) => c.id);
+    const cells = weeks.length ? [...(await this.loadCells(ids, weeks[0], addDays(weeks[weeks.length - 1], 6))).values()] : [];
+    const totals = totalsOf(cells);
     return {
-      avgActiveStudents: weeks.length ? Math.round(weeks.reduce((n, w) => n + w.size, 0) / weeks.length) : 0,
-      completedTasks: attempts.length,
-      avgScore: attempts.length ? Math.round(attempts.reduce((n, a) => n + percent(a.correct, a.total), 0) / attempts.length) : 0,
+      /** Hisobga olingan yakunlangan haftalar (0 — oyning birinchi haftasi hali tugamagan). */
+      weeks: weeks.length,
+      avgActiveStudents: weeks.length ? Math.round(totals.activeStudents / weeks.length) : 0,
+      completedTasks: totals.completedTasks,
+      avgScore: totals.avgScore,
+      suppressed: totals.suppressed,
       assignments,
     };
   }
@@ -316,6 +299,16 @@ export class SchoolLearningService {
       await tx.schoolLearningAssignment.delete({ where: { id } });
       await this.audit.write(actor, { module: 'LEARNING', action: 'learning.unassign', summary: 'Topshiriq o\'chirildi', entityId: id, before: assignment, params: {} }, tx);
     });
+  }
+
+  /** (urinish paytidagi sinf, hafta) kataklari — barcha hisobotlarda bir xil bo'linish (learning-cells). */
+  private async loadCells(classIds: readonly string[], from: string, to?: string): Promise<Map<string, LearningCell>> {
+    if (classIds.length === 0) return new Map();
+    const attempts = await this.prisma.learningAttempt.findMany({
+      where: { schoolClassId: { in: [...classIds] }, status: 'COMPLETED', day: { gte: from, ...(to && { lte: to }) } },
+      select: { childId: true, schoolClassId: true, day: true, correct: true, total: true, donEarned: true },
+    });
+    return buildCells(attempts);
   }
 
   private scopedClasses(actor: SchoolActor) {

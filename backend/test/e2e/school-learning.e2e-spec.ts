@@ -21,17 +21,24 @@ describe('School learning (Growth)', () => {
     t.app.inject({ method, url: `/api/school/learning${url}`, payload: payload as object, headers: { authorization: `Bearer ${who.token}` } });
   const monday = () => addDays(tashkentDay(), 1 - isoWeekday(tashkentDay()));
 
+  /** Bola → bog'langan sinf (urinish snapshot'i uchun). */
+  const classOfKid = new Map<string, string>();
+
   async function linkedKid(classId: string, subjects: LearningSubject[] = ['MATH']): Promise<TestChild> {
     const parent = await createParent(t.prisma);
     const kid = await createChild(t.prisma, parent);
     await createStudent(t.prisma, schoolId, classId, { childId: kid.childId, firstName: kid.childId.slice(0, 5) });
     await t.prisma.learningProfile.create({ data: { childId: kid.childId, grade: 7, subjects } });
+    classOfKid.set(kid.childId, classId);
     return kid;
   }
 
   const attempt = (kid: TestChild, day: string, correct: number, subject: LearningSubject = 'MATH') =>
     t.prisma.learningAttempt.create({
-      data: { childId: kid.childId, subject, day, isDaily: true, status: 'COMPLETED', questionIds: [], correct, total: 5, donEarned: correct * 2, completedAt: new Date() },
+      data: {
+        childId: kid.childId, subject, day, isDaily: true, status: 'COMPLETED', questionIds: [], correct, total: 5, donEarned: correct * 2,
+        completedAt: new Date(), schoolClassId: classOfKid.get(kid.childId) ?? null,
+      },
     });
 
   beforeAll(async () => {
@@ -51,17 +58,25 @@ describe('School learning (Growth)', () => {
   it('faollik: faqat bog\'langan bolalar, sinf darajasida; doira', async () => {
     const k1 = await linkedKid(classA);
     const k2 = await linkedKid(classA, ['ENGLISH', 'MATH']);
+    const rest = [await linkedKid(classA), await linkedKid(classA), await linkedKid(classA)];
     await createStudent(t.prisma, schoolId, classA, { firstName: 'Ulanmagan' });
-    await attempt(k1, monday(), 5);
-    await attempt(k2, monday(), 3);
-    await attempt(k1, addDays(monday(), -7), 4);
+    const lastWeek = addDays(monday(), -7);
+    await attempt(k1, lastWeek, 5);
+    await attempt(k2, lastWeek, 3);
+    for (const kid of rest) await attempt(kid, lastWeek, 4);
+    await attempt(k1, addDays(lastWeek, -7), 4);
+    // Davom etayotgan hafta — faqat faollar soni, natijalar hafta yakunida.
+    await attempt(k2, monday(), 1);
 
     const act = (await call(director, 'GET', '/activity')).json();
-    expect(act.latestWeek).toBe(monday());
-    expect(act.weeks).toHaveLength(8);
-    expect(act.weeks.at(-1)).toMatchObject({ activeStudents: 2, completedTasks: 2, avgScore: 80, donPoints: 16 });
+    expect(act.latestWeek).toBe(lastWeek);
+    expect(act.current).toEqual({ weekStart: monday(), activeStudents: 1 });
+    expect(act.weeks).toHaveLength(6);
+    expect(act.weeks.at(-1)).toMatchObject({ weekStart: lastWeek, activeStudents: 5, completedTasks: 5, avgScore: 80, donPoints: 40, suppressed: false });
+    // Undan oldingi hafta: bitta faol bola — natijalar yashirin, faollar soni ko'rinadi.
+    expect(act.weeks.at(-2)).toMatchObject({ activeStudents: 1, completedTasks: null, avgScore: null, donPoints: null, suppressed: true });
     expect(act.classes.find((c: { classId: string }) => c.classId === classA)).toMatchObject({
-      size: 3, activeStudents: 2, activeRate: 67, completedTasks: 2, avgScore: 80, activeDelta: 1,
+      size: 6, activeStudents: 5, activeRate: 83, completedTasks: 5, avgScore: 80, donPoints: 40, suppressed: false, activeDelta: 4,
     });
     expect(JSON.stringify(act)).not.toContain(k1.childId);
 
@@ -73,10 +88,10 @@ describe('School learning (Growth)', () => {
     expect((await call(await login(t.app, 'navbatchi'), 'GET', '/activity')).statusCode).toBe(403);
 
     const interests = (await call(director, 'GET', '/interests')).json();
-    expect(interests).toEqual([{ grade: 7, shares: [{ subject: 'MATH', percent: 67 }, { subject: 'ENGLISH', percent: 33 }] }]);
+    expect(interests).toEqual([{ grade: 7, shares: [{ subject: 'MATH', percent: 83 }, { subject: 'ENGLISH', percent: 17 }] }]);
 
     const dash = (await t.app.inject({ method: 'GET', url: '/api/school/dashboard/overview', headers: { authorization: `Bearer ${director.token}` } })).json();
-    expect(dash.learning).toMatchObject({ activeStudents: 2, totalStudents: 3, completedTasks: 2, avgScore: 80, dueThisWeek: 0 });
+    expect(dash.learning).toMatchObject({ weekStart: lastWeek, activeStudents: 5, totalStudents: 6, completedTasks: 5, avgScore: 80, suppressed: false, dueThisWeek: 0 });
   });
 
   it('materiallar: fan testlari va tasdiqlangan audiokitoblar', async () => {

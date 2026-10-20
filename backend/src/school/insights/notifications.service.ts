@@ -6,6 +6,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
+import { tashkentDay } from '../../common/time/tashkent';
 import { actorCan, allowedClassIds, assertCan, classScopeWhere, SchoolActor } from '../auth/school-actor';
 import { audienceTouchesScope, loadRoster, toAudience } from '../comms/comms-roster';
 
@@ -84,7 +85,7 @@ export class NotificationsService {
     assertCan(actor, 'dashboard.view');
     const groups = await Promise.all([
       this.stored(actor),
-      this.earlyExits(actor),
+      this.earlyExits(actor, now),
       this.verifications(actor),
       this.care(actor),
       this.messages(actor, now),
@@ -127,10 +128,13 @@ export class NotificationsService {
     });
   }
 
-  private async earlyExits(actor: SchoolActor): Promise<NotificationItem[]> {
+  /** Ro'yxat bilan bir xil: tarix ruxsatisiz (navbatchi) — faqat bugungi; sabab — faqat `attendance.earlyExit` egasiga. */
+  private async earlyExits(actor: SchoolActor, now: Date): Promise<NotificationItem[]> {
     if (!actorCan(actor, 'attendance.view')) return [];
+    const onlyToday = !actorCan(actor, 'attendance.history');
+    const showReason = actorCan(actor, 'attendance.earlyExit');
     const exits = await this.prisma.schoolEarlyExit.findMany({
-      where: { schoolId: actor.schoolId, status: 'PENDING', ...classScopeWhere(actor) },
+      where: { schoolId: actor.schoolId, status: 'PENDING', ...classScopeWhere(actor), ...(onlyToday && { date: tashkentDay(now) }) },
       orderBy: { requestedAt: 'desc' },
       take: FEED_LIMIT,
     });
@@ -138,7 +142,7 @@ export class NotificationsService {
     return exits.map((e) =>
       item('EARLY_EXIT_PENDING', `exit:${e.id}`, e.requestedAt, {
         params: { name: students.get(e.studentId) ?? '—', className: (e.classId && classes.get(e.classId)) || '', time: e.time },
-        subject: plain(e.reason),
+        subject: showReason ? plain(e.reason) : null,
         href: '/attendance/early-exit',
       }),
     );
