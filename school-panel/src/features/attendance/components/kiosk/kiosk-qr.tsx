@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import QRCode from 'react-qr-code';
 
 import { api } from '@/data/api';
+import { isHttpMode } from '@/data/source';
 import { useI18n } from '@/i18n';
 
 const TICK_MS = 250;
@@ -75,9 +76,12 @@ export function KioskQr() {
           <span className="absolute inset-0 flex items-center justify-center font-display text-sm font-semibold tabular-nums">{seconds}</span>
         </div>
         <div className="text-left">
-          <p className="font-mono text-xl font-semibold tracking-[0.3em] text-white/90 tabular-nums xl:text-2xl">
-            {token.code.slice(0, 3)} {token.code.slice(3)}
-          </p>
+          {/* Haqiqiy rejimda kod imzolangan uzun token — faqat QR orqali o'qiladi. */}
+          {!isHttpMode && (
+            <p className="font-mono text-xl font-semibold tracking-[0.3em] text-white/90 tabular-nums xl:text-2xl">
+              {token.code.slice(0, 3)} {token.code.slice(3)}
+            </p>
+          )}
           <p className="mt-0.5 max-w-[240px] text-xs text-white/60">{t('attendance.kiosk.scanHint')}</p>
         </div>
       </div>

@@ -68,6 +68,21 @@ describe('bildirishnomalar lentasi: rolga mos', () => {
     expect(kinds.has('VERIFICATION_OPEN')).toBe(false);
   });
 
+  it('erta ketish: tarix ruxsatisiz (navbatchi) — faqat bugungi va sababsiz; sinf rahbari sababni ko\'radi', () => {
+    transact((t) => {
+      const today = t.earlyExits.find((e) => e.status === 'PENDING' && e.classId === 'cls-7a');
+      if (!today) throw new Error('seed: pending early exit in 7-A');
+      t.earlyExits.push({ ...today, id: 'ee-old', date: '2026-10-09', requestedAt: '2026-10-09T09:00:00', reason: 'Shifokor ko\'rigi' });
+      t.earlyExits = t.earlyExits.map((e) => (e.id === today.id ? { ...e, date: '2026-10-12', requestedAt: '2026-10-12T08:30:00' } : e));
+    });
+    const duty = feedAs('DUTY').filter((i) => i.kind === 'EARLY_EXIT_PENDING');
+    expect(duty.length).toBeGreaterThan(0);
+    expect(duty.map((i) => i.id)).not.toContain('exit:ee-old');
+    for (const item of duty) expect(item.subject).toBeNull();
+    const homeroom = feedAs('HOMEROOM').filter((i) => i.kind === 'EARLY_EXIT_PENDING');
+    expect(homeroom.find((i) => i.id === 'exit:ee-old')?.subject?.uz).toBe('Shifokor ko\'rigi');
+  });
+
   it('id\'lar barqaror va manbaga ko\'ra prefiksli', () => {
     const items = feedAs('DIRECTOR');
     for (const item of items) {

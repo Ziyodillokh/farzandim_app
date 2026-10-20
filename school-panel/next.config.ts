@@ -8,7 +8,9 @@ import type { NextConfig } from 'next';
  * yo'lda `[ ]` bo'lsa curl uni glob deb tushunadi va deploy orqaga qaytadi.
  * Tafsilot sahifalari `.../view/?id=...` ko'rinishida.
  */
-const BASE_PATH = '/school';
+// Haqiqiy (http) rejim paneli demo bilan bir domenda boshqa yo'lda turishi
+// mumkin: `PANEL_BASE_PATH=/maktab npm run build` (standart — demo yo'li).
+const BASE_PATH = process.env.PANEL_BASE_PATH ?? '/school';
 
 const nextConfig: NextConfig = {
   output: 'export',

@@ -1,0 +1,465 @@
+{
+  "subject": "chemistry",
+  "questions": [
+    {
+      "id": "chemistry-16",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Uglevodorodlar",
+        "ru": "Углеводороды",
+        "en": "Hydrocarbons"
+      },
+      "question": {
+        "uz": "Metanning kimyoviy formulasi qaysi?",
+        "ru": "Какова химическая формула метана?",
+        "en": "What is the chemical formula of methane?"
+      },
+      "options": [
+        {
+          "uz": "C₂H₆",
+          "ru": "C₂H₆",
+          "en": "C₂H₆"
+        },
+        {
+          "uz": "CH₄",
+          "ru": "CH₄",
+          "en": "CH₄"
+        },
+        {
+          "uz": "C₂H₄",
+          "ru": "C₂H₄",
+          "en": "C₂H₄"
+        },
+        {
+          "uz": "CH₃OH",
+          "ru": "CH₃OH",
+          "en": "CH₃OH"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Metan — eng oddiy alkan, uning molekulasida 1 ta uglerod va 4 ta vodorod atomi bor: CH₄. C₂H₆ — etan, C₂H₄ — etilen, CH₃OH — metanol.",
+        "ru": "Метан — простейший алкан: в его молекуле 1 атом углерода и 4 атома водорода, CH₄. C₂H₆ — этан, C₂H₄ — этилен, CH₃OH — метанол.",
+        "en": "Methane is the simplest alkane, with 1 carbon and 4 hydrogen atoms: CH₄. C₂H₆ is ethane, C₂H₄ is ethylene and CH₃OH is methanol."
+      }
+    },
+    {
+      "id": "chemistry-17",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Eritma muhiti",
+        "ru": "Среда раствора",
+        "en": "pH scale"
+      },
+      "question": {
+        "uz": "pH = 7 bo‘lgan eritmaning muhiti qanday?",
+        "ru": "Какова среда раствора с pH = 7?",
+        "en": "What kind of solution has a pH of 7?"
+      },
+      "options": [
+        {
+          "uz": "Kislotali",
+          "ru": "Кислотная",
+          "en": "Acidic"
+        },
+        {
+          "uz": "Ishqoriy",
+          "ru": "Щелочная",
+          "en": "Alkaline"
+        },
+        {
+          "uz": "Neytral",
+          "ru": "Нейтральная",
+          "en": "Neutral"
+        },
+        {
+          "uz": "Kuchli kislotali",
+          "ru": "Сильнокислотная",
+          "en": "Strongly acidic"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "pH = 7 — neytral muhit (masalan, toza suv). pH < 7 bo‘lsa muhit kislotali, pH > 7 bo‘lsa ishqoriy bo‘ladi.",
+        "ru": "pH = 7 — нейтральная среда (например, чистая вода). При pH < 7 среда кислотная, при pH > 7 — щелочная.",
+        "en": "pH 7 is neutral (like pure water). Below 7 a solution is acidic, above 7 it is alkaline."
+      }
+    },
+    {
+      "id": "chemistry-18",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Spirtlar",
+        "ru": "Спирты",
+        "en": "Alcohols"
+      },
+      "question": {
+        "uz": "Spirtlarning funksional guruhi qaysi?",
+        "ru": "Какая функциональная группа характерна для спиртов?",
+        "en": "Which functional group do alcohols have?"
+      },
+      "options": [
+        {
+          "uz": "–COOH",
+          "ru": "–COOH",
+          "en": "–COOH"
+        },
+        {
+          "uz": "–CHO",
+          "ru": "–CHO",
+          "en": "–CHO"
+        },
+        {
+          "uz": "–NH₂",
+          "ru": "–NH₂",
+          "en": "–NH₂"
+        },
+        {
+          "uz": "–OH",
+          "ru": "–OH",
+          "en": "–OH"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Spirtlar gidroksil guruhi –OH ga ega (masalan, etanol C₂H₅OH). –COOH — karboksil, –CHO — aldegid, –NH₂ esa amino guruh.",
+        "ru": "Спирты содержат гидроксильную группу –OH (например, этанол C₂H₅OH). –COOH — карбоксильная, –CHO — альдегидная, –NH₂ — аминогруппа.",
+        "en": "Alcohols contain the hydroxyl group –OH (for example, ethanol C₂H₅OH). –COOH is carboxyl, –CHO is aldehyde and –NH₂ is amino."
+      }
+    },
+    {
+      "id": "chemistry-19",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Kimyoviy muvozanat",
+        "ru": "Химическое равновесие",
+        "en": "Chemical equilibrium"
+      },
+      "question": {
+        "uz": "N₂ + 3H₂ ⇌ 2NH₃ sistemada bosim oshirilsa, muvozanat qaysi tomonga siljiydi?",
+        "ru": "Куда сместится равновесие в системе N₂ + 3H₂ ⇌ 2NH₃ при повышении давления?",
+        "en": "Which way does the equilibrium N₂ + 3H₂ ⇌ 2NH₃ shift when the pressure is increased?"
+      },
+      "options": [
+        {
+          "uz": "O‘ngga — ammiak hosil bo‘lish tomonga",
+          "ru": "Вправо — в сторону образования аммиака",
+          "en": "To the right, towards ammonia"
+        },
+        {
+          "uz": "Chapga — azot va vodorod tomonga",
+          "ru": "Влево — в сторону азота и водорода",
+          "en": "To the left, towards nitrogen and hydrogen"
+        },
+        {
+          "uz": "Muvozanat siljimaydi",
+          "ru": "Равновесие не сместится",
+          "en": "It does not shift"
+        },
+        {
+          "uz": "Avval o‘ngga, keyin chapga",
+          "ru": "Сначала вправо, потом влево",
+          "en": "First to the right, then to the left"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Le Shatelye prinsipiga ko‘ra, bosim oshganda muvozanat gaz molekulalari kamroq tomonga siljiydi: chapda 4 mol gaz, o‘ngda 2 mol. Demak, o‘ngga.",
+        "ru": "По принципу Ле Шателье при повышении давления равновесие смещается в сторону меньшего числа молей газа: слева 4 моль, справа 2. Значит, вправо.",
+        "en": "By Le Chatelier’s principle, higher pressure shifts equilibrium towards fewer gas molecules: 4 mol on the left, 2 on the right. So it shifts right."
+      }
+    },
+    {
+      "id": "chemistry-20",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Elektroliz",
+        "ru": "Электролиз",
+        "en": "Electrolysis"
+      },
+      "question": {
+        "uz": "Mis(II) xlorid (CuCl₂) eritmasi elektroliz qilinganda katodda qanday modda ajraladi?",
+        "ru": "Какое вещество выделяется на катоде при электролизе раствора хлорида меди(II) CuCl₂?",
+        "en": "What forms at the cathode during the electrolysis of copper(II) chloride (CuCl₂) solution?"
+      },
+      "options": [
+        {
+          "uz": "Xlor (Cl₂)",
+          "ru": "Хлор (Cl₂)",
+          "en": "Chlorine (Cl₂)"
+        },
+        {
+          "uz": "Mis (Cu)",
+          "ru": "Медь (Cu)",
+          "en": "Copper (Cu)"
+        },
+        {
+          "uz": "Vodorod (H₂)",
+          "ru": "Водород (H₂)",
+          "en": "Hydrogen (H₂)"
+        },
+        {
+          "uz": "Kislorod (O₂)",
+          "ru": "Кислород (O₂)",
+          "en": "Oxygen (O₂)"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Katodda kationlar qaytariladi: Cu²⁺ + 2e⁻ → Cu. Mis kam faol metall, shuning uchun vodorod emas, aynan mis ajraladi. Anodda esa xlor hosil bo‘ladi.",
+        "ru": "На катоде восстанавливаются катионы: Cu²⁺ + 2e⁻ → Cu. Медь — малоактивный металл, поэтому выделяется медь, а не водород. На аноде образуется хлор.",
+        "en": "Cations are reduced at the cathode: Cu²⁺ + 2e⁻ → Cu. Copper is unreactive, so copper rather than hydrogen is deposited. Chlorine forms at the anode."
+      }
+    },
+    {
+      "id": "chemistry-21",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Molyar hajm",
+        "ru": "Молярный объём",
+        "en": "Molar volume"
+      },
+      "question": {
+        "uz": "Normal sharoitda 11,2 l kislorod necha mol bo‘ladi?",
+        "ru": "Сколько моль составляют 11,2 л кислорода при нормальных условиях?",
+        "en": "How many moles are there in 11.2 L of oxygen at standard conditions (STP)?"
+      },
+      "options": [
+        {
+          "uz": "1 mol",
+          "ru": "1 моль",
+          "en": "1 mol"
+        },
+        {
+          "uz": "2 mol",
+          "ru": "2 моль",
+          "en": "2 mol"
+        },
+        {
+          "uz": "0,25 mol",
+          "ru": "0,25 моль",
+          "en": "0.25 mol"
+        },
+        {
+          "uz": "0,5 mol",
+          "ru": "0,5 моль",
+          "en": "0.5 mol"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Normal sharoitda 1 mol istalgan gaz 22,4 l hajmni egallaydi: n = 11,2 : 22,4 = 0,5 mol.",
+        "ru": "При нормальных условиях 1 моль любого газа занимает 22,4 л: n = 11,2 : 22,4 = 0,5 моль.",
+        "en": "At STP, 1 mol of any gas occupies 22.4 L: n = 11.2 ÷ 22.4 = 0.5 mol."
+      }
+    },
+    {
+      "id": "chemistry-22",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Alkenlar",
+        "ru": "Алкены",
+        "en": "Alkenes"
+      },
+      "question": {
+        "uz": "Etilen bromli suvni rangsizlantiradi: CH₂=CH₂ + Br₂ → CH₂Br–CH₂Br. Bu qaysi turdagi reaksiya?",
+        "ru": "Этилен обесцвечивает бромную воду: CH₂=CH₂ + Br₂ → CH₂Br–CH₂Br. К какому типу относится эта реакция?",
+        "en": "Ethylene decolourises bromine water: CH₂=CH₂ + Br₂ → CH₂Br–CH₂Br. What type of reaction is this?"
+      },
+      "options": [
+        {
+          "uz": "Birikish",
+          "ru": "Присоединения",
+          "en": "Addition"
+        },
+        {
+          "uz": "O‘rin olish",
+          "ru": "Замещения",
+          "en": "Substitution"
+        },
+        {
+          "uz": "Parchalanish",
+          "ru": "Разложения",
+          "en": "Decomposition"
+        },
+        {
+          "uz": "Almashinish",
+          "ru": "Обмена",
+          "en": "Exchange"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Qo‘shbog‘ uziladi va brom atomlari ikkala uglerod atomiga birikadi, hech narsa ajralib chiqmaydi. Bu birikish reaksiyasi — qo‘shbog‘ga sifat reaksiyasi.",
+        "ru": "Двойная связь разрывается, и атомы брома присоединяются к обоим атомам углерода, ничего не отщепляется. Это реакция присоединения — качественная реакция на двойную связь.",
+        "en": "The double bond opens and bromine atoms add to both carbon atoms; nothing is split off. This is an addition reaction — a standard test for a double bond."
+      }
+    },
+    {
+      "id": "chemistry-23",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Izomeriya",
+        "ru": "Изомерия",
+        "en": "Isomerism"
+      },
+      "question": {
+        "uz": "C₅H₁₂ (pentan) formulasiga mos nechta struktur izomer mavjud?",
+        "ru": "Сколько структурных изомеров соответствует формуле C₅H₁₂ (пентан)?",
+        "en": "How many structural isomers have the formula C₅H₁₂ (pentane)?"
+      },
+      "options": [
+        {
+          "uz": "2",
+          "ru": "2",
+          "en": "2"
+        },
+        {
+          "uz": "3",
+          "ru": "3",
+          "en": "3"
+        },
+        {
+          "uz": "4",
+          "ru": "4",
+          "en": "4"
+        },
+        {
+          "uz": "5",
+          "ru": "5",
+          "en": "5"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "C₅H₁₂ ning uchta izomeri bor: n-pentan, 2-metilbutan (izopentan) va 2,2-dimetilpropan (neopentan).",
+        "ru": "У C₅H₁₂ три изомера: н-пентан, 2-метилбутан (изопентан) и 2,2-диметилпропан (неопентан).",
+        "en": "C₅H₁₂ has three isomers: n-pentane, 2-methylbutane (isopentane) and 2,2-dimethylpropane (neopentane)."
+      }
+    },
+    {
+      "id": "chemistry-24",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Oksidlanish darajasi",
+        "ru": "Степень окисления",
+        "en": "Oxidation states"
+      },
+      "question": {
+        "uz": "Kaliy dixromat K₂Cr₂O₇ tarkibida xromning oksidlanish darajasi nechaga teng?",
+        "ru": "Какова степень окисления хрома в дихромате калия K₂Cr₂O₇?",
+        "en": "What is the oxidation state of chromium in potassium dichromate, K₂Cr₂O₇?"
+      },
+      "options": [
+        {
+          "uz": "+3",
+          "ru": "+3",
+          "en": "+3"
+        },
+        {
+          "uz": "+7",
+          "ru": "+7",
+          "en": "+7"
+        },
+        {
+          "uz": "+6",
+          "ru": "+6",
+          "en": "+6"
+        },
+        {
+          "uz": "+2",
+          "ru": "+2",
+          "en": "+2"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Birikma elektroneytral: 2·(+1) + 2x + 7·(−2) = 0, ya’ni 2 + 2x − 14 = 0, bundan x = +6.",
+        "ru": "Соединение электронейтрально: 2·(+1) + 2x + 7·(−2) = 0, то есть 2 + 2x − 14 = 0, откуда x = +6.",
+        "en": "The compound is neutral: 2(+1) + 2x + 7(−2) = 0, so 2 + 2x − 14 = 0 and x = +6."
+      }
+    },
+    {
+      "id": "chemistry-25",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Hisoblash masalalari",
+        "ru": "Расчётные задачи",
+        "en": "Stoichiometry"
+      },
+      "question": {
+        "uz": "5,6 g temir mo‘l miqdordagi xlorid kislota bilan reaksiyaga kirishdi: Fe + 2HCl → FeCl₂ + H₂↑. Normal sharoitda necha litr vodorod ajraladi? (Ar(Fe) = 56)",
+        "ru": "5,6 г железа прореагировали с избытком соляной кислоты: Fe + 2HCl → FeCl₂ + H₂↑. Какой объём водорода (н. у.) выделился? (Ar(Fe) = 56)",
+        "en": "5.6 g of iron reacts with excess hydrochloric acid: Fe + 2HCl → FeCl₂ + H₂↑. What volume of hydrogen forms at STP? (Ar(Fe) = 56)"
+      },
+      "options": [
+        {
+          "uz": "1,12 l",
+          "ru": "1,12 л",
+          "en": "1.12 L"
+        },
+        {
+          "uz": "4,48 l",
+          "ru": "4,48 л",
+          "en": "4.48 L"
+        },
+        {
+          "uz": "22,4 l",
+          "ru": "22,4 л",
+          "en": "22.4 L"
+        },
+        {
+          "uz": "2,24 l",
+          "ru": "2,24 л",
+          "en": "2.24 L"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "n(Fe) = 5,6 : 56 = 0,1 mol. Tenglama bo‘yicha 1 mol Fe dan 1 mol H₂ hosil bo‘ladi, demak, V(H₂) = 0,1 · 22,4 = 2,24 l.",
+        "ru": "n(Fe) = 5,6 : 56 = 0,1 моль. По уравнению из 1 моль Fe образуется 1 моль H₂, значит, V(H₂) = 0,1 · 22,4 = 2,24 л.",
+        "en": "n(Fe) = 5.6 ÷ 56 = 0.1 mol. The equation gives 1 mol of H₂ per 1 mol of Fe, so V(H₂) = 0.1 × 22.4 = 2.24 L."
+      }
+    }
+  ]
+}

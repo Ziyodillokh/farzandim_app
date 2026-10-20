@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { Guardian } from '@/data/contracts';
 import { INNER_TILE, SELECTED_SOFT } from '@/features/messages/styles';
+import { isHttpMode } from '@/data/source';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { useCopy } from '../hooks';
@@ -61,7 +62,7 @@ export function InviteQrDialog({ guardian, onOpenChange }: { guardian: Guardian 
             </div>
             <p className="flex items-center gap-2 rounded-lg bg-success/10 px-3 py-2 text-xs font-medium text-success">
               <MessageSquareText className="h-4 w-4 shrink-0" />
-              {t('parents.inviteDialog.sms', { phone: guardian.phone })}
+              {t(isHttpMode ? 'parents.inviteDialog.handOver' : 'parents.inviteDialog.sms', { phone: guardian.phone })}
             </p>
             <div className={cn(INNER_TILE, 'w-full p-4')}>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('parents.inviteDialog.stepsTitle')}</p>

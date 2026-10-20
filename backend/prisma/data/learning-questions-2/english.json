@@ -1,0 +1,1109 @@
+{
+  "subject": "english",
+  "questions": [
+    {
+      "id": "english-22",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Sonlar",
+        "ru": "Числа",
+        "en": "Numbers"
+      },
+      "question": {
+        "uz": "“5” soni inglizcha qanday aytiladi?",
+        "ru": "Как по-английски будет число «5»?",
+        "en": "Which word means the number 5?"
+      },
+      "options": [
+        {
+          "uz": "four",
+          "ru": "four",
+          "en": "four"
+        },
+        {
+          "uz": "five",
+          "ru": "five",
+          "en": "five"
+        },
+        {
+          "uz": "fifteen",
+          "ru": "fifteen",
+          "en": "fifteen"
+        },
+        {
+          "uz": "fifty",
+          "ru": "fifty",
+          "en": "fifty"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "5 — “five”. “Fifteen” — 15, “fifty” — 50, “four” esa 4.",
+        "ru": "5 — это five. Fifteen — 15, fifty — 50, а four — 4.",
+        "en": "5 is five. Fifteen is 15, fifty is 50 and four is 4."
+      }
+    },
+    {
+      "id": "english-23",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Tana a’zolari",
+        "ru": "Части тела",
+        "en": "Parts of the body"
+      },
+      "question": {
+        "uz": "Biz nima bilan ko‘ramiz? Inglizcha so‘zni tanlang.",
+        "ru": "Чем мы видим? Выберите английское слово.",
+        "en": "What do we see with?"
+      },
+      "options": [
+        {
+          "uz": "ears",
+          "ru": "ears",
+          "en": "ears"
+        },
+        {
+          "uz": "nose",
+          "ru": "nose",
+          "en": "nose"
+        },
+        {
+          "uz": "hands",
+          "ru": "hands",
+          "en": "hands"
+        },
+        {
+          "uz": "eyes",
+          "ru": "eyes",
+          "en": "eyes"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Biz ko‘zlarimiz bilan ko‘ramiz, inglizchada ko‘zlar — “eyes”. “Ears” — quloqlar, “nose” — burun, “hands” — qo‘llar.",
+        "ru": "Мы видим глазами, а «глаза» по-английски — eyes. Ears — уши, nose — нос, hands — руки.",
+        "en": "We see with our eyes. We hear with our ears, smell with our nose and hold things with our hands."
+      }
+    },
+    {
+      "id": "english-24",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Mevalar",
+        "ru": "Фрукты",
+        "en": "Fruit"
+      },
+      "question": {
+        "uz": "Qaysi inglizcha so‘z mevani bildiradi?",
+        "ru": "Какое английское слово обозначает фрукт?",
+        "en": "Which word is a fruit?"
+      },
+      "options": [
+        {
+          "uz": "apple",
+          "ru": "apple",
+          "en": "apple"
+        },
+        {
+          "uz": "chair",
+          "ru": "chair",
+          "en": "chair"
+        },
+        {
+          "uz": "dog",
+          "ru": "dog",
+          "en": "dog"
+        },
+        {
+          "uz": "pen",
+          "ru": "pen",
+          "en": "pen"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“Apple” — olma, u meva. “Chair” — stul, “dog” — it, “pen” — ruchka.",
+        "ru": "Apple — «яблоко», это фрукт. Chair — стул, dog — собака, pen — ручка.",
+        "en": "An apple is a fruit. A chair is furniture, a dog is an animal and a pen is for writing."
+      }
+    },
+    {
+      "id": "english-25",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Hafta kunlari",
+        "ru": "Дни недели",
+        "en": "Days of the week"
+      },
+      "question": {
+        "uz": "Inglizchada “Monday”dan keyin qaysi kun keladi?",
+        "ru": "Какой день недели идёт после Monday?",
+        "en": "Which day comes after Monday?"
+      },
+      "options": [
+        {
+          "uz": "Sunday",
+          "ru": "Sunday",
+          "en": "Sunday"
+        },
+        {
+          "uz": "Thursday",
+          "ru": "Thursday",
+          "en": "Thursday"
+        },
+        {
+          "uz": "Tuesday",
+          "ru": "Tuesday",
+          "en": "Tuesday"
+        },
+        {
+          "uz": "Friday",
+          "ru": "Friday",
+          "en": "Friday"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Hafta kunlari tartibi: Monday (dushanba), Tuesday (seshanba), Wednesday (chorshanba) va hokazo.",
+        "ru": "Порядок дней недели: Monday (понедельник), Tuesday (вторник), Wednesday (среда) и так далее.",
+        "en": "The days go in this order: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday."
+      }
+    },
+    {
+      "id": "english-26",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Salomlashish",
+        "ru": "Приветствия",
+        "en": "Greetings"
+      },
+      "question": {
+        "uz": "Ertalab salomlashganda inglizcha nima deymiz?",
+        "ru": "Что мы говорим по-английски, когда здороваемся утром?",
+        "en": "What do we say when we greet someone in the morning?"
+      },
+      "options": [
+        {
+          "uz": "Good night",
+          "ru": "Good night",
+          "en": "Good night"
+        },
+        {
+          "uz": "Goodbye",
+          "ru": "Goodbye",
+          "en": "Goodbye"
+        },
+        {
+          "uz": "Thank you",
+          "ru": "Thank you",
+          "en": "Thank you"
+        },
+        {
+          "uz": "Good morning",
+          "ru": "Good morning",
+          "en": "Good morning"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Ertalab “Good morning” deymiz. “Good night” uxlashdan oldin, “Goodbye” esa xayrlashganda aytiladi.",
+        "ru": "Утром говорят Good morning. Good night говорят перед сном, а Goodbye — при прощании.",
+        "en": "In the morning we say Good morning. Good night is for bedtime, and Goodbye is for leaving."
+      }
+    },
+    {
+      "id": "english-27",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Fasllar",
+        "ru": "Времена года",
+        "en": "Seasons"
+      },
+      "question": {
+        "uz": "Yilning eng sovuq fasli inglizcha qanday ataladi?",
+        "ru": "Как по-английски называется самое холодное время года?",
+        "en": "Which is the coldest season of the year?"
+      },
+      "options": [
+        {
+          "uz": "summer",
+          "ru": "summer",
+          "en": "summer"
+        },
+        {
+          "uz": "spring",
+          "ru": "spring",
+          "en": "spring"
+        },
+        {
+          "uz": "winter",
+          "ru": "winter",
+          "en": "winter"
+        },
+        {
+          "uz": "autumn",
+          "ru": "autumn",
+          "en": "autumn"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Eng sovuq fasl — qish, inglizchada “winter”. “Summer” — yoz, “spring” — bahor, “autumn” — kuz.",
+        "ru": "Самое холодное время года — зима, по-английски winter. Summer — лето, spring — весна, autumn — осень.",
+        "en": "Winter is the coldest season. Summer is the hottest, and spring and autumn are in between."
+      }
+    },
+    {
+      "id": "english-28",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Maktab buyumlari",
+        "ru": "Школьные принадлежности",
+        "en": "School things"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: We write with a ___.",
+        "ru": "Заполните пропуск: We write with a ___.",
+        "en": "Fill in the blank: We write with a ___."
+      },
+      "options": [
+        {
+          "uz": "bag",
+          "ru": "bag",
+          "en": "bag"
+        },
+        {
+          "uz": "pen",
+          "ru": "pen",
+          "en": "pen"
+        },
+        {
+          "uz": "desk",
+          "ru": "desk",
+          "en": "desk"
+        },
+        {
+          "uz": "door",
+          "ru": "door",
+          "en": "door"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "“Pen” — ruchka, u bilan yozamiz. “Bag” — sumka, “desk” — parta, “door” — eshik.",
+        "ru": "Pen — «ручка», ею пишут. Bag — сумка, desk — парта, door — дверь.",
+        "en": "We write with a pen. A bag carries books, a desk is for sitting at and a door opens and closes."
+      }
+    },
+    {
+      "id": "english-29",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Oila",
+        "ru": "Семья",
+        "en": "Family"
+      },
+      "question": {
+        "uz": "Onangizning onasi inglizcha qanday ataladi?",
+        "ru": "Как по-английски называют маму вашей мамы?",
+        "en": "What do you call your mother’s mother?"
+      },
+      "options": [
+        {
+          "uz": "grandmother",
+          "ru": "grandmother",
+          "en": "grandmother"
+        },
+        {
+          "uz": "sister",
+          "ru": "sister",
+          "en": "sister"
+        },
+        {
+          "uz": "aunt",
+          "ru": "aunt",
+          "en": "aunt"
+        },
+        {
+          "uz": "daughter",
+          "ru": "daughter",
+          "en": "daughter"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Onaning onasi — buvi, inglizchada “grandmother”. “Sister” — opa yoki singil, “aunt” — xola yoki amma, “daughter” — qiz farzand.",
+        "ru": "Мама мамы — бабушка, по-английски grandmother. Sister — сестра, aunt — тётя, daughter — дочь.",
+        "en": "Your mother’s mother is your grandmother. An aunt is your parent’s sister, and a daughter is someone’s child."
+      }
+    },
+    {
+      "id": "english-30",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Have va has",
+        "ru": "Have и has",
+        "en": "Have and has"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: She ___ a red bag.",
+        "ru": "Заполните пропуск: She ___ a red bag.",
+        "en": "Fill in the blank: She ___ a red bag."
+      },
+      "options": [
+        {
+          "uz": "have",
+          "ru": "have",
+          "en": "have"
+        },
+        {
+          "uz": "is",
+          "ru": "is",
+          "en": "is"
+        },
+        {
+          "uz": "are",
+          "ru": "are",
+          "en": "are"
+        },
+        {
+          "uz": "has",
+          "ru": "has",
+          "en": "has"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "He, she, it bilan “has” ishlatiladi: she has. I, you, we, they bilan esa “have” keladi.",
+        "ru": "С he, she, it используется has: she has. С I, you, we, they — have.",
+        "en": "We use has with he, she and it: she has. We use have with I, you, we and they."
+      }
+    },
+    {
+      "id": "english-31",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "This va these",
+        "ru": "This и these",
+        "en": "This and these"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: ___ are my books.",
+        "ru": "Заполните пропуск: ___ are my books.",
+        "en": "Fill in the blank: ___ are my books."
+      },
+      "options": [
+        {
+          "uz": "This",
+          "ru": "This",
+          "en": "This"
+        },
+        {
+          "uz": "These",
+          "ru": "These",
+          "en": "These"
+        },
+        {
+          "uz": "It",
+          "ru": "It",
+          "en": "It"
+        },
+        {
+          "uz": "That",
+          "ru": "That",
+          "en": "That"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "“Books” ko‘plikda, shuning uchun “these” kerak: these are. “This” birlik uchun ishlatiladi: this is.",
+        "ru": "Books — множественное число, поэтому нужно these: these are. This — для единственного числа: this is.",
+        "en": "Books is plural, so we need these: these are. This is for one thing: this is."
+      }
+    },
+    {
+      "id": "english-32",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Ko‘plik shakli",
+        "ru": "Множественное число",
+        "en": "Plural nouns"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: one mouse, two ___",
+        "ru": "Заполните пропуск: one mouse, two ___",
+        "en": "Fill in the blank: one mouse, two ___"
+      },
+      "options": [
+        {
+          "uz": "mouses",
+          "ru": "mouses",
+          "en": "mouses"
+        },
+        {
+          "uz": "mices",
+          "ru": "mices",
+          "en": "mices"
+        },
+        {
+          "uz": "mice",
+          "ru": "mice",
+          "en": "mice"
+        },
+        {
+          "uz": "mouse",
+          "ru": "mouse",
+          "en": "mouse"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "“Mouse” (sichqon) qoidaga bo‘ysunmaydigan ot: uning ko‘plik shakli “mice”.",
+        "ru": "Mouse («мышь») — исключение: во множественном числе mice.",
+        "en": "Mouse is an irregular noun: its plural is mice."
+      }
+    },
+    {
+      "id": "english-33",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Imlo",
+        "ru": "Орфография",
+        "en": "Spelling"
+      },
+      "question": {
+        "uz": "Qaysi inglizcha so‘z to‘g‘ri yozilgan?",
+        "ru": "Какое английское слово написано правильно?",
+        "en": "Which word is spelled correctly?"
+      },
+      "options": [
+        {
+          "uz": "school",
+          "ru": "school",
+          "en": "school"
+        },
+        {
+          "uz": "scool",
+          "ru": "scool",
+          "en": "scool"
+        },
+        {
+          "uz": "skool",
+          "ru": "skool",
+          "en": "skool"
+        },
+        {
+          "uz": "shcool",
+          "ru": "shcool",
+          "en": "shcool"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“School” (maktab) s-c-h-o-o-l harflari bilan yoziladi; bu so‘zda “ch” [k] deb o‘qiladi.",
+        "ru": "School («школа») пишется s-c-h-o-o-l; сочетание ch здесь читается как [k].",
+        "en": "School is spelled s-c-h-o-o-l; here the letters ch sound like k."
+      }
+    },
+    {
+      "id": "english-34",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Savol va javob",
+        "ru": "Вопрос и ответ",
+        "en": "Questions and answers"
+      },
+      "question": {
+        "uz": "Savolga mos javobni tanlang: How old are you?",
+        "ru": "Выберите подходящий ответ на вопрос: How old are you?",
+        "en": "Choose the right answer to the question: How old are you?"
+      },
+      "options": [
+        {
+          "uz": "I am fine.",
+          "ru": "I am fine.",
+          "en": "I am fine."
+        },
+        {
+          "uz": "I am Ali.",
+          "ru": "I am Ali.",
+          "en": "I am Ali."
+        },
+        {
+          "uz": "I am at home.",
+          "ru": "I am at home.",
+          "en": "I am at home."
+        },
+        {
+          "uz": "I am nine.",
+          "ru": "I am nine.",
+          "en": "I am nine."
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "“How old are you?” — “Necha yoshdasan?” degani, shuning uchun yoshimizni aytamiz: I am nine.",
+        "ru": "How old are you? значит «Сколько тебе лет?», поэтому называем возраст: I am nine.",
+        "en": "How old are you? asks about age, so we answer with how many years old we are: I am nine."
+      }
+    },
+    {
+      "id": "english-35",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Hozirgi davomli zamon",
+        "ru": "Present Continuous",
+        "en": "Present Continuous"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: I am ___ a book now.",
+        "ru": "Заполните пропуск: I am ___ a book now.",
+        "en": "Fill in the blank: I am ___ a book now."
+      },
+      "options": [
+        {
+          "uz": "read",
+          "ru": "read",
+          "en": "read"
+        },
+        {
+          "uz": "reads",
+          "ru": "reads",
+          "en": "reads"
+        },
+        {
+          "uz": "reading",
+          "ru": "reading",
+          "en": "reading"
+        },
+        {
+          "uz": "to read",
+          "ru": "to read",
+          "en": "to read"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "“Am” va “now” ish-harakat ayni paytda bo‘layotganini bildiradi, shuning uchun fe’lga -ing qo‘shiladi: I am reading.",
+        "ru": "Am и now показывают, что действие происходит сейчас, поэтому к глаголу добавляется -ing: I am reading.",
+        "en": "Am and now show the action is happening at the moment, so the verb takes -ing: I am reading."
+      }
+    },
+    {
+      "id": "english-36",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "O‘tgan davomli zamon",
+        "ru": "Past Continuous",
+        "en": "Past Continuous"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: While I ___ dinner, the lights went out.",
+        "ru": "Заполните пропуск: While I ___ dinner, the lights went out.",
+        "en": "Fill in the blank: While I ___ dinner, the lights went out."
+      },
+      "options": [
+        {
+          "uz": "cook",
+          "ru": "cook",
+          "en": "cook"
+        },
+        {
+          "uz": "am cooking",
+          "ru": "am cooking",
+          "en": "am cooking"
+        },
+        {
+          "uz": "have cooked",
+          "ru": "have cooked",
+          "en": "have cooked"
+        },
+        {
+          "uz": "was cooking",
+          "ru": "was cooking",
+          "en": "was cooking"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Boshqa voqea yuz bergan paytda davom etayotgan o‘tmishdagi harakat Past Continuous bilan ifodalanadi: was cooking.",
+        "ru": "Действие, которое длилось в прошлом в момент другого события, выражается Past Continuous: was cooking.",
+        "en": "An action in progress in the past when something else happened takes the Past Continuous: was cooking."
+      }
+    },
+    {
+      "id": "english-37",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Modal fe’llar",
+        "ru": "Модальные глаголы",
+        "en": "Modal verbs"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: You ___ wear a seat belt in a car. It is the law.",
+        "ru": "Заполните пропуск: You ___ wear a seat belt in a car. It is the law.",
+        "en": "Fill in the blank: You ___ wear a seat belt in a car. It is the law."
+      },
+      "options": [
+        {
+          "uz": "might",
+          "ru": "might",
+          "en": "might"
+        },
+        {
+          "uz": "must",
+          "ru": "must",
+          "en": "must"
+        },
+        {
+          "uz": "may",
+          "ru": "may",
+          "en": "may"
+        },
+        {
+          "uz": "would",
+          "ru": "would",
+          "en": "would"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "“It is the law” qat’iy majburiyatni bildiradi, qat’iy majburiyat esa “must” bilan ifodalanadi.",
+        "ru": "It is the law указывает на строгую обязанность, а строгую обязанность выражает must.",
+        "en": "It is the law shows a strict obligation, and strict obligation is expressed with must."
+      }
+    },
+    {
+      "id": "english-38",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Sinonimlar",
+        "ru": "Синонимы",
+        "en": "Synonyms"
+      },
+      "question": {
+        "uz": "“enormous” so‘zining sinonimini tanlang.",
+        "ru": "Выберите синоним к слову “enormous”.",
+        "en": "Choose a synonym for “enormous”."
+      },
+      "options": [
+        {
+          "uz": "huge",
+          "ru": "huge",
+          "en": "huge"
+        },
+        {
+          "uz": "tiny",
+          "ru": "tiny",
+          "en": "tiny"
+        },
+        {
+          "uz": "ancient",
+          "ru": "ancient",
+          "en": "ancient"
+        },
+        {
+          "uz": "narrow",
+          "ru": "narrow",
+          "en": "narrow"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“Enormous” va “huge” ikkalasi ham “juda katta, ulkan” ma’nosini bildiradi; “tiny” esa aksincha, “juda kichik” degani.",
+        "ru": "Enormous и huge оба значат «огромный»; tiny — наоборот, «крошечный».",
+        "en": "Enormous and huge both mean very big; tiny means the opposite."
+      }
+    },
+    {
+      "id": "english-39",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Shart gaplar",
+        "ru": "Условные предложения",
+        "en": "Conditionals"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: If I ___ rich, I would travel around the world.",
+        "ru": "Заполните пропуск: If I ___ rich, I would travel around the world.",
+        "en": "Fill in the blank: If I ___ rich, I would travel around the world."
+      },
+      "options": [
+        {
+          "uz": "am",
+          "ru": "am",
+          "en": "am"
+        },
+        {
+          "uz": "will be",
+          "ru": "will be",
+          "en": "will be"
+        },
+        {
+          "uz": "were",
+          "ru": "were",
+          "en": "were"
+        },
+        {
+          "uz": "have been",
+          "ru": "have been",
+          "en": "have been"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Ikkinchi tur shart gapda (hozirgi xayoliy holat) if qismida Past Simple keladi, “to be” esa odatda “were” shaklida bo‘ladi: If I were.",
+        "ru": "В условных предложениях второго типа (нереальное настоящее) после if ставится Past Simple, а to be обычно имеет форму were: If I were.",
+        "en": "The second conditional (an unreal present) uses the Past Simple after if, and to be usually becomes were: If I were."
+      }
+    },
+    {
+      "id": "english-40",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "O‘zlashtirma gap",
+        "ru": "Косвенная речь",
+        "en": "Reported speech"
+      },
+      "question": {
+        "uz": "O‘zlashtirma gapga aylantiring: “Where do you live?” she asked. → She asked me where ___.",
+        "ru": "Переведите в косвенную речь: “Where do you live?” she asked. → She asked me where ___.",
+        "en": "Change to reported speech: “Where do you live?” she asked. → She asked me where ___."
+      },
+      "options": [
+        {
+          "uz": "I lived",
+          "ru": "I lived",
+          "en": "I lived"
+        },
+        {
+          "uz": "do I live",
+          "ru": "do I live",
+          "en": "do I live"
+        },
+        {
+          "uz": "did I live",
+          "ru": "did I live",
+          "en": "did I live"
+        },
+        {
+          "uz": "lived I",
+          "ru": "lived I",
+          "en": "lived I"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "O‘zlashtirma so‘roq gapda so‘z tartibi darak gapdagidek bo‘ladi (do/did ishlatilmaydi), zamon esa bir pog‘ona orqaga suriladi: where I lived.",
+        "ru": "В косвенном вопросе используется прямой порядок слов (без do/did), а время сдвигается в прошлое: where I lived.",
+        "en": "Reported questions use statement word order (no do/did), and the tense moves back: where I lived."
+      }
+    },
+    {
+      "id": "english-41",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Majhul nisbat",
+        "ru": "Страдательный залог",
+        "en": "Passive voice"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: A new bridge ___ here next year.",
+        "ru": "Заполните пропуск: A new bridge ___ here next year.",
+        "en": "Fill in the blank: A new bridge ___ here next year."
+      },
+      "options": [
+        {
+          "uz": "will build",
+          "ru": "will build",
+          "en": "will build"
+        },
+        {
+          "uz": "will be built",
+          "ru": "will be built",
+          "en": "will be built"
+        },
+        {
+          "uz": "is building",
+          "ru": "is building",
+          "en": "is building"
+        },
+        {
+          "uz": "has built",
+          "ru": "has built",
+          "en": "has built"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Ko‘prik o‘zini o‘zi qurmaydi, uni quradilar, shuning uchun kelasi zamon majhul nisbati kerak: will be + V3 (will be built).",
+        "ru": "Мост не строит сам себя — его построят, поэтому нужен страдательный залог в будущем времени: will be + V3 (will be built).",
+        "en": "The bridge does not build itself, so we need the future passive: will be + V3 (will be built)."
+      }
+    },
+    {
+      "id": "english-42",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Frazali fe’llar",
+        "ru": "Фразовые глаголы",
+        "en": "Phrasal verbs"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: I need to ___ this word in the dictionary.",
+        "ru": "Заполните пропуск: I need to ___ this word in the dictionary.",
+        "en": "Fill in the blank: I need to ___ this word in the dictionary."
+      },
+      "options": [
+        {
+          "uz": "look after",
+          "ru": "look after",
+          "en": "look after"
+        },
+        {
+          "uz": "give up",
+          "ru": "give up",
+          "en": "give up"
+        },
+        {
+          "uz": "turn down",
+          "ru": "turn down",
+          "en": "turn down"
+        },
+        {
+          "uz": "look up",
+          "ru": "look up",
+          "en": "look up"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "“Look up” — lug‘at yoki ma’lumotnomadan qidirib topmoq. “Look after” — g‘amxo‘rlik qilmoq, “give up” — voz kechmoq, “turn down” — rad etmoq.",
+        "ru": "Look up — «найти в словаре или справочнике». Look after — заботиться, give up — бросить, сдаться, turn down — отклонить.",
+        "en": "Look up means find information in a dictionary or reference book. Look after means take care of, give up means stop trying, turn down means refuse."
+      }
+    },
+    {
+      "id": "english-43",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Shart gaplar",
+        "ru": "Условные предложения",
+        "en": "Conditionals"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: If she had studied harder, she ___ the exam.",
+        "ru": "Заполните пропуск: If she had studied harder, she ___ the exam.",
+        "en": "Fill in the blank: If she had studied harder, she ___ the exam."
+      },
+      "options": [
+        {
+          "uz": "would have passed",
+          "ru": "would have passed",
+          "en": "would have passed"
+        },
+        {
+          "uz": "would pass",
+          "ru": "would pass",
+          "en": "would pass"
+        },
+        {
+          "uz": "will pass",
+          "ru": "will pass",
+          "en": "will pass"
+        },
+        {
+          "uz": "had passed",
+          "ru": "had passed",
+          "en": "had passed"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Uchinchi tur shart gap o‘tmishdagi ro‘y bermagan holatni bildiradi: If + had + V3, … would have + V3.",
+        "ru": "Условное предложение третьего типа описывает нереальное прошлое: If + had + V3, … would have + V3.",
+        "en": "The third conditional talks about an unreal past: If + had + V3, … would have + V3."
+      }
+    },
+    {
+      "id": "english-44",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Inversiya",
+        "ru": "Инверсия",
+        "en": "Inversion"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: Never ___ such a beautiful sunset.",
+        "ru": "Заполните пропуск: Never ___ such a beautiful sunset.",
+        "en": "Fill in the blank: Never ___ such a beautiful sunset."
+      },
+      "options": [
+        {
+          "uz": "I have seen",
+          "ru": "I have seen",
+          "en": "I have seen"
+        },
+        {
+          "uz": "have I seen",
+          "ru": "have I seen",
+          "en": "have I seen"
+        },
+        {
+          "uz": "I saw",
+          "ru": "I saw",
+          "en": "I saw"
+        },
+        {
+          "uz": "did I saw",
+          "ru": "did I saw",
+          "en": "did I saw"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "“Never” kabi inkor so‘z gap boshida kelsa, inversiya bo‘ladi: yordamchi fe’l egadan oldin keladi — Never have I seen.",
+        "ru": "Если отрицательное слово never стоит в начале предложения, происходит инверсия: вспомогательный глагол ставится перед подлежащим — Never have I seen.",
+        "en": "When a negative word like never starts the sentence, we use inversion: the auxiliary comes before the subject — Never have I seen."
+      }
+    },
+    {
+      "id": "english-45",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Be used to",
+        "ru": "Be used to",
+        "en": "Be used to"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: She lives on a farm, so she is used to ___ up early.",
+        "ru": "Заполните пропуск: She lives on a farm, so she is used to ___ up early.",
+        "en": "Fill in the blank: She lives on a farm, so she is used to ___ up early."
+      },
+      "options": [
+        {
+          "uz": "get",
+          "ru": "get",
+          "en": "get"
+        },
+        {
+          "uz": "got",
+          "ru": "got",
+          "en": "got"
+        },
+        {
+          "uz": "getting",
+          "ru": "getting",
+          "en": "getting"
+        },
+        {
+          "uz": "have got",
+          "ru": "have got",
+          "en": "have got"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "“Be used to” (biror narsaga o‘rganib qolmoq) iborasidagi “to” — predlog, shuning uchun undan keyin fe’l -ing shaklida keladi: is used to getting up.",
+        "ru": "В выражении be used to («привыкнуть к чему-либо») to — предлог, поэтому после него глагол стоит в форме -ing: is used to getting up.",
+        "en": "In be used to (be accustomed to), to is a preposition, so the verb after it takes the -ing form: is used to getting up."
+      }
+    }
+  ]
+}

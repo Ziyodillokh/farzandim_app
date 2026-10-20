@@ -299,5 +299,6 @@ export const assessments = {
     csvTooLarge: 'Fayl 512 KB dan katta',
     csvTooManyRows: 'Qatorlar soni 2000 dan oshmasligi kerak',
     csvEmpty: 'Faylda natija qatorlari yo\'q',
+    openAssignments: 'Testning ochiq tayinlashlari bor (muddati yaqinda tugaganlari ham) — savollarni o\'zgartirish yoki arxivlash uchun avval ularni «Tayinlashlar» bo\'limida yoping',
   },
 };

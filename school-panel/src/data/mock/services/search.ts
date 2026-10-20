@@ -10,9 +10,9 @@ export type SearchResults = {
   staff: Array<{ id: string; name: string; position: string }>;
 };
 
-/** Global qidiruv (⌘K) — rol doirasida. */
+/** Global qidiruv (⌘K) — rol doirasida (haqiqiy rejimda server so'rovi — shu sabab async). */
 export const searchService = {
-  query(q: string, limit = 6): SearchResults {
+  async query(q: string, limit = 6): Promise<SearchResults> {
     const actor = currentActor();
     const empty: SearchResults = { students: [], classes: [], staff: [] };
     if (q.trim().length < 2) return empty;

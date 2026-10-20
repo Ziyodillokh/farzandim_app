@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
 import { ROLES } from '@/auth/permissions';
-import { useCan } from '@/auth/use-session';
+import { useCan, useSession } from '@/auth/use-session';
 import { FormField } from '@/components/common/form-field';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,9 +13,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { RoleKey } from '@/data/contracts';
 import type { StaffRow } from '@/data/mock/services/staff';
+import { isHttpMode } from '@/data/source';
 import { CLASS_SCOPED_ROLES, staffFormSchema, type StaffInput } from '@/data/schemas/staff';
 import { useSetStaffPhoto } from '@/features/profile/hooks';
 import { useI18n } from '@/i18n';
+import { isProtectedRole } from '../account';
 import { useCreateStaff, useUpdateStaff } from '../hooks';
 import { ClassMultiSelect } from './class-multi-select';
 import { StaffPhotoField } from './staff-photo-field';
@@ -36,7 +38,11 @@ export function StaffFormDialog({ open, onOpenChange, row }: { open: boolean; on
   const setPhoto = useSetStaffPhoto();
   const canPhoto = useCan()('staff.manage');
   const form = useForm<FormValues>({ resolver: zodResolver(staffFormSchema), defaultValues: EMPTY });
-  const roleLocked = Boolean(row?.username);
+  const selfId = useSession()?.staffId;
+  // Demo hisoblar rolini o'zgartirib bo'lmaydi; haqiqiy rejimda — faqat o'z rolini.
+  const roleLocked = isHttpMode ? Boolean(row && row.id === selfId) : Boolean(row?.username);
+  // Haqiqiy rejimda himoyalangan rol (psixolog) tanlovda yo'q — uni operator beradi.
+  const roleOptions = isHttpMode ? ROLE_KEYS.filter((r) => !isProtectedRole(r) || r === row?.role) : ROLE_KEYS;
   // undefined — o'zgarmagan; null — olib tashlash; satr — yangi rasm (saqlashda qo'llanadi).
   const [pendingPhoto, setPendingPhoto] = useState<string | null | undefined>(undefined);
 
@@ -101,7 +107,7 @@ export function StaffFormDialog({ open, onOpenChange, row }: { open: boolean; on
             <FormField label={t('staff.form.position')} htmlFor="staff-position" error={errors.position}>
               <Input id="staff-position" placeholder={t('staff.form.positionPlaceholder')} {...form.register('position')} />
             </FormField>
-            <FormField label={t('staff.form.role')} error={errors.role} hint={roleLocked ? t('staff.form.roleLocked') : undefined}>
+            <FormField label={t('staff.form.role')} error={errors.role} hint={roleLocked ? t(isHttpMode ? 'staff.form.roleLockedSelf' : 'staff.form.roleLocked') : undefined}>
               <Controller
                 control={form.control}
                 name="role"
@@ -111,7 +117,7 @@ export function StaffFormDialog({ open, onOpenChange, row }: { open: boolean; on
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {ROLE_KEYS.map((r) => (
+                      {roleOptions.map((r) => (
                         <SelectItem key={r} value={r}>
                           {t(`enums.role.${r}`)}
                         </SelectItem>

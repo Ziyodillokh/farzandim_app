@@ -19,6 +19,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProfileDialog } from '@/features/profile/components/profile-dialog-context';
 import { useMe } from '@/features/profile/hooks';
+import { isHttpMode } from '@/data/source';
+import { httpSignOut } from '@/data/http/session';
 import { useI18n, type Locale } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { ParvozWordmark } from './parvoz-wordmark';
@@ -112,6 +114,10 @@ export function UserMenu({ variant }: { variant: 'topbar' | 'sidebar' }) {
         <DropdownMenuItem
           className={cn('text-destructive focus:bg-destructive/10 focus:text-destructive')}
           onSelect={() => {
+            if (isHttpMode) {
+              void httpSignOut().finally(() => router.replace('/login'));
+              return;
+            }
             setSession(null);
             router.replace('/login');
           }}

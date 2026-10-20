@@ -12,6 +12,7 @@ import type { Tables } from '../tables';
 import { resolveRecord } from './attendance';
 import { computeCareAggregate, defaultSurvey } from './care-aggregate';
 import { effective } from './comms-announcements';
+import { lastClosedWeek, learningTotals } from './learning';
 
 const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -38,7 +39,8 @@ export type MonthlyReport = {
   schoolMode: { applied: number; noPermission: number; noPhone: number; offline: number; exceptions: number; changes: number } | null;
   messages: { announcements: number; recipients: number; delivered: number; read: number; deliveryRate: number; readRate: number; reminders: number } | null;
   care: { surveys: number; invited: number; respondents: number; participation: number; wellbeing: number | null; requests: string; groups: CareGroupRow[] } | null;
-  learning: { avgActiveStudents: number; completedTasks: number; avgScore: number; assignments: number } | null;
+  /** `weeks` — hisobga olingan yakunlangan haftalar (0 — oyning birinchi haftasi hali tugamagan). */
+  learning: { weeks: number; avgActiveStudents: number; completedTasks: number | null; avgScore: number | null; assignments: number; suppressed: boolean } | null;
 };
 
 function monthBounds(month: string): { first: IsoDate; last: IsoDate } {
@@ -156,6 +158,34 @@ function careSection(tables: Tables, month: string, today: IsoDate): MonthlyRepo
   };
 }
 
+/**
+ * Oy kataklari (sinf × hafta) — faqat dushanbasi shu oyda bo'lgan YOPIQ haftalar (joriy hafta kirmaydi):
+ * faollar — barchasidan, natijalar — faqat ≥ 5 faolli kataklardan (`learningTotals`).
+ */
+/** Dushanbasi shu oyda bo'lgan yakunlangan haftalar soni (backend bilan bir xil — kalendar bo'yicha). */
+function closedWeeksIn(month: string, lastClosed: IsoDate): number {
+  let week = `${month}-01`;
+  while (isoWeekday(week) !== 1) week = addDays(week, 1);
+  let count = 0;
+  for (; week.slice(0, 7) === month && week <= lastClosed; week = addDays(week, 7)) count += 1;
+  return count;
+}
+
+function learningSection(tables: Tables, month: string, today: IsoDate): MonthlyReport['learning'] {
+  const lastClosed = lastClosedWeek(today);
+  const activity = tables.activity.filter((a) => a.weekStart.slice(0, 7) === month && a.weekStart <= lastClosed);
+  const weeks = closedWeeksIn(month, lastClosed);
+  const totals = learningTotals(activity);
+  return {
+    weeks,
+    avgActiveStudents: weeks ? Math.round(totals.activeStudents / weeks) : 0,
+    completedTasks: totals.completedTasks,
+    avgScore: totals.avgScore,
+    assignments: tables.assignments.filter((a) => inMonth(a.createdAt, month)).length,
+    suppressed: totals.suppressed,
+  };
+}
+
 export const reportsService = {
   /** O'quv yili boshidan joriy oygacha (yangisi birinchi). */
   months(): string[] {
@@ -207,9 +237,6 @@ export const reportsService = {
     const delivered = sent.reduce((s, a) => s + a.stats.delivered, 0);
     const read = sent.reduce((s, a) => s + a.stats.read, 0);
 
-    const activity = tables.activity.filter((a) => a.weekStart.slice(0, 7) === month);
-    const weeks = new Set(activity.map((a) => a.weekStart)).size;
-
     return {
       month,
       until: days.length ? until : null,
@@ -237,14 +264,7 @@ export const reportsService = {
           }
         : null,
       care: can('care.aggregate') ? careSection(tables, month, today) : null,
-      learning: can('learning.view')
-        ? {
-            avgActiveStudents: weeks ? Math.round(activity.reduce((s, a) => s + a.activeStudents, 0) / weeks) : 0,
-            completedTasks: activity.reduce((s, a) => s + a.completedTasks, 0),
-            avgScore: activity.length ? Math.round(activity.reduce((s, a) => s + a.avgScore, 0) / activity.length) : 0,
-            assignments: tables.assignments.filter((a) => inMonth(a.createdAt, month)).length,
-          }
-        : null,
+      learning: can('learning.view') ? learningSection(tables, month, today) : null,
     };
   },
 };

@@ -1,8 +1,12 @@
+import { isHttpMode } from '@/data/source';
+
 /**
- * Kichik sozlamalar (til, mavzu, sessiya) — localStorage, `parvoz-school:` prefiksi.
+ * Kichik sozlamalar (til, mavzu, sessiya) — localStorage. Demo (`/school`) va
+ * haqiqiy panel (`/maktab`) bir domenda: prefiks alohida, aks holda demo
+ * sessiyasi haqiqiy panelga (va aksincha) o'tib qolardi.
  * Xususiy rejim yoki bloklangan xotirada xato bermaydi.
  */
-const PREFIX = 'parvoz-school:';
+const PREFIX = isHttpMode ? 'parvoz-maktab:' : 'parvoz-school:';
 
 export function readPref<T>(key: string): T | null {
   if (typeof window === 'undefined') return null;

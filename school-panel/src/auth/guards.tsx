@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ParvozLogo } from '@/components/layout/parvoz-logo';
 import { useI18n } from '@/i18n';
 import { normalizePath } from '@/lib/base-path';
+import { currentMe, restoreHttpSession } from '@/data/http/session';
 import { forbiddenHints } from './forbidden-hints';
 import { roleHas } from './permissions';
 import { findRoute } from './route-manifest';
@@ -34,6 +35,26 @@ export function FullScreenLoader() {
       </div>
     </div>
   );
+}
+
+/**
+ * http rejim: access token faqat xotirada — sahifa ochilganda httpOnly cookie
+ * orqali sessiya tiklanadi (bo'lmasa AuthGuard kirish sahifasiga o'tkazadi).
+ */
+export function HttpSessionGate({ children }: { children: ReactNode }) {
+  const [ready, setReady] = useState(() => currentMe() !== null);
+  useEffect(() => {
+    if (ready) return;
+    let alive = true;
+    void restoreHttpSession().finally(() => {
+      if (alive) setReady(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [ready]);
+  if (!ready) return <FullScreenLoader />;
+  return <>{children}</>;
 }
 
 export function AuthGuard({ children }: { children: ReactNode }) {

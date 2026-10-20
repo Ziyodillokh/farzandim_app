@@ -1,0 +1,136 @@
+name: School operator
+
+# Parvoz School operatori: serverda scripts/school/create-school.ts va
+# create-staff.ts (maktab + direktor, psixolog, parolni tiklash).
+#
+# ⚠️ REPO OMMAVIY — loglar hammaga ko'rinadi:
+#  - vaqtinchalik parol logga YOZILMAYDI: operatorning bir martalik RSA-3072
+#    ochiq kaliti bilan shifrlanadi (faqat shifrlangan matn chiqadi);
+#  - kiritilgan matnlar (maktab kodi, F.I.Sh., login) logda KO'RINADI —
+#    neytral nomlar ishlating yoki keyin panelda o'zgartiring; ishdan keyin
+#    `gh run delete <id>` bilan logni o'chirish mumkin.
+#
+# Operator (Mac'da):
+#   D="$(mktemp -d)"; openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out "$D/op.key"
+#   PUB="$(openssl pkey -in "$D/op.key" -pubout | base64 | tr -d '\n')"
+#   gh workflow run school-operator.yml -f action=create-school -f school_code=... -f school_name=... \
+#     -f full_name=... -f username=direktor -f pubkey_b64="$PUB"
+#   gh run view <id> --log | sed -n 's/.*ENCRYPTED_PASSWORD=//p' | tail -n1 | base64 -d \
+#     | openssl pkeyutl -decrypt -inkey "$D/op.key" -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Amal'
+        type: choice
+        options: [create-school, create-psychologist, reset-staff]
+        required: true
+      school_code:
+        description: 'Maktab kodi: a-z 0-9 - (2-40)'
+        required: true
+      username:
+        description: 'Login: a-z 0-9 . _ - (3-32)'
+        required: true
+      full_name:
+        description: 'F.I.Sh. (create-school: direktor; create-psychologist: psixolog)'
+        default: ''
+      school_name:
+        description: 'Faqat create-school: maktab nomi'
+        default: ''
+      city:
+        description: 'Faqat create-school: shahar (ixtiyoriy)'
+        default: ''
+      staff_id:
+        description: "Faqat reset-staff: login o'chirilgan xodim ID (ixtiyoriy)"
+        default: ''
+      reset_2fa:
+        description: "Faqat reset-staff: 2FA ham o'chirilsin"
+        type: boolean
+        default: false
+      pubkey_b64:
+        description: 'Bir martalik RSA-3072 ochiq kalit (PEM, base64, bir qator)'
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: school-operator
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    env:
+      SSHPASS: ${{ secrets.SSH_PASSWORD }}
+      TARGET: ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+      SSH_OPTS: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=4
+      ACTION: ${{ inputs.action }}
+      CODE: ${{ inputs.school_code }}
+      LOGIN: ${{ inputs.username }}
+      FULL_NAME: ${{ inputs.full_name }}
+      SCHOOL_NAME: ${{ inputs.school_name }}
+      CITY: ${{ inputs.city }}
+      STAFF_ID: ${{ inputs.staff_id }}
+      RESET_2FA: ${{ inputs.reset_2fa }}
+      PUBKEY_B64: ${{ inputs.pubkey_b64 }}
+    steps:
+      - name: Validate inputs
+        run: |
+          set -euo pipefail
+          [[ "$CODE"  =~ ^[a-z0-9-]{2,40}$ ]]   || { echo "::error::school_code"; exit 1; }
+          [[ "$LOGIN" =~ ^[a-z0-9._-]{3,32}$ ]] || { echo "::error::username"; exit 1; }
+          [ -z "$STAFF_ID" ] || [[ "$STAFF_ID" =~ ^[0-9a-f-]{36}$ ]] || { echo "::error::staff_id (UUID)"; exit 1; }
+          for v in "$FULL_NAME" "$SCHOOL_NAME" "$CITY"; do
+            [ "${#v}" -le 120 ] && [[ "$v" != *$'\n'* ]] || { echo "::error::matn uzun yoki ko'p qatorli"; exit 1; }
+          done
+          case "$ACTION" in
+            create-school)       [ -n "$FULL_NAME" ] && [ -n "$SCHOOL_NAME" ] ;;
+            create-psychologist) [ -n "$FULL_NAME" ] ;;
+            reset-staff)         true ;;
+          esac || { echo "::error::$ACTION uchun majburiy maydon bo'sh"; exit 1; }
+          printf '%s' "$PUBKEY_B64" | base64 -d > "$RUNNER_TEMP/op.pub.pem"
+          bits="$(openssl pkey -pubin -in "$RUNNER_TEMP/op.pub.pem" -noout -text | sed -n 's/.*(\([0-9]*\) bit).*/\1/p' | head -n1)"
+          [ "${bits:-0}" -ge 3072 ] || { echo "::error::RSA >= 3072 bit ochiq kalit kerak"; exit 1; }
+
+      - name: Install sshpass
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          for i in 1 2 3; do
+            timeout 120 sudo -E apt-get install -y --no-install-recommends sshpass && break
+            timeout 180 sudo -E apt-get update -o Acquire::Retries=3 || true
+            sleep 10
+          done
+          command -v sshpass
+
+      - name: Run on server (parol shifrlanadi, logga chiqmaydi)
+        run: |
+          set -euo pipefail
+          case "$ACTION" in
+            create-school)
+              args=(scripts/school/create-school.ts --code "$CODE" --name "$SCHOOL_NAME" --director "$FULL_NAME" --username "$LOGIN")
+              [ -z "$CITY" ] || args+=(--city "$CITY") ;;
+            create-psychologist)
+              args=(scripts/school/create-staff.ts --school "$CODE" --role PSYCHOLOGIST --name "$FULL_NAME" --username "$LOGIN") ;;
+            reset-staff)
+              args=(scripts/school/create-staff.ts --school "$CODE" --username "$LOGIN" --reset)
+              [ -z "$STAFF_ID" ] || args+=(--id "$STAFF_ID")
+              [ "$RESET_2FA" != "true" ] || args+=(--reset-2fa) ;;
+          esac
+          # Skript serverdagi bash'ga stdin orqali; argumentlar printf %q bilan (injection yo'q).
+          remote="set -euo pipefail; cd ~/new-platform/backend; ./node_modules/.bin/tsx $(printf '%q ' "${args[@]}")"
+          set +e
+          out="$(printf '%s\n' "$remote" | sshpass -e ssh ${SSH_OPTS} "$TARGET" 'bash -s' 2>&1)"
+          rc=$?
+          set -e
+          pw="$(printf '%s\n' "$out" | sed -n 's/^Vaqtinchalik parol: //p' | head -n1)"
+          if [ -n "$pw" ]; then echo "::add-mask::$pw"; fi
+          printf '%s\n' "$out" | grep -v '^Vaqtinchalik parol:' || true
+          [ "$rc" -eq 0 ] || { echo "::error::server skripti $rc bilan tugadi"; exit 1; }
+          [ -n "$pw" ] || { echo "::error::chiqishda parol topilmadi"; exit 1; }
+          ct="$(printf '%s' "$pw" | openssl pkeyutl -encrypt -pubin -inkey "$RUNNER_TEMP/op.pub.pem" \
+                -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 | base64 -w0)"
+          echo "ENCRYPTED_PASSWORD=$ct"
+          printf '### %s: %s @ %s\n\n```\n%s\n```\n' "$ACTION" "$LOGIN" "$CODE" "$ct" >> "$GITHUB_STEP_SUMMARY"

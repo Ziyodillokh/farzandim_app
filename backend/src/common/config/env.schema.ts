@@ -27,6 +27,24 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRES: z.string().default('15m'),
   JWT_REFRESH_EXPIRES: z.string().default('30d'),
 
+  // Maktab paneli JWT kaliti (ixtiyoriy — yo'q bo'lsa JWT_ACCESS_SECRET'dan
+  // hosila olinadi; audience boshqa bo'lgani uchun tokenlar aralashmaydi).
+  SCHOOL_JWT_SECRET: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().min(32).optional(),
+  ),
+  // Maktab: bolaning xom javoblari va murojaatlarini shifrlash kaliti
+  // (AES-256-GCM, 32 bayt base64). Boshqa kalitdan hosila OLINMAYDI —
+  // JWT kaliti almashsa ma'lumot yo'qolmasin. Yo'q bo'lsa Bola ovozi va
+  // psixologik testlar yozuvi 503 beradi (qolgan maktab funksiyalari ishlaydi).
+  SCHOOL_DATA_KEY: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z
+      .string()
+      .refine((v) => Buffer.from(v, 'base64').length === 32, 'SCHOOL_DATA_KEY: 32 bayt (base64)')
+      .optional(),
+  ),
+
   ADMIN_JWT_ACCESS_SECRET: z.string().min(32),
   ADMIN_JWT_REFRESH_SECRET: z.string().min(32),
   ADMIN_JWT_ACCESS_EXPIRES: z.string().default('15m'),

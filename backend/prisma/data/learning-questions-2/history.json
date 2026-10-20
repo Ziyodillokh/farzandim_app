@@ -1,0 +1,465 @@
+{
+  "subject": "history",
+  "questions": [
+    {
+      "id": "history-16",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Ikkinchi jahon urushi",
+        "ru": "Вторая мировая война",
+        "en": "World War II"
+      },
+      "question": {
+        "uz": "Ikkinchi jahon urushi qaysi yilda boshlangan?",
+        "ru": "В каком году началась Вторая мировая война?",
+        "en": "In which year did World War II begin?"
+      },
+      "options": [
+        {
+          "uz": "1914",
+          "ru": "1914",
+          "en": "1914"
+        },
+        {
+          "uz": "1939",
+          "ru": "1939",
+          "en": "1939"
+        },
+        {
+          "uz": "1941",
+          "ru": "1941",
+          "en": "1941"
+        },
+        {
+          "uz": "1945",
+          "ru": "1945",
+          "en": "1945"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Ikkinchi jahon urushi 1939-yil 1-sentabrda Germaniyaning Polshaga hujumi bilan boshlanib, 1945-yil 2-sentabrda tugagan. 1941-yilda esa Germaniya SSSRga hujum qilgan.",
+        "ru": "Вторая мировая война началась 1 сентября 1939 года с нападения Германии на Польшу и закончилась 2 сентября 1945 года. В 1941 году Германия напала на СССР.",
+        "en": "World War II began on 1 September 1939 when Germany invaded Poland, and ended on 2 September 1945. In 1941 Germany attacked the USSR."
+      }
+    },
+    {
+      "id": "history-17",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Koinotni zabt etish",
+        "ru": "Освоение космоса",
+        "en": "Space exploration"
+      },
+      "question": {
+        "uz": "Koinotga uchgan birinchi inson kim?",
+        "ru": "Кто первым из людей полетел в космос?",
+        "en": "Who was the first person to fly into space?"
+      },
+      "options": [
+        {
+          "uz": "Yuriy Gagarin",
+          "ru": "Юрий Гагарин",
+          "en": "Yuri Gagarin"
+        },
+        {
+          "uz": "Nil Armstrong",
+          "ru": "Нил Армстронг",
+          "en": "Neil Armstrong"
+        },
+        {
+          "uz": "Valentina Tereshkova",
+          "ru": "Валентина Терешкова",
+          "en": "Valentina Tereshkova"
+        },
+        {
+          "uz": "Aleksey Leonov",
+          "ru": "Алексей Леонов",
+          "en": "Alexei Leonov"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Yuriy Gagarin 1961-yil 12-aprelda “Vostok” kemasida Yer atrofini aylanib chiqqan. Nil Armstrong esa 1969-yilda Oyga birinchi bo‘lib qadam qo‘ygan.",
+        "ru": "Юрий Гагарин 12 апреля 1961 года облетел Землю на корабле «Восток». А Нил Армстронг в 1969 году первым ступил на Луну.",
+        "en": "Yuri Gagarin orbited the Earth in Vostok on 12 April 1961. Neil Armstrong was the first person to walk on the Moon, in 1969."
+      }
+    },
+    {
+      "id": "history-18",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Mustaqil O‘zbekiston",
+        "ru": "Независимый Узбекистан",
+        "en": "Independent Uzbekistan"
+      },
+      "question": {
+        "uz": "O‘zbekiston Respublikasining Konstitutsiyasi qaysi yilda qabul qilingan?",
+        "ru": "В каком году была принята Конституция Республики Узбекистан?",
+        "en": "In which year was the Constitution of the Republic of Uzbekistan adopted?"
+      },
+      "options": [
+        {
+          "uz": "1990",
+          "ru": "1990",
+          "en": "1990"
+        },
+        {
+          "uz": "1991",
+          "ru": "1991",
+          "en": "1991"
+        },
+        {
+          "uz": "1992",
+          "ru": "1992",
+          "en": "1992"
+        },
+        {
+          "uz": "1995",
+          "ru": "1995",
+          "en": "1995"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Konstitutsiya 1992-yil 8-dekabrda qabul qilingan, bu sana Konstitutsiya kuni sifatida nishonlanadi. 2023-yilda referendum orqali uning yangi tahriri qabul qilindi.",
+        "ru": "Конституция принята 8 декабря 1992 года, этот день отмечается как День Конституции. В 2023 году на референдуме была принята её новая редакция.",
+        "en": "The Constitution was adopted on 8 December 1992, now marked as Constitution Day. A new edition was approved by referendum in 2023."
+      }
+    },
+    {
+      "id": "history-19",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Xalqaro tashkilotlar",
+        "ru": "Международные организации",
+        "en": "International organisations"
+      },
+      "question": {
+        "uz": "Birlashgan Millatlar Tashkiloti (BMT) qaysi yilda tashkil topgan?",
+        "ru": "В каком году была основана Организация Объединённых Наций (ООН)?",
+        "en": "In which year was the United Nations (UN) founded?"
+      },
+      "options": [
+        {
+          "uz": "1919",
+          "ru": "1919",
+          "en": "1919"
+        },
+        {
+          "uz": "1929",
+          "ru": "1929",
+          "en": "1929"
+        },
+        {
+          "uz": "1939",
+          "ru": "1939",
+          "en": "1939"
+        },
+        {
+          "uz": "1945",
+          "ru": "1945",
+          "en": "1945"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "BMT Ikkinchi jahon urushidan so‘ng, 1945-yil 24-oktabrda tashkil topgan. O‘zbekiston 1992-yil 2-martda BMTga a’zo bo‘lgan.",
+        "ru": "ООН основана 24 октября 1945 года, после Второй мировой войны. Узбекистан стал членом ООН 2 марта 1992 года.",
+        "en": "The UN was founded on 24 October 1945, after World War II. Uzbekistan joined the UN on 2 March 1992."
+      }
+    },
+    {
+      "id": "history-20",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Sovuq urush",
+        "ru": "Холодная война",
+        "en": "Cold War"
+      },
+      "question": {
+        "uz": "Berlin devori qaysi yilda qulagan?",
+        "ru": "В каком году пала Берлинская стена?",
+        "en": "In which year did the Berlin Wall fall?"
+      },
+      "options": [
+        {
+          "uz": "1953",
+          "ru": "1953",
+          "en": "1953"
+        },
+        {
+          "uz": "1961",
+          "ru": "1961",
+          "en": "1961"
+        },
+        {
+          "uz": "1985",
+          "ru": "1985",
+          "en": "1985"
+        },
+        {
+          "uz": "1989",
+          "ru": "1989",
+          "en": "1989"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Berlin devori 1961-yilda qurilgan va 1989-yil 9-noyabrda qulagan. Shundan so‘ng, 1990-yilda Germaniya birlashgan.",
+        "ru": "Берлинская стена была построена в 1961 году и пала 9 ноября 1989 года. После этого, в 1990 году, Германия объединилась.",
+        "en": "The Berlin Wall was built in 1961 and fell on 9 November 1989. Germany then reunified in 1990."
+      }
+    },
+    {
+      "id": "history-21",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "O‘zbekiston tarixi",
+        "ru": "История Узбекистана",
+        "en": "History of Uzbekistan"
+      },
+      "question": {
+        "uz": "Toshkent shahri markazini vayron qilgan kuchli zilzila qaysi yilda sodir bo‘lgan?",
+        "ru": "В каком году произошло сильное землетрясение, разрушившее центр Ташкента?",
+        "en": "In which year did the strong earthquake that destroyed the centre of Tashkent happen?"
+      },
+      "options": [
+        {
+          "uz": "1948",
+          "ru": "1948",
+          "en": "1948"
+        },
+        {
+          "uz": "1966",
+          "ru": "1966",
+          "en": "1966"
+        },
+        {
+          "uz": "1976",
+          "ru": "1976",
+          "en": "1976"
+        },
+        {
+          "uz": "1986",
+          "ru": "1986",
+          "en": "1986"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Toshkent zilzilasi 1966-yil 26-aprelda sodir bo‘lgan. Shahar qisqa muddatda qayta qurilgan, bu voqeaga “Jasorat” yodgorligi bag‘ishlangan.",
+        "ru": "Ташкентское землетрясение произошло 26 апреля 1966 года. Город быстро отстроили заново, этому событию посвящён памятник «Мужество».",
+        "en": "The Tashkent earthquake struck on 26 April 1966. The city was quickly rebuilt, and the Courage monument commemorates the event."
+      }
+    },
+    {
+      "id": "history-22",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "O‘zbekiston tarixi",
+        "ru": "История Узбекистана",
+        "en": "History of Uzbekistan"
+      },
+      "question": {
+        "uz": "O‘zbekiston SSR tashkil topgach, 1930-yilgacha uning poytaxti qaysi shahar bo‘lgan?",
+        "ru": "Какой город был столицей Узбекской ССР с момента её образования до 1930 года?",
+        "en": "Which city was the capital of the Uzbek SSR from its formation until 1930?"
+      },
+      "options": [
+        {
+          "uz": "Buxoro",
+          "ru": "Бухара",
+          "en": "Bukhara"
+        },
+        {
+          "uz": "Samarqand",
+          "ru": "Самарканд",
+          "en": "Samarkand"
+        },
+        {
+          "uz": "Xiva",
+          "ru": "Хива",
+          "en": "Khiva"
+        },
+        {
+          "uz": "Qo‘qon",
+          "ru": "Коканд",
+          "en": "Kokand"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "O‘zbekiston SSRning birinchi poytaxti Samarqand bo‘lgan. 1930-yilda poytaxt Toshkentga ko‘chirilgan.",
+        "ru": "Первой столицей Узбекской ССР был Самарканд. В 1930 году столицу перенесли в Ташкент.",
+        "en": "Samarkand was the first capital of the Uzbek SSR. In 1930 the capital moved to Tashkent."
+      }
+    },
+    {
+      "id": "history-23",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Turkiston Muxtoriyati",
+        "ru": "Туркестанская автономия",
+        "en": "Turkestan Autonomy"
+      },
+      "question": {
+        "uz": "1917-yil noyabrda “Turkiston Muxtoriyati” qaysi shaharda e’lon qilingan?",
+        "ru": "В каком городе в ноябре 1917 года была провозглашена Туркестанская автономия?",
+        "en": "In which city was the Turkestan Autonomy proclaimed in November 1917?"
+      },
+      "options": [
+        {
+          "uz": "Qo‘qon",
+          "ru": "Коканд",
+          "en": "Kokand"
+        },
+        {
+          "uz": "Toshkent",
+          "ru": "Ташкент",
+          "en": "Tashkent"
+        },
+        {
+          "uz": "Samarqand",
+          "ru": "Самарканд",
+          "en": "Samarkand"
+        },
+        {
+          "uz": "Buxoro",
+          "ru": "Бухара",
+          "en": "Bukhara"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Turkiston Muxtoriyati 1917-yil noyabr oxirida Qo‘qonda bo‘lib o‘tgan qurultoyda e’lon qilingan, shuning uchun “Qo‘qon muxtoriyati” deb ham ataladi. U 1918-yil fevralda tugatilgan.",
+        "ru": "Туркестанская автономия провозглашена в конце ноября 1917 года на съезде в Коканде, поэтому её называют и Кокандской автономией. Она была ликвидирована в феврале 1918 года.",
+        "en": "It was proclaimed at a congress in Kokand in late November 1917, so it is also called the Kokand Autonomy. It was abolished in February 1918."
+      }
+    },
+    {
+      "id": "history-24",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Davlat tili",
+        "ru": "Государственный язык",
+        "en": "State language"
+      },
+      "question": {
+        "uz": "O‘zbek tiliga davlat tili maqomi berilgani haqidagi qonun qaysi yilda qabul qilingan?",
+        "ru": "В каком году был принят закон, придавший узбекскому языку статус государственного?",
+        "en": "In which year was the law giving Uzbek the status of the state language adopted?"
+      },
+      "options": [
+        {
+          "uz": "1991",
+          "ru": "1991",
+          "en": "1991"
+        },
+        {
+          "uz": "1992",
+          "ru": "1992",
+          "en": "1992"
+        },
+        {
+          "uz": "1989",
+          "ru": "1989",
+          "en": "1989"
+        },
+        {
+          "uz": "1993",
+          "ru": "1993",
+          "en": "1993"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "“Davlat tili haqida”gi qonun 1989-yil 21-oktabrda qabul qilingan. Shu kun har yili O‘zbek tili bayrami kuni sifatida nishonlanadi.",
+        "ru": "Закон «О государственном языке» принят 21 октября 1989 года. Этот день ежегодно отмечается как День узбекского языка.",
+        "en": "The law “On the State Language” was adopted on 21 October 1989. The date is celebrated every year as Uzbek Language Day."
+      }
+    },
+    {
+      "id": "history-25",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Jadidlar",
+        "ru": "Джадиды",
+        "en": "The Jadids"
+      },
+      "question": {
+        "uz": "Jadidchilik harakati yetakchilaridan qaysi biri birinchi o‘zbek dramasi “Padarkush”ni yozgan?",
+        "ru": "Кто из лидеров джадидов написал первую узбекскую драму «Падаркуш» («Отцеубийца»)?",
+        "en": "Which Jadid leader wrote “Padarkush” (The Patricide), the first Uzbek drama?"
+      },
+      "options": [
+        {
+          "uz": "Abdulla Avloniy",
+          "ru": "Абдулла Авлони",
+          "en": "Abdulla Avloniy"
+        },
+        {
+          "uz": "Munavvar qori Abdurashidxonov",
+          "ru": "Мунаввар-кари Абдурашидханов",
+          "en": "Munavvar Qori Abdurashidkhonov"
+        },
+        {
+          "uz": "Abdurauf Fitrat",
+          "ru": "Абдурауф Фитрат",
+          "en": "Abdurauf Fitrat"
+        },
+        {
+          "uz": "Mahmudxo‘ja Behbudiy",
+          "ru": "Махмудходжа Бехбуди",
+          "en": "Mahmudkhoja Behbudiy"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "“Padarkush” dramasini Mahmudxo‘ja Behbudiy 1911-yilda yozgan, u ilk bor 1914-yilda sahnalashtirilgan. Asar ilm-ma’rifatning ahamiyatini targ‘ib qiladi.",
+        "ru": "Драму «Падаркуш» Махмудходжа Бехбуди написал в 1911 году, впервые её поставили в 1914 году. Пьеса призывает к просвещению.",
+        "en": "Mahmudkhoja Behbudiy wrote “Padarkush” in 1911, and it was first staged in 1914. The play promotes education and enlightenment."
+      }
+    }
+  ]
+}

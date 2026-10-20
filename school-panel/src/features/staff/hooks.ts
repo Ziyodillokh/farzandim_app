@@ -4,10 +4,10 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { toast } from 'sonner';
 
 import { api } from '@/data/api';
-import { type ListQuery, type RoleKey, ServiceError } from '@/data/contracts';
+import type { ListQuery, RoleKey } from '@/data/contracts';
 import type { StaffInput } from '@/data/schemas/staff';
 import { useI18n } from '@/i18n';
-import { errorKey } from '@/lib/errors';
+import { staffErrorKey } from './account';
 
 export type StaffFilter = ListQuery & { role?: RoleKey; active?: boolean };
 
@@ -38,8 +38,8 @@ function useStaffMutation<TVars, TResult>(fn: (vars: TVars) => Promise<TResult>,
       void queryClient.invalidateQueries();
       toast.success(success(result));
     },
-    onError: (error) =>
-      toast.error(t(error instanceof ServiceError && error.code === 'CONFLICT' ? 'staff.errors.conflict' : errorKey(error))),
+    // 409 'username' — band login haqida aniq xabar; boshqa 409 — demo / o'z hisobi xabari; qolganlari — umumiy.
+    onError: (error) => toast.error(t(staffErrorKey(error))),
   });
 }
 
@@ -59,4 +59,17 @@ export function useSetStaffActive() {
     ({ id, active }: { id: string; active: boolean }) => api.staff.setActive(id, active),
     (s) => t(s.active ? 'staff.activated' : 'staff.deactivated'),
   );
+}
+
+export function useSetStaffAccount() {
+  const { t } = useI18n();
+  return useStaffMutation(
+    ({ id, username, password }: { id: string; username: string; password: string }) => api.staff.setAccount(id, { username, password }),
+    () => t('staff.account.saved'),
+  );
+}
+
+export function useRemoveStaffAccount() {
+  const { t } = useI18n();
+  return useStaffMutation((id: string) => api.staff.removeAccount(id), () => t('staff.account.removed'));
 }

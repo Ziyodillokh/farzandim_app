@@ -1,0 +1,1109 @@
+{
+  "subject": "native",
+  "questions": [
+    {
+      "id": "native-22",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Bo‘g‘inlar",
+        "ru": "Слоги",
+        "en": "Syllables"
+      },
+      "question": {
+        "uz": "“Kitob” so‘zida nechta bo‘g‘in bor?",
+        "ru": "Сколько слогов в узбекском слове «kitob»?",
+        "en": "How many syllables are there in the Uzbek word “kitob”?"
+      },
+      "options": [
+        {
+          "uz": "1",
+          "ru": "1",
+          "en": "1"
+        },
+        {
+          "uz": "2",
+          "ru": "2",
+          "en": "2"
+        },
+        {
+          "uz": "3",
+          "ru": "3",
+          "en": "3"
+        },
+        {
+          "uz": "5",
+          "ru": "5",
+          "en": "5"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "So‘zda nechta unli bo‘lsa, shuncha bo‘g‘in bo‘ladi: ki-tob so‘zida 2 ta unli (i, o) bor, demak, 2 ta bo‘g‘in.",
+        "ru": "Слогов в слове столько, сколько гласных: в ki-tob 2 гласные (i, o), значит, 2 слога.",
+        "en": "A word has as many syllables as vowels: ki-tob has 2 vowels (i, o), so it has 2 syllables."
+      }
+    },
+    {
+      "id": "native-23",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Unli tovushlar",
+        "ru": "Гласные звуки",
+        "en": "Vowel sounds"
+      },
+      "question": {
+        "uz": "Qaysi so‘z unli tovush bilan boshlanadi?",
+        "ru": "Какое узбекское слово начинается с гласного звука?",
+        "en": "Which Uzbek word begins with a vowel sound?"
+      },
+      "options": [
+        {
+          "uz": "nok",
+          "ru": "nok",
+          "en": "nok"
+        },
+        {
+          "uz": "olma",
+          "ru": "olma",
+          "en": "olma"
+        },
+        {
+          "uz": "gilos",
+          "ru": "gilos",
+          "en": "gilos"
+        },
+        {
+          "uz": "behi",
+          "ru": "behi",
+          "en": "behi"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "“Olma” so‘zi “o” unlisi bilan boshlanadi. “Nok”, “gilos” va “behi” esa undosh tovush bilan boshlanadi.",
+        "ru": "Слово olma («яблоко») начинается с гласной o. Nok, gilos и behi начинаются с согласных.",
+        "en": "Olma (apple) starts with the vowel o. Nok, gilos and behi start with consonants."
+      }
+    },
+    {
+      "id": "native-24",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Hayvonlar",
+        "ru": "Животные",
+        "en": "Animals"
+      },
+      "question": {
+        "uz": "Sigirning bolasi nima deb ataladi?",
+        "ru": "Как по-узбекски называется детёныш коровы?",
+        "en": "What is a baby cow called in Uzbek?"
+      },
+      "options": [
+        {
+          "uz": "qo‘zi",
+          "ru": "qo‘zi",
+          "en": "qo‘zi"
+        },
+        {
+          "uz": "toychoq",
+          "ru": "toychoq",
+          "en": "toychoq"
+        },
+        {
+          "uz": "buzoq",
+          "ru": "buzoq",
+          "en": "buzoq"
+        },
+        {
+          "uz": "kuchukcha",
+          "ru": "kuchukcha",
+          "en": "kuchukcha"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Sigirning bolasi — buzoq. Qo‘zi — qo‘yning, toychoq — otning, kuchukcha esa itning bolasi.",
+        "ru": "Детёныш коровы — buzoq («телёнок»). Qo‘zi — ягнёнок, toychoq — жеребёнок, kuchukcha — щенок.",
+        "en": "A baby cow is a buzoq (calf). Qo‘zi is a lamb, toychoq is a foal and kuchukcha is a puppy."
+      }
+    },
+    {
+      "id": "native-25",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "O‘qib tushunish",
+        "ru": "Чтение и понимание",
+        "en": "Reading comprehension"
+      },
+      "question": {
+        "uz": "Gapni o‘qing: “Anvar bog‘da olma terdi.” Anvar qayerda edi?",
+        "ru": "Прочитайте предложение: «Anvar bog‘da olma terdi.» Где был Анвар?",
+        "en": "Read the sentence: “Anvar bog‘da olma terdi.” Where was Anvar?"
+      },
+      "options": [
+        {
+          "uz": "maktabda",
+          "ru": "maktabda",
+          "en": "maktabda"
+        },
+        {
+          "uz": "uyda",
+          "ru": "uyda",
+          "en": "uyda"
+        },
+        {
+          "uz": "bog‘da",
+          "ru": "bog‘da",
+          "en": "bog‘da"
+        },
+        {
+          "uz": "bozorda",
+          "ru": "bozorda",
+          "en": "bozorda"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Gapda “bog‘da” so‘zi bor, u “qayerda?” so‘rog‘iga javob beradi: Anvar bog‘da edi.",
+        "ru": "В предложении есть слово bog‘da («в саду»), оно отвечает на вопрос qayerda? (где?): Анвар был в саду.",
+        "en": "The sentence contains bog‘da (in the garden), which answers qayerda? (where?): Anvar was in the garden."
+      }
+    },
+    {
+      "id": "native-26",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Sinonimlar",
+        "ru": "Синонимы",
+        "en": "Synonyms"
+      },
+      "question": {
+        "uz": "“Do‘st” so‘zining ma’nodoshini toping.",
+        "ru": "Найдите синоним к узбекскому слову «do‘st».",
+        "en": "Find a synonym for the Uzbek word “do‘st”."
+      },
+      "options": [
+        {
+          "uz": "dushman",
+          "ru": "dushman",
+          "en": "dushman"
+        },
+        {
+          "uz": "qo‘shni",
+          "ru": "qo‘shni",
+          "en": "qo‘shni"
+        },
+        {
+          "uz": "mehmon",
+          "ru": "mehmon",
+          "en": "mehmon"
+        },
+        {
+          "uz": "o‘rtoq",
+          "ru": "o‘rtoq",
+          "en": "o‘rtoq"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "“Do‘st” va “o‘rtoq” — ma’nosi yaqin so‘zlar. “Dushman” esa “do‘st” so‘zining teskarisi.",
+        "ru": "Do‘st и o‘rtoq близки по значению: «друг, товарищ». Dushman («враг») — наоборот, антоним.",
+        "en": "Do‘st and o‘rtoq are close in meaning (friend). Dushman (enemy) is the opposite."
+      }
+    },
+    {
+      "id": "native-27",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Antonimlar",
+        "ru": "Антонимы",
+        "en": "Antonyms"
+      },
+      "question": {
+        "uz": "“Yaxshi” so‘zining teskarisini toping.",
+        "ru": "Найдите слово, противоположное узбекскому слову «yaxshi».",
+        "en": "Find the opposite of the Uzbek word “yaxshi”."
+      },
+      "options": [
+        {
+          "uz": "yomon",
+          "ru": "yomon",
+          "en": "yomon"
+        },
+        {
+          "uz": "shirin",
+          "ru": "shirin",
+          "en": "shirin"
+        },
+        {
+          "uz": "chiroyli",
+          "ru": "chiroyli",
+          "en": "chiroyli"
+        },
+        {
+          "uz": "katta",
+          "ru": "katta",
+          "en": "katta"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“Yaxshi” va “yomon” — qarama-qarshi ma’noli so‘zlar.",
+        "ru": "Yaxshi («хороший») и yomon («плохой») — слова с противоположным значением.",
+        "en": "Yaxshi (good) and yomon (bad) have opposite meanings."
+      }
+    },
+    {
+      "id": "native-28",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Hafta kunlari",
+        "ru": "Дни недели",
+        "en": "Days of the week"
+      },
+      "question": {
+        "uz": "Dushanbadan keyin haftaning qaysi kuni keladi?",
+        "ru": "Какой день недели идёт после dushanba (понедельник)? Выберите узбекское слово.",
+        "en": "Which day comes after dushanba (Monday)? Choose the Uzbek word."
+      },
+      "options": [
+        {
+          "uz": "yakshanba",
+          "ru": "yakshanba",
+          "en": "yakshanba"
+        },
+        {
+          "uz": "chorshanba",
+          "ru": "chorshanba",
+          "en": "chorshanba"
+        },
+        {
+          "uz": "juma",
+          "ru": "juma",
+          "en": "juma"
+        },
+        {
+          "uz": "seshanba",
+          "ru": "seshanba",
+          "en": "seshanba"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Hafta kunlari tartibi: dushanba, seshanba, chorshanba, payshanba, juma, shanba, yakshanba.",
+        "ru": "Порядок дней недели: dushanba, seshanba (вторник), chorshanba, payshanba, juma, shanba, yakshanba.",
+        "en": "The order is: dushanba, seshanba (Tuesday), chorshanba, payshanba, juma, shanba, yakshanba."
+      }
+    },
+    {
+      "id": "native-29",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Alifbo",
+        "ru": "Алфавит",
+        "en": "Alphabet"
+      },
+      "question": {
+        "uz": "O‘zbek alifbosida “B” harfidan keyin qaysi harf keladi?",
+        "ru": "Какая буква идёт после «B» в узбекском латинском алфавите?",
+        "en": "Which letter comes after “B” in the Uzbek Latin alphabet?"
+      },
+      "options": [
+        {
+          "uz": "D",
+          "ru": "D",
+          "en": "D"
+        },
+        {
+          "uz": "E",
+          "ru": "E",
+          "en": "E"
+        },
+        {
+          "uz": "V",
+          "ru": "V",
+          "en": "V"
+        },
+        {
+          "uz": "G",
+          "ru": "G",
+          "en": "G"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "O‘zbek lotin alifbosida “C” alohida harf emas, shuning uchun tartib shunday: A, B, D, E, F, G…",
+        "ru": "В узбекском латинском алфавите нет отдельной буквы C, поэтому порядок такой: A, B, D, E, F, G…",
+        "en": "The Uzbek Latin alphabet has no separate letter C, so the order is A, B, D, E, F, G…"
+      }
+    },
+    {
+      "id": "native-30",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Kim? va nima? so‘roqlari",
+        "ru": "Вопросы kim? и nima?",
+        "en": "Questions kim? and nima?"
+      },
+      "question": {
+        "uz": "“Mushuk” so‘zi qaysi so‘roqqa javob beradi?",
+        "ru": "На какой вопрос отвечает узбекское слово «mushuk» (кошка)?",
+        "en": "Which question does the Uzbek word “mushuk” (cat) answer?"
+      },
+      "options": [
+        {
+          "uz": "kim?",
+          "ru": "kim?",
+          "en": "kim?"
+        },
+        {
+          "uz": "nima?",
+          "ru": "nima?",
+          "en": "nima?"
+        },
+        {
+          "uz": "qanday?",
+          "ru": "qanday?",
+          "en": "qanday?"
+        },
+        {
+          "uz": "nima qildi?",
+          "ru": "nima qildi?",
+          "en": "nima qildi?"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "O‘zbek tilida “kim?” so‘rog‘i faqat odamlarga beriladi. Hayvon va narsalarni bildiruvchi so‘zlar “nima?” so‘rog‘iga javob beradi: mushuk — nima?",
+        "ru": "В узбекском языке вопрос kim? (кто?) задают только о людях. Животные и предметы отвечают на вопрос nima? (что?): mushuk — nima?",
+        "en": "In Uzbek, kim? (who?) is only used for people. Words for animals and things answer nima? (what?): mushuk — nima?"
+      }
+    },
+    {
+      "id": "native-31",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Bosh harf",
+        "ru": "Заглавная буква",
+        "en": "Capital letters"
+      },
+      "question": {
+        "uz": "Qaysi so‘z gap o‘rtasida ham doim bosh harf bilan yoziladi?",
+        "ru": "Какое узбекское слово всегда пишется с заглавной буквы, даже в середине предложения?",
+        "en": "Which Uzbek word is always written with a capital letter, even in the middle of a sentence?"
+      },
+      "options": [
+        {
+          "uz": "shahar",
+          "ru": "shahar",
+          "en": "shahar"
+        },
+        {
+          "uz": "daryo",
+          "ru": "daryo",
+          "en": "daryo"
+        },
+        {
+          "uz": "toshkent",
+          "ru": "toshkent",
+          "en": "toshkent"
+        },
+        {
+          "uz": "maktab",
+          "ru": "maktab",
+          "en": "maktab"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Shahar, joy va kishilarning nomlari atoqli otlar bo‘lib, doim bosh harf bilan yoziladi: Toshkent.",
+        "ru": "Названия городов, мест и имена людей — имена собственные, они всегда пишутся с заглавной буквы: Toshkent.",
+        "en": "Names of cities, places and people are proper nouns, so they always start with a capital letter: Toshkent."
+      }
+    },
+    {
+      "id": "native-32",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Kasblar",
+        "ru": "Профессии",
+        "en": "Professions"
+      },
+      "question": {
+        "uz": "Qaysi so‘z kasbni bildiradi?",
+        "ru": "Какое узбекское слово обозначает профессию?",
+        "en": "Which Uzbek word names a profession?"
+      },
+      "options": [
+        {
+          "uz": "o‘qimoq",
+          "ru": "o‘qimoq",
+          "en": "o‘qimoq"
+        },
+        {
+          "uz": "kitob",
+          "ru": "kitob",
+          "en": "kitob"
+        },
+        {
+          "uz": "maktab",
+          "ru": "maktab",
+          "en": "maktab"
+        },
+        {
+          "uz": "o‘qituvchi",
+          "ru": "o‘qituvchi",
+          "en": "o‘qituvchi"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "“O‘qituvchi” — kasb nomi. “O‘qimoq” harakatni bildiradi, “kitob” va “maktab” esa narsa va joy nomlari.",
+        "ru": "O‘qituvchi («учитель») — название профессии. O‘qimoq — действие «читать, учиться», kitob — книга, maktab — школа.",
+        "en": "O‘qituvchi (teacher) is a profession. O‘qimoq means to read or study, kitob is a book and maktab is a school."
+      }
+    },
+    {
+      "id": "native-33",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "So‘z yasalishi",
+        "ru": "Словообразование",
+        "en": "Word formation"
+      },
+      "question": {
+        "uz": "“Gul” so‘ziga qaysi qo‘shimcha qo‘shilsa, “gullar ko‘p o‘sadigan joy” ma’nosi chiqadi?",
+        "ru": "Какой суффикс нужно добавить к узбекскому слову «gul» (цветок), чтобы получилось «место, где растёт много цветов»?",
+        "en": "Which suffix turns the Uzbek word “gul” (flower) into “a place where many flowers grow”?"
+      },
+      "options": [
+        {
+          "uz": "-zor",
+          "ru": "-zor",
+          "en": "-zor"
+        },
+        {
+          "uz": "-chi",
+          "ru": "-chi",
+          "en": "-chi"
+        },
+        {
+          "uz": "-li",
+          "ru": "-li",
+          "en": "-li"
+        },
+        {
+          "uz": "-siz",
+          "ru": "-siz",
+          "en": "-siz"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "-zor qo‘shimchasi biror narsa ko‘p bo‘lgan joyni bildiradi: gulzor, olmazor, paxtazor.",
+        "ru": "Суффикс -zor обозначает место, где чего-то много: gulzor («цветник»), olmazor («яблоневый сад»).",
+        "en": "The suffix -zor means a place with lots of something: gulzor (flower garden), olmazor (apple orchard)."
+      }
+    },
+    {
+      "id": "native-34",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "O‘qib tushunish",
+        "ru": "Чтение и понимание",
+        "en": "Reading comprehension"
+      },
+      "question": {
+        "uz": "Gapni o‘qing: “Havo sovuq edi, shuning uchun Aziz issiq kiyindi.” Nega Aziz issiq kiyindi?",
+        "ru": "Прочитайте: «Havo sovuq edi, shuning uchun Aziz issiq kiyindi.» Почему Азиз тепло оделся?",
+        "en": "Read: “Havo sovuq edi, shuning uchun Aziz issiq kiyindi.” Why did Aziz dress warmly?"
+      },
+      "options": [
+        {
+          "uz": "Kechikayotgani uchun",
+          "ru": "Потому что он опаздывал",
+          "en": "Because he was late"
+        },
+        {
+          "uz": "Havo sovuq bo‘lgani uchun",
+          "ru": "Потому что было холодно",
+          "en": "Because it was cold"
+        },
+        {
+          "uz": "Bayram bo‘lgani uchun",
+          "ru": "Потому что был праздник",
+          "en": "Because it was a holiday"
+        },
+        {
+          "uz": "Kasal bo‘lgani uchun",
+          "ru": "Потому что он заболел",
+          "en": "Because he was ill"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "“Shuning uchun” so‘zlari sababni ko‘rsatadi: havo sovuq edi, shuning uchun Aziz issiq kiyindi.",
+        "ru": "Слова shuning uchun («поэтому») указывают на причину: было холодно, поэтому Азиз тепло оделся.",
+        "en": "Shuning uchun (that is why) points to the reason: it was cold, so Aziz dressed warmly."
+      }
+    },
+    {
+      "id": "native-35",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "So‘z turkumlari",
+        "ru": "Части речи",
+        "en": "Parts of speech"
+      },
+      "question": {
+        "uz": "Qaysi so‘z “nima qildi?” so‘rog‘iga javob beradi?",
+        "ru": "Какое узбекское слово отвечает на вопрос nima qildi? (что сделал?)",
+        "en": "Which Uzbek word answers the question nima qildi? (what did he do?)"
+      },
+      "options": [
+        {
+          "uz": "yugurdi",
+          "ru": "yugurdi",
+          "en": "yugurdi"
+        },
+        {
+          "uz": "kitob",
+          "ru": "kitob",
+          "en": "kitob"
+        },
+        {
+          "uz": "qizil",
+          "ru": "qizil",
+          "en": "qizil"
+        },
+        {
+          "uz": "uchta",
+          "ru": "uchta",
+          "en": "uchta"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“Nima qildi?” so‘rog‘i harakatni bildiruvchi so‘zga — fe’lga beriladi: yugurdi.",
+        "ru": "Вопрос nima qildi? задают к слову, обозначающему действие, — к глаголу: yugurdi («побежал»).",
+        "en": "Nima qildi? is asked about an action word — a verb: yugurdi (ran)."
+      }
+    },
+    {
+      "id": "native-36",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "O‘zbek adabiyoti",
+        "ru": "Узбекская литература",
+        "en": "Uzbek literature"
+      },
+      "question": {
+        "uz": "“Kecha va kunduz” romanining muallifi kim?",
+        "ru": "Кто автор романа «Kecha va kunduz» («Ночь и день»)?",
+        "en": "Who wrote the novel “Kecha va kunduz” (Night and Day)?"
+      },
+      "options": [
+        {
+          "uz": "Oybek",
+          "ru": "Oybek",
+          "en": "Oybek"
+        },
+        {
+          "uz": "Abdulla Qahhor",
+          "ru": "Abdulla Qahhor",
+          "en": "Abdulla Qahhor"
+        },
+        {
+          "uz": "Cho‘lpon",
+          "ru": "Cho‘lpon",
+          "en": "Cho‘lpon"
+        },
+        {
+          "uz": "Fitrat",
+          "ru": "Fitrat",
+          "en": "Fitrat"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "“Kecha va kunduz” romanini Cho‘lpon yozgan. Adibning asl ismi — Abdulhamid Sulaymon o‘g‘li Yunusov.",
+        "ru": "Роман «Kecha va kunduz» написал Чулпан. Настоящее имя писателя — Абдулхамид Сулейман-оглы Юнусов.",
+        "en": "The novel was written by Cho‘lpon, whose real name was Abdulhamid Sulaymon o‘g‘li Yunusov."
+      }
+    },
+    {
+      "id": "native-37",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "She’riy janrlar",
+        "ru": "Стихотворные жанры",
+        "en": "Poetic genres"
+      },
+      "question": {
+        "uz": "To‘rt misradan iborat, odatda a-a-b-a tarzida qofiyalanadigan she’r qanday ataladi?",
+        "ru": "Как называется стихотворение из четырёх строк, которые обычно рифмуются по схеме a-a-b-a?",
+        "en": "What is a poem of four lines, usually rhyming a-a-b-a, called?"
+      },
+      "options": [
+        {
+          "uz": "g‘azal",
+          "ru": "газель",
+          "en": "ghazal"
+        },
+        {
+          "uz": "masnaviy",
+          "ru": "маснави",
+          "en": "masnavi"
+        },
+        {
+          "uz": "qasida",
+          "ru": "касыда",
+          "en": "qasida"
+        },
+        {
+          "uz": "ruboiy",
+          "ru": "рубаи",
+          "en": "rubai"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Ruboiy — to‘rt misrali she’r bo‘lib, odatda a-a-b-a tarzida qofiyalanadi. G‘azal, qasida va masnaviy esa ko‘plab baytlardan tashkil topadi.",
+        "ru": "Рубаи — четверостишие, которое обычно рифмуется по схеме a-a-b-a. Газель, касыда и маснави состоят из многих бейтов.",
+        "en": "A rubai is a four-line poem that usually rhymes a-a-b-a. A ghazal, a qasida and a masnavi are made up of many couplets."
+      }
+    },
+    {
+      "id": "native-38",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Omonimlar",
+        "ru": "Омонимы",
+        "en": "Homonyms"
+      },
+      "question": {
+        "uz": "“Ot” so‘zi “hayvon”, “ism” va “otmoq” ma’nolarida qo‘llanadi. Bunday so‘zlar qanday ataladi?",
+        "ru": "Узбекское слово «ot» означает «лошадь», «имя» и «бросай». Как называются такие слова?",
+        "en": "The Uzbek word “ot” can mean “horse”, “name” and “throw!”. What are such words called?"
+      },
+      "options": [
+        {
+          "uz": "sinonimlar",
+          "ru": "синонимы",
+          "en": "synonyms"
+        },
+        {
+          "uz": "antonimlar",
+          "ru": "антонимы",
+          "en": "antonyms"
+        },
+        {
+          "uz": "omonimlar",
+          "ru": "омонимы",
+          "en": "homonyms"
+        },
+        {
+          "uz": "paronimlar",
+          "ru": "паронимы",
+          "en": "paronyms"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Shakli bir xil, ma’nosi har xil so‘zlar omonimlar deyiladi: ot (hayvon) — ot (ism) — ot (otmoq).",
+        "ru": "Слова, одинаковые по звучанию и написанию, но разные по значению, называются омонимами.",
+        "en": "Words that look and sound the same but have different meanings are called homonyms."
+      }
+    },
+    {
+      "id": "native-39",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Badiiy san’atlar",
+        "ru": "Художественные приёмы",
+        "en": "Literary devices"
+      },
+      "question": {
+        "uz": "“Yuzing oydek” iborasida qaysi badiiy san’at qo‘llangan?",
+        "ru": "Какой художественный приём использован в выражении «Yuzing oydek» («Лицо твоё словно луна»)?",
+        "en": "Which literary device is used in the phrase “Yuzing oydek” (your face is like the moon)?"
+      },
+      "options": [
+        {
+          "uz": "tashbeh",
+          "ru": "ташбех (сравнение)",
+          "en": "tashbeh (simile)"
+        },
+        {
+          "uz": "tazod",
+          "ru": "тазод (антитеза)",
+          "en": "tazod (antithesis)"
+        },
+        {
+          "uz": "mubolag‘a",
+          "ru": "мубалага (гипербола)",
+          "en": "mubolag‘a (hyperbole)"
+        },
+        {
+          "uz": "tashxis",
+          "ru": "ташхис (олицетворение)",
+          "en": "tashxis (personification)"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Tashbeh — o‘xshatish san’ati: “-dek”, “-day”, “kabi” yordamida bir narsa boshqasiga o‘xshatiladi. “Yuzing oydek”da yuz oyga o‘xshatilgan.",
+        "ru": "Ташбех — это сравнение: один предмет уподобляется другому с помощью -dek, -day, kabi. В «Yuzing oydek» лицо сравнивается с луной.",
+        "en": "Tashbeh is a simile: one thing is compared to another using -dek, -day or kabi (like). In “Yuzing oydek” a face is compared to the moon."
+      }
+    },
+    {
+      "id": "native-40",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Qo‘shma gaplar",
+        "ru": "Сложные предложения",
+        "en": "Complex sentences"
+      },
+      "question": {
+        "uz": "Qaysi gap ergashgan qo‘shma gap?",
+        "ru": "Какое узбекское предложение является сложноподчинённым (ergashgan qo‘shma gap)?",
+        "en": "Which Uzbek sentence has a subordinate clause (ergashgan qo‘shma gap)?"
+      },
+      "options": [
+        {
+          "uz": "Bahor keldi, daraxtlar gulladi.",
+          "ru": "Bahor keldi, daraxtlar gulladi.",
+          "en": "Bahor keldi, daraxtlar gulladi."
+        },
+        {
+          "uz": "Quyosh chiqdi va havo isidi.",
+          "ru": "Quyosh chiqdi va havo isidi.",
+          "en": "Quyosh chiqdi va havo isidi."
+        },
+        {
+          "uz": "Men kitob o‘qidim, ukam esa rasm chizdi.",
+          "ru": "Men kitob o‘qidim, ukam esa rasm chizdi.",
+          "en": "Men kitob o‘qidim, ukam esa rasm chizdi."
+        },
+        {
+          "uz": "Agar yomg‘ir yog‘sa, sayrga chiqmaymiz.",
+          "ru": "Agar yomg‘ir yog‘sa, sayrga chiqmaymiz.",
+          "en": "Agar yomg‘ir yog‘sa, sayrga chiqmaymiz."
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "“Agar … -sa” shart ergash gapi bosh gapga tobe bo‘ladi. Qolgan gaplarda qismlar teng huquqli: ular bog‘lovchisiz yoki bog‘langan qo‘shma gaplar.",
+        "ru": "Часть «Agar … -sa» («если…») — придаточное условия, зависящее от главного. В остальных предложениях части равноправны.",
+        "en": "“Agar … -sa” (if…) is a conditional clause that depends on the main clause. In the other sentences the clauses are equal."
+      }
+    },
+    {
+      "id": "native-41",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Mumtoz adabiyot",
+        "ru": "Классическая литература",
+        "en": "Classical literature"
+      },
+      "question": {
+        "uz": "“Qutadg‘u bilig” asarining muallifi kim?",
+        "ru": "Кто автор произведения «Qutadg‘u bilig» («Благодатное знание»)?",
+        "en": "Who wrote “Qutadg‘u bilig” (The Wisdom of Royal Glory)?"
+      },
+      "options": [
+        {
+          "uz": "Mahmud Koshg‘ariy",
+          "ru": "Mahmud Koshg‘ariy",
+          "en": "Mahmud Koshg‘ariy"
+        },
+        {
+          "uz": "Yusuf Xos Hojib",
+          "ru": "Yusuf Xos Hojib",
+          "en": "Yusuf Xos Hojib"
+        },
+        {
+          "uz": "Ahmad Yugnakiy",
+          "ru": "Ahmad Yugnakiy",
+          "en": "Ahmad Yugnakiy"
+        },
+        {
+          "uz": "Ahmad Yassaviy",
+          "ru": "Ahmad Yassaviy",
+          "en": "Ahmad Yassaviy"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "“Qutadg‘u bilig”ni Yusuf Xos Hojib 1069–1070-yillarda yozgan. Bu turkiy tildagi eng qadimgi yirik dostonlardan biri.",
+        "ru": "«Qutadg‘u bilig» написал Юсуф Хас Хаджиб в 1069–1070 годах. Это одна из древнейших крупных поэм на тюркском языке.",
+        "en": "Yusuf Xos Hojib (Yusuf Khass Hajib) wrote it in 1069–1070. It is one of the oldest major poems in a Turkic language."
+      }
+    },
+    {
+      "id": "native-42",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Alisher Navoiy",
+        "ru": "Алишер Навои",
+        "en": "Alisher Navoiy"
+      },
+      "question": {
+        "uz": "Alisher Navoiy forsiy tilda yozgan she’rlarida qaysi taxallusni qo‘llagan?",
+        "ru": "Какой псевдоним (тахаллус) использовал Алишер Навои в стихах на персидском языке?",
+        "en": "Which pen name did Alisher Navoiy use for his poems in Persian?"
+      },
+      "options": [
+        {
+          "uz": "Navoiy",
+          "ru": "Navoiy",
+          "en": "Navoiy"
+        },
+        {
+          "uz": "Lutfiy",
+          "ru": "Lutfiy",
+          "en": "Lutfiy"
+        },
+        {
+          "uz": "Foniy",
+          "ru": "Foniy",
+          "en": "Foniy"
+        },
+        {
+          "uz": "Atoiy",
+          "ru": "Atoiy",
+          "en": "Atoiy"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Navoiy turkiy she’rlarini “Navoiy”, forsiy she’rlarini esa “Foniy” taxallusi bilan yozgan. Lutfiy va Atoiy — boshqa shoirlar.",
+        "ru": "Тюркские стихи Навои подписывал псевдонимом «Навои», а персидские — «Фани» (Foniy). Лутфи и Атаи — другие поэты.",
+        "en": "Navoiy signed his Turkic poems “Navoiy” and his Persian poems “Foniy”. Lutfiy and Atoiy were other poets."
+      }
+    },
+    {
+      "id": "native-43",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Alisher Navoiy",
+        "ru": "Алишер Навои",
+        "en": "Alisher Navoiy"
+      },
+      "question": {
+        "uz": "Alisher Navoiyning turkiy va forsiy tillarni qiyoslab yozgan asari qaysi?",
+        "ru": "В каком произведении Алишер Навои сравнил тюркский и персидский языки?",
+        "en": "In which work did Alisher Navoiy compare the Turkic and Persian languages?"
+      },
+      "options": [
+        {
+          "uz": "“Mahbub ul-qulub”",
+          "ru": "«Mahbub ul-qulub»",
+          "en": "“Mahbub ul-qulub”"
+        },
+        {
+          "uz": "“Muhokamat ul-lug‘atayn”",
+          "ru": "«Muhokamat ul-lug‘atayn»",
+          "en": "“Muhokamat ul-lug‘atayn”"
+        },
+        {
+          "uz": "“Mezon ul-avzon”",
+          "ru": "«Mezon ul-avzon»",
+          "en": "“Mezon ul-avzon”"
+        },
+        {
+          "uz": "“Majolis un-nafois”",
+          "ru": "«Majolis un-nafois»",
+          "en": "“Majolis un-nafois”"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "“Muhokamat ul-lug‘atayn” (“Ikki til muhokamasi”) 1499-yilda yozilgan; unda Navoiy turkiy tilning boyligini dalillar bilan ko‘rsatgan.",
+        "ru": "«Muhokamat ul-lug‘atayn» («Суждение о двух языках») написан в 1499 году; в нём Навои доказывает богатство тюркского языка.",
+        "en": "“Muhokamat ul-lug‘atayn” (Judgement of Two Languages), written in 1499, argues for the richness of the Turkic language."
+      }
+    },
+    {
+      "id": "native-44",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "She’r tizimlari",
+        "ru": "Системы стихосложения",
+        "en": "Verse systems"
+      },
+      "question": {
+        "uz": "Misralardagi bo‘g‘inlar sonining tengligiga asoslangan she’r tizimi qanday ataladi?",
+        "ru": "Как называется система стихосложения, основанная на равном количестве слогов в строках?",
+        "en": "What is the verse system based on an equal number of syllables in each line called?"
+      },
+      "options": [
+        {
+          "uz": "barmoq",
+          "ru": "бармак",
+          "en": "barmoq"
+        },
+        {
+          "uz": "aruz",
+          "ru": "аруз",
+          "en": "aruz"
+        },
+        {
+          "uz": "sarbast",
+          "ru": "сарбаст",
+          "en": "sarbast"
+        },
+        {
+          "uz": "tuyuq",
+          "ru": "туюг",
+          "en": "tuyuq"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Barmoq tizimida misralardagi bo‘g‘inlar soni teng bo‘ladi. Aruz cho‘ziq va qisqa hijolar tartibiga asoslanadi, sarbast esa erkin she’r.",
+        "ru": "В системе бармак строки имеют равное число слогов. Аруз основан на чередовании долгих и кратких слогов, а сарбаст — свободный стих.",
+        "en": "In barmoq, lines have an equal number of syllables. Aruz is based on long and short syllables, and sarbast is free verse."
+      }
+    },
+    {
+      "id": "native-45",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "So‘z birikmasi",
+        "ru": "Словосочетание",
+        "en": "Phrases"
+      },
+      "question": {
+        "uz": "Qaysi so‘z birikmasida tobe so‘z hokim so‘zga bitishuv yo‘li bilan bog‘langan?",
+        "ru": "В каком узбекском словосочетании зависимое слово связано с главным примыканием (bitishuv)?",
+        "en": "In which Uzbek phrase is the dependent word linked to the head word by adjacency (bitishuv)?"
+      },
+      "options": [
+        {
+          "uz": "mening kitobim",
+          "ru": "mening kitobim",
+          "en": "mening kitobim"
+        },
+        {
+          "uz": "kitobni o‘qimoq",
+          "ru": "kitobni o‘qimoq",
+          "en": "kitobni o‘qimoq"
+        },
+        {
+          "uz": "maktabga bormoq",
+          "ru": "maktabga bormoq",
+          "en": "maktabga bormoq"
+        },
+        {
+          "uz": "chiroyli gul",
+          "ru": "chiroyli gul",
+          "en": "chiroyli gul"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Bitishuvda tobe so‘z hech qanday qo‘shimchasiz, faqat so‘z tartibi orqali bog‘lanadi: chiroyli gul. “Mening kitobim” — moslashuv, qolganlari — boshqaruv.",
+        "ru": "При примыкании зависимое слово связано без окончаний, только порядком слов: chiroyli gul. Mening kitobim — согласование, остальные — управление.",
+        "en": "In adjacency the dependent word takes no ending and is linked only by word order: chiroyli gul. Mening kitobim shows agreement; the others show government."
+      }
+    }
+  ]
+}

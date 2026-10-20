@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ServiceError } from '@/data/contracts';
 import { CARE_MIN_GROUP } from '@/lib/k-anon';
+import { __setClockForTests } from '../clock';
 import { reportsService } from '../services/reports';
 import { freshDb, loginAs } from './helpers';
 
@@ -33,6 +34,13 @@ describe('reportsService', () => {
       if (g.hidden) expect(g.wellbeing).toBeNull();
       else expect(g.respondents).toBeGreaterThanOrEqual(CARE_MIN_GROUP);
     }
+  });
+
+  it('Growth: faqat yakunlangan haftalar; oyning birinchi haftasi tugamagan bo\'lsa — weeks 0', async () => {
+    loginAs('DIRECTOR');
+    expect((await reportsService.monthly('2026-10')).learning?.weeks).toBe(1);
+    __setClockForTests({ mode: 'SCENARIO', scenarioDate: '2026-11-03', scenarioStartMinute: 10 * 60, realStartedAt: Date.now(), speed: 1 });
+    expect((await reportsService.monthly('2026-11')).learning).toMatchObject({ weeks: 0, avgActiveStudents: 0, avgScore: null });
   });
 
   it('joriy oy bugungi kunni hisobga olmaydi', async () => {

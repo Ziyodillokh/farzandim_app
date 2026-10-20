@@ -1,0 +1,465 @@
+{
+  "subject": "informatics",
+  "questions": [
+    {
+      "id": "informatics-16",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Ma’lumotlar tuzilmalari",
+        "ru": "Структуры данных",
+        "en": "Data structures"
+      },
+      "question": {
+        "uz": "Qaysi ma’lumotlar tuzilmasi “oxirgi kirgan — birinchi chiqadi” (LIFO) tamoyili asosida ishlaydi?",
+        "ru": "Какая структура данных работает по принципу «последним пришёл — первым ушёл» (LIFO)?",
+        "en": "Which data structure works on the “last in, first out” (LIFO) principle?"
+      },
+      "options": [
+        {
+          "uz": "Navbat",
+          "ru": "Очередь",
+          "en": "Queue"
+        },
+        {
+          "uz": "Stek",
+          "ru": "Стек",
+          "en": "Stack"
+        },
+        {
+          "uz": "Massiv",
+          "ru": "Массив",
+          "en": "Array"
+        },
+        {
+          "uz": "Daraxt",
+          "ru": "Дерево",
+          "en": "Tree"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Stekda oxirgi qo‘shilgan element birinchi bo‘lib olinadi — xuddi ustma-ust qo‘yilgan likopchalar kabi. Navbat esa FIFO tamoyilida ishlaydi.",
+        "ru": "В стеке последний добавленный элемент извлекается первым — как в стопке тарелок. Очередь работает по принципу FIFO.",
+        "en": "In a stack the last item added is the first one removed — like a pile of plates. A queue works on FIFO."
+      }
+    },
+    {
+      "id": "informatics-17",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Kompyuter tarmoqlari",
+        "ru": "Компьютерные сети",
+        "en": "Computer networks"
+      },
+      "question": {
+        "uz": "Domen nomlarini (masalan, uz.wikipedia.org) IP-manzillarga aylantiruvchi tizim qanday ataladi?",
+        "ru": "Как называется система, которая преобразует доменные имена (например, uz.wikipedia.org) в IP-адреса?",
+        "en": "What is the system that turns domain names (such as uz.wikipedia.org) into IP addresses called?"
+      },
+      "options": [
+        {
+          "uz": "DNS",
+          "ru": "DNS",
+          "en": "DNS"
+        },
+        {
+          "uz": "HTTP",
+          "ru": "HTTP",
+          "en": "HTTP"
+        },
+        {
+          "uz": "FTP",
+          "ru": "FTP",
+          "en": "FTP"
+        },
+        {
+          "uz": "SMTP",
+          "ru": "SMTP",
+          "en": "SMTP"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "DNS (Domain Name System) domen nomini IP-manzilga aylantiradi. HTTP veb-sahifalarni uzatadi, FTP fayllarni, SMTP esa elektron xatlarni jo‘natadi.",
+        "ru": "DNS (Domain Name System) преобразует доменное имя в IP-адрес. HTTP передаёт веб-страницы, FTP — файлы, а SMTP — электронную почту.",
+        "en": "DNS (Domain Name System) turns a domain name into an IP address. HTTP carries web pages, FTP transfers files and SMTP sends email."
+      }
+    },
+    {
+      "id": "informatics-18",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Ma’lumotlar bazalari",
+        "ru": "Базы данных",
+        "en": "Databases"
+      },
+      "question": {
+        "uz": "SQL tilida jadvaldan ma’lumotlarni tanlab olish uchun qaysi buyruq ishlatiladi?",
+        "ru": "Какая команда SQL используется для выборки данных из таблицы?",
+        "en": "Which SQL command is used to retrieve data from a table?"
+      },
+      "options": [
+        {
+          "uz": "INSERT",
+          "ru": "INSERT",
+          "en": "INSERT"
+        },
+        {
+          "uz": "SELECT",
+          "ru": "SELECT",
+          "en": "SELECT"
+        },
+        {
+          "uz": "DELETE",
+          "ru": "DELETE",
+          "en": "DELETE"
+        },
+        {
+          "uz": "UPDATE",
+          "ru": "UPDATE",
+          "en": "UPDATE"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "SELECT ma’lumotlarni tanlab oladi. INSERT yangi yozuv qo‘shadi, UPDATE yozuvlarni o‘zgartiradi, DELETE esa ularni o‘chiradi.",
+        "ru": "SELECT выбирает данные. INSERT добавляет записи, UPDATE изменяет их, а DELETE удаляет.",
+        "en": "SELECT retrieves data. INSERT adds rows, UPDATE changes them and DELETE removes them."
+      }
+    },
+    {
+      "id": "informatics-19",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Algoritmlar",
+        "ru": "Алгоритмы",
+        "en": "Algorithms"
+      },
+      "question": {
+        "uz": "Saralangan massivda ikkilik qidiruv algoritmining vaqt murakkabligi qanday?",
+        "ru": "Какова временная сложность двоичного поиска в отсортированном массиве?",
+        "en": "What is the time complexity of binary search in a sorted array?"
+      },
+      "options": [
+        {
+          "uz": "O(1)",
+          "ru": "O(1)",
+          "en": "O(1)"
+        },
+        {
+          "uz": "O(n)",
+          "ru": "O(n)",
+          "en": "O(n)"
+        },
+        {
+          "uz": "O(log n)",
+          "ru": "O(log n)",
+          "en": "O(log n)"
+        },
+        {
+          "uz": "O(n²)",
+          "ru": "O(n²)",
+          "en": "O(n²)"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Ikkilik qidiruvda har bir qadamda qidiruv sohasi ikki marta qisqaradi, shuning uchun qadamlar soni taxminan log₂ n ga teng: O(log n).",
+        "ru": "Двоичный поиск на каждом шаге сокращает область поиска вдвое, поэтому число шагов около log₂ n: O(log n).",
+        "en": "Binary search halves the search range at every step, so it needs about log₂ n steps: O(log n)."
+      }
+    },
+    {
+      "id": "informatics-20",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Sanoq sistemalari",
+        "ru": "Системы счисления",
+        "en": "Number systems"
+      },
+      "question": {
+        "uz": "O‘n oltilik sanoq sistemasidagi 2F₁₆ sonini o‘nlik sanoq sistemasiga o‘tkazing.",
+        "ru": "Переведите число 2F₁₆ из шестнадцатеричной системы счисления в десятичную.",
+        "en": "Convert the hexadecimal number 2F₁₆ to decimal."
+      },
+      "options": [
+        {
+          "uz": "32",
+          "ru": "32",
+          "en": "32"
+        },
+        {
+          "uz": "45",
+          "ru": "45",
+          "en": "45"
+        },
+        {
+          "uz": "215",
+          "ru": "215",
+          "en": "215"
+        },
+        {
+          "uz": "47",
+          "ru": "47",
+          "en": "47"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "O‘n oltilik sistemada F = 15, shuning uchun 2F₁₆ = 2 · 16 + 15 = 47.",
+        "ru": "В шестнадцатеричной системе F = 15, поэтому 2F₁₆ = 2 · 16 + 15 = 47.",
+        "en": "In hexadecimal F = 15, so 2F₁₆ = 2 × 16 + 15 = 47."
+      }
+    },
+    {
+      "id": "informatics-21",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Ma’lumotlar tuzilmalari",
+        "ru": "Структуры данных",
+        "en": "Data structures"
+      },
+      "question": {
+        "uz": "Bo‘sh navbatga ketma-ket 5, 8 va 3 sonlari qo‘shildi, so‘ng navbatdan bitta element olindi. Qaysi son olindi?",
+        "ru": "В пустую очередь по порядку добавили числа 5, 8 и 3, затем извлекли один элемент. Какое число извлекли?",
+        "en": "The numbers 5, 8 and 3 are added in that order to an empty queue, then one element is removed. Which number is removed?"
+      },
+      "options": [
+        {
+          "uz": "5",
+          "ru": "5",
+          "en": "5"
+        },
+        {
+          "uz": "8",
+          "ru": "8",
+          "en": "8"
+        },
+        {
+          "uz": "3",
+          "ru": "3",
+          "en": "3"
+        },
+        {
+          "uz": "16",
+          "ru": "16",
+          "en": "16"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Navbat FIFO (“birinchi kirgan — birinchi chiqadi”) tamoyilida ishlaydi, shuning uchun birinchi qo‘shilgan 5 olinadi. Stekdan esa 3 olingan bo‘lardi.",
+        "ru": "Очередь работает по принципу FIFO («первым пришёл — первым ушёл»), поэтому извлекается первое добавленное число 5. Из стека извлекли бы 3.",
+        "en": "A queue is FIFO (first in, first out), so the first number added, 5, comes out. A stack would give 3."
+      }
+    },
+    {
+      "id": "informatics-22",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Ma’lumotlar bazalari",
+        "ru": "Базы данных",
+        "en": "Databases"
+      },
+      "question": {
+        "uz": "Relyatsion jadvaldagi har bir yozuvni yagona tarzda aniqlaydigan maydon qanday ataladi?",
+        "ru": "Как называется поле, которое однозначно определяет каждую запись в реляционной таблице?",
+        "en": "What is the field that uniquely identifies each record in a relational table called?"
+      },
+      "options": [
+        {
+          "uz": "Tashqi kalit",
+          "ru": "Внешний ключ",
+          "en": "Foreign key"
+        },
+        {
+          "uz": "Indeks",
+          "ru": "Индекс",
+          "en": "Index"
+        },
+        {
+          "uz": "Birlamchi kalit",
+          "ru": "Первичный ключ",
+          "en": "Primary key"
+        },
+        {
+          "uz": "So‘rov",
+          "ru": "Запрос",
+          "en": "Query"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Birlamchi kalit (primary key) qiymatlari takrorlanmaydi va bo‘sh bo‘lmaydi. Tashqi kalit esa boshqa jadvalning birlamchi kalitiga havola qiladi.",
+        "ru": "Значения первичного ключа (primary key) уникальны и не бывают пустыми. Внешний ключ ссылается на первичный ключ другой таблицы.",
+        "en": "Primary key values are unique and never empty. A foreign key refers to the primary key of another table."
+      }
+    },
+    {
+      "id": "informatics-23",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Saralash algoritmlari",
+        "ru": "Алгоритмы сортировки",
+        "en": "Sorting algorithms"
+      },
+      "question": {
+        "uz": "Pufakchali saralash (bubble sort) algoritmining eng yomon holatdagi vaqt murakkabligi qanday?",
+        "ru": "Какова временная сложность сортировки пузырьком в худшем случае?",
+        "en": "What is the worst-case time complexity of bubble sort?"
+      },
+      "options": [
+        {
+          "uz": "O(n)",
+          "ru": "O(n)",
+          "en": "O(n)"
+        },
+        {
+          "uz": "O(n log n)",
+          "ru": "O(n log n)",
+          "en": "O(n log n)"
+        },
+        {
+          "uz": "O(log n)",
+          "ru": "O(log n)",
+          "en": "O(log n)"
+        },
+        {
+          "uz": "O(n²)",
+          "ru": "O(n²)",
+          "en": "O(n²)"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Eng yomon holatda (masalan, massiv teskari tartibda bo‘lsa) n·(n − 1)/2 ta taqqoslash bajariladi, ya’ni murakkablik O(n²).",
+        "ru": "В худшем случае (например, массив упорядочен в обратном порядке) выполняется n·(n − 1)/2 сравнений, то есть O(n²).",
+        "en": "In the worst case (for example, a reverse-sorted array) it makes n·(n − 1)/2 comparisons, which is O(n²)."
+      }
+    },
+    {
+      "id": "informatics-24",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "IP-manzillash",
+        "ru": "IP-адресация",
+        "en": "IP addressing"
+      },
+      "question": {
+        "uz": "192.168.1.0/24 tarmog‘idagi qurilmalarga (xostlarga) nechta manzil berish mumkin?",
+        "ru": "Сколько адресов можно назначить устройствам (хостам) в сети 192.168.1.0/24?",
+        "en": "How many addresses can be assigned to devices (hosts) in the network 192.168.1.0/24?"
+      },
+      "options": [
+        {
+          "uz": "256",
+          "ru": "256",
+          "en": "256"
+        },
+        {
+          "uz": "255",
+          "ru": "255",
+          "en": "255"
+        },
+        {
+          "uz": "254",
+          "ru": "254",
+          "en": "254"
+        },
+        {
+          "uz": "24",
+          "ru": "24",
+          "en": "24"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "/24 da xostlar uchun 32 − 24 = 8 bit qoladi: 2⁸ = 256 ta manzil. Ulardan tarmoq manzili (.0) va keng eshittirish manzili (.255) chiqariladi: 256 − 2 = 254.",
+        "ru": "При /24 на хосты остаётся 32 − 24 = 8 бит: 2⁸ = 256 адресов. Из них вычитают адрес сети (.0) и широковещательный адрес (.255): 256 − 2 = 254.",
+        "en": "With /24, 32 − 24 = 8 bits are left for hosts: 2⁸ = 256 addresses. Take away the network address (.0) and the broadcast address (.255): 256 − 2 = 254."
+      }
+    },
+    {
+      "id": "informatics-25",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Rekursiya",
+        "ru": "Рекурсия",
+        "en": "Recursion"
+      },
+      "question": {
+        "uz": "F(1) = F(2) = 1 va n > 2 bo‘lganda F(n) = F(n − 1) + F(n − 2). F(10) nechaga teng?",
+        "ru": "F(1) = F(2) = 1, а при n > 2 F(n) = F(n − 1) + F(n − 2). Чему равно F(10)?",
+        "en": "F(1) = F(2) = 1, and for n > 2, F(n) = F(n − 1) + F(n − 2). What is F(10)?"
+      },
+      "options": [
+        {
+          "uz": "34",
+          "ru": "34",
+          "en": "34"
+        },
+        {
+          "uz": "55",
+          "ru": "55",
+          "en": "55"
+        },
+        {
+          "uz": "89",
+          "ru": "89",
+          "en": "89"
+        },
+        {
+          "uz": "45",
+          "ru": "45",
+          "en": "45"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Ketma-ketlik: 1, 1, 2, 3, 5, 8, 13, 21, 34, 55. O‘ninchi had — 55. Bular Fibonachchi sonlari.",
+        "ru": "Последовательность: 1, 1, 2, 3, 5, 8, 13, 21, 34, 55. Десятый член — 55. Это числа Фибоначчи.",
+        "en": "The sequence is 1, 1, 2, 3, 5, 8, 13, 21, 34, 55. The tenth term is 55. These are the Fibonacci numbers."
+      }
+    }
+  ]
+}

@@ -31,8 +31,8 @@ const ALLOWED_MIMES = [
   'audio/wav',
 ];
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
-// Chat media (rasm / hujjat) — audio'dan kattaroq, lekin main.ts multipart
-// bodyLimit (100 MB) ichida. Telefon kamerasi rasmlari + odatiy hujjatlar.
+// Chat media (rasm / hujjat) — audio'dan kattaroq, lekin multipart fileSize
+// (configure-app, 100 MB) ichida. Telefon kamerasi rasmlari + odatiy hujjatlar.
 const MAX_MEDIA_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 
 @Injectable()

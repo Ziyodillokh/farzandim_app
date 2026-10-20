@@ -85,6 +85,27 @@ jobs:
           path: school-panel/out
           retention-days: 3
           if-no-files-found: error
+      # Haqiqiy panel (http rejim, haqiqiy backend) → /maktab/. Demo (/school, mock)
+      # va uning E2E'si yuqorida; demo artefakti allaqachon yuklangan.
+      - name: Build real panel (http, basePath /maktab)
+        env:
+          NEXT_PUBLIC_DATA_SOURCE: http
+          NEXT_PUBLIC_API_BASE: /api
+          PANEL_BASE_PATH: /maktab
+          NEXT_TELEMETRY_DISABLED: '1'
+        run: |
+          set -euo pipefail
+          rm -rf .next out
+          npm run build
+          npm run check:export
+          grep -q '/maktab/_next/' out/index.html || { echo "::error::basePath /maktab emas"; exit 1; }
+          if grep -q '/school/_next/' out/index.html; then echo "::error::demo basePath aralashdi"; exit 1; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: school-panel-maktab-out
+          path: school-panel/out
+          retention-days: 3
+          if-no-files-found: error
 
   deploy:
     needs: [test, school-panel]
@@ -112,6 +133,11 @@ jobs:
         with:
           name: school-panel-out
           path: website/public/school
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: school-panel-maktab-out
+          path: website/public/maktab
 
       - name: Stage (sayt + xesh manifest + deploy skriptlari)
         run: bash website/deploy/make-stage.sh "$RUNNER_TEMP/stage"
@@ -147,6 +173,11 @@ jobs:
           check /parvoz-yoq-sahifa         404 "Bu sahifa topilmadi"
           check /school/                   200 "Parvoz School"
           check /school/login/             200 "Parvoz School"
+          check /maktab/                   200 "Parvoz School"
+          check /maktab/login/             200 "/maktab/_next/"
+          # Backend maktab moduli jonlimi (deploy-test.yml): 401 — jonli, 404 — backend hali eski.
+          sr="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -X POST "https://${DOMAIN}/api/school/auth/refresh" || true)"
+          [ "$sr" = "401" ] && echo "✓ /api/school/auth/refresh → 401" || echo "::warning::/api/school/auth/refresh → $sr"
           # /api holatini server-deploy.sh o'zgarishdan oldingi bilan solishtirgan; bu yerda faqat ogohlantirish.
           api="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://${DOMAIN}/api" || true)"
           [ "$api" = "200" ] && echo "✓ /api → 200" || echo "::warning::/api → $api"

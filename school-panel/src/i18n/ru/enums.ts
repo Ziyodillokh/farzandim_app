@@ -76,6 +76,9 @@ export const enums: DeepString<typeof uz> = {
     BIOLOGY: 'Биология',
     IT: 'Информатика',
     NATIVE: 'Родной язык',
+    PHYSICS: 'Физика',
+    CHEMISTRY: 'Химия',
+    RUSSIAN: 'Русский язык',
   },
   auditModule: {
     AUTH: 'Вход',

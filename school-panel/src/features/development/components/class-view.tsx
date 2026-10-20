@@ -137,7 +137,10 @@ export function ClassView({ psychologist }: { psychologist: boolean }) {
       </Card>
     );
   }
-  const compare = data?.domainAverages.map((d) => ({ domain: d.domain, index: d.index, compare: data.schoolAverages[d.domain] ?? null }));
+  // Sinf rahbariga hissiy holat o'rtachasi kelmaydi (null yoki umuman yo'q) — taqqoslashda bu qator ko'rsatilmaydi.
+  const compare = data?.domainAverages
+    .filter((d) => psychologist || d.domain !== 'EMOTIONAL')
+    .map((d) => ({ domain: d.domain, index: d.index, compare: data.schoolAverages[d.domain] ?? null }));
 
   return (
     <div className="space-y-6">

@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ForbiddenException,
   BadRequestException,
@@ -9,16 +10,20 @@ import { AuditService } from '../../common/audit/audit.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { FcmService } from '../../common/fcm/fcm.service';
 import { tashkentNow, isActiveNow } from '../../common/helpers/routines-rules';
+import { SchoolModeSyncService } from '../../school/school-mode/school-mode-sync.service';
 import { CreateRoutineDto } from './dto/create-routine.dto';
 import { UpdateRoutineDto } from './dto/update-routine.dto';
 
 @Injectable()
 export class RoutinesService {
+  private readonly logger = new Logger(RoutinesService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly realtime: RealtimeGateway,
     private readonly fcm: FcmService,
+    private readonly schoolMode: SchoolModeSyncService,
   ) {}
 
   async listByChild(userId: string, childId: string) {
@@ -28,12 +33,30 @@ export class RoutinesService {
       throw new ForbiddenException('Forbidden');
     }
 
-    const routines = await this.prisma.routine.findMany({
+    const own = await this.prisma.routine.findMany({
       where: { childId },
       orderBy: [{ startHour: 'asc' }, { startMinute: 'asc' }],
     });
+    // Bola qurilmasi uchun: maktab School Mode'i virtual "Maktab" jadvallari
+    // sifatida (bola ilovasi ularni oddiy jadval kabi qo'llaydi). Ota-ona
+    // ro'yxatida ko'rsatilmaydi — u ularni tahrirlay olmaydi.
+    const school = child.childUserId === userId ? await this.schoolRoutines(childId) : [];
+    const routines = [...own, ...school];
 
     return { routines, count: routines.length };
+  }
+
+  /**
+   * School Mode xatosi bolaning O'Z jadvallari va cheklovlarini to'xtatmasin:
+   * bola ilovasi routines so'rovi yiqilsa hech qanday yangilanishni qo'llamaydi.
+   */
+  private async schoolRoutines(childId: string) {
+    try {
+      return await this.schoolMode.routinesForChild(childId);
+    } catch (err) {
+      this.logger.error(`school mode routines failed for child ${childId}: ${(err as Error).message}`);
+      return [];
+    }
   }
 
   async getToday(userId: string, childId: string) {

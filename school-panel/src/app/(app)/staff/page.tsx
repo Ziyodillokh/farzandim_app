@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RolesTab } from '@/features/staff/components/roles-tab';
 import { StaffTab } from '@/features/staff/components/staff-tab';
 import { useStaffSummary } from '@/features/staff/hooks';
+import { isHttpMode } from '@/data/source';
 import { useI18n } from '@/i18n';
 
 type TabKey = 'staff' | 'roles';
@@ -59,9 +60,9 @@ export default function StaffPage() {
         <StatCard
           icon={<KeyRound />}
           tone="muted"
-          label={t('staff.stats.demo')}
+          label={t(isHttpMode ? 'staff.stats.accounts' : 'staff.stats.demo')}
           value={formatNumber(s?.demo ?? 0)}
-          hint={t('staff.stats.demoHint')}
+          hint={t(isHttpMode ? 'staff.stats.accountsHint' : 'staff.stats.demoHint')}
           loading={summary.isLoading}
         />
       </div>

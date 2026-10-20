@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { api } from '@/data/api';
 import type { ListQuery, ParentLinkStatus } from '@/data/contracts';
 import type { BulkInviteInput } from '@/data/schemas/classes';
+import { isHttpMode } from '@/data/source';
 import { type TKey, useI18n } from '@/i18n';
 import { errorKey } from '@/lib/errors';
 
@@ -69,7 +70,12 @@ function useParentMutation<TVars, TResult>(fn: (vars: TVars) => Promise<TResult>
 
 export function useInvite() {
   const { t } = useI18n();
-  return useParentMutation((guardianId: string) => api.guardians.invite(guardianId), () => t('parents.toast.invited'));
+  return useParentMutation((guardianId: string) => api.guardians.invite(guardianId), () => t(isHttpMode ? 'parents.toast.invitedCode' : 'parents.toast.invited'));
+}
+
+export function useUnlink() {
+  const { t } = useI18n();
+  return useParentMutation((guardianId: string) => api.guardians.unlink(guardianId), () => t('parents.toast.unlinked'));
 }
 
 export function useResend() {

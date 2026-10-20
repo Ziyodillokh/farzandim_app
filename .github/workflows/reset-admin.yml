@@ -1,10 +1,19 @@
 name: Reset admin password
 
 # Qo'lda ishga tushiriladi (GitHub → Actions → "Reset admin password" → Run workflow).
-# Serverdagi mavjud scripts/seed-admin-quick.ts ni SSH orqali chaqiradi —
-# admin@farzandim.uz parolini tiklaydi/yaratadi (bcryptjs, login bilan mos).
-# Hech narsani deploy qilmaydi. Parol repoda saqlanmaydi: bo'sh qoldirsangiz
-# skriptning o'z standarti (Admin12345) ishlatiladi yoki ishga tushirishda kiritasiz.
+# Serverdagi scripts/seed-admin-quick.ts ni SSH orqali chaqiradi — admin
+# moderator parolini tiklaydi/yaratadi (bcryptjs, login bilan mos).
+#
+# ⚠️ REPO OMMAVIY — loglar hammaga ko'rinadi. Shuning uchun parol INPUT EMAS
+# (avvalgi versiyada input va skript chiqishi logga tushardi): yangi tasodifiy
+# parol runner'da yaratiladi, serverga stdin orqali beriladi, logda yashiriladi
+# va faqat operatorning bir martalik RSA-3072 ochiq kaliti bilan shifrlangan
+# holda chiqadi (school-operator.yml dagi kabi):
+#   D="$(mktemp -d)"; openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out "$D/op.key"
+#   PUB="$(openssl pkey -in "$D/op.key" -pubout | base64 | tr -d '\n')"
+#   gh workflow run reset-admin.yml -f email=admin@farzandim.uz -f pubkey_b64="$PUB"
+#   gh run view <id> --log | sed -n 's/.*ENCRYPTED_PASSWORD=//p' | tail -n1 | base64 -d \
+#     | openssl pkeyutl -decrypt -inkey "$D/op.key" -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256
 
 on:
   workflow_dispatch:
@@ -13,10 +22,12 @@ on:
         description: "Admin login (email). Bo'sh = admin@farzandim.uz"
         required: false
         default: ''
-      password:
-        description: "Yangi admin parol (bo'sh = skript standarti)"
-        required: false
-        default: ''
+      pubkey_b64:
+        description: 'Bir martalik RSA-3072 ochiq kalit (PEM, base64, bir qator)'
+        required: true
+
+permissions:
+  contents: read
 
 concurrency:
   group: reset-admin
@@ -25,23 +36,50 @@ concurrency:
 jobs:
   reset:
     runs-on: ubuntu-22.04
+    timeout-minutes: 10
     env:
       SSHPASS: ${{ secrets.SSH_PASSWORD }}
-      SSH_OPTS: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20
-      INPUT_PW: ${{ github.event.inputs.password }}
-      INPUT_EMAIL: ${{ github.event.inputs.email }}
+      SSH_OPTS: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=4
+      TARGET: ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+      INPUT_EMAIL: ${{ inputs.email }}
+      PUBKEY_B64: ${{ inputs.pubkey_b64 }}
     steps:
-      - name: Install sshpass
-        run: sudo apt-get update && sudo apt-get install -y sshpass
-
-      - name: Reset admin on server
+      - name: Validate inputs
         run: |
-          # Email ham input orqali — yangi admin yaratish yoki loginni
-          # almashtirish uchun (skript email bo'yicha upsert qiladi).
+          set -euo pipefail
           EMAIL="${INPUT_EMAIL:-admin@farzandim.uz}"
-          REMOTE="cd ~/new-platform/backend && ADMIN_EMAIL='$EMAIL'"
-          if [ -n "$INPUT_PW" ]; then
-            REMOTE="$REMOTE ADMIN_PASSWORD='$INPUT_PW'"
-          fi
-          REMOTE="$REMOTE npx tsx scripts/seed-admin-quick.ts"
-          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "$REMOTE"
+          [[ "$EMAIL" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]] || { echo "::error::email"; exit 1; }
+          printf '%s' "$PUBKEY_B64" | base64 -d > "$RUNNER_TEMP/op.pub.pem"
+          bits="$(openssl pkey -pubin -in "$RUNNER_TEMP/op.pub.pem" -noout -text | sed -n 's/.*(\([0-9]*\) bit).*/\1/p' | head -n1)"
+          [ "${bits:-0}" -ge 3072 ] || { echo "::error::RSA >= 3072 bit ochiq kalit kerak"; exit 1; }
+
+      - name: Install sshpass
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          for i in 1 2 3; do
+            timeout 120 sudo -E apt-get install -y --no-install-recommends sshpass && break
+            timeout 180 sudo -E apt-get update -o Acquire::Retries=3 || true
+            sleep 10
+          done
+          command -v sshpass
+
+      - name: Reset admin on server (parol shifrlanadi, logga chiqmaydi)
+        run: |
+          set -euo pipefail
+          EMAIL="${INPUT_EMAIL:-admin@farzandim.uz}"
+          PW="$(openssl rand -base64 24 | tr -d '/+=' | cut -c1-20)"
+          echo "::add-mask::$PW"
+          remote="set -euo pipefail; export ADMIN_EMAIL=$(printf '%q' "$EMAIL"); cd ~/new-platform/backend; ./node_modules/.bin/tsx scripts/seed-admin-quick.ts"
+          set +e
+          # stdin'ning 1-qatori — parol (buyruq qatorida / ps'da ko'rinmaydi), qolgani — skript.
+          out="$({ printf '%s\n' "$PW"; printf '%s\n' "$remote"; } \
+            | sshpass -e ssh ${SSH_OPTS} "$TARGET" 'IFS= read -r ADMIN_PASSWORD && export ADMIN_PASSWORD && exec bash -s' 2>&1)"
+          rc=$?
+          set -e
+          # Skript parolni chop etadi — logga faqat parolsiz qatorlar.
+          printf '%s\n' "$out" | grep -v 'Password:' || true
+          [ "$rc" -eq 0 ] || { echo "::error::server skripti $rc bilan tugadi"; exit 1; }
+          ct="$(printf '%s' "$PW" | openssl pkeyutl -encrypt -pubin -inkey "$RUNNER_TEMP/op.pub.pem" \
+                -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 | base64 -w0)"
+          echo "ENCRYPTED_PASSWORD=$ct"
+          printf '### admin: %s\n\n```\n%s\n```\n' "$EMAIL" "$ct" >> "$GITHUB_STEP_SUMMARY"

@@ -15,6 +15,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { ClassDetail } from '@/data/mock/services/classes';
+import { isHttpMode } from '@/data/source';
 import { useI18n } from '@/i18n';
 import { useClassDetail, useClassMode, useInviteClassGuardians, useTodayBoard } from '../hooks';
 import { ClassAttendanceCard } from './class-attendance-card';
@@ -162,7 +163,7 @@ export function ClassDetailView({ id }: { id: string | null }) {
         open={inviteOpen}
         onOpenChange={setInviteOpen}
         title={t('classes.view.inviteTitle')}
-        description={t('classes.view.inviteText', { name: c.name, count: c.notInvitedGuardians })}
+        description={t(isHttpMode ? 'classes.view.inviteTextCode' : 'classes.view.inviteText', { name: c.name, count: c.notInvitedGuardians })}
         confirmLabel={t('classes.view.inviteConfirm')}
         loading={invite.isPending}
         onConfirm={() => void sendInvites()}

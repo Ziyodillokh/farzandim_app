@@ -93,5 +93,6 @@ export const classes: DeepString<typeof uz> = {
     write: 'Написать email',
     lesson: 'Урок',
     break: 'Перемена',
+    inviteTextCode: 'Для {count} ещё не приглашённых родителей класса {name} будут созданы коды приглашения в Parvoz Parents. Передайте коды родителям. Каждый код действует 7 дней.',
   },
 };

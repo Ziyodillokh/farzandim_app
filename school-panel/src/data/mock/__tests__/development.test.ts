@@ -54,6 +54,21 @@ describe('Rivojlanish — o\'quvchi profili (ruxsatlar)', () => {
     expect(Object.keys(p.classAverage).length).toBeGreaterThan(0);
   });
 
+  it("sinf rahbari: hissiy holat o'rtachasi yo'q (profil va sinf kesimi) — ayirib, yashirin indeks topilmaydi; psixologda bor", async () => {
+    const id = studentOf('cls-7a');
+    loginAs('HOMEROOM');
+    const p = await dev.studentProfile(id);
+    expect(p.classAverage.EMOTIONAL).toBeUndefined();
+    expect(Object.keys(p.classAverage).length).toBeGreaterThan(0);
+    const c = await dev.classOverview('cls-7a');
+    expect(c.domainAverages.find((d) => d.domain === 'EMOTIONAL')?.index ?? null).toBeNull();
+    expect(c.domainAverages.some((d) => d.index !== null)).toBe(true);
+
+    loginAs('PSYCHOLOGIST');
+    expect((await dev.studentProfile(id)).classAverage.EMOTIONAL).toEqual(expect.any(Number));
+    expect((await dev.classOverview('cls-7a')).domainAverages.find((d) => d.domain === 'EMOTIONAL')?.index).toEqual(expect.any(Number));
+  });
+
   it("sinf rahbari boshqa sinf o'quvchisini ko'ra olmaydi (8-B → FORBIDDEN)", async () => {
     loginAs('HOMEROOM');
     await rejects(() => dev.studentProfile(studentOf('cls-8b')));
@@ -151,5 +166,13 @@ describe('developmentSummary (bosh sahifa)', () => {
     if (s?.mode === 'CLASS') expect(s.classId).toBe('cls-7a');
     if (s?.mode === 'PSYCHOLOGIST') expect(s.attention).toBeGreaterThan(0);
     if (s?.mode === 'AGGREGATE') expect(JSON.stringify(s)).not.toMatch(/stu-/);
+  });
+
+  it('sinf rahbari kartasi: hissiy o\'rtacha yo\'q (jonli o\'rtacha har yangi natijada o\'zgaradi)', () => {
+    loginAs('HOMEROOM');
+    const s = developmentSummary(getTables(), currentActor(), today);
+    if (s?.mode !== 'CLASS') throw new Error('expected CLASS summary');
+    expect(s.domains.find((d) => d.domain === 'EMOTIONAL')?.index).toBeNull();
+    expect(s.domains.some((d) => d.domain !== 'EMOTIONAL' && d.index !== null)).toBe(true);
   });
 });

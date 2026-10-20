@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { INNER_TILE } from '@/features/messages/styles';
+import { isHttpMode } from '@/data/source';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { useBulkInvite, usePendingInvites } from '../hooks';
@@ -44,7 +45,7 @@ export function BulkInviteDialog({ open, onOpenChange, classId, className, searc
             {pending.isLoading
               ? t('common.loading')
               : count > 0
-                ? t('parents.bulk.text', { count: formatNumber(count) })
+                ? t(isHttpMode ? 'parents.bulk.textCode' : 'parents.bulk.text', { count: formatNumber(count) })
                 : t('parents.bulk.none')}
           </DialogDescription>
         </DialogHeader>

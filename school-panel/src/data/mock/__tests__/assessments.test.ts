@@ -1,11 +1,31 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { __setClockForTests } from '../clock';
 import { getTables } from '../db';
 import { assessmentsService as svc } from '../services/assessments';
 import { L, sampleInput } from './assessments-fixtures';
 import { freshDb, loginAs } from './helpers';
 
 const WINDOW = { opensAt: '2026-10-12T08:00', closesAt: '2026-10-19T18:00' };
+/** WINDOW.closesAt — 19-oktabr 18:00 (kun boshidan daqiqa). */
+const CLOSE = 18 * 60;
+const OPEN_ASSIGNMENTS = { code: 'CONFLICT', message: 'assessments.validation.openAssignments' };
+
+/** Demo soati — 19-oktabr (yopilish kuni), `minute` — kun boshidan. */
+function atMinute(minute: number): void {
+  __setClockForTests({ mode: 'SCENARIO', scenarioDate: '2026-10-19', scenarioStartMinute: minute, realStartedAt: Date.now(), speed: 1 });
+}
+
+/** Savollari kamaytirilgan tahrir (test vaqti — berilgan, standart 10 daqiqa). */
+const fewerItems = (timeLimitMin: number | null = 10) => sampleInput({ items: sampleInput().items.slice(0, 3), timeLimitMin });
+
+/** Nashr etilgan test va 7-A ga tayinlash (WINDOW). */
+async function publishedWithAssignment(timeLimitMin: number | null): Promise<{ id: string; assignmentId: string }> {
+  const draft = await svc.createTest(sampleInput({ timeLimitMin }));
+  await svc.publishTest(draft.id);
+  const a = await svc.assign({ testId: draft.id, target: { kind: 'CLASSES', classIds: ['cls-7a'] }, ...WINDOW, consent: true });
+  return { id: draft.id, assignmentId: a.id };
+}
 
 describe('Psixologik testlar — ruxsatlar', () => {
   beforeEach(freshDb);
@@ -89,6 +109,66 @@ describe('Psixologik testlar — to\'liq oqim', () => {
     const bumped = await svc.updateTest(draft.id, sampleInput({ title: L('Yangi nom') }));
     expect(bumped.version).toBe(2);
     expect(bumped.status).toBe('PUBLISHED');
+  });
+
+  it('faol tayinlashda savol o\'zgarmaydi va test arxivlanmaydi; tayinlash yopilgach — yangi versiya', async () => {
+    const draft = await svc.createTest(sampleInput());
+    await svc.publishTest(draft.id);
+    const a = await svc.assign({ testId: draft.id, target: { kind: 'CLASSES', classIds: ['cls-7a'] }, ...WINDOW, consent: true });
+    await expect(svc.updateTest(draft.id, fewerItems())).rejects.toMatchObject(OPEN_ASSIGNMENTS);
+    await expect(svc.archiveTest(draft.id)).rejects.toMatchObject(OPEN_ASSIGNMENTS);
+    expect((await svc.updateTest(draft.id, sampleInput({ title: L('Yangi nom') }))).version).toBe(1);
+    await svc.closeAssignment(a.id);
+    expect((await svc.updateTest(draft.id, fewerItems())).version).toBe(2);
+    expect((await svc.archiveTest(draft.id)).status).toBe('ARCHIVED');
+  });
+
+  it('muddati o\'tgan (ENDED), lekin test vaqti ichida — hali jonli: tahrir va arxiv 409; oynadan keyin — ruxsat', async () => {
+    const { id } = await publishedWithAssignment(10);
+    atMinute(CLOSE + 5);
+    expect((await svc.listAssignments({ testId: id }))[0]).toMatchObject({ state: 'ENDED', status: 'OPEN' });
+    await expect(svc.updateTest(id, fewerItems())).rejects.toMatchObject(OPEN_ASSIGNMENTS);
+    await expect(svc.archiveTest(id)).rejects.toMatchObject(OPEN_ASSIGNMENTS);
+    atMinute(CLOSE + 11);
+    expect((await svc.updateTest(id, fewerItems())).version).toBe(2);
+    expect((await svc.archiveTest(id)).status).toBe('ARCHIVED');
+  });
+
+  it('jonli paytda vaqt chegarasi o\'zgarmaydi — qisqartirib keyingi tahrirda tekshiruvni chetlab bo\'lmaydi', async () => {
+    const { id } = await publishedWithAssignment(10);
+    atMinute(CLOSE + 5);
+    await expect(svc.updateTest(id, sampleInput({ timeLimitMin: 1 }))).rejects.toMatchObject(OPEN_ASSIGNMENTS);
+    expect((await svc.updateTest(id, sampleInput({ title: L('Faqat nom') }))).version).toBe(1);
+    atMinute(CLOSE + 11);
+    expect((await svc.updateTest(id, sampleInput({ timeLimitMin: 1 }))).timeLimitMin).toBe(1);
+  });
+
+  it('test vaqti yo\'q — kechikish oynasi 30 daqiqa', async () => {
+    const { id } = await publishedWithAssignment(null);
+    atMinute(CLOSE + 29);
+    await expect(svc.archiveTest(id)).rejects.toMatchObject(OPEN_ASSIGNMENTS);
+    atMinute(CLOSE + 31);
+    expect((await svc.archiveTest(id)).status).toBe('ARCHIVED');
+  });
+
+  it('test vaqti o\'zgarsa — eski va yangi oynadan kattasi: oshirish uzaytiradi, kamaytirish qisqartirmaydi', async () => {
+    const { id } = await publishedWithAssignment(10);
+    atMinute(CLOSE + 15);
+    // Eski 10 daqiqalik oyna tugagan, lekin savollar bilan birga vaqt 20 ga oshirilsa — hali jonli.
+    await expect(svc.updateTest(id, fewerItems(20))).rejects.toMatchObject(OPEN_ASSIGNMENTS);
+    // Faqat vaqt o'zgarsa (savollar o'sha) — ruxsat; endi 20 daqiqalik oyna amal qiladi.
+    expect((await svc.updateTest(id, sampleInput({ timeLimitMin: 20 }))).version).toBe(1);
+    await expect(svc.archiveTest(id)).rejects.toMatchObject(OPEN_ASSIGNMENTS);
+    await expect(svc.updateTest(id, fewerItems(5))).rejects.toMatchObject(OPEN_ASSIGNMENTS);
+    atMinute(CLOSE + 21);
+    expect((await svc.updateTest(id, fewerItems(5))).version).toBe(2);
+  });
+
+  it('tayinlashni muddat o\'tgach ham yopish mumkin — qulf darhol ochiladi', async () => {
+    const { id, assignmentId } = await publishedWithAssignment(10);
+    atMinute(CLOSE + 5);
+    expect((await svc.closeAssignment(assignmentId)).status).toBe('CLOSED');
+    expect((await svc.updateTest(id, fewerItems())).version).toBe(2);
   });
 
   it('shablonni tahrirlab bo\'lmaydi; me\'yorlari o\'zgaradi va tiklanadi', async () => {

@@ -1,11 +1,13 @@
 import { roleHas } from '@/auth/permissions';
-import type { IsoDate, LearningAssignment, LearningMaterial, MaterialKind, Subject } from '@/data/contracts';
+import type { ClassActivity, IsoDate, LearningAssignment, LearningMaterial, MaterialKind, Subject } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
 import { assignmentInputSchema, materialFilterSchema, SUBJECTS, type AssignmentInput, type MaterialFilter } from '@/data/schemas/learning';
 import { parseOrThrow } from '@/data/schemas/validate';
+import { CARE_MIN_GROUP } from '@/lib/k-anon';
 import { matchesSearch } from '@/lib/normalize-search';
 import { unitHash } from '@/lib/rng';
-import { percent } from '@/lib/utils';
+import { sharePercent } from '@/lib/utils';
+import { addDays, weekStart } from '../calendar';
 import { clockToday } from '../clock';
 import { type Actor, allowedClassIds, assertCan, assertClassInScope, currentActor, inScope, latency, newId, writeAudit } from '../context';
 import { getTables, transact } from '../db';
@@ -16,21 +18,33 @@ import type { Tables } from '../tables';
  * Growth Learning (maktab tomoni). Faollik — faqat SINF darajasida (shaxsiy reyting yo'q).
  * Sinf rahbari — faqat o'z sinfi (ko'rish va tayinlash).
  */
-export type ActivityWeek = { weekStart: IsoDate; activeStudents: number; completedTasks: number; avgScore: number; donPoints: number };
-export type ClassActivityRow = {
+
+/**
+ * K=5 kataklar (backend bilan bir xil): natija ko'rsatkichlari (topshiriqlar, o'rtacha ball, DON)
+ * faqat kamida shuncha faol o'quvchisi bor (sinf, ISO hafta) kataklardan yig'iladi — kichik
+ * guruhda shaxsiy natija oshkor bo'lmasin. Faol o'quvchilar soni hech qachon yashirilmaydi.
+ */
+export const LEARNING_MIN_COHORT = CARE_MIN_GROUP;
+
+/** 1..4 faol — `suppressed`, natijalar null; 0 faol — 0 / null / 0 (yashirilmagan). */
+export type LearningTotals = { activeStudents: number; completedTasks: number | null; avgScore: number | null; donPoints: number | null; suppressed: boolean };
+export type ActivityWeek = { weekStart: IsoDate } & LearningTotals;
+export type ClassActivityRow = LearningTotals & {
   classId: string;
   className: string;
   grade: number;
   size: number;
-  activeStudents: number;
   activeRate: number;
-  completedTasks: number;
-  avgScore: number;
-  donPoints: number;
-  /** Faol o'quvchilar o'tgan haftaga nisbatan (+/−). */
+  /** Faol o'quvchilar oldingi haftaga nisbatan (+/−). */
   activeDelta: number;
 };
-export type LearningActivity = { latestWeek: IsoDate | null; weeks: ActivityWeek[]; classes: ClassActivityRow[] };
+/** Joriy (tugallanmagan) hafta — faqat faol bolalar soni, natijalar hech qachon yo'q. */
+export type CurrentWeek = { weekStart: IsoDate; activeStudents: number };
+/**
+ * `latestWeek` — oxirgi YOPIQ hafta dushanbasi; `weeks` — shu bilan tugaydigan 6 yopiq hafta (eskisi
+ * birinchi); `classes` — `latestWeek` kataklari; `current` — joriy hafta (faqat faollar soni).
+ */
+export type LearningActivity = { latestWeek: IsoDate | null; weeks: ActivityWeek[]; classes: ClassActivityRow[]; current: CurrentWeek };
 export type InterestRow = { grade: number; shares: Array<{ subject: Subject; percent: number }> };
 export type MaterialRow = LearningMaterial & { assignedClasses: number };
 export type AssignmentRow = LearningAssignment & {
@@ -55,16 +69,41 @@ function scopedClasses(t: Tables, actor: Actor) {
   return t.classes.filter((c) => !allowed || allowed.includes(c.id)).sort(compareClasses);
 }
 
-function sumWeek(weekStart: IsoDate, rows: Tables['activity']): ActivityWeek {
-  const active = rows.reduce((s, r) => s + r.activeStudents, 0);
-  const weighted = rows.reduce((s, r) => s + r.avgScore * r.activeStudents, 0);
+const sumOf = (rows: readonly ClassActivity[], pick: (r: ClassActivity) => number) => rows.reduce((s, r) => s + pick(r), 0);
+
+/**
+ * Kataklar jami (bitta katak ham): faollar — BARCHA kataklardan; natijalar — faqat ochiq
+ * (≥ K faol) kataklardan, ball faollar soni bo'yicha tortilgan. Ochiq katak yo'q, lekin
+ * faol bor — yashirin (null); umuman faol yo'q — 0 / null / 0.
+ */
+export function learningTotals(rows: readonly ClassActivity[]): LearningTotals {
+  const activeStudents = sumOf(rows, (r) => r.activeStudents);
+  const open = rows.filter((r) => r.activeStudents >= LEARNING_MIN_COHORT);
+  if (open.length === 0 && activeStudents > 0) return { activeStudents, completedTasks: null, avgScore: null, donPoints: null, suppressed: true };
+  const openActive = sumOf(open, (r) => r.activeStudents);
   return {
-    weekStart,
-    activeStudents: active,
-    completedTasks: rows.reduce((s, r) => s + r.completedTasks, 0),
-    avgScore: active ? Math.round(weighted / active) : 0,
-    donPoints: rows.reduce((s, r) => s + r.donPoints, 0),
+    activeStudents,
+    completedTasks: sumOf(open, (r) => r.completedTasks),
+    avgScore: openActive ? Math.round(sumOf(open, (r) => r.avgScore * r.activeStudents) / openActive) : null,
+    donPoints: sumOf(open, (r) => r.donPoints),
+    suppressed: false,
   };
+}
+
+function sumWeek(weekStart: IsoDate, rows: Tables['activity']): ActivityWeek {
+  return { weekStart, ...learningTotals(rows) };
+}
+
+/** /learning grafigidagi yopiq haftalar soni (backend bilan bir xil). */
+export const ACTIVITY_WEEKS = 6;
+
+/**
+ * Natijalar faqat YOPIQ haftalardan (backend bilan bir xil): hafta yakshanbasi o'tgach yopiladi.
+ * Joriy hafta kataklari har yangi yakunlash bilan o'zgaradi — ikki o'qishni solishtirib bitta
+ * bolaning natijasi topilmasin. Oxirgi yopiq hafta — o'tgan haftaning dushanbasi.
+ */
+export function lastClosedWeek(today: IsoDate): IsoDate {
+  return addDays(weekStart(today), -7);
 }
 
 /** Foizlarni yaxlitlash (eng katta qoldiq usuli) — jami aniq 100. */
@@ -84,6 +123,7 @@ function canDeleteAssignment(actor: Actor, assignment: LearningAssignment): bool
 }
 
 export const learningService = {
+  /** Natijalar — faqat yopiq haftalardan (`lastClosedWeek`); joriy haftadan — faqat faollar soni. */
   async activity(filter: { classId?: string } = {}): Promise<LearningActivity> {
     await latency(80, 180);
     const actor = requireView();
@@ -92,10 +132,11 @@ export const learningService = {
     const idx = buildIndexes(t);
     const sizes = classSizes(t);
     const rows = inScope(actor, t.activity).filter((r) => !filter.classId || r.classId === filter.classId);
-    const weekKeys = [...new Set(rows.map((r) => r.weekStart))].sort();
+    const today = clockToday();
+    const latestWeek = lastClosedWeek(today);
+    const previousWeek = addDays(latestWeek, -7);
+    const weekKeys = Array.from({ length: ACTIVITY_WEEKS }, (_, i) => addDays(latestWeek, -7 * (ACTIVITY_WEEKS - 1 - i)));
     const weeks = weekKeys.map((w) => sumWeek(w, rows.filter((r) => r.weekStart === w)));
-    const latestWeek = weekKeys.at(-1) ?? null;
-    const previousWeek = weekKeys.at(-2) ?? null;
     const classes = rows
       .filter((r) => r.weekStart === latestWeek)
       .map((r) => {
@@ -107,19 +148,22 @@ export const learningService = {
           className: cls?.name ?? '—',
           grade: cls?.grade ?? 0,
           size,
-          activeStudents: r.activeStudents,
-          activeRate: percent(r.activeStudents, size),
-          completedTasks: r.completedTasks,
-          avgScore: r.avgScore,
-          donPoints: r.donPoints,
-          activeDelta: prev ? r.activeStudents - prev.activeStudents : 0,
+          ...learningTotals([r]),
+          activeRate: sharePercent(r.activeStudents, size),
+          activeDelta: r.activeStudents - (prev?.activeStudents ?? 0),
         };
       })
       .sort((a, b) => a.grade - b.grade || a.className.localeCompare(b.className));
-    return { latestWeek, weeks, classes };
+    const currentWeek = weekStart(today);
+    const current = { weekStart: currentWeek, activeStudents: sumOf(rows.filter((r) => r.weekStart === currentWeek), (r) => r.activeStudents) };
+    return { latestWeek, weeks, classes, current };
   },
 
-  /** Qiziqishlar taqsimoti (sinf darajasi) — DEMO BAHOSI: deterministik, shaxsiy ma'lumotsiz. */
+  /**
+   * Qiziqishlar taqsimoti (sinf darajasi) — DEMO BAHOSI: deterministik, shaxsiy ma'lumotsiz.
+   * Backend 5 nafardan kam bola hissa qo'shgan darajani qaytarmaydi; demo baho bolalar tanloviga
+   * asoslanmagani uchun bu yerda barcha darajalar bor (UI bo'sh ro'yxatni ham ko'tara oladi).
+   */
   async interests(): Promise<InterestRow[]> {
     await latency(60, 140);
     const actor = requireView();

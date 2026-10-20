@@ -197,6 +197,18 @@ export const staffService = {
     });
   },
 
+  /** Panel hisobi (login + vaqtinchalik parol) — faqat haqiqiy rejimda; demo hisoblar qat'iy. */
+  async setAccount(id: string, input: { username: string; password: string }): Promise<Staff> {
+    void id;
+    void input;
+    throw new ServiceError('UNKNOWN', 'demo-only');
+  },
+
+  async removeAccount(id: string): Promise<Staff> {
+    void id;
+    throw new ServiceError('UNKNOWN', 'demo-only');
+  },
+
   async roles(): Promise<RoleDefinition[]> {
     const actor = currentActor();
     assertCan(actor, 'staff.view');

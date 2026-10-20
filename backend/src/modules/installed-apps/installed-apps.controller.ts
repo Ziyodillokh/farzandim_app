@@ -14,12 +14,18 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
-import { CurrentUser, Public } from '../../common/decorators';
+import { BodyLimit, CurrentUser, Public } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { InstalledAppsService } from './installed-apps.service';
 import { BatchUpsertAppsDto } from './dto/batch-upsert-apps.dto';
 import { ListInstalledAppsDto } from './dto/list-installed-apps.dto';
 import { Request } from 'express';
+
+/**
+ * Bola qurilmasi barcha ilovalarni ikonalari bilan BITTA so'rovda yuboradi:
+ * DTO chegarasi 500 ilova × 80 000 belgi ikon ≈ 40 MB (+ maydonlar).
+ */
+const INSTALLED_APPS_BODY_LIMIT = 48 * 1024 * 1024;
 
 @ApiTags('Installed Apps')
 @ApiBearerAuth()
@@ -29,6 +35,7 @@ export class InstalledAppsController {
   constructor(private readonly service: InstalledAppsService) {}
 
   @Post('children/:childId/installed-apps')
+  @BodyLimit(INSTALLED_APPS_BODY_LIMIT)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Batch upsert installed apps' })
   batchUpsert(

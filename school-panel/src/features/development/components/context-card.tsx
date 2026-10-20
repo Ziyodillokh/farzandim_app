@@ -40,8 +40,11 @@ export function ContextCard({ context }: { context: StudentDevProfile['context']
         <Tile
           icon={<BookOpen />}
           title={t('development.profile.classLearning')}
-          value={`${l.avgScore}`}
-          details={[t('development.profile.activeRate', { rate: l.activeRate }), t('development.profile.avgScore', { score: l.avgScore })]}
+          value={l.avgScore === null ? '—' : `${l.avgScore}`}
+          details={[
+            t('development.profile.activeRate', { rate: l.activeRate }),
+            l.suppressed ? t('development.profile.scoreHidden') : t('development.profile.avgScore', { score: l.avgScore ?? '—' }),
+          ]}
         />
       )}
     </ul>

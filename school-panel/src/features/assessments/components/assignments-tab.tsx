@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { AssignmentState } from '@/data/contracts';
+import { isHttpMode } from '@/data/source';
 import type { AssignmentRow } from '@/data/mock/services/assessments';
 import { useI18n } from '@/i18n';
 import { percent } from '@/lib/utils';
@@ -112,20 +113,21 @@ export function AssignmentsTab({ onAssign, testId }: { onAssign: () => void; tes
         className: 'w-[120px] text-right',
         cell: (a) => (
           <div className="flex justify-end gap-1">
-            {a.state === 'ACTIVE' && (
+            {a.state === 'ACTIVE' && !isHttpMode && (
               <IconAction label={t('assessments.assignments.simulate')} onClick={() => simulate.mutate(a.id)} disabled={simulate.isPending} testId={`simulate-${a.id}`}>
                 <Play />
               </IconAction>
             )}
+            {/* Yopish — status OPEN bo'lsa doim (muddati o'tgan, ENDED ko'rinsa ham): ochiq tayinlash testni tahrirlash va arxivlashni qulflaydi. */}
+            {a.status === 'OPEN' && (
+              <IconAction label={t('assessments.assignments.close')} onClick={() => setPending({ kind: 'close', row: a })}>
+                <CircleStop />
+              </IconAction>
+            )}
             {a.status === 'OPEN' && a.state !== 'ENDED' && (
-              <>
-                <IconAction label={t('assessments.assignments.close')} onClick={() => setPending({ kind: 'close', row: a })}>
-                  <CircleStop />
-                </IconAction>
-                <IconAction label={t('assessments.assignments.cancel')} onClick={() => setPending({ kind: 'cancel', row: a })}>
-                  <XCircle />
-                </IconAction>
-              </>
+              <IconAction label={t('assessments.assignments.cancel')} onClick={() => setPending({ kind: 'cancel', row: a })}>
+                <XCircle />
+              </IconAction>
             )}
           </div>
         ),

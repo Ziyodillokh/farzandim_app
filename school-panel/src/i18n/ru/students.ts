@@ -82,6 +82,7 @@ export const students: DeepString<typeof uz> = {
     psychologistNote: 'Как психолог, вы видите только имя и класс ученика.',
     legend: 'Обозначения',
     notFound: 'Ученик не найден',
+    inviteTextCode: 'Родитель вводит этот код в приложении Parvoz Parents или сканирует QR. Код действует 7 дней.',
   },
   tabs: {
     label: 'Разделы карточки ученика',

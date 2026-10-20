@@ -24,6 +24,11 @@ export function percent(part: number, total: number): number {
   return Math.round((part / total) * 100);
 }
 
+/** Ulush foizi, 100 dan oshmaydi: masalan, o'tgan hafta faollari bugungi sinf tarkibidan ko'p bo'lishi mumkin. */
+export function sharePercent(part: number, total: number): number {
+  return Math.min(100, percent(part, total));
+}
+
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }

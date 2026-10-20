@@ -36,6 +36,9 @@ export const ALL_ADMIN_PERMISSIONS = [
   'delete_contest',
   'select_winner',
 
+  // Growth — kunlik testlar savollar banki
+  'manage_learning',
+
   // Analytics & Audit
   'view_analytics',
   'view_audit_log',
@@ -65,6 +68,7 @@ export const ROLE_PRESETS: Record<string, readonly string[]> = {
     'edit_audiobooks',
     'delete_audiobooks',
     'approve_audiobooks',
+    'manage_learning',
   ],
   support: [
     'view_users',

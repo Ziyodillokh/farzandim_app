@@ -1,12 +1,15 @@
 'use client';
 
-import { AtSign, Briefcase, Camera, KeyRound, Phone } from 'lucide-react';
+import { AtSign, Briefcase, Camera, ChevronDown, KeyRound, Phone } from 'lucide-react';
+import { useState } from 'react';
 
 import { PhotoPicker } from '@/components/common/photo-picker';
 import { StaffAvatar } from '@/components/common/staff-avatar';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { isHttpMode } from '@/data/source';
+import { PasswordChangeForm } from '@/features/auth/components/password-change-form';
 import { useI18n } from '@/i18n';
 import { useMe, useSetStaffPhoto } from '../hooks';
 
@@ -27,6 +30,7 @@ export function ProfileDialog({ open, onOpenChange }: { open: boolean; onOpenCha
   const me = useMe();
   const setPhoto = useSetStaffPhoto();
   const p = me.data;
+  const [passwordOpen, setPasswordOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -74,6 +78,24 @@ export function ProfileDialog({ open, onOpenChange }: { open: boolean; onOpenCha
               <Row icon={<AtSign />} label={t('profile.fields.email')} value={p.email} />
               {p.username && <Row icon={<KeyRound />} label={t('profile.fields.username')} value={p.username} />}
             </div>
+            {isHttpMode && (
+              <div className="rounded-2xl border p-3">
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between text-sm font-medium"
+                  aria-expanded={passwordOpen}
+                  onClick={() => setPasswordOpen((v) => !v)}
+                >
+                  {t('auth.changePassword.voluntary')}
+                  <ChevronDown className={`h-4 w-4 transition-transform ${passwordOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {passwordOpen && (
+                  <div className="mt-4">
+                    <PasswordChangeForm onDone={() => setPasswordOpen(false)} />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </DialogContent>

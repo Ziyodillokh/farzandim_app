@@ -33,6 +33,7 @@ export class NotificationsService {
     NotificationType.PERMISSION_CHANGED,
     NotificationType.UNLOCK_REQUEST,
     NotificationType.GEO_ZONE,
+    NotificationType.LEARNING_REPORT,
   ];
 
   async listByChild(userId: string, childId: string, query: ListNotificationsDto) {
@@ -126,10 +127,7 @@ export class NotificationsService {
       where: { id },
       include: { child: true },
     });
-    if (!notification) throw new NotFoundException('Notification not found');
-    if (notification.child.parentId !== userId && notification.child.childUserId !== userId) {
-      throw new ForbiddenException('Forbidden');
-    }
+    this.assertVisible(notification, userId);
 
     const updated = await this.prisma.notification.update({
       where: { id },
@@ -158,10 +156,7 @@ export class NotificationsService {
       where: { id },
       include: { child: true },
     });
-    if (!notification) throw new NotFoundException('Notification not found');
-    if (notification.child.parentId !== userId && notification.child.childUserId !== userId) {
-      throw new ForbiddenException('Forbidden');
-    }
+    this.assertVisible(notification, userId);
 
     // Only count first click
     if (notification.clickedAt === null) {
@@ -191,8 +186,13 @@ export class NotificationsService {
       throw new ForbiddenException('Forbidden');
     }
 
+    // Bola qurilmasi ota-onaga tegishli bildirishnomalarni o'qilgan qila olmaydi.
+    const audienceFilter =
+      child.childUserId === userId
+        ? { type: { notIn: NotificationsService.PARENT_ONLY_TYPES } }
+        : {};
     const result = await this.prisma.notification.updateMany({
-      where: { childId, isRead: false },
+      where: { childId, isRead: false, ...audienceFilter },
       data: { isRead: true },
     });
 
@@ -210,15 +210,34 @@ export class NotificationsService {
       where: { id },
       include: { child: true },
     });
-    if (!notification) throw new NotFoundException('Notification not found');
-    if (notification.child.parentId !== userId && notification.child.childUserId !== userId) {
-      throw new ForbiddenException('Forbidden');
-    }
+    this.assertVisible(notification, userId);
 
     await this.prisma.notification.delete({ where: { id } });
     await this.audit.log(userId, 'notification', 'DELETE', id, undefined, request);
     this.realtime.emitToChild(notification.childId, 'notification:deleted', { id });
 
     return { ok: true };
+  }
+
+  /**
+   * Egalik: ota-ona yoki bolaning o'zi. Ota-onaga tegishli turlar bola
+   * qurilmasiga mavjud emasdek (404) — u ularni o'qilgan / o'chirilgan qila
+   * olmaydi (ro'yxatdagi filtr bilan bir xil).
+   */
+  private assertVisible(
+    notification: { type: NotificationType; child: { parentId: string; childUserId: string | null } } | null,
+    userId: string,
+  ): asserts notification is NonNullable<typeof notification> {
+    if (!notification) throw new NotFoundException('Notification not found');
+    const { child } = notification;
+    if (child.parentId !== userId && child.childUserId !== userId) {
+      throw new ForbiddenException('Forbidden');
+    }
+    if (
+      child.childUserId === userId &&
+      NotificationsService.PARENT_ONLY_TYPES.includes(notification.type)
+    ) {
+      throw new NotFoundException('Notification not found');
+    }
   }
 }

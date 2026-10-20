@@ -93,6 +93,24 @@ function parseNorms(test: PsychTest, norms: PsychNormsInput): PsychNorms {
 
 const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
+const OPEN_ASSIGNMENTS = 'assessments.validation.openAssignments';
+/** Muddat tugagach ham shuncha daqiqa "jonli": oxirgi daqiqada boshlagan bola testni tugatib yuborsin. */
+const DEFAULT_GRACE_MIN = 30;
+const MINUTE_MS = 60_000;
+
+/** Kechikish oynasi (daqiqa): test vaqti, u bo'lmasa — 30. */
+const graceMinOf = (test: Pick<PsychTest, 'timeLimitMin'>): number => test.timeLimitMin ?? DEFAULT_GRACE_MIN;
+
+/**
+ * Backend bilan bir xil (LOW 6): status OPEN va hozir ≤ closesAt + grace bo'lgan tayinlash — "jonli",
+ * bola hali yechayotgan bo'lishi mumkin: savol / shkala o'zgarmaydi, test arxivlanmaydi (holati
+ * ENDED ko'rinsa ham). Psixolog tayinlashni istalgan payt yopib (OPEN → CLOSED) qulfni ochadi.
+ */
+function hasLiveAssignments(t: Tables, testId: string, graceMin: number): boolean {
+  const nowMs = clockNow().getTime();
+  return t.psychAssignments.some((a) => a.testId === testId && a.status === 'OPEN' && nowMs <= Date.parse(a.closesAt) + graceMin * MINUTE_MS);
+}
+
 function setStatus(id: string, to: PsychTestStatus, from: readonly PsychTestStatus[], action: string): PsychTest {
   const actor = requireManage();
   return transact((t) => {
@@ -100,6 +118,7 @@ function setStatus(id: string, to: PsychTestStatus, from: readonly PsychTestStat
     if (!test) throw new ServiceError('NOT_FOUND', id);
     if (!from.includes(test.status)) throw new ServiceError('CONFLICT', `status ${test.status}`);
     if (to === 'PUBLISHED' && test.source !== 'EXTERNAL' && test.items.length === 0) throw new ServiceError('VALIDATION', 'items: assessments.validation.noItems');
+    if (to === 'ARCHIVED' && hasLiveAssignments(t, id, graceMinOf(test))) throw new ServiceError('CONFLICT', OPEN_ASSIGNMENTS);
     if (isTemplateId(id)) {
       t.psychTemplateState = { ...t.psychTemplateState, [id]: { ...t.psychTemplateState[id], status: to, norms: t.psychTemplateState[id]?.norms ?? null } };
     } else {
@@ -184,6 +203,13 @@ export const assessmentsService = {
       const { index, test } = ownTest(t, id);
       if (test.status === 'ARCHIVED' || test.source === 'EXTERNAL') throw new ServiceError('CONFLICT', `${test.source}/${test.status}`);
       const changed = !sameJson(test.items, data.items) || !sameJson(test.scales, data.scales);
+      // Backend bilan bir xil: faol tayinlashda savol / shkala (kechikish — eski va yangi oynaning
+      // kattasi) va vaqt chegarasi o'zgarmaydi (qisqartirib keyingi tahrirda chetlab o'tilmasin).
+      const limitChanged = (data.timeLimitMin ?? null) !== (test.timeLimitMin ?? null);
+      const graceMin = changed ? Math.max(graceMinOf(test), graceMinOf(data)) : graceMinOf(test);
+      if (test.status === 'PUBLISHED' && (changed || limitChanged) && hasLiveAssignments(t, id, graceMin)) {
+        throw new ServiceError('CONFLICT', OPEN_ASSIGNMENTS);
+      }
       const version = test.status === 'PUBLISHED' && changed ? test.version + 1 : test.version;
       const next: PsychTest = { ...test, ...data, version, updatedAt: nowIso() };
       t.psychTests[index] = next;

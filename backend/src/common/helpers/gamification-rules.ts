@@ -1,3 +1,5 @@
+import { daysBetween, tashkentDay } from '../time/tashkent';
+
 /**
  * Gamification: XP -> level/status, streak calculation. Pure functions (no DB).
  *
@@ -28,31 +30,22 @@ export function levelForXp(xp: number): number {
 
 /**
  * Streak: if active yesterday +1; if today - same; otherwise reset to 1.
- * `now` parameter can be injected for testing.
+ * Kunlar TOSHKENT vaqtida (server UTC'da — lokal sana 00:00–05:00 da xato
+ * kun berardi). `now` parameter can be injected for testing.
  */
 export function calculateNewStreak(
   lastActivityDate: Date | null,
   currentStreak: number,
   now: Date = new Date(),
 ): { newStreak: number; isNewDay: boolean } {
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
   if (!lastActivityDate) {
     return { newStreak: 1, isNewDay: true };
   }
 
-  const lastDay = new Date(
-    lastActivityDate.getFullYear(),
-    lastActivityDate.getMonth(),
-    lastActivityDate.getDate(),
-  );
+  const diffDays = daysBetween(tashkentDay(lastActivityDate), tashkentDay(now));
 
-  const diffDays = Math.round(
-    (today.getTime() - lastDay.getTime()) / (1000 * 60 * 60 * 24),
-  );
-
-  if (diffDays === 0) {
-    return { newStreak: currentStreak, isNewDay: false };
+  if (diffDays <= 0) {
+    return { newStreak: Math.max(currentStreak, 1), isNewDay: false };
   }
   if (diffDays === 1) {
     return { newStreak: currentStreak + 1, isNewDay: true };

@@ -36,11 +36,19 @@ export const parents = {
     resend: 'Yangi kod yuborish',
     simulate: 'Ulandi (demo)',
     more: 'Boshqa amallar',
+    unlink: 'Aloqani uzish',
   },
   toast: {
     invited: 'Taklif yuborildi (SMS)',
     resent: 'Yangi kod yuborildi',
     linked: 'Ota-ona Parvoz Parents\'ga ulandi',
+    unlinked: 'Aloqa uzildi — yangi taklif yuborish mumkin',
+    invitedCode: 'Taklif kodi yaratildi — ota-onaga bering',
+  },
+  unlinkConfirm: {
+    title: 'Parvoz Parents bilan aloqani uzish',
+    text: '{name} endi farzandi davomati va maktab xabarlarini ko\'rmaydi. Kerak bo\'lsa, yangi taklif kodi yuborasiz.',
+    confirm: 'Uzish',
   },
   bulk: {
     button: 'Barchasini taklif qilish',
@@ -54,6 +62,7 @@ export const parents = {
     confirm: 'Taklif yuborish ({count})',
     done: '{count} ota-onaga taklif yuborildi',
     nothing: 'Taklif yuboriladigan ota-ona topilmadi',
+    textCode: 'Joriy filtr bo\'yicha hali taklif qilinmagan {count} ota-ona uchun Parvoz Parents taklif kodlari yaratiladi. Kodlarni ota-onalarga bering (QR yoki ro\'yxat). Har kod 7 kun amal qiladi.',
   },
   inviteDialog: {
     title: 'Parvoz Parents taklifi',
@@ -67,6 +76,7 @@ export const parents = {
     step1: 'Parvoz Parents ilovasini o\'rnatadi',
     step2: '«Maktabga ulanish» bo\'limini ochadi',
     step3: 'QR kodni skanerlaydi yoki kodni kiritadi',
+    handOver: 'Kodni {phone} egasiga bering yoki QR\'ni ko\'rsating',
   },
   copyFailed: 'Nusxa olib bo\'lmadi — matnni qo\'lda belgilang',
   exportFile: 'ota-onalar',

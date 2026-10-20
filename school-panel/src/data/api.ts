@@ -22,7 +22,10 @@ import { profileService } from './mock/services/profile';
 import { reportsService } from './mock/services/reports';
 import { schoolModeService } from './mock/services/school-mode';
 
-export const api = {
+import { createHttpApi } from './http';
+import { isHttpMode } from './source';
+
+const mockApi = {
   school: schoolService,
   classes: classesService,
   students: studentsService,
@@ -45,4 +48,7 @@ export const api = {
   demo: demoService,
 };
 
-export type Api = typeof api;
+export type Api = typeof mockApi;
+
+/** `NEXT_PUBLIC_DATA_SOURCE=http` — backend; aks holda brauzerdagi demo. */
+export const api: Api = isHttpMode ? createHttpApi() : mockApi;
