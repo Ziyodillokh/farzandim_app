@@ -162,6 +162,7 @@ export const audit: DeepString<typeof uz> = {
     reminder_delete: 'Напоминание «{title}» удалено',
     reminder_toggle_on: 'Напоминание «{title}» включено',
     reminder_toggle_off: 'Напоминание «{title}» приостановлено',
+    payment_create: '{name}: создано напоминание об оплате (следующая дата {date})',
     payment_shift: '{name}: дата напоминания {fromDate} → {toDate}',
     payment_pause: '{name}: напоминание приостановлено — {note}',
     payment_resume: '{name}: напоминание возобновлено — {note}',

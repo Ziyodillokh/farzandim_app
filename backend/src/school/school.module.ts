@@ -2,6 +2,7 @@
 
 import { Module } from '@nestjs/common';
 import { AttendanceModule } from './attendance/attendance.module';
+import { CareModule } from './care/care.module';
 import { AuditController } from './audit/audit.controller';
 import { AuditService } from './audit/audit.service';
 import { SchoolAuthController } from './auth/school-auth.controller';
@@ -20,7 +21,7 @@ import { SchoolInfoController } from './structure/school-info.controller';
 import { SchoolInfoService } from './structure/school-info.service';
 
 @Module({
-  imports: [SchoolCoreModule, StudentsModule, AttendanceModule, CommsModule, SchoolModeModule],
+  imports: [SchoolCoreModule, StudentsModule, AttendanceModule, CommsModule, SchoolModeModule, CareModule],
   controllers: [
     SchoolAuthController,
     SchoolInfoController,

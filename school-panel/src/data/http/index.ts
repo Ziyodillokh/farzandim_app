@@ -1,6 +1,9 @@
 import type { Api } from '../api';
 import { notAvailable } from './not-available';
+import { attendanceHttp } from './services/attendance';
+import { careHttp } from './services/care';
 import { classesHttp } from './services/classes';
+import { commsHttp } from './services/comms';
 import { profileHttp } from './services/profile';
 import { schoolHttp } from './services/school';
 import { schoolModeHttp } from './services/school-mode';
@@ -20,10 +23,10 @@ export function createHttpApi(): Api {
     staff: staffHttp,
     audit: auditHttp,
     search: notAvailable('search'),
-    attendance: notAvailable('attendance'),
+    attendance: attendanceHttp,
     schoolMode: schoolModeHttp,
-    comms: notAvailable('comms'),
-    care: notAvailable('care'),
+    comms: commsHttp,
+    care: careHttp,
     learning: notAvailable('learning'),
     reports: notAvailable('reports'),
     dashboard: notAvailable('dashboard'),

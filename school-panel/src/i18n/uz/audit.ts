@@ -163,6 +163,7 @@ export const audit = {
     reminder_delete: '«{title}» eslatmasi o\'chirildi',
     reminder_toggle_on: '«{title}» eslatmasi yoqildi',
     reminder_toggle_off: '«{title}» eslatmasi to\'xtatildi',
+    payment_create: '{name}: to\'lov eslatmasi yaratildi (keyingi sana {date})',
     payment_shift: '{name}: eslatma sanasi {fromDate} → {toDate}',
     payment_pause: '{name}: eslatma to\'xtatildi — {note}',
     payment_resume: '{name}: eslatma qayta yoqildi — {note}',

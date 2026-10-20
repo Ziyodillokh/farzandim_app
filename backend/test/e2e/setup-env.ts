@@ -18,6 +18,7 @@ const required: Record<string, string> = {
   MINIO_SECRET_KEY: 'e2e-secret',
   MINIO_PUBLIC_URL: 'http://127.0.0.1:9',
   CORS_ORIGINS: 'http://localhost',
+  SCHOOL_DATA_KEY: Buffer.alloc(32, 7).toString('base64'),
 };
 
 import { existsSync } from 'node:fs';
