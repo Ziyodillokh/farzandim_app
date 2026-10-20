@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { Guardian } from '@/data/contracts';
+import { isHttpMode } from '@/data/source';
 import { useI18n } from '@/i18n';
 
 /** Parvoz Parents taklif kodi + QR (ota-ona ilovada skanerlaydi). */
@@ -18,7 +19,7 @@ export function InviteDialog({ guardian, onOpenChange }: { guardian: Guardian | 
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{t('students.detail.inviteTitle')}</DialogTitle>
-          <DialogDescription>{t('students.detail.inviteText')}</DialogDescription>
+          <DialogDescription>{t(isHttpMode ? 'students.detail.inviteTextCode' : 'students.detail.inviteText')}</DialogDescription>
         </DialogHeader>
         {guardian && (
           <div className="flex flex-col items-center gap-4 py-2">

@@ -90,5 +90,6 @@ export const classes = {
     write: 'Email yozish',
     lesson: 'Dars',
     break: 'Tanaffus',
+    inviteTextCode: '{name} sinfidagi hali taklif qilinmagan {count} ota-ona uchun Parvoz Parents taklif kodlari yaratiladi. Kodlarni ota-onalarga bering. Har kod 7 kun amal qiladi.',
   },
 };

@@ -46,6 +46,7 @@ export const parents: DeepString<typeof uz> = {
     resent: 'Новый код отправлен',
     linked: 'Родитель подключился к Parvoz Parents',
     unlinked: 'Связь отключена — можно отправить новое приглашение',
+    invitedCode: 'Код приглашения создан — передайте родителю',
   },
   unlinkConfirm: {
     title: 'Отключить от Parvoz Parents',
@@ -64,6 +65,7 @@ export const parents: DeepString<typeof uz> = {
     confirm: 'Отправить приглашения ({count})',
     done: 'Приглашения отправлены: {count}',
     nothing: 'Не найдено родителей для приглашения',
+    textCode: 'Для {count} ещё не приглашённых родителей по текущему фильтру будут созданы коды приглашения в Parvoz Parents. Передайте коды родителям (QR или список). Каждый код действует 7 дней.',
   },
   inviteDialog: {
     title: 'Приглашение в Parvoz Parents',
@@ -77,6 +79,7 @@ export const parents: DeepString<typeof uz> = {
     step1: 'Устанавливает приложение Parvoz Parents',
     step2: 'Открывает раздел «Подключение к школе»',
     step3: 'Сканирует QR-код или вводит код',
+    handOver: 'Передайте код владельцу номера {phone} или покажите QR',
   },
   copyFailed: 'Не удалось скопировать — выделите текст вручную',
   exportFile: 'roditeli',

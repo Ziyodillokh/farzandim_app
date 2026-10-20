@@ -79,6 +79,7 @@ export const students = {
     psychologistNote: 'Psixolog sifatida siz faqat o\'quvchining ismi va sinfini ko\'rasiz.',
     legend: 'Belgilar',
     notFound: 'O\'quvchi topilmadi',
+    inviteTextCode: 'Ota-ona Parvoz Parents ilovasida shu kodni kiritadi yoki QR kodni skanerlaydi. Kod 7 kun amal qiladi.',
   },
   /** 360° karta: tablar, sarlavha amallari, tarix va eslatmalar. */
   tabs: {
