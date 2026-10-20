@@ -1,0 +1,465 @@
+{
+  "subject": "geography",
+  "questions": [
+    {
+      "id": "geography-16",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Dunyo davlatlari",
+        "ru": "Страны мира",
+        "en": "Countries of the world"
+      },
+      "question": {
+        "uz": "Maydoni bo‘yicha dunyodagi eng katta davlat qaysi?",
+        "ru": "Какая страна самая большая в мире по площади?",
+        "en": "Which is the largest country in the world by area?"
+      },
+      "options": [
+        {
+          "uz": "Xitoy",
+          "ru": "Китай",
+          "en": "China"
+        },
+        {
+          "uz": "AQSH",
+          "ru": "США",
+          "en": "USA"
+        },
+        {
+          "uz": "Kanada",
+          "ru": "Канада",
+          "en": "Canada"
+        },
+        {
+          "uz": "Rossiya",
+          "ru": "Россия",
+          "en": "Russia"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Rossiyaning maydoni 17 mln km² dan ortiq — bu dunyodagi eng katta ko‘rsatkich. Ikkinchi o‘rinda Kanada turadi.",
+        "ru": "Площадь России — более 17 млн км², это самый большой показатель в мире. На втором месте — Канада.",
+        "en": "Russia covers more than 17 million km², the most of any country. Canada is second."
+      }
+    },
+    {
+      "id": "geography-17",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Xalqaro tashkilotlar",
+        "ru": "Международные организации",
+        "en": "International organisations"
+      },
+      "question": {
+        "uz": "OPEK qaysi mahsulotni eksport qiluvchi davlatlarni birlashtiradi?",
+        "ru": "Экспортёров какого товара объединяет ОПЕК?",
+        "en": "OPEC brings together countries that export which product?"
+      },
+      "options": [
+        {
+          "uz": "Neft",
+          "ru": "Нефть",
+          "en": "Oil"
+        },
+        {
+          "uz": "Paxta",
+          "ru": "Хлопок",
+          "en": "Cotton"
+        },
+        {
+          "uz": "Oltin",
+          "ru": "Золото",
+          "en": "Gold"
+        },
+        {
+          "uz": "Bug‘doy",
+          "ru": "Пшеница",
+          "en": "Wheat"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "OPEK — Neft eksport qiluvchi mamlakatlar tashkiloti. U 1960-yilda Bag‘dodda tuzilgan.",
+        "ru": "ОПЕК — Организация стран — экспортёров нефти. Она создана в 1960 году в Багдаде.",
+        "en": "OPEC is the Organization of the Petroleum Exporting Countries, founded in Baghdad in 1960."
+      }
+    },
+    {
+      "id": "geography-18",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Aholi geografiyasi",
+        "ru": "География населения",
+        "en": "Population geography"
+      },
+      "question": {
+        "uz": "Shaharlarning o‘sishi va shahar aholisi ulushining ortishi qanday ataladi?",
+        "ru": "Как называется рост городов и увеличение доли городского населения?",
+        "en": "What is the growth of cities and of the share of people living in them called?"
+      },
+      "options": [
+        {
+          "uz": "Migratsiya",
+          "ru": "Миграция",
+          "en": "Migration"
+        },
+        {
+          "uz": "Globallashuv",
+          "ru": "Глобализация",
+          "en": "Globalisation"
+        },
+        {
+          "uz": "Urbanizatsiya",
+          "ru": "Урбанизация",
+          "en": "Urbanisation"
+        },
+        {
+          "uz": "Industrializatsiya",
+          "ru": "Индустриализация",
+          "en": "Industrialisation"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Urbanizatsiya — shaharlar soni va hajmining o‘sishi, shahar aholisi ulushining ortishi. Migratsiya esa aholining bir joydan boshqa joyga ko‘chishi.",
+        "ru": "Урбанизация — рост числа и размеров городов и доли городского населения. Миграция — это переселение людей с одного места на другое.",
+        "en": "Urbanisation is the growth of cities and of the urban share of the population. Migration is people moving from one place to another."
+      }
+    },
+    {
+      "id": "geography-19",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Kanallar va bo‘g‘ozlar",
+        "ru": "Каналы и проливы",
+        "en": "Canals and straits"
+      },
+      "question": {
+        "uz": "Suvaysh kanali qaysi suv havzalarini bog‘laydi?",
+        "ru": "Какие водоёмы соединяет Суэцкий канал?",
+        "en": "Which bodies of water does the Suez Canal connect?"
+      },
+      "options": [
+        {
+          "uz": "Atlantika va Tinch okeanini",
+          "ru": "Атлантический и Тихий океаны",
+          "en": "The Atlantic and the Pacific"
+        },
+        {
+          "uz": "O‘rta yer dengizi va Qizil dengizni",
+          "ru": "Средиземное и Красное моря",
+          "en": "The Mediterranean and the Red Sea"
+        },
+        {
+          "uz": "Qora dengiz va O‘rta yer dengizini",
+          "ru": "Чёрное и Средиземное моря",
+          "en": "The Black Sea and the Mediterranean"
+        },
+        {
+          "uz": "Boltiq dengizi va Shimoliy dengizni",
+          "ru": "Балтийское и Северное моря",
+          "en": "The Baltic Sea and the North Sea"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Suvaysh kanali (1869) Misr hududida joylashgan va O‘rta yer dengizini Qizil dengiz bilan bog‘laydi. Atlantika va Tinch okeanlarini esa Panama kanali bog‘laydi.",
+        "ru": "Суэцкий канал (1869) проходит по территории Египта и соединяет Средиземное и Красное моря. Атлантический и Тихий океаны соединяет Панамский канал.",
+        "en": "The Suez Canal (1869) runs through Egypt and links the Mediterranean with the Red Sea. The Atlantic and Pacific are linked by the Panama Canal."
+      }
+    },
+    {
+      "id": "geography-20",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Iqtisodiy ko‘rsatkichlar",
+        "ru": "Экономические показатели",
+        "en": "Economic indicators"
+      },
+      "question": {
+        "uz": "Mamlakatda bir yil davomida ishlab chiqarilgan barcha yakuniy tovar va xizmatlarning bozor qiymati qanday ataladi?",
+        "ru": "Как называется рыночная стоимость всех конечных товаров и услуг, произведённых в стране за год?",
+        "en": "What is the market value of all final goods and services produced in a country in a year called?"
+      },
+      "options": [
+        {
+          "uz": "Yalpi ichki mahsulot (YaIM)",
+          "ru": "Валовой внутренний продукт (ВВП)",
+          "en": "Gross domestic product (GDP)"
+        },
+        {
+          "uz": "Davlat byudjeti",
+          "ru": "Государственный бюджет",
+          "en": "The state budget"
+        },
+        {
+          "uz": "Savdo balansi",
+          "ru": "Торговый баланс",
+          "en": "The trade balance"
+        },
+        {
+          "uz": "Inflyatsiya",
+          "ru": "Инфляция",
+          "en": "Inflation"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Bu yalpi ichki mahsulot (YaIM). U iqtisodiyot hajmini ko‘rsatadi; aholi soniga bo‘linsa, aholi jon boshiga YaIM kelib chiqadi.",
+        "ru": "Это валовой внутренний продукт (ВВП). Он показывает размер экономики; если разделить его на число жителей, получится ВВП на душу населения.",
+        "en": "This is gross domestic product (GDP). It shows the size of an economy; divided by the population, it gives GDP per capita."
+      }
+    },
+    {
+      "id": "geography-21",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Aholi geografiyasi",
+        "ru": "География населения",
+        "en": "Population geography"
+      },
+      "question": {
+        "uz": "Mamlakatda tug‘ilish koeffitsiyenti 25‰, o‘lim koeffitsiyenti 5‰. Aholining tabiiy o‘sishi qancha?",
+        "ru": "В стране коэффициент рождаемости 25‰, а смертности — 5‰. Каков естественный прирост населения?",
+        "en": "A country has a birth rate of 25‰ and a death rate of 5‰. What is its natural population increase?"
+      },
+      "options": [
+        {
+          "uz": "30‰",
+          "ru": "30‰",
+          "en": "30‰"
+        },
+        {
+          "uz": "20‰",
+          "ru": "20‰",
+          "en": "20‰"
+        },
+        {
+          "uz": "5‰",
+          "ru": "5‰",
+          "en": "5‰"
+        },
+        {
+          "uz": "15‰",
+          "ru": "15‰",
+          "en": "15‰"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Tabiiy o‘sish = tug‘ilish − o‘lim = 25‰ − 5‰ = 20‰, ya’ni yiliga har 1000 kishiga 20 kishi.",
+        "ru": "Естественный прирост = рождаемость − смертность = 25‰ − 5‰ = 20‰, то есть 20 человек на каждую 1000 жителей в год.",
+        "en": "Natural increase = birth rate − death rate = 25‰ − 5‰ = 20‰, which is 20 people per 1,000 per year."
+      }
+    },
+    {
+      "id": "geography-22",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "O‘zbekiston geografiyasi",
+        "ru": "География Узбекистана",
+        "en": "Geography of Uzbekistan"
+      },
+      "question": {
+        "uz": "O‘zbekiston qaysi davlat bilan eng qisqa chegaraga ega?",
+        "ru": "С какой страной у Узбекистана самая короткая граница?",
+        "en": "With which country does Uzbekistan share its shortest border?"
+      },
+      "options": [
+        {
+          "uz": "Qozog‘iston",
+          "ru": "Казахстан",
+          "en": "Kazakhstan"
+        },
+        {
+          "uz": "Turkmaniston",
+          "ru": "Туркменистан",
+          "en": "Turkmenistan"
+        },
+        {
+          "uz": "Tojikiston",
+          "ru": "Таджикистан",
+          "en": "Tajikistan"
+        },
+        {
+          "uz": "Afg‘oniston",
+          "ru": "Афганистан",
+          "en": "Afghanistan"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Afg‘oniston bilan chegara atigi 140 km atrofida bo‘lib, Amudaryo bo‘ylab o‘tadi. Eng uzun chegara esa Qozog‘iston bilan.",
+        "ru": "Граница с Афганистаном — всего около 140 км, она проходит по Амударье. Самая длинная граница — с Казахстаном.",
+        "en": "The border with Afghanistan is only about 140 km long and follows the Amu Darya. The longest border is with Kazakhstan."
+      }
+    },
+    {
+      "id": "geography-23",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Dunyo davlatlari",
+        "ru": "Страны мира",
+        "en": "Countries of the world"
+      },
+      "question": {
+        "uz": "Faqat dengizga chiqish yo‘li yo‘q davlatlar bilan o‘ralgan davlatlar dunyoda ikkita. Biri O‘zbekiston, ikkinchisi qaysi?",
+        "ru": "В мире лишь две страны, окружённые только государствами без выхода к морю. Одна из них — Узбекистан. Какая вторая?",
+        "en": "Only two countries in the world are surrounded entirely by landlocked countries. One is Uzbekistan. What is the other?"
+      },
+      "options": [
+        {
+          "uz": "Shveysariya",
+          "ru": "Швейцария",
+          "en": "Switzerland"
+        },
+        {
+          "uz": "Mongoliya",
+          "ru": "Монголия",
+          "en": "Mongolia"
+        },
+        {
+          "uz": "Lixtenshteyn",
+          "ru": "Лихтенштейн",
+          "en": "Liechtenstein"
+        },
+        {
+          "uz": "Avstriya",
+          "ru": "Австрия",
+          "en": "Austria"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Lixtenshteyn faqat Shveysariya va Avstriya bilan chegaradosh, ularning ikkalasi ham dengizga chiqa olmaydi. O‘zbekistonning barcha qo‘shnilari ham dengizga chiqish yo‘liga ega emas.",
+        "ru": "Лихтенштейн граничит только со Швейцарией и Австрией, у которых тоже нет выхода к морю. Все соседи Узбекистана также не имеют выхода к морю.",
+        "en": "Liechtenstein borders only Switzerland and Austria, both landlocked. All of Uzbekistan’s neighbours are landlocked too, so both are doubly landlocked."
+      }
+    },
+    {
+      "id": "geography-24",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Vaqt mintaqalari",
+        "ru": "Часовые пояса",
+        "en": "Time zones"
+      },
+      "question": {
+        "uz": "Toshkent vaqti UTC+5, London vaqti qishda UTC+0. Qishda Toshkentda soat 15:00 bo‘lsa, Londonda soat necha bo‘ladi?",
+        "ru": "Ташкентское время — UTC+5, лондонское зимой — UTC+0. Когда зимой в Ташкенте 15:00, сколько времени в Лондоне?",
+        "en": "Tashkent time is UTC+5 and London time in winter is UTC+0. When it is 15:00 in Tashkent in winter, what time is it in London?"
+      },
+      "options": [
+        {
+          "uz": "20:00",
+          "ru": "20:00",
+          "en": "20:00"
+        },
+        {
+          "uz": "10:00",
+          "ru": "10:00",
+          "en": "10:00"
+        },
+        {
+          "uz": "15:00",
+          "ru": "15:00",
+          "en": "15:00"
+        },
+        {
+          "uz": "12:00",
+          "ru": "12:00",
+          "en": "12:00"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Toshkent vaqti Londondan 5 soat oldinda: 15:00 − 5 soat = 10:00. Yer g‘arbdan sharqqa aylangani uchun sharqda kun ertaroq boshlanadi.",
+        "ru": "Ташкент опережает Лондон на 5 часов: 15:00 − 5 ч = 10:00. Земля вращается с запада на восток, поэтому на востоке день наступает раньше.",
+        "en": "Tashkent is 5 hours ahead of London: 15:00 − 5 h = 10:00. The Earth spins from west to east, so the day starts earlier in the east."
+      }
+    },
+    {
+      "id": "geography-25",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Foydali qazilmalar",
+        "ru": "Полезные ископаемые",
+        "en": "Mineral resources"
+      },
+      "question": {
+        "uz": "Dunyodagi eng yirik oltin konlaridan biri — Muruntov O‘zbekistonning qaysi viloyatida joylashgan?",
+        "ru": "В какой области Узбекистана находится Мурунтау — одно из крупнейших в мире месторождений золота?",
+        "en": "In which region of Uzbekistan is Muruntau, one of the world’s largest gold deposits?"
+      },
+      "options": [
+        {
+          "uz": "Navoiy viloyati",
+          "ru": "Навоийская область",
+          "en": "Navoi Region"
+        },
+        {
+          "uz": "Farg‘ona viloyati",
+          "ru": "Ферганская область",
+          "en": "Fergana Region"
+        },
+        {
+          "uz": "Surxondaryo viloyati",
+          "ru": "Сурхандарьинская область",
+          "en": "Surkhandarya Region"
+        },
+        {
+          "uz": "Xorazm viloyati",
+          "ru": "Хорезмская область",
+          "en": "Khorezm Region"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Muruntov koni Qizilqum cho‘lida, Navoiy viloyatidagi Zarafshon shahri yaqinida joylashgan. Uni Navoiy kon-metallurgiya kombinati qazib oladi.",
+        "ru": "Мурунтау находится в пустыне Кызылкум, недалеко от города Зарафшан Навоийской области. Его разрабатывает Навоийский горно-металлургический комбинат.",
+        "en": "Muruntau lies in the Kyzylkum Desert near the city of Zarafshan in Navoi Region. It is mined by the Navoi Mining and Metallurgical Company."
+      }
+    }
+  ]
+}

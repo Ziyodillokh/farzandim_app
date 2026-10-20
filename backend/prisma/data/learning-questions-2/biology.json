@@ -1,0 +1,465 @@
+{
+  "subject": "biology",
+  "questions": [
+    {
+      "id": "biology-16",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Hujayra organoidlari",
+        "ru": "Органоиды клетки",
+        "en": "Cell organelles"
+      },
+      "question": {
+        "uz": "Hujayrada oqsil sintezi qaysi organoidda boradi?",
+        "ru": "В каком органоиде клетки происходит синтез белка?",
+        "en": "In which cell organelle does protein synthesis take place?"
+      },
+      "options": [
+        {
+          "uz": "Mitoxondriya",
+          "ru": "Митохондрия",
+          "en": "Mitochondrion"
+        },
+        {
+          "uz": "Ribosoma",
+          "ru": "Рибосома",
+          "en": "Ribosome"
+        },
+        {
+          "uz": "Lizosoma",
+          "ru": "Лизосома",
+          "en": "Lysosome"
+        },
+        {
+          "uz": "Golji apparati",
+          "ru": "Аппарат Гольджи",
+          "en": "Golgi apparatus"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Oqsil ribosomalarda sintezlanadi. Mitoxondriya energiya (ATF) hosil qiladi, lizosoma moddalarni parchalaydi, Golji apparati esa moddalarni to‘playdi va saralaydi.",
+        "ru": "Белок синтезируется на рибосомах. Митохондрии вырабатывают энергию (АТФ), лизосомы расщепляют вещества, а аппарат Гольджи накапливает и сортирует их.",
+        "en": "Proteins are made on ribosomes. Mitochondria produce energy (ATP), lysosomes break substances down and the Golgi apparatus packages and sorts them."
+      }
+    },
+    {
+      "id": "biology-17",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Xromosomalar",
+        "ru": "Хромосомы",
+        "en": "Chromosomes"
+      },
+      "question": {
+        "uz": "Odamning somatik (tana) hujayralarida nechta xromosoma bor?",
+        "ru": "Сколько хромосом в соматических клетках человека?",
+        "en": "How many chromosomes are there in human somatic (body) cells?"
+      },
+      "options": [
+        {
+          "uz": "23",
+          "ru": "23",
+          "en": "23"
+        },
+        {
+          "uz": "44",
+          "ru": "44",
+          "en": "44"
+        },
+        {
+          "uz": "46",
+          "ru": "46",
+          "en": "46"
+        },
+        {
+          "uz": "48",
+          "ru": "48",
+          "en": "48"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Odamning somatik hujayralarida 46 ta (23 juft) xromosoma bor. Jinsiy hujayralarda esa ularning yarmi — 23 ta.",
+        "ru": "В соматических клетках человека 46 хромосом (23 пары). В половых клетках их вдвое меньше — 23.",
+        "en": "Human body cells have 46 chromosomes (23 pairs). Sex cells (gametes) have half as many — 23."
+      }
+    },
+    {
+      "id": "biology-18",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Evolyutsiya",
+        "ru": "Эволюция",
+        "en": "Evolution"
+      },
+      "question": {
+        "uz": "Tabiiy tanlanish orqali evolyutsiya nazariyasini kim yaratgan?",
+        "ru": "Кто создал теорию эволюции путём естественного отбора?",
+        "en": "Who developed the theory of evolution by natural selection?"
+      },
+      "options": [
+        {
+          "uz": "Charlz Darvin",
+          "ru": "Чарлз Дарвин",
+          "en": "Charles Darwin"
+        },
+        {
+          "uz": "Gregor Mendel",
+          "ru": "Грегор Мендель",
+          "en": "Gregor Mendel"
+        },
+        {
+          "uz": "Lui Paster",
+          "ru": "Луи Пастер",
+          "en": "Louis Pasteur"
+        },
+        {
+          "uz": "Karl Linney",
+          "ru": "Карл Линней",
+          "en": "Carl Linnaeus"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Charlz Darvin 1859-yilda “Turlarning kelib chiqishi” asarida tabiiy tanlanish nazariyasini bayon qilgan. Mendel irsiyat qonunlarini, Linney esa tur tasnifini yaratgan.",
+        "ru": "Чарлз Дарвин изложил теорию естественного отбора в книге «Происхождение видов» (1859). Мендель открыл законы наследственности, а Линней создал систему классификации.",
+        "en": "Charles Darwin set out natural selection in On the Origin of Species (1859). Mendel found the laws of heredity and Linnaeus created the classification system."
+      }
+    },
+    {
+      "id": "biology-19",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Genetika",
+        "ru": "Генетика",
+        "en": "Genetics"
+      },
+      "question": {
+        "uz": "To‘liq dominantlikda ikkita geterozigota (Aa × Aa) chatishtirilsa, nasl fenotip bo‘yicha qanday nisbatda ajraladi?",
+        "ru": "Каким будет расщепление по фенотипу при скрещивании двух гетерозигот (Aa × Aa) при полном доминировании?",
+        "en": "With complete dominance, what phenotype ratio results from crossing two heterozygotes (Aa × Aa)?"
+      },
+      "options": [
+        {
+          "uz": "1 : 1",
+          "ru": "1 : 1",
+          "en": "1 : 1"
+        },
+        {
+          "uz": "1 : 2 : 1",
+          "ru": "1 : 2 : 1",
+          "en": "1 : 2 : 1"
+        },
+        {
+          "uz": "9 : 3 : 3 : 1",
+          "ru": "9 : 3 : 3 : 1",
+          "en": "9 : 3 : 3 : 1"
+        },
+        {
+          "uz": "3 : 1",
+          "ru": "3 : 1",
+          "en": "3 : 1"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Genotiplar: 1 AA : 2 Aa : 1 aa. AA va Aa bir xil (dominant) belgini namoyon qiladi, shuning uchun fenotip bo‘yicha 3 : 1. 1 : 2 : 1 esa genotip bo‘yicha nisbat.",
+        "ru": "Генотипы: 1 AA : 2 Aa : 1 aa. AA и Aa проявляют одинаковый (доминантный) признак, поэтому по фенотипу 3 : 1. А 1 : 2 : 1 — расщепление по генотипу.",
+        "en": "Genotypes are 1 AA : 2 Aa : 1 aa. AA and Aa show the same (dominant) trait, so the phenotype ratio is 3 : 1. 1 : 2 : 1 is the genotype ratio."
+      }
+    },
+    {
+      "id": "biology-20",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "DNK tuzilishi",
+        "ru": "Строение ДНК",
+        "en": "DNA structure"
+      },
+      "question": {
+        "uz": "DNK molekulasidagi nukleotidlarning 20% ini adeninli nukleotidlar tashkil etadi. Guaninli nukleotidlar necha foizni tashkil etadi?",
+        "ru": "В молекуле ДНК на долю адениловых нуклеотидов приходится 20%. Сколько процентов составляют гуаниловые нуклеотиды?",
+        "en": "In a DNA molecule, 20% of the nucleotides contain adenine. What percentage contain guanine?"
+      },
+      "options": [
+        {
+          "uz": "20%",
+          "ru": "20%",
+          "en": "20%"
+        },
+        {
+          "uz": "30%",
+          "ru": "30%",
+          "en": "30%"
+        },
+        {
+          "uz": "40%",
+          "ru": "40%",
+          "en": "40%"
+        },
+        {
+          "uz": "60%",
+          "ru": "60%",
+          "en": "60%"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Komplementarlik qoidasiga ko‘ra adenin timinga teng: A = T = 20%, jami 40%. Qolgan 60% guanin va sitozinga teng bo‘linadi: guanin 30%.",
+        "ru": "По правилу комплементарности А = Т = 20%, вместе 40%. Оставшиеся 60% поровну приходятся на гуанин и цитозин: гуанин — 30%.",
+        "en": "By base pairing, A = T = 20%, so together 40%. The remaining 60% is split equally between guanine and cytosine: guanine is 30%."
+      }
+    },
+    {
+      "id": "biology-21",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Ekologiya",
+        "ru": "Экология",
+        "en": "Ecology"
+      },
+      "question": {
+        "uz": "Produtsentlar 10 000 kJ energiya to‘pladi. 10% qoidasiga ko‘ra ikkinchi tartibli konsumentlarga qancha energiya yetib boradi?",
+        "ru": "Продуценты накопили 10 000 кДж энергии. Сколько энергии по правилу 10% дойдёт до консументов второго порядка?",
+        "en": "Producers store 10,000 kJ of energy. By the 10% rule, how much energy reaches the secondary consumers?"
+      },
+      "options": [
+        {
+          "uz": "100 kJ",
+          "ru": "100 кДж",
+          "en": "100 kJ"
+        },
+        {
+          "uz": "1000 kJ",
+          "ru": "1000 кДж",
+          "en": "1,000 kJ"
+        },
+        {
+          "uz": "10 kJ",
+          "ru": "10 кДж",
+          "en": "10 kJ"
+        },
+        {
+          "uz": "5000 kJ",
+          "ru": "5000 кДж",
+          "en": "5,000 kJ"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Har bir keyingi trofik darajaga energiyaning taxminan 10% i o‘tadi: 10 000 → 1000 kJ (I tartibli konsumentlar) → 100 kJ (II tartibli konsumentlar).",
+        "ru": "На каждый следующий трофический уровень переходит около 10% энергии: 10 000 → 1000 кДж (консументы I порядка) → 100 кДж (консументы II порядка).",
+        "en": "About 10% of energy passes to each next level: 10,000 → 1,000 kJ (primary consumers) → 100 kJ (secondary consumers)."
+      }
+    },
+    {
+      "id": "biology-22",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Meyoz",
+        "ru": "Мейоз",
+        "en": "Meiosis"
+      },
+      "question": {
+        "uz": "Meyoz natijasida bitta diploid hujayradan nechta gaploid hujayra hosil bo‘ladi?",
+        "ru": "Сколько гаплоидных клеток образуется из одной диплоидной клетки в результате мейоза?",
+        "en": "How many haploid cells are formed from one diploid cell as a result of meiosis?"
+      },
+      "options": [
+        {
+          "uz": "1",
+          "ru": "1",
+          "en": "1"
+        },
+        {
+          "uz": "2",
+          "ru": "2",
+          "en": "2"
+        },
+        {
+          "uz": "4",
+          "ru": "4",
+          "en": "4"
+        },
+        {
+          "uz": "8",
+          "ru": "8",
+          "en": "8"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Meyoz ketma-ket ikki bo‘linishdan iborat, natijada xromosomalar to‘plami ikki marta kam bo‘lgan 4 ta hujayra hosil bo‘ladi. Mitozda esa 2 ta diploid hujayra hosil bo‘ladi.",
+        "ru": "Мейоз состоит из двух последовательных делений, в результате образуются 4 клетки с вдвое меньшим набором хромосом. При митозе образуются 2 диплоидные клетки.",
+        "en": "Meiosis has two divisions in a row, giving 4 cells with half the chromosome number. Mitosis gives 2 diploid cells."
+      }
+    },
+    {
+      "id": "biology-23",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Jinsga bog‘liq irsiyat",
+        "ru": "Сцепление с полом",
+        "en": "Sex-linked inheritance"
+      },
+      "question": {
+        "uz": "Daltonizm geni X xromosomada joylashgan retsessiv gen. Ona shu genni tashuvchi (o‘zi sog‘lom), ota esa sog‘lom. Ularning o‘g‘li daltonik bo‘lish ehtimoli qancha?",
+        "ru": "Ген дальтонизма рецессивный и сцеплен с X-хромосомой. Мать — носительница (сама здорова), отец здоров. Какова вероятность, что их сын будет дальтоником?",
+        "en": "The colour-blindness gene is recessive and X-linked. The mother is a carrier (not affected) and the father is healthy. What is the probability that their son is colour-blind?"
+      },
+      "options": [
+        {
+          "uz": "0%",
+          "ru": "0%",
+          "en": "0%"
+        },
+        {
+          "uz": "25%",
+          "ru": "25%",
+          "en": "25%"
+        },
+        {
+          "uz": "50%",
+          "ru": "50%",
+          "en": "50%"
+        },
+        {
+          "uz": "100%",
+          "ru": "100%",
+          "en": "100%"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "O‘g‘il X xromosomani faqat onadan oladi. Tashuvchi ona daltonizm genli X ni 50% ehtimol bilan beradi, demak, har bir o‘g‘il 50% ehtimol bilan daltonik bo‘ladi.",
+        "ru": "Сын получает X-хромосому только от матери. Мать-носительница передаёт X с геном дальтонизма с вероятностью 50%, поэтому сын будет дальтоником с вероятностью 50%.",
+        "en": "A son gets his X chromosome only from his mother. A carrier mother passes on the affected X half the time, so each son has a 50% chance of being colour-blind."
+      }
+    },
+    {
+      "id": "biology-24",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Genetika",
+        "ru": "Генетика",
+        "en": "Genetics"
+      },
+      "question": {
+        "uz": "AaBb × AaBb chatishtirishda (genlar mustaqil irsiylanadi) aabb genotipli avlodlar ulushi qancha?",
+        "ru": "Какова доля потомков с генотипом aabb при скрещивании AaBb × AaBb (гены наследуются независимо)?",
+        "en": "In the cross AaBb × AaBb (genes inherited independently), what fraction of the offspring is aabb?"
+      },
+      "options": [
+        {
+          "uz": "9/16",
+          "ru": "9/16",
+          "en": "9/16"
+        },
+        {
+          "uz": "1/4",
+          "ru": "1/4",
+          "en": "1/4"
+        },
+        {
+          "uz": "1/8",
+          "ru": "1/8",
+          "en": "1/8"
+        },
+        {
+          "uz": "1/16",
+          "ru": "1/16",
+          "en": "1/16"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Har bir gen bo‘yicha aa ehtimoli 1/4, bb ehtimoli ham 1/4. Genlar mustaqil irsiylangani uchun: 1/4 · 1/4 = 1/16.",
+        "ru": "Вероятность aa равна 1/4, вероятность bb — тоже 1/4. Так как гены наследуются независимо: 1/4 · 1/4 = 1/16.",
+        "en": "The chance of aa is 1/4 and of bb is also 1/4. Since the genes are inherited independently: 1/4 × 1/4 = 1/16."
+      }
+    },
+    {
+      "id": "biology-25",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Evolyutsiya dalillari",
+        "ru": "Доказательства эволюции",
+        "en": "Evidence of evolution"
+      },
+      "question": {
+        "uz": "Kelib chiqishi har xil, ammo bir xil vazifani bajaradigan organlar (masalan, kapalak va qushning qanoti) qanday ataladi?",
+        "ru": "Как называются органы разного происхождения, выполняющие одинаковую функцию (например, крылья бабочки и птицы)?",
+        "en": "What are organs with different origins but the same function called (for example, the wings of a butterfly and a bird)?"
+      },
+      "options": [
+        {
+          "uz": "Gomologik organlar",
+          "ru": "Гомологичные органы",
+          "en": "Homologous organs"
+        },
+        {
+          "uz": "Analogik organlar",
+          "ru": "Аналогичные органы",
+          "en": "Analogous organs"
+        },
+        {
+          "uz": "Rudiment organlar",
+          "ru": "Рудиментарные органы",
+          "en": "Vestigial organs"
+        },
+        {
+          "uz": "Atavizmlar",
+          "ru": "Атавизмы",
+          "en": "Atavisms"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Analogik organlar o‘xshash sharoitga moslashish natijasida paydo bo‘ladi, lekin kelib chiqishi har xil. Gomologik organlarning kelib chiqishi esa bir xil (masalan, odam qo‘li va qush qanoti).",
+        "ru": "Аналогичные органы возникают при приспособлении к сходным условиям, но имеют разное происхождение. У гомологичных органов происхождение общее (например, рука человека и крыло птицы).",
+        "en": "Analogous organs arise from adapting to similar conditions but have different origins. Homologous organs share an origin (for example, a human arm and a bird’s wing)."
+      }
+    }
+  ]
+}

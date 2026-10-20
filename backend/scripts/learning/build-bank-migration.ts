@@ -4,6 +4,7 @@
 // deterministik — qayta yaratilganda SQL o'zgarmaydi.
 //
 //   npx tsx scripts/learning/build-bank-migration.ts > prisma/migrations/<nom>/migration.sql
+//   npx tsx scripts/learning/build-bank-migration.ts 2 > prisma/migrations/<nom>/migration.sql  # 2-to'lqin
 
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
@@ -12,6 +13,12 @@ import { parseBankQuestion } from '../../src/modules/learning/domain/question-ba
 import { fromApiSubject } from '../../src/modules/learning/domain/subjects';
 
 const DATA_DIR = path.resolve(__dirname, '../../prisma/data/learning-questions');
+
+/** To'lqinlar: manba papkasi va migratsiya sarlavhasi (eski to'lqin chiqishi o'zgarmaydi). */
+export const BANK_WAVES = {
+  1: { dir: DATA_DIR, title: 'boshlang\'ich savollar banki (10 fan, uz/ru/en,' },
+  2: { dir: `${DATA_DIR}-2`, title: '2-to\'lqin — 1–4 va 10–11-sinflar savollari (uz/ru/en,' },
+} as const;
 
 /** externalId → barqaror UUID (v5 shaklida, SHA-1). */
 export function stableId(externalId: string): string {
@@ -28,7 +35,7 @@ export function stableId(externalId: string): string {
 
 const literal = (value: unknown) => `'${JSON.stringify(value).replace(/'/g, "''")}'::jsonb`;
 
-export function buildBankMigrationSql(dataDir: string = DATA_DIR): string {
+export function buildBankMigrationSql(dataDir: string = DATA_DIR, title: string = BANK_WAVES[1].title): string {
   const files = readdirSync(dataDir).filter((f) => f.endsWith('.json')).sort();
   const rows: string[] = [];
   for (const file of files) {
@@ -50,7 +57,7 @@ export function buildBankMigrationSql(dataDir: string = DATA_DIR): string {
   }
   return (
     [
-      '-- Growth Daily Learning: boshlang\'ich savollar banki (10 fan, uz/ru/en,',
+      `-- Growth Daily Learning: ${title}`,
       '-- izohlar bilan). scripts/learning/build-bank-migration.ts yaratgan —',
       '-- qo\'lda tahrirlamang. Mavjud (externalId) savollar o\'zgartirilmaydi.',
       '',
@@ -66,5 +73,6 @@ export function buildBankMigrationSql(dataDir: string = DATA_DIR): string {
 }
 
 if (require.main === module) {
-  process.stdout.write(buildBankMigrationSql());
+  const wave = BANK_WAVES[process.argv[2] === '2' ? 2 : 1];
+  process.stdout.write(buildBankMigrationSql(wave.dir, wave.title));
 }

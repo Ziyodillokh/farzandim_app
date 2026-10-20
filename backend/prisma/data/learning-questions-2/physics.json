@@ -1,0 +1,465 @@
+{
+  "subject": "physics",
+  "questions": [
+    {
+      "id": "physics-16",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Magnit maydon",
+        "ru": "Магнитное поле",
+        "en": "Magnetic field"
+      },
+      "question": {
+        "uz": "Magnit induksiyasi SI tizimida qanday birlikda o‘lchanadi?",
+        "ru": "В каких единицах СИ измеряется магнитная индукция?",
+        "en": "In what SI unit is magnetic induction (magnetic flux density) measured?"
+      },
+      "options": [
+        {
+          "uz": "veber (Vb)",
+          "ru": "вебер (Вб)",
+          "en": "weber (Wb)"
+        },
+        {
+          "uz": "tesla (Tl)",
+          "ru": "тесла (Тл)",
+          "en": "tesla (T)"
+        },
+        {
+          "uz": "genri (Gn)",
+          "ru": "генри (Гн)",
+          "en": "henry (H)"
+        },
+        {
+          "uz": "farad (F)",
+          "ru": "фарад (Ф)",
+          "en": "farad (F)"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Magnit induksiyasi teslada (Tl) o‘lchanadi. Veber — magnit oqimi, genri — induktivlik, farad esa elektr sig‘imi birligi.",
+        "ru": "Магнитная индукция измеряется в теслах (Тл). Вебер — единица магнитного потока, генри — индуктивности, фарад — электроёмкости.",
+        "en": "Magnetic induction is measured in teslas (T). The weber measures magnetic flux, the henry inductance and the farad capacitance."
+      }
+    },
+    {
+      "id": "physics-17",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Yorug‘lik tezligi",
+        "ru": "Скорость света",
+        "en": "Speed of light"
+      },
+      "question": {
+        "uz": "Yorug‘likning vakuumdagi tezligi taxminan nechaga teng?",
+        "ru": "Чему примерно равна скорость света в вакууме?",
+        "en": "Approximately what is the speed of light in a vacuum?"
+      },
+      "options": [
+        {
+          "uz": "3·10⁸ m/s",
+          "ru": "3·10⁸ м/с",
+          "en": "3 × 10⁸ m/s"
+        },
+        {
+          "uz": "3·10⁶ m/s",
+          "ru": "3·10⁶ м/с",
+          "en": "3 × 10⁶ m/s"
+        },
+        {
+          "uz": "340 m/s",
+          "ru": "340 м/с",
+          "en": "340 m/s"
+        },
+        {
+          "uz": "3·10⁵ m/s",
+          "ru": "3·10⁵ м/с",
+          "en": "3 × 10⁵ m/s"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Yorug‘lik vakuumda taxminan 300 000 km/s, ya’ni 3·10⁸ m/s tezlikda tarqaladi. 340 m/s esa havodagi tovush tezligi.",
+        "ru": "Свет в вакууме распространяется со скоростью около 300 000 км/с, то есть 3·10⁸ м/с. А 340 м/с — скорость звука в воздухе.",
+        "en": "Light travels at about 300,000 km/s in a vacuum, which is 3 × 10⁸ m/s. 340 m/s is the speed of sound in air."
+      }
+    },
+    {
+      "id": "physics-18",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Radioaktivlik",
+        "ru": "Радиоактивность",
+        "en": "Radioactivity"
+      },
+      "question": {
+        "uz": "Alfa-zarra nima?",
+        "ru": "Что представляет собой альфа-частица?",
+        "en": "What is an alpha particle?"
+      },
+      "options": [
+        {
+          "uz": "Elektron",
+          "ru": "Электрон",
+          "en": "An electron"
+        },
+        {
+          "uz": "Proton",
+          "ru": "Протон",
+          "en": "A proton"
+        },
+        {
+          "uz": "Geliy atomining yadrosi",
+          "ru": "Ядро атома гелия",
+          "en": "A helium nucleus"
+        },
+        {
+          "uz": "Yuqori energiyali foton",
+          "ru": "Фотон высокой энергии",
+          "en": "A high-energy photon"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Alfa-zarra 2 ta proton va 2 ta neytrondan iborat, ya’ni u geliy atomining yadrosi. Beta-nurlanish — elektronlar oqimi, gamma-nurlanish esa yuqori energiyali fotonlar.",
+        "ru": "Альфа-частица состоит из 2 протонов и 2 нейтронов — это ядро атома гелия. Бета-излучение — поток электронов, а гамма-излучение — фотоны высокой энергии.",
+        "en": "An alpha particle is 2 protons and 2 neutrons — a helium nucleus. Beta radiation is a stream of electrons, and gamma rays are high-energy photons."
+      }
+    },
+    {
+      "id": "physics-19",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Linzalar",
+        "ru": "Линзы",
+        "en": "Lenses"
+      },
+      "question": {
+        "uz": "Yig‘uvchi linzaning fokus masofasi 50 sm. Uning optik kuchi nechaga teng?",
+        "ru": "Фокусное расстояние собирающей линзы 50 см. Чему равна её оптическая сила?",
+        "en": "A converging lens has a focal length of 50 cm. What is its optical power?"
+      },
+      "options": [
+        {
+          "uz": "0,5 dptr",
+          "ru": "0,5 дптр",
+          "en": "0.5 D"
+        },
+        {
+          "uz": "5 dptr",
+          "ru": "5 дптр",
+          "en": "5 D"
+        },
+        {
+          "uz": "50 dptr",
+          "ru": "50 дптр",
+          "en": "50 D"
+        },
+        {
+          "uz": "2 dptr",
+          "ru": "2 дптр",
+          "en": "2 D"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Optik kuch D = 1/F, bunda F metrlarda olinadi: F = 0,5 m, demak, D = 1/0,5 = 2 dptr (dioptriya).",
+        "ru": "Оптическая сила D = 1/F, где F берётся в метрах: F = 0,5 м, значит, D = 1/0,5 = 2 дптр (диоптрии).",
+        "en": "Optical power is D = 1/F with F in metres: F = 0.5 m, so D = 1/0.5 = 2 D (dioptres)."
+      }
+    },
+    {
+      "id": "physics-20",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Elektromagnit induksiya",
+        "ru": "Электромагнитная индукция",
+        "en": "Electromagnetic induction"
+      },
+      "question": {
+        "uz": "Bitta o‘ramdan iborat kontur orqali o‘tuvchi magnit oqimi 0,1 s ichida 0,5 Vb ga tekis o‘zgardi. Konturda hosil bo‘lgan induksiya EYuK ini toping.",
+        "ru": "Магнитный поток через один виток равномерно изменился на 0,5 Вб за 0,1 с. Найдите ЭДС индукции в витке.",
+        "en": "The magnetic flux through a single loop changes steadily by 0.5 Wb in 0.1 s. Find the induced EMF in the loop."
+      },
+      "options": [
+        {
+          "uz": "0,05 V",
+          "ru": "0,05 В",
+          "en": "0.05 V"
+        },
+        {
+          "uz": "5 V",
+          "ru": "5 В",
+          "en": "5 V"
+        },
+        {
+          "uz": "50 V",
+          "ru": "50 В",
+          "en": "50 V"
+        },
+        {
+          "uz": "0,5 V",
+          "ru": "0,5 В",
+          "en": "0.5 V"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Faradey qonuni bo‘yicha EYuK = ΔΦ/Δt = 0,5 Vb : 0,1 s = 5 V.",
+        "ru": "По закону Фарадея ЭДС = ΔΦ/Δt = 0,5 Вб : 0,1 с = 5 В.",
+        "en": "By Faraday’s law, EMF = ΔΦ/Δt = 0.5 Wb ÷ 0.1 s = 5 V."
+      }
+    },
+    {
+      "id": "physics-21",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Amper kuchi",
+        "ru": "Сила Ампера",
+        "en": "Ampère force"
+      },
+      "question": {
+        "uz": "Uzunligi 0,4 m bo‘lgan o‘tkazgich induksiyasi 0,5 Tl bo‘lgan bir jinsli magnit maydonda induksiya chiziqlariga tik joylashgan. Undan 2 A tok o‘tsa, o‘tkazgichga qanday kuch ta’sir qiladi?",
+        "ru": "Проводник длиной 0,4 м расположен перпендикулярно линиям однородного магнитного поля с индукцией 0,5 Тл. По нему идёт ток 2 А. Какая сила действует на проводник?",
+        "en": "A 0.4 m wire lies perpendicular to a uniform magnetic field of 0.5 T and carries a current of 2 A. What force acts on the wire?"
+      },
+      "options": [
+        {
+          "uz": "0,4 N",
+          "ru": "0,4 Н",
+          "en": "0.4 N"
+        },
+        {
+          "uz": "4 N",
+          "ru": "4 Н",
+          "en": "4 N"
+        },
+        {
+          "uz": "0,1 N",
+          "ru": "0,1 Н",
+          "en": "0.1 N"
+        },
+        {
+          "uz": "1,6 N",
+          "ru": "1,6 Н",
+          "en": "1.6 N"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Amper kuchi F = B·I·L·sin α = 0,5 · 2 · 0,4 · 1 = 0,4 N, chunki sin 90° = 1.",
+        "ru": "Сила Ампера F = B·I·L·sin α = 0,5 · 2 · 0,4 · 1 = 0,4 Н, так как sin 90° = 1.",
+        "en": "The Ampère force is F = B·I·L·sin α = 0.5 × 2 × 0.4 × 1 = 0.4 N, since sin 90° = 1."
+      }
+    },
+    {
+      "id": "physics-22",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Yarim yemirilish davri",
+        "ru": "Период полураспада",
+        "en": "Half-life"
+      },
+      "question": {
+        "uz": "Radioaktiv izotopning yarim yemirilish davri 2 sutka. 8 sutkadan keyin dastlabki yadrolarning qancha qismi yemirilmay qoladi?",
+        "ru": "Период полураспада радиоактивного изотопа 2 суток. Какая часть исходных ядер останется нераспавшейся через 8 суток?",
+        "en": "A radioactive isotope has a half-life of 2 days. What fraction of the original nuclei remains undecayed after 8 days?"
+      },
+      "options": [
+        {
+          "uz": "1/4",
+          "ru": "1/4",
+          "en": "1/4"
+        },
+        {
+          "uz": "1/8",
+          "ru": "1/8",
+          "en": "1/8"
+        },
+        {
+          "uz": "1/16",
+          "ru": "1/16",
+          "en": "1/16"
+        },
+        {
+          "uz": "1/32",
+          "ru": "1/32",
+          "en": "1/32"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "8 sutka — bu 4 ta yarim yemirilish davri. Har bir davrda yadrolar soni ikki marta kamayadi: (1/2)⁴ = 1/16.",
+        "ru": "8 суток — это 4 периода полураспада. За каждый период число ядер уменьшается вдвое: (1/2)⁴ = 1/16.",
+        "en": "8 days is 4 half-lives. Each half-life halves the number of nuclei: (1/2)⁴ = 1/16."
+      }
+    },
+    {
+      "id": "physics-23",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Fotoeffekt",
+        "ru": "Фотоэффект",
+        "en": "Photoelectric effect"
+      },
+      "question": {
+        "uz": "Energiyasi 5 eV bo‘lgan fotonlar chiqish ishi 2 eV bo‘lgan metallga tushmoqda. Fotoelektronlarning maksimal kinetik energiyasi qancha?",
+        "ru": "На металл с работой выхода 2 эВ падают фотоны с энергией 5 эВ. Чему равна максимальная кинетическая энергия фотоэлектронов?",
+        "en": "Photons with an energy of 5 eV fall on a metal whose work function is 2 eV. What is the maximum kinetic energy of the photoelectrons?"
+      },
+      "options": [
+        {
+          "uz": "7 eV",
+          "ru": "7 эВ",
+          "en": "7 eV"
+        },
+        {
+          "uz": "2,5 eV",
+          "ru": "2,5 эВ",
+          "en": "2.5 eV"
+        },
+        {
+          "uz": "10 eV",
+          "ru": "10 эВ",
+          "en": "10 eV"
+        },
+        {
+          "uz": "3 eV",
+          "ru": "3 эВ",
+          "en": "3 eV"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Eynshteyn tenglamasi: hν = A + Ek. Bundan Ek = hν − A = 5 eV − 2 eV = 3 eV.",
+        "ru": "Уравнение Эйнштейна: hν = A + Ek. Отсюда Ek = hν − A = 5 эВ − 2 эВ = 3 эВ.",
+        "en": "Einstein’s equation: hν = W + Ek. So Ek = hν − W = 5 eV − 2 eV = 3 eV."
+      }
+    },
+    {
+      "id": "physics-24",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "To‘la ichki qaytish",
+        "ru": "Полное внутреннее отражение",
+        "en": "Total internal reflection"
+      },
+      "question": {
+        "uz": "Muhitning sindirish ko‘rsatkichi 2 ga teng. Yorug‘lik bu muhitdan havoga o‘tganda to‘la ichki qaytishning chegaraviy burchagi nechaga teng?",
+        "ru": "Показатель преломления среды равен 2. Чему равен предельный угол полного внутреннего отражения при переходе света из этой среды в воздух?",
+        "en": "A medium has a refractive index of 2. What is the critical angle for total internal reflection when light passes from it into air?"
+      },
+      "options": [
+        {
+          "uz": "30°",
+          "ru": "30°",
+          "en": "30°"
+        },
+        {
+          "uz": "45°",
+          "ru": "45°",
+          "en": "45°"
+        },
+        {
+          "uz": "60°",
+          "ru": "60°",
+          "en": "60°"
+        },
+        {
+          "uz": "90°",
+          "ru": "90°",
+          "en": "90°"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Chegaraviy burchak sin α₀ = 1/n formula bilan topiladi: sin α₀ = 1/2, demak, α₀ = 30°.",
+        "ru": "Предельный угол находят по формуле sin α₀ = 1/n: sin α₀ = 1/2, значит, α₀ = 30°.",
+        "en": "The critical angle satisfies sin α₀ = 1/n: sin α₀ = 1/2, so α₀ = 30°."
+      }
+    },
+    {
+      "id": "physics-25",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Massa va energiya",
+        "ru": "Масса и энергия",
+        "en": "Mass and energy"
+      },
+      "question": {
+        "uz": "1 g massaga ekvivalent bo‘lgan energiya qancha? (c = 3·10⁸ m/s)",
+        "ru": "Какая энергия эквивалентна массе 1 г? (c = 3·10⁸ м/с)",
+        "en": "How much energy is equivalent to a mass of 1 g? (c = 3 × 10⁸ m/s)"
+      },
+      "options": [
+        {
+          "uz": "9·10¹⁶ J",
+          "ru": "9·10¹⁶ Дж",
+          "en": "9 × 10¹⁶ J"
+        },
+        {
+          "uz": "9·10¹³ J",
+          "ru": "9·10¹³ Дж",
+          "en": "9 × 10¹³ J"
+        },
+        {
+          "uz": "3·10⁵ J",
+          "ru": "3·10⁵ Дж",
+          "en": "3 × 10⁵ J"
+        },
+        {
+          "uz": "3·10⁸ J",
+          "ru": "3·10⁸ Дж",
+          "en": "3 × 10⁸ J"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "E = mc² = 0,001 kg · (3·10⁸ m/s)² = 9·10¹³ J. Massani albatta kilogrammga o‘tkazish kerak: 1 g = 0,001 kg.",
+        "ru": "E = mc² = 0,001 кг · (3·10⁸ м/с)² = 9·10¹³ Дж. Массу обязательно переводим в килограммы: 1 г = 0,001 кг.",
+        "en": "E = mc² = 0.001 kg × (3 × 10⁸ m/s)² = 9 × 10¹³ J. Remember to convert the mass to kilograms: 1 g = 0.001 kg."
+      }
+    }
+  ]
+}

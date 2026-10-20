@@ -1,0 +1,1109 @@
+{
+  "subject": "russian",
+  "questions": [
+    {
+      "id": "russian-22",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Sonlar",
+        "ru": "Числа",
+        "en": "Numbers"
+      },
+      "question": {
+        "uz": "“Uch” soni ruschada qanday aytiladi?",
+        "ru": "Какое слово обозначает число 3?",
+        "en": "Which Russian word means the number 3?"
+      },
+      "options": [
+        {
+          "uz": "два",
+          "ru": "два",
+          "en": "два"
+        },
+        {
+          "uz": "три",
+          "ru": "три",
+          "en": "три"
+        },
+        {
+          "uz": "пять",
+          "ru": "пять",
+          "en": "пять"
+        },
+        {
+          "uz": "десять",
+          "ru": "десять",
+          "en": "десять"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "“Uch” ruschada “три” bo‘ladi. “Два” — ikki, “пять” — besh, “десять” — o‘n.",
+        "ru": "Число 3 — «три». «Два» — это 2, «пять» — 5, «десять» — 10.",
+        "en": "3 is три in Russian. Два is 2, пять is 5 and десять is 10."
+      }
+    },
+    {
+      "id": "russian-23",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Hayvonlar",
+        "ru": "Животные",
+        "en": "Animals"
+      },
+      "question": {
+        "uz": "Qaysi hayvon “gav-gav” deydi? Ruscha so‘zni tanlang.",
+        "ru": "Какое животное говорит «гав-гав»?",
+        "en": "Which animal says “woof” (гав-гав in Russian)?"
+      },
+      "options": [
+        {
+          "uz": "собака",
+          "ru": "собака",
+          "en": "собака"
+        },
+        {
+          "uz": "кошка",
+          "ru": "кошка",
+          "en": "кошка"
+        },
+        {
+          "uz": "корова",
+          "ru": "корова",
+          "en": "корова"
+        },
+        {
+          "uz": "лошадь",
+          "ru": "лошадь",
+          "en": "лошадь"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“Gav-gav” deb it vovullaydi, ruschada it — “собака”.",
+        "ru": "«Гав-гав» говорит собака. Кошка говорит «мяу», а корова — «му-у».",
+        "en": "A dog says woof, and dog in Russian is собака."
+      }
+    },
+    {
+      "id": "russian-24",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Odob so‘zlari",
+        "ru": "Вежливые слова",
+        "en": "Polite words"
+      },
+      "question": {
+        "uz": "“Rahmat” so‘zi ruschada qanday aytiladi?",
+        "ru": "Каким словом мы благодарим?",
+        "en": "Which Russian word means “thank you”?"
+      },
+      "options": [
+        {
+          "uz": "привет",
+          "ru": "привет",
+          "en": "привет"
+        },
+        {
+          "uz": "пока",
+          "ru": "пока",
+          "en": "пока"
+        },
+        {
+          "uz": "пожалуйста",
+          "ru": "пожалуйста",
+          "en": "пожалуйста"
+        },
+        {
+          "uz": "спасибо",
+          "ru": "спасибо",
+          "en": "спасибо"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "“Rahmat” — “спасибо”. “Привет” — salom, “пока” — xayr, “пожалуйста” — iltimos.",
+        "ru": "Благодарят словом «спасибо». «Привет» — приветствие, «пока» — прощание, «пожалуйста» — вежливая просьба.",
+        "en": "Спасибо means thank you. Привет means hi, пока means bye and пожалуйста means please."
+      }
+    },
+    {
+      "id": "russian-25",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Ranglar",
+        "ru": "Цвета",
+        "en": "Colours"
+      },
+      "question": {
+        "uz": "Yozda maysa qanday rangda bo‘ladi? Ruscha so‘zni tanlang.",
+        "ru": "Какого цвета летом трава?",
+        "en": "What colour is grass in summer? Choose the Russian word."
+      },
+      "options": [
+        {
+          "uz": "красный",
+          "ru": "красный",
+          "en": "красный"
+        },
+        {
+          "uz": "зелёный",
+          "ru": "зелёный",
+          "en": "зелёный"
+        },
+        {
+          "uz": "белый",
+          "ru": "белый",
+          "en": "белый"
+        },
+        {
+          "uz": "чёрный",
+          "ru": "чёрный",
+          "en": "чёрный"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Yozda maysa yashil bo‘ladi, ruschada yashil — “зелёный”.",
+        "ru": "Летом трава зелёная.",
+        "en": "Grass is green in summer, and green in Russian is зелёный."
+      }
+    },
+    {
+      "id": "russian-26",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Hafta kunlari",
+        "ru": "Дни недели",
+        "en": "Days of the week"
+      },
+      "question": {
+        "uz": "Ruschada “понедельник”dan keyin qaysi kun keladi?",
+        "ru": "Какой день недели идёт после понедельника?",
+        "en": "Which day comes after понедельник (Monday) in Russian?"
+      },
+      "options": [
+        {
+          "uz": "среда",
+          "ru": "среда",
+          "en": "среда"
+        },
+        {
+          "uz": "суббота",
+          "ru": "суббота",
+          "en": "суббота"
+        },
+        {
+          "uz": "вторник",
+          "ru": "вторник",
+          "en": "вторник"
+        },
+        {
+          "uz": "воскресенье",
+          "ru": "воскресенье",
+          "en": "воскресенье"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Hafta kunlari tartibi: понедельник (dushanba), вторник (seshanba), среда (chorshanba) va hokazo.",
+        "ru": "Порядок дней недели: понедельник, вторник, среда, четверг, пятница, суббота, воскресенье.",
+        "en": "The order is: понедельник (Monday), вторник (Tuesday), среда (Wednesday) and so on."
+      }
+    },
+    {
+      "id": "russian-27",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Antonimlar",
+        "ru": "Антонимы",
+        "en": "Antonyms"
+      },
+      "question": {
+        "uz": "“Большой” so‘zining teskarisini toping.",
+        "ru": "Подберите слово, противоположное по значению слову «большой».",
+        "en": "Find the opposite of the Russian word “большой” (big)."
+      },
+      "options": [
+        {
+          "uz": "высокий",
+          "ru": "высокий",
+          "en": "высокий"
+        },
+        {
+          "uz": "длинный",
+          "ru": "длинный",
+          "en": "длинный"
+        },
+        {
+          "uz": "новый",
+          "ru": "новый",
+          "en": "новый"
+        },
+        {
+          "uz": "маленький",
+          "ru": "маленький",
+          "en": "маленький"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "“Большой” — katta, “маленький” — kichik; ular qarama-qarshi ma’noli so‘zlar.",
+        "ru": "«Большой» и «маленький» — слова с противоположным значением.",
+        "en": "Большой (big) and маленький (small) are opposites."
+      }
+    },
+    {
+      "id": "russian-28",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "O‘qib tushunish",
+        "ru": "Чтение и понимание",
+        "en": "Reading comprehension"
+      },
+      "question": {
+        "uz": "Gapni o‘qing: «Маша пьёт молоко.» Masha nima ichyapti?",
+        "ru": "Прочитайте: «Маша пьёт молоко.» Что пьёт Маша?",
+        "en": "Read: «Маша пьёт молоко.» What is Masha drinking?"
+      },
+      "options": [
+        {
+          "uz": "чай",
+          "ru": "чай",
+          "en": "чай"
+        },
+        {
+          "uz": "сок",
+          "ru": "сок",
+          "en": "сок"
+        },
+        {
+          "uz": "молоко",
+          "ru": "молоко",
+          "en": "молоко"
+        },
+        {
+          "uz": "воду",
+          "ru": "воду",
+          "en": "воду"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Gapda “молоко” (sut) so‘zi bor: Masha sut ichyapti.",
+        "ru": "В предложении сказано, что Маша пьёт молоко.",
+        "en": "The sentence says Masha is drinking молоко (milk)."
+      }
+    },
+    {
+      "id": "russian-29",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Otlarning jinsi",
+        "ru": "Род существительных",
+        "en": "Noun gender"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: «Это ___ папа.»",
+        "ru": "Вставьте нужное слово: «Это ___ папа.»",
+        "en": "Fill in the blank: «Это ___ папа.» (This is my dad.)"
+      },
+      "options": [
+        {
+          "uz": "моя",
+          "ru": "моя",
+          "en": "моя"
+        },
+        {
+          "uz": "мой",
+          "ru": "мой",
+          "en": "мой"
+        },
+        {
+          "uz": "моё",
+          "ru": "моё",
+          "en": "моё"
+        },
+        {
+          "uz": "мои",
+          "ru": "мои",
+          "en": "мои"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "“Папа” so‘zi -а bilan tugasa ham, erkak kishini bildiradi, shuning uchun “мой” ishlatiladi: мой папа.",
+        "ru": "Слово «папа» оканчивается на -а, но обозначает мужчину, поэтому говорим «мой папа».",
+        "en": "Папа ends in -а, but it names a man, so we say мой папа."
+      }
+    },
+    {
+      "id": "russian-30",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Ko‘plik shakli",
+        "ru": "Множественное число",
+        "en": "Plural nouns"
+      },
+      "question": {
+        "uz": "“Книга” so‘zining ko‘plik shaklini toping.",
+        "ru": "Образуйте множественное число от слова «книга».",
+        "en": "Find the plural form of the Russian word “книга” (book)."
+      },
+      "options": [
+        {
+          "uz": "книги",
+          "ru": "книги",
+          "en": "книги"
+        },
+        {
+          "uz": "книгы",
+          "ru": "книгы",
+          "en": "книгы"
+        },
+        {
+          "uz": "книгой",
+          "ru": "книгой",
+          "en": "книгой"
+        },
+        {
+          "uz": "книгу",
+          "ru": "книгу",
+          "en": "книгу"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“Г”, “к”, “х” harflaridan keyin “ы” emas, “и” yoziladi: книга — книги.",
+        "ru": "После г, к, х пишется и, а не ы: книга — книги.",
+        "en": "After г, к and х, Russian uses и, not ы: книга — книги."
+      }
+    },
+    {
+      "id": "russian-31",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Кто? va что? so‘roqlari",
+        "ru": "Вопросы кто? и что?",
+        "en": "Questions кто? and что?"
+      },
+      "question": {
+        "uz": "Qaysi ruscha so‘z “кто?” so‘rog‘iga javob beradi?",
+        "ru": "Какое слово отвечает на вопрос «кто?»?",
+        "en": "Which Russian word answers the question кто? (who?)"
+      },
+      "options": [
+        {
+          "uz": "стол",
+          "ru": "стол",
+          "en": "стол"
+        },
+        {
+          "uz": "мяч",
+          "ru": "мяч",
+          "en": "мяч"
+        },
+        {
+          "uz": "мальчик",
+          "ru": "мальчик",
+          "en": "мальчик"
+        },
+        {
+          "uz": "окно",
+          "ru": "окно",
+          "en": "окно"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Rus tilida jonli mavjudotlar (odamlar va hayvonlar) “кто?” so‘rog‘iga javob beradi: мальчик (bola). Jonsiz narsalar esa “что?” so‘rog‘iga javob beradi.",
+        "ru": "На вопрос «кто?» отвечают одушевлённые существительные — люди и животные: мальчик. Предметы отвечают на вопрос «что?».",
+        "en": "In Russian, living beings (people and animals) answer кто?: мальчик (boy). Objects answer что? (what?)."
+      }
+    },
+    {
+      "id": "russian-32",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Imlo",
+        "ru": "Орфография",
+        "en": "Spelling"
+      },
+      "question": {
+        "uz": "Xatosiz yozilgan ruscha so‘zni toping.",
+        "ru": "Найдите слово, написанное без ошибки.",
+        "en": "Find the Russian word that is written without a mistake."
+      },
+      "options": [
+        {
+          "uz": "жызнь",
+          "ru": "жызнь",
+          "en": "жызнь"
+        },
+        {
+          "uz": "шырокий",
+          "ru": "шырокий",
+          "en": "шырокий"
+        },
+        {
+          "uz": "лыжы",
+          "ru": "лыжы",
+          "en": "лыжы"
+        },
+        {
+          "uz": "машина",
+          "ru": "машина",
+          "en": "машина"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Qoida: “жи” va “ши” doim “и” bilan yoziladi — машина, жизнь, широкий, лыжи.",
+        "ru": "Правило: жи и ши пиши с буквой и — машина, жизнь, широкий, лыжи.",
+        "en": "Rule: жи and ши are always written with и — машина, жизнь, широкий, лыжи."
+      }
+    },
+    {
+      "id": "russian-33",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Fe’l",
+        "ru": "Глагол",
+        "en": "Verbs"
+      },
+      "question": {
+        "uz": "Gapni to‘ldiring: «Я ___ книгу.»",
+        "ru": "Вставьте нужное слово: «Я ___ книгу.»",
+        "en": "Fill in the blank: «Я ___ книгу.» (I am reading a book.)"
+      },
+      "options": [
+        {
+          "uz": "читаю",
+          "ru": "читаю",
+          "en": "читаю"
+        },
+        {
+          "uz": "читает",
+          "ru": "читает",
+          "en": "читает"
+        },
+        {
+          "uz": "читаем",
+          "ru": "читаем",
+          "en": "читаем"
+        },
+        {
+          "uz": "читаешь",
+          "ru": "читаешь",
+          "en": "читаешь"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“Я” (men) olmoshi bilan fe’l -ю (-у) qo‘shimchasini oladi: я читаю.",
+        "ru": "С местоимением «я» глагол имеет окончание -ю (-у): я читаю.",
+        "en": "With я (I), the verb ends in -ю (or -у): я читаю."
+      }
+    },
+    {
+      "id": "russian-34",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Bo‘g‘inlar",
+        "ru": "Слоги",
+        "en": "Syllables"
+      },
+      "question": {
+        "uz": "“Собака” so‘zida nechta bo‘g‘in bor?",
+        "ru": "Сколько слогов в слове «собака»?",
+        "en": "How many syllables are there in the Russian word “собака”?"
+      },
+      "options": [
+        {
+          "uz": "2",
+          "ru": "2",
+          "en": "2"
+        },
+        {
+          "uz": "3",
+          "ru": "3",
+          "en": "3"
+        },
+        {
+          "uz": "4",
+          "ru": "4",
+          "en": "4"
+        },
+        {
+          "uz": "6",
+          "ru": "6",
+          "en": "6"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Bo‘g‘inlar soni unlilar soniga teng: со-ба-ка — 3 ta unli, demak, 3 ta bo‘g‘in.",
+        "ru": "Сколько в слове гласных, столько и слогов: со-ба-ка — 3 гласные, значит, 3 слога.",
+        "en": "A word has as many syllables as vowels: со-ба-ка has 3 vowels, so 3 syllables."
+      }
+    },
+    {
+      "id": "russian-35",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Harflar va tovushlar",
+        "ru": "Буквы и звуки",
+        "en": "Letters and sounds"
+      },
+      "question": {
+        "uz": "Qaysi ruscha harf tovushni bildirmaydi?",
+        "ru": "Какая буква не обозначает звука?",
+        "en": "Which Russian letter does not stand for a sound?"
+      },
+      "options": [
+        {
+          "uz": "а",
+          "ru": "а",
+          "en": "а"
+        },
+        {
+          "uz": "м",
+          "ru": "м",
+          "en": "м"
+        },
+        {
+          "uz": "ь",
+          "ru": "ь",
+          "en": "ь"
+        },
+        {
+          "uz": "о",
+          "ru": "о",
+          "en": "о"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Yumshatish belgisi “ь” tovush bildirmaydi, u oldingi undoshning yumshoq o‘qilishini ko‘rsatadi: конь, день.",
+        "ru": "Мягкий знак (ь) не обозначает звука — он показывает мягкость предыдущего согласного: конь, день.",
+        "en": "The soft sign ь has no sound of its own; it shows the consonant before it is soft: конь, день."
+      }
+    },
+    {
+      "id": "russian-36",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Rus adabiyoti",
+        "ru": "Русская литература",
+        "en": "Russian literature"
+      },
+      "question": {
+        "uz": "«Горе от ума» komediyasining muallifi kim?",
+        "ru": "Кто автор комедии «Горе от ума»?",
+        "en": "Who wrote the comedy «Горе от ума» (Woe from Wit)?"
+      },
+      "options": [
+        {
+          "uz": "А. С. Грибоедов",
+          "ru": "А. С. Грибоедов",
+          "en": "А. С. Грибоедов"
+        },
+        {
+          "uz": "А. С. Пушкин",
+          "ru": "А. С. Пушкин",
+          "en": "А. С. Пушкин"
+        },
+        {
+          "uz": "Н. В. Гоголь",
+          "ru": "Н. В. Гоголь",
+          "en": "Н. В. Гоголь"
+        },
+        {
+          "uz": "А. П. Чехов",
+          "ru": "А. П. Чехов",
+          "en": "А. П. Чехов"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "«Горе от ума» komediyasini A. S. Griboyedov yozgan; asarning bosh qahramoni — Chatskiy.",
+        "ru": "Комедию «Горе от ума» написал А. С. Грибоедов; её главный герой — Чацкий.",
+        "en": "«Горе от ума» was written by Alexander Griboyedov; its main character is Chatsky."
+      }
+    },
+    {
+      "id": "russian-37",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Rus adabiyoti",
+        "ru": "Русская литература",
+        "en": "Russian literature"
+      },
+      "question": {
+        "uz": "«Преступление и наказание» romanini kim yozgan?",
+        "ru": "Кто написал роман «Преступление и наказание»?",
+        "en": "Who wrote the novel «Преступление и наказание» (Crime and Punishment)?"
+      },
+      "options": [
+        {
+          "uz": "Л. Н. Толстой",
+          "ru": "Л. Н. Толстой",
+          "en": "Л. Н. Толстой"
+        },
+        {
+          "uz": "И. С. Тургенев",
+          "ru": "И. С. Тургенев",
+          "en": "И. С. Тургенев"
+        },
+        {
+          "uz": "М. Ю. Лермонтов",
+          "ru": "М. Ю. Лермонтов",
+          "en": "М. Ю. Лермонтов"
+        },
+        {
+          "uz": "Ф. М. Достоевский",
+          "ru": "Ф. М. Достоевский",
+          "en": "Ф. М. Достоевский"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Romanni F. M. Dostoyevskiy yozgan; uning bosh qahramoni — Rodion Raskolnikov.",
+        "ru": "Роман написал Ф. М. Достоевский; его главный герой — Родион Раскольников.",
+        "en": "The novel was written by Fyodor Dostoevsky; its main character is Rodion Raskolnikov."
+      }
+    },
+    {
+      "id": "russian-38",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Sifatdosh",
+        "ru": "Причастие",
+        "en": "Participles"
+      },
+      "question": {
+        "uz": "Qaysi ruscha so‘z sifatdosh (причастие)?",
+        "ru": "Какое слово является причастием?",
+        "en": "Which Russian word is a participle (причастие)?"
+      },
+      "options": [
+        {
+          "uz": "читая",
+          "ru": "читая",
+          "en": "читая"
+        },
+        {
+          "uz": "читающий",
+          "ru": "читающий",
+          "en": "читающий"
+        },
+        {
+          "uz": "читать",
+          "ru": "читать",
+          "en": "читать"
+        },
+        {
+          "uz": "чтение",
+          "ru": "чтение",
+          "en": "чтение"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "“Читающий” (o‘qiyotgan) — sifatdosh, u “какой?” so‘rog‘iga javob beradi. “Читая” — ravishdosh, “читать” — infinitiv, “чтение” — ot.",
+        "ru": "«Читающий» — причастие, оно отвечает на вопрос «какой?». «Читая» — деепричастие, «читать» — инфинитив, «чтение» — существительное.",
+        "en": "Читающий (reading, as in “a reading boy”) is a participle answering какой? Читая is an adverbial participle, читать is the infinitive and чтение is a noun."
+      }
+    },
+    {
+      "id": "russian-39",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Qo‘shma gaplar",
+        "ru": "Сложные предложения",
+        "en": "Complex sentences"
+      },
+      "question": {
+        "uz": "Qaysi gap ergashgan qo‘shma gap (сложноподчинённое)?",
+        "ru": "Какое предложение является сложноподчинённым?",
+        "en": "Which sentence is complex, with a subordinate clause (сложноподчинённое)?"
+      },
+      "options": [
+        {
+          "uz": "Наступила весна, и растаял снег.",
+          "ru": "Наступила весна, и растаял снег.",
+          "en": "Наступила весна, и растаял снег."
+        },
+        {
+          "uz": "Светит солнце, поют птицы.",
+          "ru": "Светит солнце, поют птицы.",
+          "en": "Светит солнце, поют птицы."
+        },
+        {
+          "uz": "Я знаю, что ты придёшь.",
+          "ru": "Я знаю, что ты придёшь.",
+          "en": "Я знаю, что ты придёшь."
+        },
+        {
+          "uz": "Он пришёл и сел за стол.",
+          "ru": "Он пришёл и сел за стол.",
+          "en": "Он пришёл и сел за стол."
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "“Что” bog‘lovchisi ergash gapni bosh gapga bog‘laydi: Я знаю (что?), что ты придёшь. Qolganlari — bog‘langan, bog‘lovchisiz qo‘shma gap va sodda gap.",
+        "ru": "Союз «что» присоединяет придаточное к главному: Я знаю (что?), что ты придёшь. Остальные — сложносочинённое, бессоюзное и простое предложения.",
+        "en": "The conjunction что (that) attaches a subordinate clause to the main one. The others are a compound sentence, an asyndetic sentence and a simple sentence."
+      }
+    },
+    {
+      "id": "russian-40",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Rus adabiyoti",
+        "ru": "Русская литература",
+        "en": "Russian literature"
+      },
+      "question": {
+        "uz": "Pechorin qaysi asarning bosh qahramoni?",
+        "ru": "Главным героем какого произведения является Печорин?",
+        "en": "Pechorin is the main character of which work?"
+      },
+      "options": [
+        {
+          "uz": "«Евгений Онегин»",
+          "ru": "«Евгений Онегин»",
+          "en": "«Евгений Онегин»"
+        },
+        {
+          "uz": "«Отцы и дети»",
+          "ru": "«Отцы и дети»",
+          "en": "«Отцы и дети»"
+        },
+        {
+          "uz": "«Мёртвые души»",
+          "ru": "«Мёртвые души»",
+          "en": "«Мёртвые души»"
+        },
+        {
+          "uz": "«Герой нашего времени»",
+          "ru": "«Герой нашего времени»",
+          "en": "«Герой нашего времени»"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Grigoriy Pechorin — M. Yu. Lermontovning «Герой нашего времени» romani qahramoni.",
+        "ru": "Григорий Печорин — главный герой романа М. Ю. Лермонтова «Герой нашего времени».",
+        "en": "Grigory Pechorin is the hero of Mikhail Lermontov’s novel «Герой нашего времени» (A Hero of Our Time)."
+      }
+    },
+    {
+      "id": "russian-41",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Iboralar",
+        "ru": "Фразеологизмы",
+        "en": "Idioms"
+      },
+      "question": {
+        "uz": "«Как две капли воды» iborasi nimani anglatadi?",
+        "ru": "Что означает фразеологизм «как две капли воды»?",
+        "en": "What does the Russian idiom «как две капли воды» mean?"
+      },
+      "options": [
+        {
+          "uz": "очень похожи",
+          "ru": "очень похожи",
+          "en": "очень похожи"
+        },
+        {
+          "uz": "очень быстро",
+          "ru": "очень быстро",
+          "en": "очень быстро"
+        },
+        {
+          "uz": "очень мало",
+          "ru": "очень мало",
+          "en": "очень мало"
+        },
+        {
+          "uz": "очень холодно",
+          "ru": "очень холодно",
+          "en": "очень холодно"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "«Как две капли воды» — “ikki tomchi suvdek”, ya’ni bir-biriga juda o‘xshash degani.",
+        "ru": "«Как две капли воды» говорят о людях или предметах, которые очень похожи друг на друга.",
+        "en": "Like two drops of water means that two people or things look exactly alike."
+      }
+    },
+    {
+      "id": "russian-42",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Adabiy janrlar",
+        "ru": "Литературные жанры",
+        "en": "Literary genres"
+      },
+      "question": {
+        "uz": "A. S. Pushkinning «Евгений Онегин» asari qaysi janrga mansub?",
+        "ru": "К какому жанру относится «Евгений Онегин» А. С. Пушкина?",
+        "en": "What genre is Pushkin’s «Евгений Онегин» (Eugene Onegin)?"
+      },
+      "options": [
+        {
+          "uz": "поэма",
+          "ru": "поэма",
+          "en": "поэма"
+        },
+        {
+          "uz": "роман в стихах",
+          "ru": "роман в стихах",
+          "en": "роман в стихах"
+        },
+        {
+          "uz": "повесть",
+          "ru": "повесть",
+          "en": "повесть"
+        },
+        {
+          "uz": "комедия",
+          "ru": "комедия",
+          "en": "комедия"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Pushkinning o‘zi bu asarni “she’riy roman” (роман в стихах) deb atagan.",
+        "ru": "Сам Пушкин назвал «Евгения Онегина» романом в стихах.",
+        "en": "Pushkin himself called Eugene Onegin a novel in verse (роман в стихах)."
+      }
+    },
+    {
+      "id": "russian-43",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Imlo",
+        "ru": "Орфография",
+        "en": "Spelling"
+      },
+      "question": {
+        "uz": "Qaysi so‘zda tushirib qoldirilgan joyga “нн” yoziladi?",
+        "ru": "В каком слове на месте пропуска пишется НН?",
+        "en": "In which Russian word is the gap filled with нн?"
+      },
+      "options": [
+        {
+          "uz": "серебря_ый",
+          "ru": "серебря_ый",
+          "en": "серебря_ый"
+        },
+        {
+          "uz": "кожа_ый",
+          "ru": "кожа_ый",
+          "en": "кожа_ый"
+        },
+        {
+          "uz": "деревя_ый",
+          "ru": "деревя_ый",
+          "en": "деревя_ый"
+        },
+        {
+          "uz": "ветре_ый",
+          "ru": "ветре_ый",
+          "en": "ветре_ый"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "-ан-, -ян- qo‘shimchali sifatlar bitta “н” bilan yoziladi (кожаный, серебряный), lekin стеклянный, оловянный, деревянный — istisno. Ветреный ham istisno: bitta “н”.",
+        "ru": "Прилагательные с суффиксами -ан-, -ян- пишутся с одной Н (кожаный, серебряный), но стеклянный, оловянный, деревянный — исключения. Ветреный — исключение с одной Н.",
+        "en": "Adjectives with -ан-/-ян- take one н (кожаный, серебряный), but стеклянный, оловянный and деревянный are exceptions with нн. Ветреный is an exception with one н."
+      }
+    },
+    {
+      "id": "russian-44",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Rus adabiyoti",
+        "ru": "Русская литература",
+        "en": "Russian literature"
+      },
+      "question": {
+        "uz": "«Ташкент — город хлебный» qissasining muallifi kim?",
+        "ru": "Кто автор повести «Ташкент — город хлебный»?",
+        "en": "Who wrote the story «Ташкент — город хлебный» (Tashkent, the City of Bread)?"
+      },
+      "options": [
+        {
+          "uz": "М. А. Шолохов",
+          "ru": "М. А. Шолохов",
+          "en": "М. А. Шолохов"
+        },
+        {
+          "uz": "М. Горький",
+          "ru": "М. Горький",
+          "en": "М. Горький"
+        },
+        {
+          "uz": "К. Г. Паустовский",
+          "ru": "К. Г. Паустовский",
+          "en": "К. Г. Паустовский"
+        },
+        {
+          "uz": "А. С. Неверов",
+          "ru": "А. С. Неверов",
+          "en": "А. С. Неверов"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Qissani A. S. Neverov yozgan, u 1923-yilda nashr etilgan. Unda ocharchilik yillarida Volgabo‘yidan non izlab Toshkentga kelgan bola Mishka haqida hikoya qilinadi.",
+        "ru": "Повесть написал А. С. Неверов, она опубликована в 1923 году. В ней рассказывается о мальчике Мишке, который в голодные годы едет из Поволжья в Ташкент за хлебом.",
+        "en": "Alexander Neverov wrote it; it was published in 1923. It tells of a boy, Mishka, who travels from the famine-hit Volga region to Tashkent for bread."
+      }
+    },
+    {
+      "id": "russian-45",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Ravishdosh oboroti",
+        "ru": "Деепричастный оборот",
+        "en": "Adverbial participles"
+      },
+      "question": {
+        "uz": "Qaysi gapda ravishdosh oboroti (деепричастный оборот) bor?",
+        "ru": "В каком предложении есть деепричастный оборот?",
+        "en": "Which sentence contains an adverbial participle phrase (деепричастный оборот)?"
+      },
+      "options": [
+        {
+          "uz": "Прочитав книгу, я вернул её в библиотеку.",
+          "ru": "Прочитав книгу, я вернул её в библиотеку.",
+          "en": "Прочитав книгу, я вернул её в библиотеку."
+        },
+        {
+          "uz": "Книга, прочитанная мной, лежит на столе.",
+          "ru": "Книга, прочитанная мной, лежит на столе.",
+          "en": "Книга, прочитанная мной, лежит на столе."
+        },
+        {
+          "uz": "Я читал книгу и пил чай.",
+          "ru": "Я читал книгу и пил чай.",
+          "en": "Я читал книгу и пил чай."
+        },
+        {
+          "uz": "Я прочитал книгу, которую ты дал.",
+          "ru": "Я прочитал книгу, которую ты дал.",
+          "en": "Я прочитал книгу, которую ты дал."
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "“Прочитав книгу” — ravishdosh oboroti, u “что сделав?” so‘rog‘iga javob beradi. Ikkinchi gapda esa sifatdosh oboroti (прочитанная мной) bor.",
+        "ru": "«Прочитав книгу» — деепричастный оборот, он отвечает на вопрос «что сделав?». Во втором предложении — причастный оборот «прочитанная мной».",
+        "en": "Прочитав книгу (having read the book) is an adverbial participle phrase answering что сделав? The second sentence has an ordinary participle phrase instead."
+      }
+    }
+  ]
+}

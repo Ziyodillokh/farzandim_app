@@ -1,0 +1,1109 @@
+{
+  "subject": "math",
+  "questions": [
+    {
+      "id": "math-22",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Sanash",
+        "ru": "Счёт",
+        "en": "Counting"
+      },
+      "question": {
+        "uz": "19 sonidan keyin qaysi son keladi?",
+        "ru": "Какое число идёт после 19?",
+        "en": "Which number comes after 19?"
+      },
+      "options": [
+        {
+          "uz": "18",
+          "ru": "18",
+          "en": "18"
+        },
+        {
+          "uz": "29",
+          "ru": "29",
+          "en": "29"
+        },
+        {
+          "uz": "20",
+          "ru": "20",
+          "en": "20"
+        },
+        {
+          "uz": "21",
+          "ru": "21",
+          "en": "21"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Sanoqda har bir son oldingisidan 1 ta ko‘p: 19 + 1 = 20.",
+        "ru": "При счёте каждое следующее число на 1 больше предыдущего: 19 + 1 = 20.",
+        "en": "When counting, each number is 1 more than the one before: 19 + 1 = 20."
+      }
+    },
+    {
+      "id": "math-23",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Ayirish",
+        "ru": "Вычитание",
+        "en": "Subtraction"
+      },
+      "question": {
+        "uz": "Hisoblang: 15 − 8",
+        "ru": "Вычислите: 15 − 8",
+        "en": "Work out: 15 − 8"
+      },
+      "options": [
+        {
+          "uz": "7",
+          "ru": "7",
+          "en": "7"
+        },
+        {
+          "uz": "8",
+          "ru": "8",
+          "en": "8"
+        },
+        {
+          "uz": "6",
+          "ru": "6",
+          "en": "6"
+        },
+        {
+          "uz": "23",
+          "ru": "23",
+          "en": "23"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "15 dan avval 5 ni ayiramiz — 10 qoladi, keyin yana 3 ni ayiramiz — 7 qoladi. Tekshiramiz: 7 + 8 = 15.",
+        "ru": "Сначала вычтем 5 — останется 10, затем ещё 3 — останется 7. Проверка: 7 + 8 = 15.",
+        "en": "First take away 5 to get 10, then take away 3 more to get 7. Check: 7 + 8 = 15."
+      }
+    },
+    {
+      "id": "math-24",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Shakllar",
+        "ru": "Фигуры",
+        "en": "Shapes"
+      },
+      "question": {
+        "uz": "Uchburchakning nechta tomoni bor?",
+        "ru": "Сколько сторон у треугольника?",
+        "en": "How many sides does a triangle have?"
+      },
+      "options": [
+        {
+          "uz": "4",
+          "ru": "4",
+          "en": "4"
+        },
+        {
+          "uz": "2",
+          "ru": "2",
+          "en": "2"
+        },
+        {
+          "uz": "5",
+          "ru": "5",
+          "en": "5"
+        },
+        {
+          "uz": "3",
+          "ru": "3",
+          "en": "3"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Uchburchakning 3 ta tomoni va 3 ta burchagi bor — uning nomi ham shundan kelib chiqqan.",
+        "ru": "У треугольника 3 стороны и 3 угла — отсюда и его название.",
+        "en": "A triangle has 3 sides and 3 corners — that is where its name comes from."
+      }
+    },
+    {
+      "id": "math-25",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Juft va toq sonlar",
+        "ru": "Чётные и нечётные числа",
+        "en": "Even and odd numbers"
+      },
+      "question": {
+        "uz": "Qaysi son juft?",
+        "ru": "Какое число чётное?",
+        "en": "Which number is even?"
+      },
+      "options": [
+        {
+          "uz": "7",
+          "ru": "7",
+          "en": "7"
+        },
+        {
+          "uz": "16",
+          "ru": "16",
+          "en": "16"
+        },
+        {
+          "uz": "13",
+          "ru": "13",
+          "en": "13"
+        },
+        {
+          "uz": "21",
+          "ru": "21",
+          "en": "21"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Juft son 2 ga qoldiqsiz bo‘linadi: 16 : 2 = 8. Qolgan sonlar toq.",
+        "ru": "Чётное число делится на 2 без остатка: 16 : 2 = 8. Остальные числа нечётные.",
+        "en": "An even number divides by 2 with no remainder: 16 ÷ 2 = 8. The other numbers are odd."
+      }
+    },
+    {
+      "id": "math-26",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Xona birliklari",
+        "ru": "Разряды чисел",
+        "en": "Place value"
+      },
+      "question": {
+        "uz": "45 sonida nechta o‘nlik bor?",
+        "ru": "Сколько десятков в числе 45?",
+        "en": "How many tens are there in the number 45?"
+      },
+      "options": [
+        {
+          "uz": "5",
+          "ru": "5",
+          "en": "5"
+        },
+        {
+          "uz": "9",
+          "ru": "9",
+          "en": "9"
+        },
+        {
+          "uz": "4",
+          "ru": "4",
+          "en": "4"
+        },
+        {
+          "uz": "1",
+          "ru": "1",
+          "en": "1"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "45 — bu 4 ta o‘nlik va 5 ta birlik. O‘nliklar xonasida 4 raqami turibdi.",
+        "ru": "45 — это 4 десятка и 5 единиц. В разряде десятков стоит цифра 4.",
+        "en": "45 is 4 tens and 5 ones. The digit in the tens place is 4."
+      }
+    },
+    {
+      "id": "math-27",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Vaqt birliklari",
+        "ru": "Единицы времени",
+        "en": "Units of time"
+      },
+      "question": {
+        "uz": "1 soatda necha daqiqa bor?",
+        "ru": "Сколько минут в 1 часе?",
+        "en": "How many minutes are there in 1 hour?"
+      },
+      "options": [
+        {
+          "uz": "100",
+          "ru": "100",
+          "en": "100"
+        },
+        {
+          "uz": "60",
+          "ru": "60",
+          "en": "60"
+        },
+        {
+          "uz": "24",
+          "ru": "24",
+          "en": "24"
+        },
+        {
+          "uz": "30",
+          "ru": "30",
+          "en": "30"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "1 soat = 60 daqiqa. Daqiqa mili 60 daqiqada soat siferblatini bir marta to‘liq aylanib chiqadi.",
+        "ru": "1 час = 60 минут. За 60 минут минутная стрелка проходит полный круг по циферблату.",
+        "en": "1 hour = 60 minutes. In 60 minutes the minute hand goes all the way around the clock face once."
+      }
+    },
+    {
+      "id": "math-28",
+      "difficulty": 1,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Sonlar qatori",
+        "ru": "Числовой ряд",
+        "en": "Number patterns"
+      },
+      "question": {
+        "uz": "Qatorni davom ettiring: 3, 6, 9, 12, …",
+        "ru": "Продолжите ряд: 3, 6, 9, 12, …",
+        "en": "Continue the pattern: 3, 6, 9, 12, …"
+      },
+      "options": [
+        {
+          "uz": "13",
+          "ru": "13",
+          "en": "13"
+        },
+        {
+          "uz": "14",
+          "ru": "14",
+          "en": "14"
+        },
+        {
+          "uz": "18",
+          "ru": "18",
+          "en": "18"
+        },
+        {
+          "uz": "15",
+          "ru": "15",
+          "en": "15"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Har bir keyingi son oldingisidan 3 ta ko‘p: 12 + 3 = 15.",
+        "ru": "Каждое следующее число больше предыдущего на 3: 12 + 3 = 15.",
+        "en": "Each number is 3 more than the one before: 12 + 3 = 15."
+      }
+    },
+    {
+      "id": "math-29",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Ko‘paytirish jadvali",
+        "ru": "Таблица умножения",
+        "en": "Times tables"
+      },
+      "question": {
+        "uz": "Hisoblang: 8 · 9",
+        "ru": "Вычислите: 8 · 9",
+        "en": "Work out: 8 × 9"
+      },
+      "options": [
+        {
+          "uz": "72",
+          "ru": "72",
+          "en": "72"
+        },
+        {
+          "uz": "63",
+          "ru": "63",
+          "en": "63"
+        },
+        {
+          "uz": "81",
+          "ru": "81",
+          "en": "81"
+        },
+        {
+          "uz": "64",
+          "ru": "64",
+          "en": "64"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "Qulay usul: 8 · 9 = 8 · 10 − 8 = 80 − 8 = 72.",
+        "ru": "Удобный способ: 8 · 9 = 8 · 10 − 8 = 80 − 8 = 72.",
+        "en": "A handy trick: 8 × 9 = 8 × 10 − 8 = 80 − 8 = 72."
+      }
+    },
+    {
+      "id": "math-30",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Bo‘lish",
+        "ru": "Деление",
+        "en": "Division"
+      },
+      "question": {
+        "uz": "24 ta olmani 4 ta bolaga teng bo‘lib berishdi. Har bir bolaga nechta olma tegdi?",
+        "ru": "24 яблока поровну разделили между 4 детьми. Сколько яблок получил каждый?",
+        "en": "24 apples are shared equally among 4 children. How many apples does each child get?"
+      },
+      "options": [
+        {
+          "uz": "8",
+          "ru": "8",
+          "en": "8"
+        },
+        {
+          "uz": "6",
+          "ru": "6",
+          "en": "6"
+        },
+        {
+          "uz": "20",
+          "ru": "20",
+          "en": "20"
+        },
+        {
+          "uz": "28",
+          "ru": "28",
+          "en": "28"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Teng bo‘lish — bu bo‘lish amali: 24 : 4 = 6. Tekshiramiz: 6 · 4 = 24.",
+        "ru": "Разделить поровну — значит выполнить деление: 24 : 4 = 6. Проверка: 6 · 4 = 24.",
+        "en": "Sharing equally means dividing: 24 ÷ 4 = 6. Check: 6 × 4 = 24."
+      }
+    },
+    {
+      "id": "math-31",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Masalalar",
+        "ru": "Задачи",
+        "en": "Word problems"
+      },
+      "question": {
+        "uz": "Do‘konda 30 ta shar bor edi. 12 tasi sotildi, keyin yana 8 ta shar keltirildi. Do‘konda nechta shar bo‘ldi?",
+        "ru": "В магазине было 30 шаров. 12 продали, а потом привезли ещё 8. Сколько шаров стало в магазине?",
+        "en": "A shop had 30 balloons. It sold 12 and then got 8 more. How many balloons does the shop have now?"
+      },
+      "options": [
+        {
+          "uz": "18",
+          "ru": "18",
+          "en": "18"
+        },
+        {
+          "uz": "34",
+          "ru": "34",
+          "en": "34"
+        },
+        {
+          "uz": "50",
+          "ru": "50",
+          "en": "50"
+        },
+        {
+          "uz": "26",
+          "ru": "26",
+          "en": "26"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Avval sotilganini ayiramiz: 30 − 12 = 18. Keyin keltirilganini qo‘shamiz: 18 + 8 = 26.",
+        "ru": "Сначала вычтем проданные: 30 − 12 = 18. Затем прибавим привезённые: 18 + 8 = 26.",
+        "en": "First subtract the ones sold: 30 − 12 = 18. Then add the new ones: 18 + 8 = 26."
+      }
+    },
+    {
+      "id": "math-32",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Perimetr",
+        "ru": "Периметр",
+        "en": "Perimeter"
+      },
+      "question": {
+        "uz": "Kvadratning tomoni 5 sm. Uning perimetri nechaga teng?",
+        "ru": "Сторона квадрата 5 см. Чему равен его периметр?",
+        "en": "A square has sides of 5 cm. What is its perimeter?"
+      },
+      "options": [
+        {
+          "uz": "10 sm",
+          "ru": "10 см",
+          "en": "10 cm"
+        },
+        {
+          "uz": "25 sm",
+          "ru": "25 см",
+          "en": "25 cm"
+        },
+        {
+          "uz": "20 sm",
+          "ru": "20 см",
+          "en": "20 cm"
+        },
+        {
+          "uz": "15 sm",
+          "ru": "15 см",
+          "en": "15 cm"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Kvadratning 4 ta tomoni teng, shuning uchun perimetri 5 · 4 = 20 sm.",
+        "ru": "У квадрата 4 равные стороны, поэтому его периметр равен 5 · 4 = 20 см.",
+        "en": "A square has 4 equal sides, so its perimeter is 5 × 4 = 20 cm."
+      }
+    },
+    {
+      "id": "math-33",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Uzunlik birliklari",
+        "ru": "Единицы длины",
+        "en": "Units of length"
+      },
+      "question": {
+        "uz": "3 m 20 sm necha santimetrga teng?",
+        "ru": "Сколько сантиметров в 3 м 20 см?",
+        "en": "How many centimetres are there in 3 m 20 cm?"
+      },
+      "options": [
+        {
+          "uz": "320 sm",
+          "ru": "320 см",
+          "en": "320 cm"
+        },
+        {
+          "uz": "32 sm",
+          "ru": "32 см",
+          "en": "32 cm"
+        },
+        {
+          "uz": "3020 sm",
+          "ru": "3020 см",
+          "en": "3020 cm"
+        },
+        {
+          "uz": "50 sm",
+          "ru": "50 см",
+          "en": "50 cm"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "1 m = 100 sm, demak, 3 m = 300 sm. 300 + 20 = 320 sm.",
+        "ru": "1 м = 100 см, значит, 3 м = 300 см. 300 + 20 = 320 см.",
+        "en": "1 m = 100 cm, so 3 m = 300 cm. 300 + 20 = 320 cm."
+      }
+    },
+    {
+      "id": "math-34",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Amallar tartibi",
+        "ru": "Порядок действий",
+        "en": "Order of operations"
+      },
+      "question": {
+        "uz": "Hisoblang: 2 + 3 · 4",
+        "ru": "Вычислите: 2 + 3 · 4",
+        "en": "Work out: 2 + 3 × 4"
+      },
+      "options": [
+        {
+          "uz": "20",
+          "ru": "20",
+          "en": "20"
+        },
+        {
+          "uz": "14",
+          "ru": "14",
+          "en": "14"
+        },
+        {
+          "uz": "24",
+          "ru": "24",
+          "en": "24"
+        },
+        {
+          "uz": "9",
+          "ru": "9",
+          "en": "9"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "Avval ko‘paytirish bajariladi: 3 · 4 = 12, keyin qo‘shish: 2 + 12 = 14.",
+        "ru": "Сначала выполняется умножение: 3 · 4 = 12, затем сложение: 2 + 12 = 14.",
+        "en": "Multiplication comes first: 3 × 4 = 12, then addition: 2 + 12 = 14."
+      }
+    },
+    {
+      "id": "math-35",
+      "difficulty": 2,
+      "grades": [
+        1,
+        4
+      ],
+      "topic": {
+        "uz": "Noma’lum son",
+        "ru": "Неизвестное число",
+        "en": "Missing number"
+      },
+      "question": {
+        "uz": "Bo‘sh katakka qaysi son yoziladi: □ + 25 = 60?",
+        "ru": "Какое число нужно вписать в окошко: □ + 25 = 60?",
+        "en": "Which number goes in the box: □ + 25 = 60?"
+      },
+      "options": [
+        {
+          "uz": "85",
+          "ru": "85",
+          "en": "85"
+        },
+        {
+          "uz": "45",
+          "ru": "45",
+          "en": "45"
+        },
+        {
+          "uz": "25",
+          "ru": "25",
+          "en": "25"
+        },
+        {
+          "uz": "35",
+          "ru": "35",
+          "en": "35"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Noma’lum qo‘shiluvchini topish uchun yig‘indidan ma’lum qo‘shiluvchini ayiramiz: 60 − 25 = 35.",
+        "ru": "Чтобы найти неизвестное слагаемое, из суммы вычитают известное слагаемое: 60 − 25 = 35.",
+        "en": "To find the missing addend, subtract the known addend from the sum: 60 − 25 = 35."
+      }
+    },
+    {
+      "id": "math-36",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Logarifmlar",
+        "ru": "Логарифмы",
+        "en": "Logarithms"
+      },
+      "question": {
+        "uz": "log₂ 8 ning qiymatini toping.",
+        "ru": "Найдите значение log₂ 8.",
+        "en": "Find the value of log₂ 8."
+      },
+      "options": [
+        {
+          "uz": "2",
+          "ru": "2",
+          "en": "2"
+        },
+        {
+          "uz": "4",
+          "ru": "4",
+          "en": "4"
+        },
+        {
+          "uz": "3",
+          "ru": "3",
+          "en": "3"
+        },
+        {
+          "uz": "6",
+          "ru": "6",
+          "en": "6"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "log₂ 8 — 8 ni hosil qilish uchun 2 ni qaysi darajaga ko‘tarish kerakligini bildiradi: 2³ = 8, demak, javob 3.",
+        "ru": "log₂ 8 — это показатель степени, в которую нужно возвести 2, чтобы получить 8: 2³ = 8, значит, ответ 3.",
+        "en": "log₂ 8 is the power you raise 2 to in order to get 8: 2³ = 8, so the answer is 3."
+      }
+    },
+    {
+      "id": "math-37",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Trigonometriya",
+        "ru": "Тригонометрия",
+        "en": "Trigonometry"
+      },
+      "question": {
+        "uz": "sin 30° nechaga teng?",
+        "ru": "Чему равен sin 30°?",
+        "en": "What is sin 30°?"
+      },
+      "options": [
+        {
+          "uz": "1/2",
+          "ru": "1/2",
+          "en": "1/2"
+        },
+        {
+          "uz": "√3/2",
+          "ru": "√3/2",
+          "en": "√3/2"
+        },
+        {
+          "uz": "√2/2",
+          "ru": "√2/2",
+          "en": "√2/2"
+        },
+        {
+          "uz": "1",
+          "ru": "1",
+          "en": "1"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "To‘g‘ri burchakli uchburchakda 30° li burchak qarshisidagi katet gipotenuzaning yarmiga teng, shuning uchun sin 30° = 1/2.",
+        "ru": "В прямоугольном треугольнике катет, лежащий против угла 30°, равен половине гипотенузы, поэтому sin 30° = 1/2.",
+        "en": "In a right triangle, the leg opposite a 30° angle is half the hypotenuse, so sin 30° = 1/2."
+      }
+    },
+    {
+      "id": "math-38",
+      "difficulty": 1,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Hosila",
+        "ru": "Производная",
+        "en": "Derivatives"
+      },
+      "question": {
+        "uz": "f(x) = x³ funksiyaning hosilasini toping.",
+        "ru": "Найдите производную функции f(x) = x³.",
+        "en": "Find the derivative of f(x) = x³."
+      },
+      "options": [
+        {
+          "uz": "x²",
+          "ru": "x²",
+          "en": "x²"
+        },
+        {
+          "uz": "3x",
+          "ru": "3x",
+          "en": "3x"
+        },
+        {
+          "uz": "x⁴/4",
+          "ru": "x⁴/4",
+          "en": "x⁴/4"
+        },
+        {
+          "uz": "3x²",
+          "ru": "3x²",
+          "en": "3x²"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "Daraja hosilasi formulasi: (xⁿ)′ = n·xⁿ⁻¹. Demak, (x³)′ = 3x². x⁴/4 esa hosila emas, boshlang‘ich funksiya.",
+        "ru": "По формуле (xⁿ)′ = n·xⁿ⁻¹ получаем (x³)′ = 3x². А x⁴/4 — это не производная, а первообразная.",
+        "en": "By the power rule (xⁿ)′ = n·xⁿ⁻¹, so (x³)′ = 3x². x⁴/4 is an antiderivative, not the derivative."
+      }
+    },
+    {
+      "id": "math-39",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Ko‘rsatkichli tenglamalar",
+        "ru": "Показательные уравнения",
+        "en": "Exponential equations"
+      },
+      "question": {
+        "uz": "Tenglamani yeching: 2ˣ⁺¹ = 16",
+        "ru": "Решите уравнение: 2ˣ⁺¹ = 16",
+        "en": "Solve the equation: 2ˣ⁺¹ = 16"
+      },
+      "options": [
+        {
+          "uz": "x = 4",
+          "ru": "x = 4",
+          "en": "x = 4"
+        },
+        {
+          "uz": "x = 3",
+          "ru": "x = 3",
+          "en": "x = 3"
+        },
+        {
+          "uz": "x = 7",
+          "ru": "x = 7",
+          "en": "x = 7"
+        },
+        {
+          "uz": "x = 8",
+          "ru": "x = 8",
+          "en": "x = 8"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "16 = 2⁴, shuning uchun x + 1 = 4, bundan x = 3.",
+        "ru": "16 = 2⁴, поэтому x + 1 = 4, откуда x = 3.",
+        "en": "16 = 2⁴, so x + 1 = 4, which gives x = 3."
+      }
+    },
+    {
+      "id": "math-40",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Hosila",
+        "ru": "Производная",
+        "en": "Derivatives"
+      },
+      "question": {
+        "uz": "f(x) = x² − 4x + 1 bo‘lsa, f′(3) ni toping.",
+        "ru": "Найдите f′(3), если f(x) = x² − 4x + 1.",
+        "en": "Find f′(3) if f(x) = x² − 4x + 1."
+      },
+      "options": [
+        {
+          "uz": "2",
+          "ru": "2",
+          "en": "2"
+        },
+        {
+          "uz": "−2",
+          "ru": "−2",
+          "en": "−2"
+        },
+        {
+          "uz": "6",
+          "ru": "6",
+          "en": "6"
+        },
+        {
+          "uz": "10",
+          "ru": "10",
+          "en": "10"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "f′(x) = 2x − 4, demak, f′(3) = 2 · 3 − 4 = 2. −2 esa funksiyaning o‘z qiymati: f(3) = −2.",
+        "ru": "f′(x) = 2x − 4, значит, f′(3) = 2 · 3 − 4 = 2. А −2 — это значение самой функции: f(3) = −2.",
+        "en": "f′(x) = 2x − 4, so f′(3) = 2 × 3 − 4 = 2. −2 is the value of the function itself: f(3) = −2."
+      }
+    },
+    {
+      "id": "math-41",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Ehtimollik",
+        "ru": "Вероятность",
+        "en": "Probability"
+      },
+      "question": {
+        "uz": "Ikkita o‘yin soqqasi tashlandi. Tushgan ochkolar yig‘indisi 7 ga teng bo‘lish ehtimoli qancha?",
+        "ru": "Бросают два игральных кубика. Какова вероятность, что сумма выпавших очков равна 7?",
+        "en": "Two dice are rolled. What is the probability that the total score is 7?"
+      },
+      "options": [
+        {
+          "uz": "7/36",
+          "ru": "7/36",
+          "en": "7/36"
+        },
+        {
+          "uz": "1/12",
+          "ru": "1/12",
+          "en": "1/12"
+        },
+        {
+          "uz": "1/6",
+          "ru": "1/6",
+          "en": "1/6"
+        },
+        {
+          "uz": "1/36",
+          "ru": "1/36",
+          "en": "1/36"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "Jami 6 · 6 = 36 ta teng imkoniyatli natija bor. Ulardan 6 tasida yig‘indi 7: (1;6), (2;5), (3;4), (4;3), (5;2), (6;1). P = 6/36 = 1/6.",
+        "ru": "Всего 6 · 6 = 36 равновозможных исходов. Сумму 7 дают 6 из них: (1;6), (2;5), (3;4), (4;3), (5;2), (6;1). P = 6/36 = 1/6.",
+        "en": "There are 6 × 6 = 36 equally likely outcomes. Six of them give 7: (1,6), (2,5), (3,4), (4,3), (5,2), (6,1). P = 6/36 = 1/6."
+      }
+    },
+    {
+      "id": "math-42",
+      "difficulty": 2,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Arifmetik progressiya",
+        "ru": "Арифметическая прогрессия",
+        "en": "Arithmetic progression"
+      },
+      "question": {
+        "uz": "Arifmetik progressiyada a₁ = 3 va d = 4. a₁₀ ni toping.",
+        "ru": "В арифметической прогрессии a₁ = 3 и d = 4. Найдите a₁₀.",
+        "en": "In an arithmetic progression a₁ = 3 and d = 4. Find a₁₀."
+      },
+      "options": [
+        {
+          "uz": "43",
+          "ru": "43",
+          "en": "43"
+        },
+        {
+          "uz": "40",
+          "ru": "40",
+          "en": "40"
+        },
+        {
+          "uz": "36",
+          "ru": "36",
+          "en": "36"
+        },
+        {
+          "uz": "39",
+          "ru": "39",
+          "en": "39"
+        }
+      ],
+      "answer": 3,
+      "explanation": {
+        "uz": "n-had formulasi bo‘yicha a₁₀ = a₁ + 9d = 3 + 9 · 4 = 39. Birinchi haddan o‘ninchigacha 9 ta qadam bor, 10 ta emas.",
+        "ru": "По формуле n-го члена a₁₀ = a₁ + 9d = 3 + 9 · 4 = 39. От первого члена до десятого 9 шагов, а не 10.",
+        "en": "By the nth-term formula a₁₀ = a₁ + 9d = 3 + 9 × 4 = 39. There are 9 steps from the 1st term to the 10th, not 10."
+      }
+    },
+    {
+      "id": "math-43",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Integral",
+        "ru": "Интеграл",
+        "en": "Integrals"
+      },
+      "question": {
+        "uz": "3x² funksiyadan 0 dan 2 gacha olingan aniq integralni hisoblang.",
+        "ru": "Вычислите определённый интеграл от функции 3x² на отрезке от 0 до 2.",
+        "en": "Calculate the definite integral of 3x² from 0 to 2."
+      },
+      "options": [
+        {
+          "uz": "8",
+          "ru": "8",
+          "en": "8"
+        },
+        {
+          "uz": "12",
+          "ru": "12",
+          "en": "12"
+        },
+        {
+          "uz": "6",
+          "ru": "6",
+          "en": "6"
+        },
+        {
+          "uz": "24",
+          "ru": "24",
+          "en": "24"
+        }
+      ],
+      "answer": 0,
+      "explanation": {
+        "uz": "3x² ning boshlang‘ich funksiyasi x³. Nyuton–Leybnis formulasi bo‘yicha: 2³ − 0³ = 8.",
+        "ru": "Первообразная для 3x² — это x³. По формуле Ньютона — Лейбница: 2³ − 0³ = 8.",
+        "en": "An antiderivative of 3x² is x³. By the Newton–Leibniz formula: 2³ − 0³ = 8."
+      }
+    },
+    {
+      "id": "math-44",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Logarifmik tenglamalar",
+        "ru": "Логарифмические уравнения",
+        "en": "Logarithmic equations"
+      },
+      "question": {
+        "uz": "Tenglamani yeching: log₃(x − 1) + log₃(x + 1) = 1",
+        "ru": "Решите уравнение: log₃(x − 1) + log₃(x + 1) = 1",
+        "en": "Solve the equation: log₃(x − 1) + log₃(x + 1) = 1"
+      },
+      "options": [
+        {
+          "uz": "x = −2 va x = 2",
+          "ru": "x = −2 и x = 2",
+          "en": "x = −2 and x = 2"
+        },
+        {
+          "uz": "x = 4",
+          "ru": "x = 4",
+          "en": "x = 4"
+        },
+        {
+          "uz": "x = 2",
+          "ru": "x = 2",
+          "en": "x = 2"
+        },
+        {
+          "uz": "x = √2",
+          "ru": "x = √2",
+          "en": "x = √2"
+        }
+      ],
+      "answer": 2,
+      "explanation": {
+        "uz": "log₃((x − 1)(x + 1)) = 1, ya’ni x² − 1 = 3 va x = ±2. Lekin x − 1 > 0 bo‘lishi shart, shuning uchun faqat x = 2 mos keladi.",
+        "ru": "log₃((x − 1)(x + 1)) = 1, то есть x² − 1 = 3 и x = ±2. Но должно быть x − 1 > 0, поэтому подходит только x = 2.",
+        "en": "log₃((x − 1)(x + 1)) = 1, so x² − 1 = 3 and x = ±2. But x − 1 must be positive, so only x = 2 works."
+      }
+    },
+    {
+      "id": "math-45",
+      "difficulty": 3,
+      "grades": [
+        10,
+        11
+      ],
+      "topic": {
+        "uz": "Trigonometriya",
+        "ru": "Тригонометрия",
+        "en": "Trigonometry"
+      },
+      "question": {
+        "uz": "y = 3 sin x + 4 cos x funksiyaning eng katta qiymatini toping.",
+        "ru": "Найдите наибольшее значение функции y = 3 sin x + 4 cos x.",
+        "en": "Find the greatest value of the function y = 3 sin x + 4 cos x."
+      },
+      "options": [
+        {
+          "uz": "7",
+          "ru": "7",
+          "en": "7"
+        },
+        {
+          "uz": "5",
+          "ru": "5",
+          "en": "5"
+        },
+        {
+          "uz": "4",
+          "ru": "4",
+          "en": "4"
+        },
+        {
+          "uz": "1",
+          "ru": "1",
+          "en": "1"
+        }
+      ],
+      "answer": 1,
+      "explanation": {
+        "uz": "a sin x + b cos x ning eng katta qiymati √(a² + b²) ga teng: √(9 + 16) = 5. 7 bo‘lmaydi, chunki sin x va cos x bir vaqtda 1 ga teng bo‘la olmaydi.",
+        "ru": "Наибольшее значение a sin x + b cos x равно √(a² + b²) = √(9 + 16) = 5. Ответ 7 неверен: sin x и cos x не равны 1 одновременно.",
+        "en": "The greatest value of a sin x + b cos x is √(a² + b²) = √(9 + 16) = 5. It cannot be 7, because sin x and cos x are never both 1 at once."
+      }
+    }
+  ]
+}
