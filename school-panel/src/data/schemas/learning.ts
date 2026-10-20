@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { isoDateSchema, msg, optionalText } from './common';
 
 export const MATERIAL_KINDS = ['AUDIOBOOK', 'VIDEO', 'TEST'] as const;
-export const SUBJECTS = ['MATH', 'ENGLISH', 'HISTORY', 'LITERATURE', 'GEOGRAPHY', 'BIOLOGY', 'IT', 'NATIVE'] as const;
+export const SUBJECTS = ['MATH', 'ENGLISH', 'HISTORY', 'LITERATURE', 'GEOGRAPHY', 'BIOLOGY', 'IT', 'NATIVE', 'PHYSICS', 'CHEMISTRY', 'RUSSIAN'] as const;
 
 /** Topshiriq: material + sinf(lar) + muddat + izoh. */
 export const assignmentInputSchema = z.object({

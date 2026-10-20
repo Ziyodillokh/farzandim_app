@@ -5,6 +5,7 @@ import { careHttp } from './services/care';
 import { classesHttp } from './services/classes';
 import { commsHttp } from './services/comms';
 import { dashboardHttp, notificationsHttp, reportsHttp, searchHttp } from './services/insights';
+import { learningHttp } from './services/learning';
 import { profileHttp } from './services/profile';
 import { schoolHttp } from './services/school';
 import { schoolModeHttp } from './services/school-mode';
@@ -28,7 +29,7 @@ export function createHttpApi(): Api {
     schoolMode: schoolModeHttp,
     comms: commsHttp,
     care: careHttp,
-    learning: notAvailable('learning'),
+    learning: learningHttp,
     reports: reportsHttp,
     dashboard: dashboardHttp,
     profile: profileHttp,

@@ -1,7 +1,18 @@
 import type { Id, IsoDate, IsoDateTime } from './common';
 
 export type MaterialKind = 'AUDIOBOOK' | 'VIDEO' | 'TEST';
-export type Subject = 'MATH' | 'ENGLISH' | 'HISTORY' | 'LITERATURE' | 'GEOGRAPHY' | 'BIOLOGY' | 'IT' | 'NATIVE';
+export type Subject =
+  | 'MATH'
+  | 'ENGLISH'
+  | 'HISTORY'
+  | 'LITERATURE'
+  | 'GEOGRAPHY'
+  | 'BIOLOGY'
+  | 'IT'
+  | 'NATIVE'
+  | 'PHYSICS'
+  | 'CHEMISTRY'
+  | 'RUSSIAN';
 
 export type LearningMaterial = {
   id: Id;

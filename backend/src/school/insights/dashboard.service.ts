@@ -15,6 +15,7 @@ import { nextOccurrence, RepeatKind, toLocalDateTime } from '../comms/comms-time
 import { SchoolModeReadsService } from '../school-mode/school-mode-reads.service';
 import { isSchoolDay, tashkentMinute } from '../school-mode/school-mode-time';
 import { toShiftLike } from '../school-mode/school-mode-store';
+import { SchoolLearningService } from '../learning/school-learning.service';
 import { GuardiansService } from '../students/guardians.service';
 import { NotificationsService } from './notifications.service';
 
@@ -34,13 +35,14 @@ export class DashboardService {
     private readonly guardians: GuardiansService,
     private readonly careInsights: CareInsightsService,
     private readonly notifications: NotificationsService,
+    private readonly learning: SchoolLearningService,
   ) {}
 
   async overview(actor: SchoolActor) {
     const can = (p: Parameters<typeof actorCan>[1]) => actorCan(actor, p);
     const now = new Date();
     const today = tashkentDay(now);
-    const [schoolDay, attendance, schoolMode, parents, open, care, careInbox, upcoming, safety] = await Promise.all([
+    const [schoolDay, attendance, schoolMode, parents, open, care, careInbox, upcoming, safety, learning] = await Promise.all([
       this.schoolDay(actor, today),
       can('attendance.view') ? this.attendance(actor) : null,
       can('schoolMode.view') ? this.schoolModeSummary(actor) : null,
@@ -52,6 +54,7 @@ export class DashboardService {
       this.prisma.schoolStaffNotification.count({
         where: { ...this.notifications.storedWhere(actor), kind: 'SAFETY_SIGNAL', at: { gte: new Date(now.getTime() - SAFETY_WINDOW_MS), lte: now } },
       }),
+      can('learning.view') ? this.learning.summary(actor) : null,
     ]);
     return {
       date: today,
@@ -64,13 +67,13 @@ export class DashboardService {
       schoolMode,
       parents,
       openRequests: open,
-      // Rivojlanish (psixologik testlar) va maktab Growth — tegishli modullar ulanganda.
+      // Rivojlanish (psixologik testlar) — development moduli ulanganda.
       development: null,
       alerts: await this.alerts(actor, { safety, absent: attendance?.kpi.counts.absent ?? null, schoolMode, open, careInbox }),
       upcoming,
       care,
       careInbox: careInbox?.view ?? null,
-      learning: null,
+      learning,
     };
   }
 

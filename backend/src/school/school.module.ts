@@ -11,6 +11,7 @@ import { ClassesController } from './classes/classes.controller';
 import { ClassesService } from './classes/classes.service';
 import { CommsModule } from './comms/comms.module';
 import { InsightsModule } from './insights/insights.module';
+import { SchoolLearningModule } from './learning/school-learning.module';
 import { ProfileController } from './profile/profile.controller';
 import { ProfileService } from './profile/profile.service';
 import { SchoolCoreModule } from './school-core.module';
@@ -22,7 +23,7 @@ import { SchoolInfoController } from './structure/school-info.controller';
 import { SchoolInfoService } from './structure/school-info.service';
 
 @Module({
-  imports: [SchoolCoreModule, StudentsModule, AttendanceModule, CommsModule, SchoolModeModule, CareModule, InsightsModule],
+  imports: [SchoolCoreModule, StudentsModule, AttendanceModule, CommsModule, SchoolModeModule, CareModule, InsightsModule, SchoolLearningModule],
   controllers: [
     SchoolAuthController,
     SchoolInfoController,

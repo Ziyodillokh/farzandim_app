@@ -73,6 +73,9 @@ export const enums = {
     BIOLOGY: 'Biologiya',
     IT: 'Informatika',
     NATIVE: 'Ona tili',
+    PHYSICS: 'Fizika',
+    CHEMISTRY: 'Kimyo',
+    RUSSIAN: 'Rus tili',
   },
   auditModule: {
     AUTH: 'Kirish',

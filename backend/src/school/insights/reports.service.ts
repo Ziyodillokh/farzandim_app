@@ -8,6 +8,7 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { addDays, isoWeekday, tashkentDay, tashkentDayStart } from '../../common/time/tashkent';
 import { actorCan, assertCan, SchoolActor } from '../auth/school-actor';
 import { CareInsightsService } from '../care/care-insights.service';
+import { SchoolLearningService } from '../learning/school-learning.service';
 import { CARE_MIN_GROUP, maskSmallCount } from '../care/care-suppression';
 import { deviceChildSelect, deviceStateOf } from '../common/device-state';
 import { compareClasses } from '../common/list-query';
@@ -31,6 +32,7 @@ export class ReportsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly careInsights: CareInsightsService,
+    private readonly learning: SchoolLearningService,
   ) {}
 
   async monthly(actor: SchoolActor, query: unknown) {
@@ -50,12 +52,13 @@ export class ReportsService {
     ]);
     const anyShiftDay = (d: string) => shifts.some((s) => isSchoolDay(d, toShiftLike(s), holidays));
     const can = (p: Parameters<typeof actorCan>[1]) => actorCan(actor, p);
-    const [attendance, parents, schoolMode, messages, care] = await Promise.all([
+    const [attendance, parents, schoolMode, messages, care, learning] = await Promise.all([
       can('attendance.history') && days.length ? this.attendance(actor.schoolId, first, until) : can('attendance.history') ? this.emptyAttendance() : null,
       can('students.view') ? this.parents(actor.schoolId) : null,
       can('schoolMode.view') ? this.schoolMode(actor.schoolId, range) : null,
       can('messages.view') ? this.messages(actor.schoolId, range, now) : null,
       can('care.aggregate') ? this.care(actor, month, range) : null,
+      can('learning.view') ? this.learning.monthSummary(actor, first, last) : null,
     ]);
     return {
       month,
@@ -68,7 +71,7 @@ export class ReportsService {
       schoolMode,
       messages,
       care,
-      learning: null,
+      learning,
     };
   }
 
