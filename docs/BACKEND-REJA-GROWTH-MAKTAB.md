@@ -1,6 +1,6 @@
 # Backend rejasi: Parvoz Growth (Daily Learning) va Parvoz School
 
-Holat: 2026-10-19. Branch: `feat/learning-school-backend` (worktree
+Holat: 2026-10-20 (bajarilganlar — 5-bo'limda). Branch: `feat/learning-school-backend` (worktree
 `farzandim_app-backend`). `main`ga push = production deploy (backend +
 `prisma migrate deploy`) — har bosqich oxirida faqat ruxsat bilan.
 
@@ -167,3 +167,35 @@ migratsiya (`ON CONFLICT (externalId) DO NOTHING`).
 - Xabarlar — avval push; SMS (pullik) keyinroq, maktab sozlamasi bilan.
 - Daily Learning DON — fan bo'yicha kunlik birinchi urinishga.
 - Ota-ona bolaning sinf / fanlarini ham o'zgartira oladi.
+
+## 5. Bajarilganlar (2026-10-20)
+
+Barcha ishlar `feat/learning-school-backend` branch'ida, `main`ga merge /
+deploy qilinmagan. Har bosqich: backend + e2e (haqiqiy Postgres) + panel
+http adapteri (`NEXT_PUBLIC_DATA_SOURCE=http`).
+
+| Bosqich | Holat | Asosiy natija |
+|---|---|---|
+| B0 | ✅ | e2e infratuzilma, atomik DON, Toshkent kuni, CI `backend-quality` |
+| G1 | ✅ | Daily Learning API, adaptiv tanlov, haftalik hisobot, admin savollar |
+| G2 | ✅ | bola ilovasi serverga ulandi (`feat/growth-redesign`) |
+| Savollar | ✅ | 174 + 156 (2-to'lqin: 1–4 va 10–11-sinflar) |
+| S1 | ✅ | maktab auth (refresh 30 s imtiyoz oynasi), tuzilma, sinflar, xodimlar, audit |
+| S2 | ✅ | o'quvchilar, ota-onalar, CSV import, 360° karta, Parvoz Parents bog'lanishi |
+| S3 | ✅ | davomat, HMAC kiosk QR, bola check-in, ota-ona push, kelmaganlar cron |
+| S4 | ✅ | e'lonlar (yetkazish / o'qildi), eslatmalar, to'lovlar, tasdiqlash, dispatcher |
+| S5 | ✅ | School Mode; Android'da virtual "Maktab" jadvallari (ilova o'zgarmaydi) |
+| S6 | ✅ | bosh sahifa, bildirishnomalar, oylik hisobot, qidiruv |
+| S7a | ✅ | Bola ovozi: shifrlangan javoblar, K=5 atomlar, murojaatlar, protokol |
+| S7b | ⏳ | psixologik testlar (agent) |
+| S7c | ⬜ | rivojlanish dashboardlari (S7b yordamchilaridan) |
+| S8 | ✅ | sinf faolligi, qiziqishlar, materiallar, topshiriqlar |
+
+**Qolgan ishlar:**
+- S7b → S7c; xavfsizlik ko'rigi topilmalarini tuzatish.
+- Parvoz Parents ilovasi: taklif kodi, e'lonlar, davomat, erta ketish, to'lovlar.
+- Parvoz Growth ilovasi: kiosk QR skaner, so'rovnoma va murojaat, psixologik
+  test, maktab topshiriqlari.
+- Production: `SCHOOL_DATA_KEY` (32 bayt base64) env'ga qo'shilishi kerak —
+  aks holda Bola ovozi / testlar yozuvi 503.
+- Pilot: `scripts/school/create-school.ts` bilan maktab, panel http rejimda.
