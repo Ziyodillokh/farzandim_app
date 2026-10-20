@@ -3,6 +3,7 @@ import { notAvailable } from './not-available';
 import { classesHttp } from './services/classes';
 import { profileHttp } from './services/profile';
 import { schoolHttp } from './services/school';
+import { schoolModeHttp } from './services/school-mode';
 import { auditHttp, staffHttp } from './services/staff';
 import { guardiansHttp, parentsHttp, studentsHttp } from './services/students';
 
@@ -20,7 +21,7 @@ export function createHttpApi(): Api {
     audit: auditHttp,
     search: notAvailable('search'),
     attendance: notAvailable('attendance'),
-    schoolMode: notAvailable('schoolMode'),
+    schoolMode: schoolModeHttp,
     comms: notAvailable('comms'),
     care: notAvailable('care'),
     learning: notAvailable('learning'),
