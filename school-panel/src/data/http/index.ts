@@ -1,5 +1,6 @@
 import type { Api } from '../api';
 import { notAvailable } from './not-available';
+import { assessmentsHttp } from './services/assessments';
 import { attendanceHttp } from './services/attendance';
 import { careHttp } from './services/care';
 import { classesHttp } from './services/classes';
@@ -33,7 +34,7 @@ export function createHttpApi(): Api {
     reports: reportsHttp,
     dashboard: dashboardHttp,
     profile: profileHttp,
-    assessments: notAvailable('assessments'),
+    assessments: assessmentsHttp,
     development: notAvailable('development'),
     notifications: notificationsHttp,
     parents: parentsHttp,

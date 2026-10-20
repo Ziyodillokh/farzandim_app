@@ -1,6 +1,7 @@
 // Parvoz School — maktab paneli backend'i (`/api/school/*`).
 
 import { Module } from '@nestjs/common';
+import { AssessmentsModule } from './assessments/assessments.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { CareModule } from './care/care.module';
 import { AuditController } from './audit/audit.controller';
@@ -23,7 +24,7 @@ import { SchoolInfoController } from './structure/school-info.controller';
 import { SchoolInfoService } from './structure/school-info.service';
 
 @Module({
-  imports: [SchoolCoreModule, StudentsModule, AttendanceModule, CommsModule, SchoolModeModule, CareModule, InsightsModule, SchoolLearningModule],
+  imports: [SchoolCoreModule, StudentsModule, AttendanceModule, CommsModule, SchoolModeModule, CareModule, InsightsModule, SchoolLearningModule, AssessmentsModule],
   controllers: [
     SchoolAuthController,
     SchoolInfoController,

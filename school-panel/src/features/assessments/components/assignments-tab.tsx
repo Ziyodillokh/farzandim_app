@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { AssignmentState } from '@/data/contracts';
+import { isHttpMode } from '@/data/source';
 import type { AssignmentRow } from '@/data/mock/services/assessments';
 import { useI18n } from '@/i18n';
 import { percent } from '@/lib/utils';
@@ -112,7 +113,7 @@ export function AssignmentsTab({ onAssign, testId }: { onAssign: () => void; tes
         className: 'w-[120px] text-right',
         cell: (a) => (
           <div className="flex justify-end gap-1">
-            {a.state === 'ACTIVE' && (
+            {a.state === 'ACTIVE' && !isHttpMode && (
               <IconAction label={t('assessments.assignments.simulate')} onClick={() => simulate.mutate(a.id)} disabled={simulate.isPending} testId={`simulate-${a.id}`}>
                 <Play />
               </IconAction>
