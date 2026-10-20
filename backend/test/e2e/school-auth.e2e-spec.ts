@@ -2,7 +2,7 @@
 // aniqlanishi, chiqish, parol almashtirish, 2FA, tenant izolyatsiyasi.
 
 import * as speakeasy from 'speakeasy';
-import { MAX_FAILED_LOGINS } from '../../src/school/auth/school-auth.service';
+import { MAX_FAILED_LOGINS, REFRESH_GRACE_MS } from '../../src/school/auth/school-auth.service';
 import { resetDb } from './db';
 import { createSchool, createStaff, login, PASSWORD } from './school-fixtures';
 import { createTestApp, TestApp } from './test-app';
@@ -68,17 +68,59 @@ describe('School auth', () => {
     expect(locked.json().code).toBe('LOCKED');
   });
 
-  it('refresh rotatsiyasi; eski cookie qayta ishlatilsa sessiya yopiladi', async () => {
+  const rtCookie = (res: { cookies: { name: string; value: string }[] }) => {
+    const c = res.cookies.find((x) => x.name === 'parvoz_school_rt');
+    return c && `parvoz_school_rt=${c.value}`;
+  };
+  /** Oxirgi rotatsiyani imtiyoz oynasidan tashqariga surish. */
+  const expireGrace = () =>
+    t.prisma.schoolStaffSession.updateMany({
+      data: { rotatedAt: new Date(Date.now() - REFRESH_GRACE_MS - 1000) },
+    });
+
+  it('refresh rotatsiyasi; eski cookie imtiyozdan keyin ishlatilsa sessiya yopiladi', async () => {
     const session = await login(t.app, 'direktor');
     const first = await post('/refresh', undefined, { cookie: session.cookie });
     expect(first.statusCode).toBe(200);
-    const rotated = `parvoz_school_rt=${first.cookies.find((c) => c.name === 'parvoz_school_rt')!.value}`;
+    const rotated = rtCookie(first)!;
     expect(rotated).not.toBe(session.cookie);
 
     // O'g'irlangan (eski) cookie — sessiya yopiladi, yangi cookie ham ishlamaydi.
+    await expireGrace();
     expect((await post('/refresh', undefined, { cookie: session.cookie })).statusCode).toBe(401);
     expect((await post('/refresh', undefined, { cookie: rotated })).statusCode).toBe(401);
     expect((await me(first.json().accessToken)).statusCode).toBe(401);
+  });
+
+  it('parallel refresh (ikki tab): ikkalasi ham 200, cookie bitta marta aylanadi', async () => {
+    const session = await login(t.app, 'direktor');
+    const [a, b] = await Promise.all([
+      post('/refresh', undefined, { cookie: session.cookie }),
+      post('/refresh', undefined, { cookie: session.cookie }),
+    ]);
+    expect([a.statusCode, b.statusCode]).toEqual([200, 200]);
+    const issued = [rtCookie(a), rtCookie(b)].filter(Boolean);
+    expect(issued).toHaveLength(1);
+    for (const res of [a, b]) expect((await me(res.json().accessToken)).statusCode).toBe(200);
+
+    // Yangi cookie bilan sessiya davom etadi.
+    const next = await post('/refresh', undefined, { cookie: issued[0]! });
+    expect(next.statusCode).toBe(200);
+    expect(rtCookie(next)).toEqual(expect.any(String));
+  });
+
+  it('imtiyoz oynasida eski cookie access beradi, lekin cookie\'ni almashtirmaydi', async () => {
+    const session = await login(t.app, 'direktor');
+    const first = await post('/refresh', undefined, { cookie: session.cookie });
+    const late = await post('/refresh', undefined, { cookie: session.cookie });
+    expect(late.statusCode).toBe(200);
+    expect(rtCookie(late)).toBeUndefined();
+    expect((await me(late.json().accessToken)).statusCode).toBe(200);
+    // Ikki rotatsiya oldingi sir — imtiyoz oynasida ham o'g'irlik.
+    const second = await post('/refresh', undefined, { cookie: rtCookie(first)! });
+    expect(second.statusCode).toBe(200);
+    expect((await post('/refresh', undefined, { cookie: session.cookie })).statusCode).toBe(401);
+    expect((await post('/refresh', undefined, { cookie: rtCookie(second)! })).statusCode).toBe(401);
   });
 
   it('chiqish — access token ham yaroqsiz bo\'ladi', async () => {

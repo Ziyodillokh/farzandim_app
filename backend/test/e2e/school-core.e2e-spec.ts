@@ -88,7 +88,15 @@ describe('School core (S1)', () => {
       expect((await call(director, 'DELETE', `/holidays/${holiday.id}`)).statusCode).toBe(204);
 
       const brand = await t.app.inject({ method: 'GET', url: '/api/school/public/brand?code=test-school' });
-      expect(brand.json()).toMatchObject({ name: '14-maktab', shortName: '14-M' });
+      expect(brand.json()).toEqual({
+        name: '14-maktab',
+        shortName: '14-M',
+        logo: expect.stringContaining('data:image/png'),
+        city: 'Toshkent',
+        academicYear: '2026–2027',
+      });
+      const missing = await t.app.inject({ method: 'GET', url: '/api/school/public/brand?code=nope' });
+      expect(missing.statusCode).toBe(404);
       expect(await t.prisma.schoolAuditLog.count({ where: { module: 'SETTINGS' } })).toBe(2);
     });
 

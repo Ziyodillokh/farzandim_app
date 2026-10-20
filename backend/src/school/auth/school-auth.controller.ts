@@ -103,13 +103,16 @@ export class SchoolAuthController {
   }
 
   private respond(reply: FastifyReply, issued: IssuedSession) {
-    reply.setCookie(SCHOOL_REFRESH_COOKIE, issued.refreshToken, {
-      httpOnly: true,
-      secure: this.secureCookies(),
-      sameSite: 'strict',
-      path: COOKIE_PATH,
-      maxAge: Math.floor(SCHOOL_REFRESH_TTL_MS / 1000),
-    });
+    // Imtiyoz yo'lida (parallel refresh) cookie'ni g'olib javob allaqachon yangilagan.
+    if (issued.refreshToken) {
+      reply.setCookie(SCHOOL_REFRESH_COOKIE, issued.refreshToken, {
+        httpOnly: true,
+        secure: this.secureCookies(),
+        sameSite: 'strict',
+        path: COOKIE_PATH,
+        maxAge: Math.floor(SCHOOL_REFRESH_TTL_MS / 1000),
+      });
+    }
     return { accessToken: issued.accessToken, expiresIn: issued.expiresIn, me: issued.me };
   }
 

@@ -66,10 +66,11 @@ export class SchoolInfoService {
   async brand(code: string) {
     const school = await this.prisma.school.findUnique({
       where: { code: code.trim().toLowerCase() },
-      select: { name: true, shortName: true, logo: true, status: true },
+      select: { name: true, shortName: true, logo: true, city: true, academicYear: true, status: true },
     });
     if (!school || school.status !== 'ACTIVE') throw notFound('school');
-    return { name: school.name, shortName: school.shortName, logo: school.logo };
+    const { status: _status, ...brand } = school;
+    return brand;
   }
 
   async updateProfile(actor: SchoolActor, input: unknown): Promise<SchoolView> {

@@ -1,7 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────
 // Maktab paneli kirishi: maktab kodi + login + parol (+ TOTP), sessiyalar
-// (refresh rotatsiyasi, o'g'irlangan token qayta ishlatilsa sessiya yopiladi),
-// hisobni vaqtincha bloklash, parol almashtirish, 2FA.
+// (refresh rotatsiyasi, o'g'irlangan token qayta ishlatilsa sessiya yopiladi;
+// bir vaqtdagi parallel refresh uchun qisqa imtiyoz oynasi), hisobni
+// vaqtincha bloklash, parol almashtirish, 2FA.
 // ─────────────────────────────────────────────────────────────────────
 
 import {
@@ -10,7 +11,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { SchoolStaff } from '@prisma/client';
+import { SchoolStaff, SchoolStaffSession } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import * as speakeasy from 'speakeasy';
 import { z } from 'zod';
@@ -30,6 +31,12 @@ import {
 export const MAX_FAILED_LOGINS = 5;
 export const LOCK_MINUTES = 15;
 export const MIN_PASSWORD_LENGTH = 10;
+/**
+ * Aylantirilgan (oldingi) refresh sir shu muddat ichida qabul qilinadi:
+ * ikki tab yoki takroriy effekt bir vaqtda refresh qilsa, yutqazgani
+ * o'g'irlik deb hisoblanmaydi — u faqat access token oladi (cookie'siz).
+ */
+export const REFRESH_GRACE_MS = 30_000;
 const BCRYPT_ROUNDS = 12;
 /** Mavjud bo'lmagan login uchun ham bir xil vaqt sarflansin (bir marta hisoblanadi). */
 let dummyHash: Promise<string> | undefined;
@@ -77,8 +84,8 @@ export interface SchoolMe {
 export interface IssuedSession {
   accessToken: string;
   expiresIn: number;
-  /** Cookie qiymati: `<sessiyaId>.<sir>`. */
-  refreshToken: string;
+  /** Cookie qiymati: `<sessiyaId>.<sir>` (imtiyoz yo'lida yo'q — cookie o'zgarmaydi). */
+  refreshToken?: string;
   me: SchoolMe;
 }
 
@@ -141,39 +148,39 @@ export class SchoolAuthService {
     return issued;
   }
 
-  /** Refresh rotatsiyasi. Eski sir qayta ishlatilsa (o'g'irlik) — sessiya yopiladi. */
+  /**
+   * Refresh rotatsiyasi. Oldingi sir faqat imtiyoz oynasida (parallel so'rov)
+   * qabul qilinadi; undan keyin yoki eskiroq sir — o'g'irlik: sessiya yopiladi.
+   */
   async refresh(cookie: string | undefined, meta: SessionMeta): Promise<IssuedSession> {
     const [sessionId, secret] = (cookie ?? '').split('.');
     if (!sessionId || !secret) throw sessionExpired();
-    const session = await this.prisma.schoolStaffSession.findUnique({ where: { id: sessionId } });
-    if (!session || session.revokedAt || session.expiresAt < new Date()) throw sessionExpired();
-    if (!this.tokens.matches(secret, session.tokenHash)) {
-      await this.prisma.schoolStaffSession.update({
-        where: { id: sessionId },
-        data: { revokedAt: new Date() },
-      });
-      throw sessionExpired();
-    }
-    const staff = await this.prisma.schoolStaff.findUnique({
-      where: { id: session.staffId },
-      include: { school: { select: { status: true } } },
-    });
-    if (!staff || !staff.active || staff.school.status !== 'ACTIVE') throw sessionExpired();
+    const session = await this.liveSession(sessionId);
+    if (!session) throw sessionExpired();
+    if (!this.tokens.matches(secret, session.tokenHash)) return this.refreshInGrace(session, secret);
+    await this.assertStaffActive(session.staffId);
 
     const next = this.tokens.newRefreshSecret();
-    // Shartli yangilash: parallel refresh'dan faqat bittasi yutadi.
+    const now = new Date();
+    // Shartli yangilash: parallel refresh'dan faqat bittasi aylantiradi.
     const rotated = await this.prisma.schoolStaffSession.updateMany({
       where: { id: sessionId, tokenHash: session.tokenHash, revokedAt: null },
       data: {
         tokenHash: next.hash,
-        lastUsedAt: new Date(),
-        expiresAt: new Date(Date.now() + SCHOOL_REFRESH_TTL_MS),
+        previousTokenHash: session.tokenHash,
+        rotatedAt: now,
+        lastUsedAt: now,
+        expiresAt: new Date(now.getTime() + SCHOOL_REFRESH_TTL_MS),
         ip: meta.ip ?? session.ip,
-        userAgent: meta.userAgent ?? session.userAgent,
+        userAgent: meta.userAgent?.slice(0, 300) ?? session.userAgent,
       },
     });
-    if (rotated.count === 0) throw sessionExpired();
-    return this.build(staff.id, sessionId, next.secret);
+    if (rotated.count === 1) return this.build(session.staffId, sessionId, next.secret);
+
+    // Parallel so'rov bizdan oldin aylantirdi — endi bizning sir "oldingi".
+    const latest = await this.liveSession(sessionId);
+    if (!latest) throw sessionExpired();
+    return this.refreshInGrace(latest, secret);
   }
 
   async logout(cookie: string | undefined, actor?: SchoolActor): Promise<void> {
@@ -265,6 +272,37 @@ export class SchoolAuthService {
 
   // ── Ichki ──────────────────────────────────────────────────────────
 
+  private async liveSession(id: string): Promise<SchoolStaffSession | null> {
+    const session = await this.prisma.schoolStaffSession.findUnique({ where: { id } });
+    return session && !session.revokedAt && session.expiresAt > new Date() ? session : null;
+  }
+
+  /** Oldingi sir imtiyoz oynasida — access token (cookie o'zgarmaydi), aks holda sessiya yopiladi. */
+  private async refreshInGrace(session: SchoolStaffSession, secret: string): Promise<IssuedSession> {
+    const inGrace =
+      session.previousTokenHash !== null &&
+      session.rotatedAt !== null &&
+      Date.now() - session.rotatedAt.getTime() <= REFRESH_GRACE_MS &&
+      this.tokens.matches(secret, session.previousTokenHash);
+    if (!inGrace) {
+      await this.prisma.schoolStaffSession.updateMany({
+        where: { id: session.id, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+      throw sessionExpired();
+    }
+    await this.assertStaffActive(session.staffId);
+    return this.build(session.staffId, session.id);
+  }
+
+  private async assertStaffActive(staffId: string): Promise<void> {
+    const staff = await this.prisma.schoolStaff.findUnique({
+      where: { id: staffId },
+      include: { school: { select: { status: true } } },
+    });
+    if (!staff || !staff.active || staff.school.status !== 'ACTIVE') throw sessionExpired();
+  }
+
   private async recordFailure(staff: SchoolStaff): Promise<void> {
     const failed = staff.failedLogins + 1;
     const lock = failed >= MAX_FAILED_LOGINS;
@@ -293,7 +331,7 @@ export class SchoolAuthService {
     return this.build(staffId, session.id, refresh.secret);
   }
 
-  private async build(staffId: string, sessionId: string, secret: string): Promise<IssuedSession> {
+  private async build(staffId: string, sessionId: string, secret?: string): Promise<IssuedSession> {
     const me = await this.meOf(staffId);
     const staff = await this.prisma.schoolStaff.findUniqueOrThrow({
       where: { id: staffId },
@@ -307,7 +345,7 @@ export class SchoolAuthService {
         tv: staff.tokenVersion,
       }),
       expiresIn: SCHOOL_ACCESS_TTL_SECONDS,
-      refreshToken: `${sessionId}.${secret}`,
+      refreshToken: secret ? `${sessionId}.${secret}` : undefined,
       me,
     };
   }
