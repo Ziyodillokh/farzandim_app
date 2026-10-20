@@ -3,6 +3,7 @@ import type { RoleKey } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
 import { API_BASE } from '@/data/source';
 import { http, setAccessToken, setRefreshHandler, setSessionLostHandler } from './client';
+import { PREF_PREFIX } from '@/lib/prefs';
 
 /** Backend `/school/auth/me` javobi. */
 export type HttpMe = {
@@ -30,7 +31,7 @@ export class LoginError extends Error {
   }
 }
 
-const LAST_SCHOOL_KEY = 'parvoz-school:last-school';
+const LAST_SCHOOL_KEY = `${PREF_PREFIX}last-school`;
 let me: HttpMe | null = null;
 const listeners = new Set<() => void>();
 

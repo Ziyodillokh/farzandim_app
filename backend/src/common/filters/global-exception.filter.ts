@@ -34,10 +34,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       // Unique cheklov buzildi (parallel so'rov / takroriy yozuv) — 500 emas.
       status = HttpStatus.CONFLICT;
       message = 'Resource already exists';
+      this.logger.warn(`P2002 unique conflict: ${prismaTarget(exception)}`);
     } else if (prismaCode(exception) === 'P2003') {
       // Bog'langan yozuv (foreign key) mavjud emas.
       status = HttpStatus.BAD_REQUEST;
       message = 'Related resource not found';
+      this.logger.warn(`P2003 foreign key: ${prismaTarget(exception)}`);
     } else {
       // Unexpected error — log full details
       this.logger.error(
@@ -62,4 +64,11 @@ function prismaCode(exception: unknown): string | undefined {
     return typeof code === 'string' && code.startsWith('P') ? code : undefined;
   }
   return undefined;
+}
+
+/** Prisma xatosidagi model / maydon (meta) — logda shaxsiy ma'lumotsiz. */
+function prismaTarget(exception: unknown): string {
+  const meta = (exception as { meta?: { modelName?: unknown; target?: unknown; field_name?: unknown } }).meta;
+  const parts = [meta?.modelName, meta?.target, meta?.field_name].filter((v) => v !== undefined && v !== null);
+  return parts.map((v) => (Array.isArray(v) ? v.join(',') : String(v))).join(' ') || 'unknown';
 }

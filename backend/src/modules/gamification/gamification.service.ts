@@ -25,6 +25,12 @@ import {
 } from './dto/create-xp-event.dto';
 import { ListXpEventsDto } from './dto/list-xp-events.dto';
 
+/**
+ * Mukofot tranzaksiyalari (bola qulfi ostida): avvalgi qulfsiz kod kabi
+ * band paytda kutadi — standart 2 s kutishdan keyin 500 qaytarmasin.
+ */
+export const AWARD_TX_OPTIONS = { maxWait: 10_000, timeout: 15_000 } as const;
+
 @Injectable()
 export class GamificationService {
   constructor(
@@ -83,6 +89,7 @@ export class GamificationService {
         dedupe: false,
         touchStreak: true,
       }),
+      AWARD_TX_OPTIONS,
     );
     // dedupe=false — natija har doim bor va ledger yozuvi yaratiladi.
     const { event, profile: updatedProfile } = result!;
@@ -120,6 +127,7 @@ export class GamificationService {
         dedupe: true,
         touchStreak: true,
       }),
+      AWARD_TX_OPTIONS,
     );
     if (result) this.notifyProfileUpdated(childId, result.profile);
   }
@@ -265,8 +273,9 @@ export class GamificationService {
     donDelta: number,
     activeToday: boolean,
   ): Promise<void> {
-    const result = await this.prisma.$transaction((tx) =>
-      this.awardStepDonInTx(tx, childId, donDelta, activeToday),
+    const result = await this.prisma.$transaction(
+      (tx) => this.awardStepDonInTx(tx, childId, donDelta, activeToday),
+      AWARD_TX_OPTIONS,
     );
     if (result) this.notifyProfileUpdated(childId, result.profile);
   }

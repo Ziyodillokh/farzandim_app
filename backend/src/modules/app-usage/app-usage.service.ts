@@ -7,7 +7,7 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { FcmService } from '../../common/fcm/fcm.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
-import { GamificationService } from '../gamification/gamification.service';
+import { AWARD_TX_OPTIONS, GamificationService } from '../gamification/gamification.service';
 import { BatchUpsertUsageDto } from './dto/batch-upsert-usage.dto';
 import { GameOpenDto } from './dto/game-open.dto';
 import { ListAppUsageDto } from './dto/list-app-usage.dto';
@@ -468,6 +468,7 @@ export class AppUsageService {
         );
         return { totalDonDelta: donDelta, todaySteps: today, profile: award?.profile ?? null };
       },
+      AWARD_TX_OPTIONS,
     );
     if (profile) this.gamification.notifyProfileUpdated(childId, profile);
 

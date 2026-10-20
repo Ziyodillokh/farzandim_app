@@ -236,34 +236,50 @@ regressiya testlari — `school-review-fixes-2.e2e-spec.ts`:
 
 ## 6. Deploy va pilot yo'riqnomasi
 
-`main`ga merge = production deploy (backend + `prisma migrate deploy` +
-web). Faqat egasining ruxsati bilan.
+`main`ga merge = production deploy: `deploy-test.yml` (backend — avval
+`backend-quality` darvozasi: unit + e2e Postgres'da) va `deploy-landing.yml`
+(sayt, `/school` demo va `/maktab` haqiqiy panel). Faqat egasining ruxsati
+bilan. Repo OMMAVIY — CI loglari hammaga ko'rinadi (parol va kalitlar logga
+chiqmaydi; quyidagi jarayonlar shunga qurilgan). Store'dagi ilovalar bilan
+moslik tekshirilgan: mavjud endpointlar shakli o'zgarmagan.
 
-1. **Server `.env`** (deploydan OLDIN):
-   - `SCHOOL_DATA_KEY` — 32 bayt, base64 (`openssl rand -base64 32`). Bola
-     ovozi javoblari, murojaatlar va psixologik test javoblari shu kalit
-     bilan shifrlanadi; yo'qolsa ma'lumotni ochib bo'lmaydi — xavfsiz joyda
-     zaxira nusxasi saqlansin. Yo'q bo'lsa shu bo'limlar 503 qaytaradi.
-   - `SCHOOL_JWT_SECRET` (ixtiyoriy, ≥ 32 belgi) — yo'q bo'lsa
-     `JWT_ACCESS_SECRET`dan hosila olinadi.
-   - `CORS_ORIGINS` — panel boshqa domenda bo'lsa, shu domen.
-2. **Migratsiyalar** — 10 ta, hammasi qo'shuvchi (DROP / RENAME / DELETE
+1. **`SCHOOL_DATA_KEY`** — 32 bayt, base64 (`openssl rand -base64 32`). Bola
+   ovozi javoblari, murojaatlar va psixologik test javoblari shu kalit bilan
+   shifrlanadi; yo'qolsa ma'lumotni ochib bo'lmaydi. GitHub secret
+   `SCHOOL_DATA_KEY` → deploy qadami uni server `.env`ga FAQAT yo'q bo'lsa
+   qo'shadi (mavjudini hech qachon almashtirmaydi; nusxa:
+   `~/new-platform/secrets/`). Noto'g'ri formatdagi kalit deploy'ni
+   to'xtatadi (aks holda butun API yiqilardi). Kalitning asosiy nusxasi —
+   egasining parol menejerida. `SCHOOL_JWT_SECRET` qo'ymang (yo'q bo'lsa
+   `JWT_ACCESS_SECRET`dan hosila olinadi; 32 belgidan qisqasi API'ni yiqitadi).
+2. **Deploydan oldin** CI bazaning zaxira nusxasini oladi
+   (`~/new-platform/backups/`, oxirgi 5 ta) va PostgreSQL ≥ 12 ni tekshiradi.
+3. **Migratsiyalar** — 10 ta, hammasi qo'shuvchi (DROP / RENAME / DELETE
    yo'q): learning (4), school core / wave2 / session grace, savollar
    2-to'lqin, psixologik natija unikal indeksi va Growth urinishi sinf
    snapshot'i (nullable ustun + indeks) — ikkalasi shu tarmoqdagi jadvallarda.
-3. **Maktab yaratish:** `npx tsx scripts/school/create-school.ts` — kod,
-   nom va direktor; vaqtinchalik parol chiqadi (birinchi kirishda
-   almashtirish majburiy). Psixolog — faqat operator:
-   `npx tsx scripts/school/create-staff.ts --school <kod> --role PSYCHOLOGIST
-   --name "F.I.Sh." --username <login>`. Parolni tiklash: `--reset`
-   (2FA ham: `--reset-2fa`); direktor hisobni o'chirgan bo'lsa — o'sha xodimga
-   `--reset --id <xodim-id> --username <login>`.
-4. **Haqiqiy panel:** `NEXT_PUBLIC_DATA_SOURCE=http NEXT_PUBLIC_API_BASE=/api
-   PANEL_BASE_PATH=/maktab npm run build` → `out/` statik fayllar. Demo
-   (`/school`) mock rejimda qoladi. Refresh cookie `/api/school/auth` yo'lida,
-   SameSite=Strict — panel va API bir saytda bo'lishi kerak.
-5. **Tekshiruv:** direktor kiradi → parolni almashtiradi → sinflar →
+4. **Rollback:** `rollback/pre-school` branch'i (oldingi production
+   commit'i) → `gh workflow run deploy-test.yml --ref rollback/pre-school -f
+   component=backend`. Diqqat: yangi Growth ilovasi ishlatilgach
+   (`LEARNING_REPORT` / `DAILY_LEARNING` yozuvlari) eski kod ularni o'qiy
+   olmaydi — shundan keyin faqat oldinga tuzatish.
+5. **Maktab, direktor, psixolog** — SSH'siz, `school-operator.yml`
+   (Actions → School operator): `create-school`, `create-psychologist`,
+   `reset-staff` (`staff_id`, `reset_2fa`). Vaqtinchalik parol operatorning
+   bir martalik RSA-3072 ochiq kaliti bilan shifrlanadi (yo'riqnoma workflow
+   faylining boshida); birinchi kirishda almashtirish majburiy. Kiritilgan
+   kod / F.I.Sh. / login ommaviy logda ko'rinadi — keyin `gh run delete`.
+   Serverda to'g'ridan-to'g'ri: `npx tsx scripts/school/create-school.ts` va
+   `create-staff.ts` (`--reset`, `--id`, `--reset-2fa`).
+6. **Haqiqiy panel:** https://farzandimedu.uz/maktab/ (CI:
+   `NEXT_PUBLIC_DATA_SOURCE=http NEXT_PUBLIC_API_BASE=/api
+   PANEL_BASE_PATH=/maktab`). Demo `/school` mock rejimda qoladi; ikkalasining
+   brauzer xotirasi alohida (`parvoz-school:` / `parvoz-maktab:`). Refresh
+   cookie `/api/school/auth` yo'lida, SameSite=Strict — panel va API bir saytda.
+7. **Tekshiruv:** direktor kiradi → parolni almashtiradi → sinflar →
    o'quvchilar (CSV) → xodimlar → ota-onalarga taklif kodlari → kiosk.
-6. **Ilovalar:** Android bola ilovasida School Mode hech qanday yangilanishsiz
-   ishlaydi (virtual "Maktab" jadvallari). Ota-ona ilovasida maktab bo'limi va
-   bola ilovasida QR / so'rovnoma / test ekranlari — keyingi bosqich.
+8. **Ilovalar:** store'dagi Android va iOS bola ilovalarida School Mode
+   yangilanishsiz ishlaydi (virtual "Maktab" jadvallari; iPhone uchun har
+   kuni 06:30 da jim sinxron push). Ota-ona ilovasidagi maktab bo'limi va
+   bola ilovasidagi QR / so'rovnoma / test / topshiriq ekranlari —
+   `feat/school-apps` branch'ida (test APK'lar; store'ga alohida chiqariladi).

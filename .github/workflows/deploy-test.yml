@@ -214,6 +214,88 @@ jobs:
           done
           command -v sshpass && command -v rsync
 
+      # Migratsiyadan OLDIN bazaning zaxira nusxasi (serverda, backend/ dan
+      # tashqarida — rsync --delete o'chirmasin). Oxirgi 5 tasi saqlanadi.
+      # pg_dump bo'lmasa — ogohlantirish (deploy to'xtamaydi).
+      - name: Pre-deploy DB backup (+ PostgreSQL versiya tekshiruvi)
+        run: |
+          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -se <<'EOF'
+          set -euo pipefail
+          umask 077
+          cd ~/new-platform
+          url="$(sed -n 's/^[[:space:]]*DATABASE_URL[[:space:]]*=//p' backend/.env | tail -n1 | tr -d "\"' \r")"
+          url="${url%%\?*}"   # prisma'ning ?schema=public — libpq bilmaydi
+          if command -v psql >/dev/null 2>&1; then
+            v="$(psql "$url" -tAc 'show server_version_num' | tr -d '[:space:]')"
+            [ "${v:-0}" -ge 120000 ] || { echo "::error::PostgreSQL $v < 12 (enum ADD VALUE migratsiyasi)"; exit 1; }
+            echo "PostgreSQL $v"
+          else
+            echo "::warning::psql yo'q — versiya tekshirilmadi"
+          fi
+          if command -v pg_dump >/dev/null 2>&1; then
+            mkdir -p backups
+            f="backups/pre-deploy-$(date +%Y%m%d-%H%M%S).dump"
+            pg_dump --no-owner -Fc -f "$f" "$url"
+            ls -1t backups/pre-deploy-*.dump | tail -n +6 | xargs -r rm -f
+            echo "zaxira: ~/new-platform/$f ($(du -h "$f" | cut -f1)); bo'sh joy: $(df -h ~ | awk 'END{print $4}')"
+          else
+            echo "::warning::pg_dump yo'q — zaxira olinmadi"
+          fi
+          EOF
+
+      # SCHOOL_DATA_KEY → server .env: faqat YO'Q bo'lsa qo'shiladi, mavjudi HECH QACHON
+      # almashtirilmaydi (almashsa shifrlangan javoblar ochilmaydi). Noto'g'ri formatdagi
+      # kalit env validatsiyasida BUTUN backendni yiqitadi — yuklashdan oldin tekshiriladi.
+      - name: Provision SCHOOL_DATA_KEY (idempotent, never overwrites)
+        env:
+          SCHOOL_DATA_KEY: ${{ secrets.SCHOOL_DATA_KEY }}
+        run: |
+          set -euo pipefail
+          KEY="$(printf '%s' "${SCHOOL_DATA_KEY:-}" | tr -d '[:space:]')"
+          if [ -z "$KEY" ]; then
+            echo "::warning::SCHOOL_DATA_KEY secret yo'q — Bola ovozi / psixologik testlar 503 beradi"; exit 0
+          fi
+          if ! [[ "$KEY" =~ ^[A-Za-z0-9+/]{43}=$ ]] || [ "$(printf '%s' "$KEY" | base64 -d | wc -c)" -ne 32 ]; then
+            echo "::error::SCHOOL_DATA_KEY 32 bayt base64 emas (openssl rand -base64 32)"; exit 1
+          fi
+          IFS= read -r -d '' REMOTE <<'EOS' || true
+          set -euo pipefail
+          umask 077
+          ENVF="$HOME/new-platform/backend/.env"
+          SEC="$HOME/new-platform/secrets"
+          [ -f "$ENVF" ] || { echo "::error::$ENVF topilmadi"; exit 1; }
+          is_key() { [ "$(printf '%s' "$1" | base64 -d 2>/dev/null | wc -c)" -eq 32 ]; }
+          cur="$(sed -n 's/^[[:space:]]*SCHOOL_DATA_KEY[[:space:]]*=//p' "$ENVF" | tail -n1 | tr -d "\"' \t\r")"
+          if [ -n "$cur" ]; then
+            is_key "$cur" || { echo "::error::serverdagi SCHOOL_DATA_KEY yaroqsiz — qo'lda hal qiling"; exit 1; }
+            if [ "$cur" = "$NEW_KEY" ]; then echo "SCHOOL_DATA_KEY bor (secret bilan bir xil)"
+            else echo "::warning::serverdagi SCHOOL_DATA_KEY secret'dan farq qiladi — serverdagisi QOLDIRILDI"; fi
+            exit 0
+          fi
+          mkdir -p "$SEC"; chmod 700 "$SEC"
+          ts="$(date +%Y%m%d-%H%M%S)"
+          cp -p "$ENVF" "$SEC/backend.env.bak.$ts"
+          printf '%s\n' "$NEW_KEY" > "$SEC/school_data_key"
+          if grep -q '^[[:space:]]*SCHOOL_DATA_KEY[[:space:]]*=' "$ENVF"; then
+            # Bo'sh "SCHOOL_DATA_KEY=" qatori bor — almashtiriladi, egasi / huquqi asl fayldan.
+            tmp="$(mktemp "$SEC/.env.new.XXXXXX")"
+            grep -v '^[[:space:]]*SCHOOL_DATA_KEY[[:space:]]*=' "$ENVF" > "$tmp" || true
+            [ -z "$(tail -c1 "$tmp")" ] || echo >> "$tmp"
+            printf 'SCHOOL_DATA_KEY=%s\n' "$NEW_KEY" >> "$tmp"
+            chmod --reference="$ENVF" "$tmp" 2>/dev/null || chmod 600 "$tmp"
+            mv -f "$tmp" "$ENVF"
+          else
+            # Oddiy holat: fayl joyida to'ldiriladi — egasi, huquqi va inode o'zgarmaydi.
+            [ -z "$(tail -c1 "$ENVF")" ] || echo >> "$ENVF"
+            printf 'SCHOOL_DATA_KEY=%s\n' "$NEW_KEY" >> "$ENVF"
+          fi
+          echo "SCHOOL_DATA_KEY qo'shildi (zaxira: $SEC/backend.env.bak.$ts)"
+          EOS
+          # Kalit stdin'ning 1-qatorida (buyruq qatorida / ps'da ko'rinmaydi), qolgani — skript.
+          { printf '%s\n' "$KEY"; printf '%s\n' "$REMOTE"; } \
+            | sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+                'IFS= read -r NEW_KEY && export NEW_KEY && exec bash -s'
+
       - name: Upload to server
         run: |
           sshpass -e rsync -az --delete --exclude '.env' --exclude '.git' -e "ssh ${SSH_OPTS}" \
@@ -242,7 +324,9 @@ jobs:
           if [ "$ok" != "1" ]; then
             echo "backend 60s ichida javob bermadi — service holati + loglar:"
             systemctl is-active farzandim-v2-backend.service || true
-            sudo journalctl -u farzandim-v2-backend.service -n 60 --no-pager || true
+            # Repo OMMAVIY — log hammaga ko'rinadi: email, telefon, token va IP yashiriladi.
+            sudo journalctl -u farzandim-v2-backend.service -n 60 --no-pager 2>/dev/null \
+              | sed -E 's/[[:alnum:]._%+-]+@[[:alnum:].-]+/<email>/g; s/\+?998[0-9 -]{9,12}/<phone>/g; s/eyJ[[:alnum:]_-]+\.[[:alnum:]_-]+\.[[:alnum:]_-]+/<jwt>/g; s/([0-9]{1,3}\.){3}[0-9]{1,3}/<ip>/g' || true
             exit 1
           fi
           EOF

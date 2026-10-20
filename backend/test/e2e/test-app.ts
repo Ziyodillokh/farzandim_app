@@ -24,7 +24,8 @@ export interface TestApp {
   close(): Promise<void>;
 }
 
-export async function createTestApp(): Promise<TestApp> {
+/** `swagger` — production kabi Swagger hujjatini ham quradi (ishga tushish testi). */
+export async function createTestApp(options: { swagger?: boolean } = {}): Promise<TestApp> {
   const fcm = new FakeFcm();
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(FcmService)
@@ -37,7 +38,7 @@ export async function createTestApp(): Promise<TestApp> {
     new FastifyAdapter(),
     { logger: ['error', 'warn'] },
   );
-  await configureApp(app, { swagger: false });
+  await configureApp(app, { swagger: options.swagger ?? false });
   await app.init();
   await app.getHttpAdapter().getInstance().ready();
   stopCronJobs(app);
