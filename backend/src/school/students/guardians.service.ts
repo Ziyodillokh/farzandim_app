@@ -199,6 +199,49 @@ export class GuardiansService {
     });
   }
 
+  /**
+   * Maktab tomonidan aloqani uzish (masalan, kod begona qo'lga tushgan): vasiy
+   * yozuvi bo'shaydi, shu foydalanuvchining farzandlari o'quvchilardan uziladi
+   * (u boshqa vasiy yozuvi orqali ham bog'langan bo'lsa — qoladi). Yangi taklif
+   * kodi alohida yaratiladi.
+   */
+  async unlink(actor: SchoolActor, guardianId: string) {
+    assertCan(actor, 'guardians.link');
+    return this.prisma.$transaction(async (tx) => {
+      const guardian = await this.scopedGuardian(tx, actor, guardianId);
+      if (guardian.linkStatus !== 'LINKED' || !guardian.userId) throw conflict('not linked');
+      const userId = guardian.userId;
+      const updated = await tx.schoolGuardian.update({
+        where: { id: guardianId },
+        data: { userId: null, linkStatus: 'NOT_INVITED', linkedAt: null, inviteCode: null, inviteExpiresAt: null },
+      });
+      const [links, children] = await Promise.all([
+        tx.schoolStudentGuardian.findMany({ where: { guardianId }, select: { studentId: true } }),
+        tx.child.findMany({ where: { parentId: userId }, select: { id: true } }),
+      ]);
+      await tx.schoolStudent.updateMany({
+        where: {
+          id: { in: links.map((l) => l.studentId) },
+          childId: { in: children.map((c) => c.id) },
+          guardians: { none: { guardian: { userId, linkStatus: 'LINKED' } } },
+        },
+        data: { childId: null },
+      });
+      await this.audit.write(
+        actor,
+        {
+          module: 'GUARDIANS',
+          action: 'guardian.unlinked',
+          summary: `${guardian.fullName}: Parvoz Parents bilan aloqa maktab tomonidan uzildi`,
+          entityId: guardianId,
+          params: { name: guardian.fullName, variant: 'staff' },
+        },
+        tx,
+      );
+      return toGuardianView(updated);
+    });
+  }
+
   // ── Ichki ──────────────────────────────────────────────────────────
 
   /** Ota-ona + maktab + sinf doirasi (kamida bitta farzandi doirada bo'lishi shart). */

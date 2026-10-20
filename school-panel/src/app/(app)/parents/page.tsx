@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Can } from '@/auth/can';
+import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { useCan } from '@/auth/use-session';
 import { DataTable, type SortState } from '@/components/common/data-table';
 import { ErrorState } from '@/components/common/error-state';
@@ -27,6 +28,7 @@ import {
   useInvite,
   useResend,
   useSimulateLink,
+  useUnlink,
 } from '@/features/parents/hooks';
 import { useClassOptions } from '@/features/students/hooks';
 import { useI18n } from '@/i18n';
@@ -46,6 +48,8 @@ export default function ParentsPage() {
   const invite = useInvite();
   const resend = useResend();
   const simulate = useSimulateLink();
+  const unlink = useUnlink();
+  const [unlinkTarget, setUnlinkTarget] = useState<GuardianRow | null>(null);
 
   const update = (patch: Partial<GuardianFilter>) => setFilter((f) => ({ ...f, page: 1, ...patch }));
   const simulateLink = simulate.mutate;
@@ -70,6 +74,7 @@ export default function ParentsPage() {
       onResend: (row) => void runInvite(row, resend.mutateAsync),
       onShowCode: (row) => setShown(row),
       onSimulate: (row) => simulateLink(row.id),
+      onUnlink: (row) => setUnlinkTarget(row),
     }),
     [can, busyId, runInvite, invite.mutateAsync, resend.mutateAsync, simulateLink],
   );
@@ -157,6 +162,19 @@ export default function ParentsPage() {
       )}
 
       <InviteQrDialog guardian={shown} onOpenChange={(open) => !open && setShown(null)} />
+      <ConfirmDialog
+        open={Boolean(unlinkTarget)}
+        onOpenChange={(open) => !open && setUnlinkTarget(null)}
+        title={t('parents.unlinkConfirm.title')}
+        description={t('parents.unlinkConfirm.text', { name: unlinkTarget?.fullName ?? '' })}
+        confirmLabel={t('parents.unlinkConfirm.confirm')}
+        destructive
+        loading={unlink.isPending}
+        onConfirm={() => {
+          if (!unlinkTarget) return;
+          unlink.mutate(unlinkTarget.id, { onSettled: () => setUnlinkTarget(null) });
+        }}
+      />
       <BulkInviteDialog
         open={bulkOpen}
         onOpenChange={setBulkOpen}

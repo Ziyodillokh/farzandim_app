@@ -39,11 +39,18 @@ export const parents: DeepString<typeof uz> = {
     resend: 'Отправить новый код',
     simulate: 'Подключился (демо)',
     more: 'Другие действия',
+    unlink: 'Отключить',
   },
   toast: {
     invited: 'Приглашение отправлено (SMS)',
     resent: 'Новый код отправлен',
     linked: 'Родитель подключился к Parvoz Parents',
+    unlinked: 'Связь отключена — можно отправить новое приглашение',
+  },
+  unlinkConfirm: {
+    title: 'Отключить от Parvoz Parents',
+    text: '{name} больше не увидит посещаемость ребёнка и сообщения школы. При необходимости отправьте новый код.',
+    confirm: 'Отключить',
   },
   bulk: {
     button: 'Пригласить всех',

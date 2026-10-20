@@ -36,11 +36,18 @@ export const parents = {
     resend: 'Yangi kod yuborish',
     simulate: 'Ulandi (demo)',
     more: 'Boshqa amallar',
+    unlink: 'Aloqani uzish',
   },
   toast: {
     invited: 'Taklif yuborildi (SMS)',
     resent: 'Yangi kod yuborildi',
     linked: 'Ota-ona Parvoz Parents\'ga ulandi',
+    unlinked: 'Aloqa uzildi — yangi taklif yuborish mumkin',
+  },
+  unlinkConfirm: {
+    title: 'Parvoz Parents bilan aloqani uzish',
+    text: '{name} endi farzandi davomati va maktab xabarlarini ko\'rmaydi. Kerak bo\'lsa, yangi taklif kodi yuborasiz.',
+    confirm: 'Uzish',
   },
   bulk: {
     button: 'Barchasini taklif qilish',

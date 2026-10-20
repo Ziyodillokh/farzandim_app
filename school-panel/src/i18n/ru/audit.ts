@@ -113,6 +113,7 @@ export const audit: DeepString<typeof uz> = {
     guardian_inviteBulk_codeAll: 'Созданы коды приглашения Parvoz для родителей: {count}',
     guardian_inviteBulk_codeClass: 'Класс {className}: созданы коды приглашения Parvoz для родителей: {count}',
     guardian_unlinked: '{name} отключился от Parvoz Parents',
+    guardian_unlinked_staff: '{name}: связь с Parvoz Parents отключена школой',
     guardian_create: '{student}: добавлен родитель {name}',
     guardian_update: 'Обновлены данные родителя: {name}',
     class_create: 'Создан класс {name}',

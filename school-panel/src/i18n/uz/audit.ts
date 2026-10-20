@@ -114,6 +114,7 @@ export const audit = {
     guardian_inviteBulk_codeAll: '{count} ota-ona uchun Parvoz taklif kodi yaratildi',
     guardian_inviteBulk_codeClass: '{className} sinfi: {count} ota-ona uchun Parvoz taklif kodi yaratildi',
     guardian_unlinked: '{name} Parvoz Parents bilan aloqani uzdi',
+    guardian_unlinked_staff: '{name}: Parvoz Parents bilan aloqa maktab tomonidan uzildi',
     guardian_create: '{student}ga ota-ona qo\'shildi: {name}',
     guardian_update: '{name} ma\'lumotlari yangilandi',
     class_create: '{name} sinfi yaratildi',

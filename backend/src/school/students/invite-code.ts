@@ -1,11 +1,11 @@
-// Ota-ona taklif kodi: 6 belgi (chalkashadigan 0/O, 1/I yo'q), 7 kun amal
-// qiladi. Kriptografik tasodif; yagonalik bazadagi unique indeks bilan.
+// Ota-ona taklif kodi: 8 belgi (32^8 ≈ 10^12; chalkashadigan 0/O, 1/I yo'q),
+// 7 kun amal qiladi. Kriptografik tasodif; yagonalik bazadagi unique indeks bilan.
 
 import { Prisma } from '@prisma/client';
 import { randomInt } from 'node:crypto';
 
 export const INVITE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-export const INVITE_CODE_LENGTH = 6;
+export const INVITE_CODE_LENGTH = 8;
 export const INVITE_TTL_MS = 7 * 86_400_000;
 const MAX_ATTEMPTS = 20;
 

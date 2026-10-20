@@ -9,9 +9,11 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FastifyRequest } from 'fastify';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
@@ -32,9 +34,9 @@ export class ParentSchoolController {
   @UseGuards(ThrottlerGuard)
   @Throttle({ schoolLink: SCHOOL_LINK_LIMIT })
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Maktab taklif kodini kiritish (6 belgi, 7 kun)' })
-  redeem(@CurrentUser() user: JwtPayload, @Body() body: unknown) {
-    return this.links.redeem(user.userId, body);
+  @ApiOperation({ summary: 'Maktab taklif kodini kiritish (8 belgi, 7 kun)' })
+  redeem(@CurrentUser() user: JwtPayload, @Body() body: unknown, @Req() req: FastifyRequest) {
+    return this.links.redeem(user.userId, body, req.ip);
   }
 
   @Get('links')

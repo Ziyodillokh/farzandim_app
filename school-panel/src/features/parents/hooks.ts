@@ -72,6 +72,11 @@ export function useInvite() {
   return useParentMutation((guardianId: string) => api.guardians.invite(guardianId), () => t('parents.toast.invited'));
 }
 
+export function useUnlink() {
+  const { t } = useI18n();
+  return useParentMutation((guardianId: string) => api.guardians.unlink(guardianId), () => t('parents.toast.unlinked'));
+}
+
 export function useResend() {
   const { t } = useI18n();
   return useParentMutation((guardianId: string) => api.guardians.invite(guardianId), () => t('parents.toast.resent'));

@@ -44,6 +44,7 @@ export const guardiansHttp: Guardians = {
   invite: (guardianId) => http<Guardian>('POST', `/school/guardians/${id(guardianId)}/invite`),
   /** Demo: haqiqiy rejimda ota-ona kodni Parvoz Parents ilovasida o'zi kiritadi. */
   simulateLink: () => Promise.reject(new ServiceError('UNKNOWN', 'demo-only')),
+  unlink: (guardianId) => http<Guardian>('POST', `/school/guardians/${id(guardianId)}/unlink`),
   addToStudent: (studentId, input: GuardianInput) => http<Guardian>('POST', `/school/students/${id(studentId)}/guardians`, { body: input }),
   update: (guardianId, input: GuardianInput) => http<Guardian>('PUT', `/school/guardians/${id(guardianId)}`, { body: input }),
 };

@@ -391,6 +391,28 @@ export const guardiansService = {
     });
   },
 
+  /** Maktab tomonidan aloqani uzish (kod begona qo'lga tushgan va h.k.) — qayta taklif qilish mumkin. */
+  async unlink(guardianId: string): Promise<Guardian> {
+    await latency();
+    const actor = currentActor();
+    assertCan(actor, 'guardians.link');
+    return transact((t) => {
+      const guardian = t.guardians.find((g) => g.id === guardianId);
+      if (!guardian) throw new ServiceError('NOT_FOUND', guardianId);
+      assertGuardianInScope(t, actor, guardianId);
+      if (guardian.linkStatus !== 'LINKED') throw new ServiceError('CONFLICT', 'not linked');
+      guardian.linkStatus = 'NOT_INVITED';
+      guardian.linkedAt = null;
+      guardian.inviteCode = null;
+      guardian.inviteExpiresAt = null;
+      writeAudit(t, actor, 'GUARDIANS', 'guardian.unlinked', `${guardian.fullName}: Parvoz Parents bilan aloqa maktab tomonidan uzildi`, guardianId, null, null, {
+        name: guardian.fullName,
+        variant: 'staff',
+      });
+      return guardian;
+    });
+  },
+
   async addToStudent(studentId: string, input: GuardianInput): Promise<Guardian> {
     await latency();
     const actor = currentActor();

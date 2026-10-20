@@ -59,13 +59,12 @@ export const importRowsSchema = z.object({
     .max(IMPORT_MAX_ROWS, msg.tooLong),
 });
 
-/** Ota-ona ilovasi: taklif kodi (6 belgi, katta-kichik harf farqsiz). */
+/** Ota-ona ilovasi: taklif kodi (8 belgi, katta-kichik harf va bo'shliq farqsiz). */
 export const redeemSchema = z.object({
   code: z
     .string({ error: msg.required })
-    .trim()
-    .toUpperCase()
-    .regex(/^[A-Z0-9]{6}$/, 'errors.school.inviteCodeFormat'),
+    .transform((v) => v.replace(/[\s-]/g, '').toUpperCase())
+    .pipe(z.string().regex(/^[A-Z0-9]{8}$/, 'errors.school.inviteCodeFormat')),
 });
 
 export const childLinkSchema = z.object({ childId: z.string().uuid().nullable() });

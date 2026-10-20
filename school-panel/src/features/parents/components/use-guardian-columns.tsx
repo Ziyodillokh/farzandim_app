@@ -1,6 +1,6 @@
 'use client';
 
-import { BadgeCheck, MoreHorizontal, QrCode, RefreshCw, Send } from 'lucide-react';
+import { BadgeCheck, MoreHorizontal, QrCode, RefreshCw, Send, Unlink } from 'lucide-react';
 import { useMemo } from 'react';
 
 import type { Column } from '@/components/common/data-table';
@@ -24,6 +24,7 @@ export type GuardianActions = {
   onShowCode: (row: GuardianRow) => void;
   onResend: (row: GuardianRow) => void;
   onSimulate: (row: GuardianRow) => void;
+  onUnlink: (row: GuardianRow) => void;
 };
 
 function StatusCell({ row }: { row: GuardianRow }) {
@@ -46,7 +47,26 @@ function StatusCell({ row }: { row: GuardianRow }) {
 
 function ActionsCell({ row, actions }: { row: GuardianRow; actions: GuardianActions }) {
   const { t } = useI18n();
-  if (!actions.canLink || row.linkStatus === 'LINKED') return <span className="text-muted-foreground">—</span>;
+  if (!actions.canLink) return <span className="text-muted-foreground">—</span>;
+  if (row.linkStatus === 'LINKED') {
+    return (
+      <div className="flex items-center justify-end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon-sm" aria-label={t('parents.actions.more')} disabled={actions.busyId === row.id}>
+              <MoreHorizontal />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem className="text-destructive" onClick={() => actions.onUnlink(row)}>
+              <Unlink className="h-4 w-4" />
+              {t('parents.actions.unlink')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  }
   const busy = actions.busyId === row.id;
   return (
     <div className="flex items-center justify-end gap-1">

@@ -3,13 +3,19 @@
 // farzandi (`Child`) bilan moslash va aloqani uzish. Ota-ona faqat o'z
 // vasiy yozuvlari va o'z farzandlari bilan ishlaydi.
 
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { SchoolAuditService } from '../common/school-audit.service';
 import { parseOrThrow } from '../common/school-zod';
 import { studentFullName, studentName } from './student-view';
+import { FailureLimiter } from './redeem-limiter';
 import { childLinkSchema, redeemSchema } from './students.schemas';
+
+/** Noto'g'ri kod: foydalanuvchiga 30 daqiqada 5 ta, bitta IP'ga 30 ta. */
+const FAILURE_WINDOW_MS = 30 * 60_000;
+const USER_FAILURES = 5;
+const IP_FAILURES = 30;
 
 type Tx = Prisma.TransactionClient;
 
@@ -22,16 +28,40 @@ const childNotFound = () => new NotFoundException({ code: 'CHILD_NOT_FOUND', mes
 const linkedBy = (childId: string | null, mine: ReadonlySet<string>) =>
   childId === null ? 'NONE' : mine.has(childId) ? 'ME' : 'OTHER';
 
+const tooManyAttempts = () =>
+  new HttpException({ code: 'TOO_MANY_ATTEMPTS', message: 'Too many invalid invite codes' }, HttpStatus.TOO_MANY_REQUESTS);
+
 @Injectable()
 export class ParentLinksService {
+  private readonly userFailures = new FailureLimiter(USER_FAILURES, FAILURE_WINDOW_MS);
+  private readonly ipFailures = new FailureLimiter(IP_FAILURES, FAILURE_WINDOW_MS);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: SchoolAuditService,
   ) {}
 
-  /** Taklif kodi: bir martalik, 7 kun; parallel kiritishda faqat bittasi yutadi. */
-  async redeem(userId: string, input: unknown) {
+  /**
+   * Taklif kodi: bir martalik, 7 kun; parallel kiritishda faqat bittasi yutadi.
+   * Noto'g'ri kodlar foydalanuvchi va IP bo'yicha sanaladi (tanlab topishga qarshi).
+   */
+  async redeem(userId: string, input: unknown, ip = 'unknown') {
+    const keys = [`user:${userId}`, `ip:${ip}`];
+    if (this.userFailures.blocked(keys[0]!) || this.ipFailures.blocked(keys[1]!)) throw tooManyAttempts();
     const { code } = parseOrThrow(redeemSchema, input);
+    try {
+      await this.redeemCode(userId, code);
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        this.userFailures.fail(keys[0]!);
+        this.ipFailures.fail(keys[1]!);
+      }
+      throw err;
+    }
+    return this.links(userId);
+  }
+
+  private async redeemCode(userId: string, code: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       const guardian = await tx.schoolGuardian.findUnique({
         where: { inviteCode: code },
@@ -64,7 +94,6 @@ export class ParentLinksService {
         tx,
       );
     });
-    return this.links(userId);
   }
 
   /** Maktab bog'lanishlari va moslash uchun ota-onaning farzandlari. */

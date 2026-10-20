@@ -40,6 +40,13 @@ export class GuardiansController {
     return this.guardians.invite(actor, id);
   }
 
+  @Post(':id/unlink')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Parvoz Parents bilan aloqani maktab tomonidan uzish' })
+  unlink(@Actor() actor: SchoolActor, @Param('id') id: string) {
+    return this.guardians.unlink(actor, id);
+  }
+
   @Put(':id')
   update(@Actor() actor: SchoolActor, @Param('id') id: string, @Body() body: unknown) {
     return this.guardians.update(actor, id, body);
