@@ -3,6 +3,9 @@
 // + 30 daqiqa o'tgach, bugun HECH QANDAY yozuvi yo'q o'quvchiga ABSENT (SYSTEM)
 // yoziladi va ota-onaga bir marta "kelmadi" push. Qo'lda / kiosk / QR yozuvlari
 // ustidan yozilmaydi; keyin kelsa — kirish uni PRESENT/LATE ga tuzatadi.
+// Mock'dan farq: bugun davomati umuman olinmagan sinf (hech kim belgilanmagan
+// yoki skanerlanmagan) o'tkazib yuboriladi — maktab bu sinfda tizimdan
+// foydalanmayotgan bo'lsa ota-onalarga noto'g'ri "kelmadi" ketmasin.
 
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
@@ -63,7 +66,7 @@ export class AttendanceAbsenceCron {
   }
 
   private async markSchool(schoolId: string, shiftIds: string[], today: string, time: string): Promise<AbsenceSweepResult> {
-    const missing = await this.prisma.schoolStudent.findMany({
+    const candidates = await this.prisma.schoolStudent.findMany({
       where: {
         schoolId,
         archived: false,
@@ -73,6 +76,13 @@ export class AttendanceAbsenceCron {
       },
       select: { id: true, classId: true },
     });
+    const taking = await this.prisma.schoolAttendance.findMany({
+      where: { schoolId, date: today, source: { not: 'SYSTEM' }, classId: { not: null } },
+      distinct: ['classId'],
+      select: { classId: true },
+    });
+    const takingClasses = new Set(taking.map((r) => r.classId));
+    const missing = candidates.filter((s) => s.classId && takingClasses.has(s.classId));
     if (missing.length === 0) return { marked: 0, notified: 0 };
     const created = await this.prisma.schoolAttendance.createMany({
       data: missing.map((s) => ({

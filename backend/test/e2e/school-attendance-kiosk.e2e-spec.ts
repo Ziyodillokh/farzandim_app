@@ -139,7 +139,8 @@ describe('School attendance (S3): kiosk, QR va cron', () => {
     const cron = t.app.get(AttendanceAbsenceCron);
     await staffCall(t, w.admin, 'POST', '/mark', { studentId: w.malika, status: 'EXCUSED' });
     expect(await cron.sweep(at(DAY, '08:39'))).toEqual({ marked: 0, notified: 0 });
-    expect(await cron.sweep(at(DAY, '08:40'))).toEqual({ marked: 2, notified: 1 });
+    // Faqat davomati olinayotgan sinf (A — Malika belgilangan); B sinf o'tkazib yuboriladi.
+    expect(await cron.sweep(at(DAY, '08:40'))).toEqual({ marked: 1, notified: 1 });
     expect(await cron.sweep(at(DAY, '08:45'))).toEqual({ marked: 0, notified: 0 });
     const vali = await t.prisma.schoolAttendance.findFirstOrThrow({ where: { studentId: w.vali } });
     expect(vali).toMatchObject({ status: 'ABSENT', source: 'SYSTEM', parentNotified: true, date: DAY });
@@ -154,6 +155,13 @@ describe('School attendance (S3): kiosk, QR va cron', () => {
     const fixed = await t.prisma.schoolAttendanceCorrection.findFirstOrThrow({ where: { attendanceId: vali.id } });
     expect(fixed).toMatchObject({ from: 'ABSENT', to: 'LATE', byStaffId: 'system' });
     expect(pushKinds()).toEqual(['ABSENT', 'ARRIVED']);
+  });
+
+  it('cron: bugun davomati olinmagan sinf o\'tkazib yuboriladi (noto\'g\'ri "kelmadi" yo\'q)', async () => {
+    const cron = t.app.get(AttendanceAbsenceCron);
+    expect(await cron.sweep(at(DAY, '09:00'))).toEqual({ marked: 0, notified: 0 });
+    expect(await t.prisma.schoolAttendance.count()).toBe(0);
+    expect(pushKinds()).toEqual([]);
   });
 
   it('cron: dam olish kuni va bayramda ishlamaydi', async () => {
