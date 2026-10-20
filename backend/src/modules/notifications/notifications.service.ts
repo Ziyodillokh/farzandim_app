@@ -3,10 +3,13 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NotificationType } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
+import { normalizeNotificationData } from '../../common/storage/notification-image';
+import { EnvConfig } from '../../common/config/env.schema';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { ListNotificationsDto } from './dto/list-notifications.dto';
 
@@ -16,6 +19,7 @@ export class NotificationsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly realtime: RealtimeGateway,
+    private readonly config: ConfigService<EnvConfig, true>,
   ) {}
 
   /**
@@ -61,12 +65,20 @@ export class NotificationsService {
       orderBy: { createdAt: 'desc' },
       take: limit + 20,
     });
+    // Admin bildirishnomasidagi eski presigned rasm URL'i (telefonga yetmaydi,
+    // 6 kunda eskiradi) — ochiq proxy URL'ga almashtiriladi. Ilovalar
+    // `data.imageUrl` ni o'zgarishsiz ko'rsatadi.
+    const base = this.config.get('PUBLIC_BASE_URL', { infer: true });
     const notifications = rawNotifications
       .filter((n) => {
         const senderId = (n.data as { senderId?: string } | null)?.senderId;
         return !senderId || senderId !== userId;
       })
-      .slice(0, limit);
+      .slice(0, limit)
+      .map((n) => {
+        const data = normalizeNotificationData(n.data, base);
+        return data === n.data ? n : { ...n, data };
+      });
 
     // Unread badge ham yashirilgan turlarni va o'z xabarlarini sanamasin.
     const unreadRaw = await this.prisma.notification.findMany({

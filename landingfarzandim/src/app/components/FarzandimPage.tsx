@@ -4,6 +4,7 @@ import main3 from "../../assets/main3.png";
 import logoApp from "../../imports/Main/logo_parvoz_app.png";
 import svgPaths from "../../imports/Main/svg-35b9599amp";
 import { QRCodeSVG } from "qrcode.react";
+import { PARENT_PLAY, PARENT_APPSTORE, CHILD_PLAY } from "../storeLinks";
 
 // ──────────────────────────────────────────────
 // Atoms
@@ -45,9 +46,37 @@ function Logo() {
 }
 
 // App store badges
-function AppStoreBadge() {
+//
+// Badge'lar ilgari oddiy <div> edi — bosilganda HECH NARSA bo'lmasdi
+// (cursor-pointer bor, havola yo'q). Endi har biri aniq do'kon sahifasiga
+// boradigan <a>: ota-ona va bola ilovalari ALOHIDA havolalar.
+function StoreBadgeLink({
+  href,
+  label,
+  children,
+}: {
+  href: string;
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="bg-[#c6ff7f] rounded px-2.5 py-1.5 flex items-center cursor-pointer hover:opacity-90 transition-opacity">
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+      title={label}
+      className="bg-[#c6ff7f] rounded px-2.5 py-1.5 flex items-center cursor-pointer hover:opacity-90 transition-opacity"
+      style={{ textDecoration: "none" }}
+    >
+      {children}
+    </a>
+  );
+}
+
+function AppStoreBadge({ href, label }: { href: string; label: string }) {
+  return (
+    <StoreBadgeLink href={href} label={label}>
       <svg className="h-4" fill="none" viewBox="0 0 65 16">
         <g clipPath="url(#as-clip)">
           <path d={svgPaths.p1326af00} fill="black" />
@@ -76,13 +105,13 @@ function AppStoreBadge() {
         </g>
         <defs><clipPath id="as-clip"><rect fill="white" height="16" width="65" /></clipPath></defs>
       </svg>
-    </div>
+    </StoreBadgeLink>
   );
 }
 
-function GooglePlayBadge() {
+function GooglePlayBadge({ href, label }: { href: string; label: string }) {
   return (
-    <div className="bg-[#c6ff7f] rounded px-2.5 py-1.5 flex items-center cursor-pointer hover:opacity-90 transition-opacity">
+    <StoreBadgeLink href={href} label={label}>
       <svg className="h-4" fill="none" viewBox="0 0 67 16">
         <g clipPath="url(#gp-clip)">
           <path d={svgPaths.p3048e400} fill="black" />
@@ -111,45 +140,10 @@ function GooglePlayBadge() {
           <clipPath id="gp-clip"><rect fill="white" height="16" width="67" /></clipPath>
         </defs>
       </svg>
-    </div>
+    </StoreBadgeLink>
   );
 }
 
-function AppGalleryBadge() {
-  return (
-    <div className="bg-[#c6ff7f] rounded px-2.5 py-1.5 flex items-center cursor-pointer hover:opacity-90 transition-opacity">
-      <svg className="h-4" fill="none" viewBox="0 0 70 16">
-        <g clipPath="url(#ag-clip)">
-          <path d={svgPaths.p26b09c80} fill="black" />
-          <path d={svgPaths.p599b330} fill="black" />
-          <path d={svgPaths.p4f21d00} fill="black" />
-          <path d={svgPaths.p14fbe6f0} fill="black" />
-          <path d={svgPaths.p3fdacc00} fill="black" />
-          <path d={svgPaths.p1aa2bac0} fill="black" />
-          <path d={svgPaths.p248bfe80} fill="black" />
-          <path d={svgPaths.p2d5c9800} fill="black" />
-          <path d={svgPaths.p39fbe00} fill="black" />
-          <path d={svgPaths.p4f94af0} fill="black" />
-          <path d={svgPaths.p27e68700} fill="black" />
-          <path d={svgPaths.p3a416d00} fill="black" />
-          <path d={svgPaths.p126cda00} fill="black" />
-          <path d={svgPaths.pe0667f0} fill="black" />
-          <path d={svgPaths.p2980e300} fill="black" />
-          <path d={svgPaths.pe178d80} fill="black" />
-          <path d={svgPaths.p38b9a000} fill="black" />
-          <path d={svgPaths.p33c7c00} fill="black" />
-          <path d={svgPaths.p5f93000} fill="black" />
-          <path d={svgPaths.p31d4e700} fill="black" />
-          <path d={svgPaths.p21e65900} fill="black" />
-          <path clipRule="evenodd" d={svgPaths.p277c1500} fill="#C8102E" fillRule="evenodd" />
-          <path d={svgPaths.p7ef7c00} fill="white" />
-          <path d={svgPaths.p1bf7c80} fill="white" />
-        </g>
-        <defs><clipPath id="ag-clip"><rect fill="white" height="16" width="70" /></clipPath></defs>
-      </svg>
-    </div>
-  );
-}
 
 // Social icon button
 function SocialBtn({ icon }: { icon: React.ReactNode }) {
@@ -315,6 +309,33 @@ function PhoneMockups() {
   );
 }
 
+/** Bitta ilovaning do'kon tugmalari — kichik sarlavha bilan. */
+function StoreGroup({
+  title,
+  app,
+  accent,
+  children,
+}: {
+  title: string;
+  app: string;
+  accent: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-baseline gap-1.5">
+        <span style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 12, color: accent }}>
+          {app}
+        </span>
+        <span style={{ fontFamily: "Inter, sans-serif", fontWeight: 500, fontSize: 11, color: "rgba(255,255,255,0.55)" }}>
+          · {title}
+        </span>
+      </div>
+      <div className="flex gap-2.5 flex-wrap">{children}</div>
+    </div>
+  );
+}
+
 function DownloadCard() {
   // Skaner qilinganda yuklab olish (tanlov) sahifasi ochiladi. Origin
   // dinamik — qaysi domenda joylashtirilsa, QR o'shanga moslashadi.
@@ -336,7 +357,7 @@ function DownloadCard() {
             </p>
           </div>
           <p style={{ fontFamily: "Inter, sans-serif", fontWeight: 400, fontSize: 12, color: "white", lineHeight: "16px" }}>
-            QR'ni skanerlang yoki bosing —<br />ilovani tanlab yuklab oling!
+            QR'ni skanerlang yoki quyidagi<br />do'kon tugmasini bosing.
           </p>
         </div>
         <a
@@ -347,11 +368,23 @@ function DownloadCard() {
           <QRCodeSVG value={downloadUrl} size={84} fgColor="#060916" bgColor="#FFFFFF" level="M" marginSize={1} />
         </a>
       </div>
-      {/* Badge row */}
-      <div className="flex gap-2.5 flex-wrap">
-        <AppStoreBadge />
-        <GooglePlayBadge />
-        <AppGalleryBadge />
+      {/* Do'kon havolalari — har bir ilova alohida qatorda */}
+      <div className="flex flex-col gap-3">
+        <StoreGroup
+          title="Ota-onalar uchun"
+          app="Parvoz Parents"
+          accent="#4f86ff"
+        >
+          <GooglePlayBadge href={PARENT_PLAY} label="Parvoz Parents — Google Play'dan yuklab olish" />
+          <AppStoreBadge href={PARENT_APPSTORE} label="Parvoz Parents — App Store'dan yuklab olish" />
+        </StoreGroup>
+        <StoreGroup
+          title="Bolalar uchun"
+          app="Parvoz Growth"
+          accent="#22d3ee"
+        >
+          <GooglePlayBadge href={CHILD_PLAY} label="Parvoz Growth — Google Play'dan yuklab olish" />
+        </StoreGroup>
       </div>
     </div>
   );

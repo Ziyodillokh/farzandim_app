@@ -120,3 +120,6 @@ backend/.env
 # build, .next, ephemeral fayllar. Repo shishmasin uchun butunlay ignore.
 admin_panel/
 frontend-web/
+
+# Parvoz School paneli — deploy paytida school-panel/out dan nusxalanadi (CI)
+website/public/school/

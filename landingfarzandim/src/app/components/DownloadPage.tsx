@@ -1,18 +1,9 @@
 import logoApp from "../../imports/Main/logo_parvoz_app.png";
+import { PARENT_PLAY, PARENT_APPSTORE, CHILD_PLAY } from "../storeLinks";
 
-// ⚠️ APK TARQATISH TO'XTATILDI (2026-08-26). Ilgari bu sahifa
-// farzandimedu.uz/app/*.apk fayllariga ishora qilardi. O'sha APK'larning
-// versionCode'i backend deploy raqami (500+) edi, Play buildlari esa
-// 4 va 7 — Android pastroq versionCode'ni ustiga o'rnatmaydi, ya'ni APK
-// o'rnatgan odam Play'dan yangilanish OLA OLMASDI. Fayllar serverdan
-// o'chirilgan, havolalar o'lik.
-//
-// Yuklab olish endi FAQAT do'kondan. Bu qatorlarni APK'ga qaytarmang.
-const PARENT_PLAY =
-  "https://play.google.com/store/apps/details?id=com.farzandim.parent";
-const PARENT_APPSTORE = "https://apps.apple.com/app/id6798972223";
-const CHILD_PLAY =
-  "https://play.google.com/store/apps/details?id=com.farzandim.growth";
+// Do'kon havolalari — yagona manbadan (src/app/storeLinks.ts). Ilgari shu
+// fayl o'z nusxasini saqlar edi; bosh sahifadagi badge'lar bilan ikkiga
+// bo'linib ketmasligi uchun endi bitta joydan olinadi.
 
 function DownloadIcon({ color }: { color: string }) {
   return (

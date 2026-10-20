@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Check, ChevronLeft, ChevronRight, Loader2, Bell, Sparkles, Users, Baby, Crown, UsersRound } from 'lucide-react';
@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { FileDropzone } from '@/components/common/file-dropzone';
 import { notificationsApi } from '@/lib/api/admin.api';
+import { preparePushImage } from '@/lib/image/prepare-push-image';
 import { getApiErrorMessage } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
 
@@ -44,6 +45,15 @@ export function NotificationComposer({
   const [deepLink, setDeepLink] = useState('');
   const [schedule, setSchedule] = useState(false);
   const [scheduledAt, setScheduledAt] = useState('');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // "Ko'rinishi" bosqichi uchun tanlangan rasmning vaqtinchalik URL'i.
+  useEffect(() => {
+    if (!imageFile) { setImagePreview(null); return; }
+    const url = URL.createObjectURL(imageFile);
+    setImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
 
   const reset = () => {
     setStep(0); setTargetType('all'); setAgeFrom(3); setAgeTo(12);
@@ -67,7 +77,9 @@ export function NotificationComposer({
     mutationFn: async () => {
       let imageUrl: string | undefined;
       if (imageFile) {
-        const res = await notificationsApi.uploadImage(imageFile);
+        // Android push rasmi ~1 MB dan katta bo'lsa ko'rinmaydi — avval siqamiz.
+        const prepared = await preparePushImage(imageFile);
+        const res = await notificationsApi.uploadImage(prepared);
         imageUrl = res.url;
       }
       const filters: Record<string, unknown> = {};
@@ -177,11 +189,12 @@ export function NotificationComposer({
               <FileDropzone
                 label="Rasm (ixtiyoriy)"
                 accept={{ 'image/jpeg': ['.jpg', '.jpeg'], 'image/png': ['.png'], 'image/webp': ['.webp'] }}
-                maxSizeBytes={5 * 1024 * 1024}
+                // Katta telefon surati ham tanlansin — yuborishdan oldin ≤900 KB gacha siqiladi.
+                maxSizeBytes={20 * 1024 * 1024}
                 file={imageFile}
                 onFile={setImageFile}
                 preview
-                hint="JPG/PNG/WebP, maks 5 MB"
+                hint="JPG/PNG/WebP, maks 20 MB · tavsiya 2:1 (masalan 1200×600) · push uchun avtomatik siqiladi"
               />
               <div className="space-y-1.5">
                 <Label>Deep link (ixtiyoriy)</Label>
@@ -220,8 +233,21 @@ export function NotificationComposer({
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold">{title || 'Sarlavha'}</p>
                     <p className="line-clamp-2 text-xs text-muted-foreground">{message || 'Xabar matni'}</p>
+                    {imagePreview && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={imagePreview}
+                        alt="Bildirishnoma rasmi"
+                        className="mt-2 aspect-[2/1] w-full rounded-md object-cover"
+                      />
+                    )}
                   </div>
                 </div>
+                {imagePreview && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Android'da rasm bildirishnoma ochilganda katta ko&apos;rinadi; ilova ichidagi ro&apos;yxatda ham chiqadi.
+                  </p>
+                )}
               </div>
             </div>
           )}

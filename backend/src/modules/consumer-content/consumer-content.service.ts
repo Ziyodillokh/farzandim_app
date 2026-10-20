@@ -11,6 +11,7 @@ import { GamificationService } from '../gamification/gamification.service';
 import { XpEventType } from '../gamification/dto/create-xp-event.dto';
 import { mediaProxyUrl, MediaSegment } from './media-proxy';
 import { BUCKETS, BucketName } from '../../common/storage/storage.constants';
+import { NOTIFICATION_IMAGE_PREFIX } from '../../common/storage/notification-image';
 import {
   youtubeThumbnail,
   youtubeId,
@@ -501,8 +502,13 @@ export class ConsumerContentService {
       cover: { bucket: BUCKETS.contentThumbnails, prefix: 'covers/' },
       video: { bucket: BUCKETS.contentVideos, prefix: 'videos/' },
       pdf: { bucket: BUCKETS.contentBooks, prefix: 'books/' },
+      // Admin bildirishnoma rasmlari (push banner + ilova ichidagi ro'yxat).
+      notif: { bucket: BUCKETS.contentThumbnails, prefix: NOTIFICATION_IMAGE_PREFIX },
     };
-    const m = map[segment as MediaSegment];
+    // hasOwnProperty: 'constructor'/'__proto__' kabi prototip kalitlari o'tib ketmasin.
+    const m = Object.prototype.hasOwnProperty.call(map, segment)
+      ? map[segment as MediaSegment]
+      : undefined;
     if (!m) throw new NotFoundException('Media not found');
     return { bucket: m.bucket, key: m.prefix + file };
   }
@@ -511,7 +517,15 @@ export class ConsumerContentService {
   // `range` berilsa MinIO 206 (Content-Range bilan) qaytaradi.
   async getMediaStream(segment: string, file: string, range?: string) {
     const { bucket, key } = this.resolveMediaKey(segment, file);
-    return this.storage.getObjectStream(bucket, key, range);
+    try {
+      return await this.storage.getObjectStream(bucket, key, range);
+    } catch (err) {
+      // Yo'q fayl — 500 emas, 404 (telefon/push rasmni "topilmadi" deb biladi).
+      if ((err as { name?: string }).name === 'NoSuchKey') {
+        throw new NotFoundException('Media file not found');
+      }
+      throw err;
+    }
   }
 
   async recordVideoLike(id: string) {

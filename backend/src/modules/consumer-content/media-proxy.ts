@@ -1,7 +1,8 @@
 import { FastifyRequest } from 'fastify';
 
-// Content media (audio/muqova/video/pdf) uchun @Public proxy segment'lari.
-export type MediaSegment = 'audio' | 'thumb' | 'cover' | 'video' | 'pdf';
+// Content media (audio/muqova/video/pdf) va admin bildirishnoma rasmlari
+// (notif) uchun @Public proxy segment'lari.
+export type MediaSegment = 'audio' | 'thumb' | 'cover' | 'video' | 'pdf' | 'notif';
 
 /**
  * So'rov kelgan domendan absolyut origin quradi (https://host).

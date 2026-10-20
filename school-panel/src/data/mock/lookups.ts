@@ -1,0 +1,55 @@
+import type { IsoDate, SchoolClass, Shift, Staff, Student } from '@/data/contracts';
+import { hhmmToMinutes } from '@/lib/utils';
+import { isSchoolDay } from './calendar';
+import type { Tables } from './tables';
+
+export function studentName(s: Pick<Student, 'lastName' | 'firstName'>): string {
+  return `${s.lastName} ${s.firstName}`;
+}
+
+export function studentFullName(s: Pick<Student, 'lastName' | 'firstName' | 'middleName'>): string {
+  return [s.lastName, s.firstName, s.middleName].filter(Boolean).join(' ');
+}
+
+export type Indexes = {
+  classes: Map<string, SchoolClass>;
+  shifts: Map<string, Shift>;
+  staff: Map<string, Staff>;
+  students: Map<string, Student>;
+};
+
+export function buildIndexes(tables: Tables): Indexes {
+  return {
+    classes: new Map(tables.classes.map((c) => [c.id, c])),
+    shifts: new Map(tables.shifts.map((s) => [s.id, s])),
+    staff: new Map(tables.staff.map((s) => [s.id, s])),
+    students: new Map(tables.students.map((s) => [s.id, s])),
+  };
+}
+
+/** Sinflarni "1-A, 1-B, 2-A…" tartibida saralash. */
+export function compareClasses(a: Pick<SchoolClass, 'grade' | 'letter'>, b: Pick<SchoolClass, 'grade' | 'letter'>): number {
+  return a.grade - b.grade || a.letter.localeCompare(b.letter);
+}
+
+/**
+ * Jonli ekranlar uchun tartib: hozir darsi ketayotgan smena sinflari birinchi,
+ * keyin bugun hali boshlanmaganlar, oxirida tugagan / dam olishdagilar.
+ */
+export function compareClassesByShiftNow(tables: Tables, date: IsoDate, minute: number) {
+  const rank = new Map<string, number>();
+  for (const shift of tables.shifts) {
+    const start = hhmmToMinutes(shift.start);
+    const end = hhmmToMinutes(shift.end);
+    const schoolDay = isSchoolDay(date, shift, tables.holidays);
+    rank.set(shift.id, !schoolDay || minute >= end ? 2 : minute >= start ? 0 : 1);
+  }
+  return (a: Pick<SchoolClass, 'grade' | 'letter' | 'shiftId'>, b: Pick<SchoolClass, 'grade' | 'letter' | 'shiftId'>): number =>
+    (rank.get(a.shiftId) ?? 2) - (rank.get(b.shiftId) ?? 2) || compareClasses(a, b);
+}
+
+export function classSizes(tables: Tables): Map<string, number> {
+  const sizes = new Map<string, number>();
+  for (const s of tables.students) if (!s.archived) sizes.set(s.classId, (sizes.get(s.classId) ?? 0) + 1);
+  return sizes;
+}

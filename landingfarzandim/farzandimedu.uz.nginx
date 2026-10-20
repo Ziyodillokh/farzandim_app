@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────────────────────────────
 # farzandimedu.uz — ASOSIY domen (production)
 # ─────────────────────────────────────────────────────────────────────
-#   /            → landing (statik SPA, /var/www/farzandim-landing)
+#   /            → Parvoz sayti (statik, /var/www/parvoz-site → releases/)
 #   /api         → YANGI backend (NestJS, :3100)
 #   /socket.io/  → YANGI backend realtime (:3100)
 #   /storage/    → YANGI MinIO public (:9100)
@@ -96,10 +96,34 @@ server {
         try_files $uri $uri/ /child/index.html;
     }
 
-    # ── Landing (root) ────────────────────────────────────────────────
+    # ── Qisqa yuklab olish havolalari (2026-09-25) ────────────────────
+    # Reklama/Telegram uchun: havola bosilsa to'g'ridan-to'g'ri do'konga.
+    #   /ota-ona (=/parent) → iPhone'da App Store, qolganida Google Play
+    #   /bola    (=/growth) → Parvoz Growth (bola ilovasi faqat Android)
+    # $parvoz_parent_store — /etc/nginx/conf.d/parvoz-store-links.conf
+    # ichidagi `map` (map faqat http konteksida ishlaydi, shu sababli
+    # alohida faylda; nusxasi: landingfarzandim/parvoz-store-links.nginx).
+    location = /ota-ona { return 302 $parvoz_parent_store; }
+    location = /parent  { return 302 $parvoz_parent_store; }
+    location = /bola    { return 302 "https://play.google.com/store/apps/details?id=com.farzandim.growth"; }
+    location = /growth  { return 302 "https://play.google.com/store/apps/details?id=com.farzandim.growth"; }
+
+    # ── Asosiy sayt (root) ────────────────────────────────────────────
+    # 2026-10-04 dan: statik Parvoz sayti (manba: website/public).
+    # Bu blokni website/deploy/nginx_switch.py yozadi (deploy-landing.yml);
+    # oldin :3200 (pm2 parvoz-landing, Lovable SSR) ga proxy edi.
+    # Jonli serverda yana `location = /privacy.html` va
+    # `location = /account-deletion.html` bor — ular ham shu root'ga
+    # ko'rsatilgan (eski /var/www/farzandim-landing o'rniga).
     location / {
-        root /var/www/farzandim-landing;
+        # parvoz-site:managed — .github/workflows/deploy-landing.yml boshqaradi, qo'lda tahrirlamang
+        root /var/www/parvoz-site;
         index index.html;
-        try_files $uri $uri/ /index.html;
+        try_files $uri $uri.html $uri/ =404;
+        error_page 404 /404.html;
+        expires 5m;
+        location /assets/img/ {
+            expires 1y;   # fayl nomida kontent-xesh bor
+        }
     }
 }
