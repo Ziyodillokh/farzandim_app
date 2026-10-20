@@ -187,12 +187,16 @@ http adapteri (`NEXT_PUBLIC_DATA_SOURCE=http`).
 | S5 | ✅ | School Mode; Android'da virtual "Maktab" jadvallari (ilova o'zgarmaydi) |
 | S6 | ✅ | bosh sahifa, bildirishnomalar, oylik hisobot, qidiruv |
 | S7a | ✅ | Bola ovozi: shifrlangan javoblar, K=5 atomlar, murojaatlar, protokol |
-| S7b | ⏳ | psixologik testlar (agent) |
-| S7c | ⬜ | rivojlanish dashboardlari (S7b yordamchilaridan) |
+| S7b | ✅ | psixologik testlar: kutubxona, konstruktor, import, tayinlash, bola ilovasida yechish |
+| S7c | ✅ | rivojlanish: o'quvchi / sinf / maktab, e'tibor ro'yxati; direktorga faqat yakunlangan va ≥5 bolali natija |
 | S8 | ✅ | sinf faolligi, qiziqishlar, materiallar, topshiriqlar |
 
+Xavfsizlik ko'rigi (1-bosqich): HIGH / MEDIUM topilmalar tuzatilgan,
+regressiya testlari — `school-review-fixes.e2e-spec.ts`. Vaqtinchalik parol
+almashtirilguncha server boshqa so'rovlarni 403 qiladi.
+
 **Qolgan ishlar:**
-- S7b → S7c; xavfsizlik ko'rigi topilmalarini tuzatish.
+- Xavfsizlik ko'rigi (2-bosqich: S6, S7b, S7c, S8) topilmalari.
 - Parvoz Parents ilovasi: taklif kodi, e'lonlar, davomat, erta ketish, to'lovlar.
 - Parvoz Growth ilovasi: kiosk QR skaner, so'rovnoma va murojaat, psixologik
   test, maktab topshiriqlari.
