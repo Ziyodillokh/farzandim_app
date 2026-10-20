@@ -120,7 +120,7 @@ describe('School insights', () => {
 
     expect((await get(director, '/reports/monthly?month=2026-13')).statusCode).toBe(400);
     const report = (await get(director, `/reports/monthly?month=${month}`)).json();
-    expect(report).toMatchObject({ month, until: yesterday, generatedBy: 'Karimov Akmal', learning: null });
+    expect(report).toMatchObject({ month, until: yesterday, generatedBy: 'Karimov Akmal', learning: { completedTasks: 0, assignments: 0 } });
     expect(report.attendance).toMatchObject({ rate: 100, late: 1, absent: 0 });
     expect(report.attendance.byClass[0]).toMatchObject({ className: '7-A', students: 1, rate: 100, late: 1 });
     expect(report.parents).toMatchObject({ linkedStudents: 0, totalStudents: 1 });

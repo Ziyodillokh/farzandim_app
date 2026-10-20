@@ -18,6 +18,8 @@ export const staff = {
     homerooms: 'Sinf rahbarlari',
     demo: 'Demo hisoblar',
     demoHint: 'Rol va holati qulflangan',
+    accounts: 'Panel hisoblari',
+    accountsHint: 'Login va parol bilan kiradi',
   },
   columns: { name: 'Xodim', role: 'Rol', classes: 'Sinflar', contact: 'Aloqa', status: 'Holat' },
   status: { active: 'Faol', inactive: 'Faol emas' },

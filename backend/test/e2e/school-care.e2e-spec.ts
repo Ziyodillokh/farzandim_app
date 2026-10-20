@@ -96,12 +96,20 @@ describe('School care (Bola ovozi)', () => {
     expect(stored.answersEnc).toMatch(/^v1\./);
     expect(stored.answersEnc).not.toContain(survey.questionIds[0]);
 
-    // 4 respondent — natija yashirin.
-    const hidden = (await staff(director, 'GET', `/aggregate?surveyId=${survey.id}&breakdown=CLASS`)).json();
+    // 4 respondent — psixologda ham kichik guruh yashirin; direktor faol so'rovnomada faqat ishtirokni ko'radi.
+    const hidden = (await staff(psych, 'GET', `/aggregate?surveyId=${survey.id}&breakdown=CLASS`)).json();
     expect(hidden).toMatchObject({ respondents: 4, overall: {}, groups: [{ hidden: true, respondents: 0, topicScores: null }] });
+    expect((await staff(director, 'GET', `/aggregate?surveyId=${survey.id}&breakdown=CLASS`)).json()).toMatchObject({ respondents: 4, groups: [] });
     expect((await staff(director, 'GET', '/surveys/options')).json()[0]).toMatchObject({ id: survey.id, ready: false });
 
     await child(kids[4]!, 'POST', `/survey/${survey.id}/responses`, { answers });
+    // Faol so'rovnoma: direktor faqat ishtirokni ko'radi (har yangi javobdagi o'zgarish
+    // shu bolani ochib qo'ymasin); psixolog — jonli natijani.
+    const live = (await staff(director, 'GET', `/aggregate?surveyId=${survey.id}&breakdown=SCHOOL`)).json();
+    expect(live).toMatchObject({ respondents: 5, overall: {}, groups: [] });
+    expect((await staff(director, 'GET', '/surveys/options')).json()[0].ready).toBe(false);
+    expect(Object.keys((await staff(psych, 'GET', `/aggregate?surveyId=${survey.id}&breakdown=SCHOOL`)).json().overall).length).toBeGreaterThan(0);
+    await staff(psych, 'POST', `/surveys/${survey.id}/close`);
     const shown = (await staff(director, 'GET', `/aggregate?breakdown=SCHOOL`)).json();
     expect(shown).toMatchObject({ surveyId: survey.id, respondents: 5, invited: 6, participationRate: 83 });
     expect(shown.groups[0].hidden).toBe(false);

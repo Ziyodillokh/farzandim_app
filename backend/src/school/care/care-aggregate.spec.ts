@@ -34,7 +34,7 @@ function school(seed: number) {
         const answers: Record<string, number> = { q1: 1 + Math.floor(r() * 5) };
         if (r() > 0.3) answers.q2 = 1 + Math.floor(r() * 5);
         if (r() > 0.6) answers.q3 = 1 + Math.floor(r() * 5);
-        responses.push({ studentId: `${id}-s${i}`, classId: id, answers });
+        responses.push({ studentId: `${id}-s${i}`, classId: id, grade, answers });
       }
     }
   }
@@ -97,7 +97,7 @@ describe('care aggregate — ayirish hujumidan himoya', () => {
 
   it('mavzu ko\'rsatkichi: teskari savol aylantiriladi, K dan kam bo\'lsa chiqmaydi', () => {
     const rows = (n: number, q2: number): ResponseRow[] =>
-      Array.from({ length: n }, (_, i) => ({ studentId: `s${i}`, classId: 'c', answers: { q1: 5, q2 } }));
+      Array.from({ length: n }, (_, i) => ({ studentId: `s${i}`, classId: 'c', grade: 7, answers: { q1: 5, q2 } }));
     expect(topicScores(rows(5, 1), questions)).toEqual({ WELLBEING: 100, PEERS: 100 });
     expect(topicScores(rows(5, 5), questions)).toEqual({ WELLBEING: 100, PEERS: 0 });
     expect(topicScores(rows(4, 1), questions)).toEqual({});
@@ -109,8 +109,8 @@ describe('care aggregate — ayirish hujumidan himoya', () => {
       { id: 'b', name: '7-B', grade: 7, letter: 'B' },
     ];
     const responses = [
-      ...Array.from({ length: 6 }, (_, i) => ({ studentId: `a${i}`, classId: 'a', answers: { q1: 4 } })),
-      ...Array.from({ length: 2 }, (_, i) => ({ studentId: `b${i}`, classId: 'b', answers: { q1: 2 } })),
+      ...Array.from({ length: 6 }, (_, i) => ({ studentId: `a${i}`, classId: 'a', grade: 7, answers: { q1: 4 } })),
+      ...Array.from({ length: 2 }, (_, i) => ({ studentId: `b${i}`, classId: 'b', grade: 7, answers: { q1: 2 } })),
     ];
     const agg = computeCareAggregate({
       survey: { id: 's', invited: 30, ageGroups: ['G5_8'] },
@@ -125,5 +125,27 @@ describe('care aggregate — ayirish hujumidan himoya', () => {
     expect(agg.groups.map((g) => g.hidden)).toEqual([true, true]);
     expect(agg).toMatchObject({ respondents: 8, participationRate: 27, requestsThisWeek: '<5' });
     expect(agg.overall.WELLBEING).toBeDefined();
+  });
+
+  it('sinf darajasini keyin tahrirlash guruhlarni o\'zgartirmaydi (javob nusxasi bo\'yicha)', () => {
+    const { classes, responses } = school(3);
+    const run = (live: typeof classes) =>
+      CARE_BREAKDOWNS.map((breakdown) =>
+        computeCareAggregate({
+          survey: { id: 's', invited: 999, ageGroups: ALL_GROUPS },
+          classes: live,
+          responses,
+          questions,
+          breakdown,
+          trend: [],
+          requestsThisWeek: 0,
+        }),
+      );
+    const before = run(classes);
+    // Direktor 7-B ni 8-sinfga "ko'chiradi" va bitta sinfni o'chiradi.
+    const edited = classes.filter((c) => c.id !== '9A').map((c) => (c.id === '7B' ? { ...c, grade: 8 } : c));
+    expect(run(edited).map((a) => a.groups.map((g) => [g.key, g.respondents, g.hidden]))).toEqual(
+      before.map((a) => a.groups.map((g) => [g.key, g.respondents, g.hidden])),
+    );
   });
 });

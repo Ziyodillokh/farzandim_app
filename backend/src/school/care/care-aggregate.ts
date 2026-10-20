@@ -15,6 +15,8 @@ export type Questions = ReadonlyMap<string, QuestionMeta>;
 export interface ResponseRow {
   studentId: string;
   classId: string;
+  /** Javob berilgan paytdagi sinf darajasi (nusxa — keyingi tahrirlar natijaga ta'sir qilmaydi). */
+  grade: number;
   answers: Record<string, number>;
 }
 export interface ClassRow {
@@ -70,6 +72,24 @@ export function topicScores(responses: readonly ResponseRow[], questions: Questi
 
 export function targetClasses<T extends ClassRow>(classes: readonly T[], ageGroups: readonly string[]): T[] {
   return classes.filter((c) => ageGroups.includes(ageGroupOf(c.grade))).sort(compareClasses);
+}
+
+/**
+ * Guruhlash uchun sinflar — javoblardagi nusxadan (sinf id + javob paytidagi daraja).
+ * Sinf darajasini keyin tahrirlash yoki sinfni o'chirish guruhlarni o'zgartirib,
+ * ayirish orqali kichik guruhni ochib qo'ya olmaydi. Javobsiz sinflar (n = 0)
+ * faqat ko'rsatish uchun joriy jadvaldan qo'shiladi — ular hech narsa ochmaydi.
+ */
+export function snapshotClasses(responses: readonly ResponseRow[], live: readonly ClassRow[], ageGroups: readonly string[]): ClassRow[] {
+  const byId = new Map(live.map((c) => [c.id, c]));
+  const seen = new Map<string, ClassRow>();
+  for (const r of responses) {
+    if (seen.has(r.classId)) continue;
+    const current = byId.get(r.classId);
+    seen.set(r.classId, { id: r.classId, name: current?.name ?? '—', grade: r.grade, letter: current?.letter ?? '' });
+  }
+  const empty = targetClasses(live, ageGroups).filter((c) => !seen.has(c.id));
+  return [...seen.values(), ...empty];
 }
 
 function suppressionPlan(classes: readonly ClassRow[], responses: readonly ResponseRow[], questions: Questions): Plan {
@@ -136,9 +156,10 @@ export function computeCareAggregate(input: {
   trend: Array<{ weekStart: string; respondents: number; wellbeing: number }>;
   requestsThisWeek: number;
 }) {
-  const classes = targetClasses(input.classes, input.survey.ageGroups);
+  const inTarget = input.responses.filter((r) => input.survey.ageGroups.includes(ageGroupOf(r.grade)));
+  const classes = targetClasses(snapshotClasses(inTarget, input.classes, input.survey.ageGroups), input.survey.ageGroups);
   const ids = new Set(classes.map((c) => c.id));
-  const responses = input.responses.filter((r) => ids.has(r.classId));
+  const responses = inTarget.filter((r) => ids.has(r.classId));
   const respondents = distinctRespondents(responses);
   const plan = suppressionPlan(classes, responses, input.questions);
   return {

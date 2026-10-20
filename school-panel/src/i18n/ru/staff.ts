@@ -21,6 +21,8 @@ export const staff: DeepString<typeof uz> = {
     homerooms: 'Классные руководители',
     demo: 'Демо-аккаунты',
     demoHint: 'Роль и статус заблокированы',
+    accounts: 'Доступ к панели',
+    accountsHint: 'Входят по логину и паролю',
   },
   columns: { name: 'Сотрудник', role: 'Роль', classes: 'Классы', contact: 'Контакты', status: 'Статус' },
   status: { active: 'Активен', inactive: 'Неактивен' },

@@ -100,17 +100,21 @@ export class CareStore {
     return this.prisma.schoolStudent.count({ where: { schoolId, archived: false, classId: { in: classIds } } });
   }
 
-  /** Maqsadli sinflar bo'yicha distinct respondentlar (shifr ochilmaydi). */
-  async respondentCount(survey: SchoolCareSurvey, classes?: ClassRow[]): Promise<number> {
-    const target = targetClasses(classes ?? (await this.classes(survey.schoolId)), survey.ageGroups).map((c) => c.id);
-    return this.prisma.schoolCareResponse.count({ where: { surveyId: survey.id, classId: { in: target } } });
+  /** Distinct respondentlar (javob paytida so'rovnoma yosh guruhida bo'lganlar; shifr ochilmaydi). */
+  respondentCount(survey: SchoolCareSurvey): Promise<number> {
+    return this.prisma.schoolCareResponse.count({ where: { surveyId: survey.id } });
   }
 
   /** So'rovnoma javoblari — shifr ochiladi (faqat umumlashtirish va psixolog uchun). */
   async responses(surveyId: string): Promise<ResponseRow[]> {
-    const rows = await this.prisma.schoolCareResponse.findMany({ where: { surveyId }, select: { studentId: true, classId: true, answersEnc: true } });
+    const rows = await this.prisma.schoolCareResponse.findMany({
+      where: { surveyId },
+      select: { studentId: true, classId: true, grade: true, answersEnc: true },
+    });
     return rows.flatMap((r) =>
-      r.classId ? [{ studentId: r.studentId, classId: r.classId, answers: this.crypto.decryptJson<Record<string, number>>(r.answersEnc) }] : [],
+      r.classId
+        ? [{ studentId: r.studentId, classId: r.classId, grade: r.grade, answers: this.crypto.decryptJson<Record<string, number>>(r.answersEnc) }]
+        : [],
     );
   }
 }
