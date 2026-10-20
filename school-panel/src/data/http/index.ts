@@ -4,6 +4,7 @@ import { attendanceHttp } from './services/attendance';
 import { careHttp } from './services/care';
 import { classesHttp } from './services/classes';
 import { commsHttp } from './services/comms';
+import { dashboardHttp, notificationsHttp, reportsHttp, searchHttp } from './services/insights';
 import { profileHttp } from './services/profile';
 import { schoolHttp } from './services/school';
 import { schoolModeHttp } from './services/school-mode';
@@ -22,18 +23,18 @@ export function createHttpApi(): Api {
     guardians: guardiansHttp,
     staff: staffHttp,
     audit: auditHttp,
-    search: notAvailable('search'),
+    search: searchHttp,
     attendance: attendanceHttp,
     schoolMode: schoolModeHttp,
     comms: commsHttp,
     care: careHttp,
     learning: notAvailable('learning'),
-    reports: notAvailable('reports'),
-    dashboard: notAvailable('dashboard'),
+    reports: reportsHttp,
+    dashboard: dashboardHttp,
     profile: profileHttp,
     assessments: notAvailable('assessments'),
     development: notAvailable('development'),
-    notifications: notAvailable('notifications'),
+    notifications: notificationsHttp,
     parents: parentsHttp,
     demo: notAvailable('demo'),
   };

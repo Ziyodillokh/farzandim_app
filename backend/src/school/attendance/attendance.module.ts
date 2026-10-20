@@ -44,5 +44,6 @@ import { AttendanceController } from './attendance.controller';
     AttendanceParentService,
     AttendanceAbsenceCron,
   ],
+  exports: [AttendanceBoardService],
 })
 export class AttendanceModule {}

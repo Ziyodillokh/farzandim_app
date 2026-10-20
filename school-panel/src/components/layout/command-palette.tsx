@@ -1,5 +1,6 @@
 'use client';
 
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { GraduationCap, User } from 'lucide-react';
 
 import { StaffAvatar } from '@/components/common/staff-avatar';
@@ -13,6 +14,10 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { api } from '@/data/api';
 import { useI18n } from '@/i18n';
 import { withBase } from '@/lib/base-path';
+import { useDebounced } from '@/lib/use-debounced';
+
+const SEARCH_MIN = 2;
+const SEARCH_DEBOUNCE_MS = 150;
 
 export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useI18n();
@@ -41,7 +46,17 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
     });
   }, [can]);
 
-  const results = useMemo(() => (open ? api.search.query(query) : null), [open, query]);
+  const term = useDebounced(query.trim(), SEARCH_DEBOUNCE_MS);
+  const searchable = open && term.length >= SEARCH_MIN;
+  const { data } = useQuery({
+    queryKey: ['search', term],
+    queryFn: () => api.search.query(term),
+    enabled: searchable,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
+  });
+  // Qisqa so'rovda oldingi natija ko'rsatilmaydi.
+  const results = searchable ? data : undefined;
 
   const go = (href: string, external = false) => {
     onOpenChange(false);

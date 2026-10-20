@@ -16,6 +16,6 @@ import { SchoolModeController } from './school-mode.controller';
   imports: [SchoolCoreModule, FcmModule],
   controllers: [SchoolModeController],
   providers: [SchoolModeStore, SchoolModeSyncService, SchoolModeReadsService, SchoolModePolicyService, SchoolModeControlService],
-  exports: [SchoolModeSyncService],
+  exports: [SchoolModeSyncService, SchoolModeReadsService],
 })
 export class SchoolModeModule {}
