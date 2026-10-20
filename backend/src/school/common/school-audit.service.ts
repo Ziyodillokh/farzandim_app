@@ -46,11 +46,27 @@ export class SchoolAuditService {
   constructor(private readonly prisma: PrismaService) {}
 
   async write(actor: SchoolActor, entry: AuditEntry, db: Db = this.prisma): Promise<void> {
+    await this.create(db, { schoolId: actor.schoolId, actorId: actor.staffId, actorName: actor.name, ip: actor.ip }, entry);
+  }
+
+  /**
+   * Xodim bo'lmagan manba (ota-ona ilovasi, tizim / cron) yozuvi — `actorId` yo'q,
+   * `actorName` jurnalda ko'rinadi ("Ota-ona: …", "Tizim").
+   */
+  async writeExternal(schoolId: string, actorName: string, entry: AuditEntry, db: Db = this.prisma): Promise<void> {
+    await this.create(db, { schoolId, actorId: null, actorName }, entry);
+  }
+
+  private async create(
+    db: Db,
+    who: { schoolId: string; actorId: string | null; actorName: string; ip?: string },
+    entry: AuditEntry,
+  ): Promise<void> {
     await db.schoolAuditLog.create({
       data: {
-        schoolId: actor.schoolId,
-        actorId: actor.staffId,
-        actorName: actor.name,
+        schoolId: who.schoolId,
+        actorId: who.actorId,
+        actorName: who.actorName,
         module: entry.module,
         action: entry.action,
         entityId: entry.entityId ?? null,
@@ -58,7 +74,7 @@ export class SchoolAuditService {
         params: entry.params ? (entry.params as Prisma.InputJsonValue) : Prisma.JsonNull,
         before: json(entry.before),
         after: json(entry.after),
-        ip: actor.ip ?? null,
+        ip: who.ip ?? null,
       },
     });
   }

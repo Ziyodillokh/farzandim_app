@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { clockNow } from '@/data/mock/clock';
+import { isHttpMode } from '@/data/source';
 import { useI18n } from '@/i18n';
 import { initials } from '@/lib/utils';
 import type { GuardianRow } from '../hooks';
@@ -60,25 +61,30 @@ function ActionsCell({ row, actions }: { row: GuardianRow; actions: GuardianActi
           {t('parents.actions.showCode')}
         </Button>
       )}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon-sm" aria-label={t('parents.actions.more')} disabled={busy}>
-            <MoreHorizontal />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {row.linkStatus === 'INVITED' && (
-            <DropdownMenuItem onClick={() => actions.onResend(row)}>
-              <RefreshCw className="h-4 w-4" />
-              {t('parents.actions.resend')}
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem onClick={() => actions.onSimulate(row)}>
-            <BadgeCheck className="h-4 w-4" />
-            {t('parents.actions.simulate')}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* Haqiqiy rejimda menyuda faqat "qayta yuborish" qoladi (simulyatsiya — demo). */}
+      {(!isHttpMode || row.linkStatus === 'INVITED') && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon-sm" aria-label={t('parents.actions.more')} disabled={busy}>
+              <MoreHorizontal />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {row.linkStatus === 'INVITED' && (
+              <DropdownMenuItem onClick={() => actions.onResend(row)}>
+                <RefreshCw className="h-4 w-4" />
+                {t('parents.actions.resend')}
+              </DropdownMenuItem>
+            )}
+            {!isHttpMode && (
+              <DropdownMenuItem onClick={() => actions.onSimulate(row)}>
+                <BadgeCheck className="h-4 w-4" />
+                {t('parents.actions.simulate')}
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   );
 }

@@ -22,6 +22,7 @@ export const THROTTLER_NAMES = {
   checkout: 'checkout',
   adminLogin: 'adminLogin',
   schoolLogin: 'schoolLogin',
+  schoolLink: 'schoolLink',
 } as const;
 
 const TEN_MINUTES_MS = 600_000;
@@ -44,6 +45,11 @@ export const ADMIN_LOGIN_LIMIT = { limit: 5, ttl: TEN_MINUTES_MS };
  * ketma-ket xatolardan keyin vaqtincha bloklanadi (SchoolAuthService).
  */
 export const SCHOOL_LOGIN_LIMIT = { limit: 30, ttl: TEN_MINUTES_MS };
+/**
+ * Ota-ona ilovasida maktab taklif kodini kiritish (IP bo'yicha). Kod 6 belgi
+ * (32^6 variant) — shu limit bilan tanlab topish amalda imkonsiz.
+ */
+export const SCHOOL_LINK_LIMIT = { limit: 10, ttl: TEN_MINUTES_MS };
 
 const THROTTLER_LIMIT_KEY = 'THROTTLER:LIMIT';
 const reflector = new Reflector();
@@ -111,6 +117,11 @@ export function buildThrottlers(): ThrottlerOptions[] {
       name: THROTTLER_NAMES.schoolLogin,
       ...SCHOOL_LOGIN_LIMIT,
       skipIf: onlyWhereDeclared(THROTTLER_NAMES.schoolLogin),
+    },
+    {
+      name: THROTTLER_NAMES.schoolLink,
+      ...SCHOOL_LINK_LIMIT,
+      skipIf: onlyWhereDeclared(THROTTLER_NAMES.schoolLink),
     },
   ];
 }

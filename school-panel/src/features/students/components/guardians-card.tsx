@@ -10,6 +10,7 @@ import { LinkBadge } from '@/components/common/status-badges';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import type { Guardian } from '@/data/contracts';
+import { isHttpMode } from '@/data/source';
 import { useI18n } from '@/i18n';
 import { initials } from '@/lib/utils';
 import { useInviteGuardian, useSimulateLink } from '../hooks';
@@ -70,7 +71,7 @@ export function GuardiansCard({ studentId, guardians }: { studentId: string; gua
                       <Send />
                       {g.linkStatus === 'INVITED' ? t('students.detail.resend') : t('students.detail.invite')}
                     </Button>
-                    {g.linkStatus === 'INVITED' && (
+                    {g.linkStatus === 'INVITED' && !isHttpMode && (
                       <Button size="sm" variant="ghost" onClick={() => link.mutate(g.id)}>
                         <Link2 />
                         {t('students.detail.simulateLink')}

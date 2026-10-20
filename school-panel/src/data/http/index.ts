@@ -4,6 +4,7 @@ import { classesHttp } from './services/classes';
 import { profileHttp } from './services/profile';
 import { schoolHttp } from './services/school';
 import { auditHttp, staffHttp } from './services/staff';
+import { guardiansHttp, parentsHttp, studentsHttp } from './services/students';
 
 /**
  * Backend (http) servislari. Hali ulanmagan nom maydonlari aniq xato beradi
@@ -13,8 +14,8 @@ export function createHttpApi(): Api {
   return {
     school: schoolHttp,
     classes: classesHttp,
-    students: notAvailable('students'),
-    guardians: notAvailable('guardians'),
+    students: studentsHttp,
+    guardians: guardiansHttp,
     staff: staffHttp,
     audit: auditHttp,
     search: notAvailable('search'),
@@ -29,7 +30,7 @@ export function createHttpApi(): Api {
     assessments: notAvailable('assessments'),
     development: notAvailable('development'),
     notifications: notAvailable('notifications'),
-    parents: notAvailable('parents'),
+    parents: parentsHttp,
     demo: notAvailable('demo'),
   };
 }
