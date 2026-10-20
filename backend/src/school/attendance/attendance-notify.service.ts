@@ -9,6 +9,7 @@ import { AttendanceStatus, ParentNoticeKind, Prisma, SchoolParentNotice } from '
 import { PrismaService } from '../../common/database/prisma.service';
 import { FcmService } from '../../common/fcm/fcm.service';
 import { isUniqueViolation } from './attendance-lookups';
+import { tashkentHhmm } from './attendance-time';
 import { AttendancePushKey, attendancePushText } from './attendance.i18n';
 
 interface ParentTarget {
@@ -47,6 +48,10 @@ export function pushKeyForStatus(status: AttendanceStatus): AttendancePushKey | 
   };
   return keys[status];
 }
+
+/** Yetkazilmagan xabar shu muddat ichida qayta yuboriladi (eskisi o'z ma'nosini yo'qotadi). */
+const RETRY_WINDOW_MS = 2 * 3_600_000;
+const RETRY_BATCH = 200;
 
 @Injectable()
 export class AttendanceNotifyService {
@@ -106,6 +111,39 @@ export class AttendanceNotifyService {
       this.logger.warn(`erta ketish qarori xabari yuborilmadi: ${String(err)}`);
       return 0;
     }
+  }
+
+  /**
+   * Yetkazilmay qolgan davomat xabarlari (FCM xatosi / uzilish) — so'nggi 2 soat
+   * ichidagilari qayta yuboriladi; yetkazilgani belgilanadi (takror push yo'q).
+   */
+  async retryUndelivered(now: Date): Promise<number> {
+    const rows = await this.prisma.schoolParentNotice.findMany({
+      where: { delivered: false, kind: { in: ['ARRIVED', 'LEFT', 'ABSENT'] }, at: { gte: new Date(now.getTime() - RETRY_WINDOW_MS) } },
+      orderBy: { at: 'asc' },
+      take: RETRY_BATCH,
+    });
+    let delivered = 0;
+    for (const row of rows) {
+      try {
+        const [guardian, record, name] = await Promise.all([
+          this.prisma.schoolGuardian.findUnique({ where: { id: row.guardianId }, select: { userId: true } }),
+          this.prisma.schoolAttendance.findUnique({ where: { studentId_date: { studentId: row.studentId, date: row.date } } }),
+          this.firstName(row.studentId),
+        ]);
+        if (!guardian?.userId || name === null) continue;
+        const key: AttendancePushKey = row.kind === 'LEFT' ? 'left' : row.kind === 'ABSENT' ? 'absent' : record?.status === 'LATE' ? 'late' : 'arrived';
+        const time = (row.kind === 'LEFT' ? record?.outAt : record?.inAt) ?? tashkentHhmm(row.at);
+        const data = { type: 'school_attendance', kind: row.kind, studentId: row.studentId, date: row.date };
+        if (await this.push(guardian.userId, key, { name, time }, data)) {
+          await this.markDelivered(row.id);
+          delivered += 1;
+        }
+      } catch (err) {
+        this.logger.warn(`davomat xabarini qayta yuborish: ${String(err)}`);
+      }
+    }
+    return delivered;
   }
 
   private async targets(studentId: string): Promise<ParentTarget[]> {

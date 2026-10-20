@@ -2,6 +2,7 @@
 // bloklash poygasi, audit ko'rinishi, kiosk ma'lumoti, QR va xodim qarori,
 // parallel yozuvlar, saralash kaliti.
 
+import { AttendanceNotifyService } from '../../src/school/attendance/attendance-notify.service';
 import { resetDb } from './db';
 import { at, consumerCall, DAY, seedWorld, setNow, staffCall, World } from './school-attendance-fixtures';
 import { createTestApp, TestApp } from './test-app';
@@ -72,6 +73,20 @@ describe('School security review fixes', () => {
     expect((await school(w.psych.token, 'GET', `/care/requests/${id}`)).json().notes).toHaveLength(6);
     await Promise.all([school(w.psych.token, 'POST', `/care/requests/${id}/protocol`), school(w.psych.token, 'POST', `/care/requests/${id}/protocol`)]);
     expect(await t.prisma.schoolStaffNotification.count({ where: { kind: 'SAFETY_SIGNAL' } })).toBe(1);
+  });
+
+  it('M6: yetkazilmay qolgan davomat xabari keyingi tikda qayta yuboriladi', async () => {
+    const notify = t.app.get(AttendanceNotifyService);
+    const notice = await t.prisma.schoolParentNotice.create({
+      data: { schoolId: w.schoolId, studentId: w.vali, guardianId: w.guardianId, date: DAY, kind: 'ABSENT', at: at(DAY, '08:45') },
+    });
+    expect(await notify.retryUndelivered(at(DAY, '09:00'))).toBe(1);
+    expect(t.fcm.pushesTo(w.parent.userId)[0]).toMatchObject({ title: 'Maktabga kelmadi', data: { kind: 'ABSENT' } });
+    expect((await t.prisma.schoolParentNotice.findUniqueOrThrow({ where: { id: notice.id } })).delivered).toBe(true);
+    expect(await notify.retryUndelivered(at(DAY, '09:05'))).toBe(0);
+    // 2 soatdan eski xabar qayta yuborilmaydi.
+    await t.prisma.schoolParentNotice.update({ where: { id: notice.id }, data: { delivered: false } });
+    expect(await notify.retryUndelivered(at(DAY, '11:00'))).toBe(0);
   });
 
   it('LOW: sortBy=__proto__ — 500 emas', async () => {

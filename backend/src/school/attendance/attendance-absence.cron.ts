@@ -34,8 +34,11 @@ export class AttendanceAbsenceCron {
   @Cron('0 */5 * * * *', { name: 'school-attendance-absence', timeZone: TASHKENT_TZ })
   async handleCron(): Promise<void> {
     try {
-      const result = await this.sweep(new Date());
+      const now = new Date();
+      const result = await this.sweep(now);
       if (result.marked > 0) this.logger.log(`kelmadi: ${result.marked} yozuv, ${result.notified} push`);
+      const retried = await this.notify.retryUndelivered(now);
+      if (retried > 0) this.logger.log(`davomat xabarlari qayta yetkazildi: ${retried}`);
     } catch (err) {
       this.logger.error(`kelmadi cron xatosi: ${String(err)}`);
     }
