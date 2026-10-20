@@ -171,8 +171,8 @@ class _BrandLogo extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SvgPicture.asset(
-          'assets/icons/parvoz_logo_mark.svg',
+        Image.asset(
+          'assets/icons/growth_logo.png',
           width: 50,
           height: 50,
         ),
