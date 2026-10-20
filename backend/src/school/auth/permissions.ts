@@ -5,6 +5,8 @@
 import { SchoolStaffRole } from '@prisma/client';
 
 /** `@SchoolPermissions(...)` metama'lumot kaliti. */
+/** Vaqtinchalik parol bilan ham ochiq yo'llar (`/me`, parol almashtirish). */
+export const SCHOOL_TEMP_PASSWORD_OK_KEY = 'school:tempPasswordOk';
 export const SCHOOL_PERMISSIONS_KEY = 'school:permissions';
 
 export const SCHOOL_PERMISSIONS = [

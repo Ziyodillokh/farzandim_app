@@ -15,7 +15,7 @@ import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { EnvConfig } from '../../common/config/env.schema';
 import { SCHOOL_LOGIN_LIMIT } from '../../common/throttle/throttle.config';
-import { Actor, SchoolAuth } from './decorators';
+import { Actor, AllowTempPassword, SchoolAuth } from './decorators';
 import { SchoolActor } from './school-actor';
 import { IssuedSession, SchoolAuthService } from './school-auth.service';
 import { SCHOOL_REFRESH_TTL_MS } from './school-tokens.service';
@@ -68,6 +68,7 @@ export class SchoolAuthController {
 
   @Get('me')
   @SchoolAuth()
+  @AllowTempPassword()
   @ApiOperation({ summary: 'Joriy xodim, maktab, rol ruxsatlari va sinf doirasi' })
   me(@Actor() actor: SchoolActor) {
     return this.auth.me(actor);
@@ -75,6 +76,7 @@ export class SchoolAuthController {
 
   @Post('password')
   @SchoolAuth()
+  @AllowTempPassword()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Parolni almashtirish (boshqa sessiyalar yopiladi)' })
   async changePassword(@Actor() actor: SchoolActor, @Body() body: unknown) {

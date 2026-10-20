@@ -152,6 +152,27 @@ describe('School auth', () => {
     expect((await login(t.app, 'direktor', 'test-school', 'New-Password-2026')).token).toBeTruthy();
   });
 
+  it('vaqtinchalik parol: almashtirilguncha faqat /me va parol almashtirish', async () => {
+    await t.prisma.schoolStaff.updateMany({ where: { username: 'direktor' }, data: { mustChangePassword: true } });
+    const session = await login(t.app, 'direktor');
+    expect(session.me).toMatchObject({ mustChangePassword: true });
+    const classes = () =>
+      t.app.inject({ method: 'GET', url: '/api/school/classes', headers: { authorization: `Bearer ${session.token}` } });
+    const blocked = await classes();
+    expect(blocked.statusCode).toBe(403);
+    expect(blocked.json().code).toBe('PASSWORD_CHANGE_REQUIRED');
+    expect((await me(session.token)).statusCode).toBe(200);
+    const changed = await t.app.inject({
+      method: 'POST',
+      url: '/api/school/auth/password',
+      headers: { authorization: `Bearer ${session.token}` },
+      payload: { current: PASSWORD, next: 'Yangi-Parol-2026!' },
+    });
+    expect(changed.statusCode).toBe(204);
+    expect((await me(session.token)).json().mustChangePassword).toBe(false);
+    expect((await classes()).statusCode).toBe(200);
+  });
+
   it('2FA: yoqilgandan keyin kod talab qilinadi', async () => {
     const session = await login(t.app, 'direktor');
     const auth = { authorization: `Bearer ${session.token}` };

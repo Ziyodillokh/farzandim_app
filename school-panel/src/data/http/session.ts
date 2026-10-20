@@ -2,7 +2,7 @@ import { setSession, type Session } from '@/auth/session';
 import type { RoleKey } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
 import { API_BASE } from '@/data/source';
-import { setAccessToken, setRefreshHandler, setSessionLostHandler } from './client';
+import { http, setAccessToken, setRefreshHandler, setSessionLostHandler } from './client';
 
 /** Backend `/school/auth/me` javobi. */
 export type HttpMe = {
@@ -132,6 +132,16 @@ async function refreshSession(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/**
+ * Parolni almashtirish (vaqtinchalik parolni ham): boshqa sessiyalar yopiladi,
+ * joriysi qoladi; `me` yangilanadi (`mustChangePassword` → false).
+ */
+export async function changeHttpPassword(current: string, next: string): Promise<void> {
+  await http<void>('POST', '/school/auth/password', { body: { current, next } });
+  me = await http<HttpMe>('GET', '/school/auth/me');
+  for (const l of listeners) l();
 }
 
 export async function httpSignOut(): Promise<void> {

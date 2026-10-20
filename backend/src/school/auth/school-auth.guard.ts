@@ -5,6 +5,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ import {
   roleHas,
   SCHOOL_PERMISSIONS_KEY,
   SCHOOL_ROLES,
+  SCHOOL_TEMP_PASSWORD_OK_KEY,
   SchoolPermission,
 } from './permissions';
 import { SchoolActor } from './school-actor';
@@ -51,6 +53,7 @@ export class SchoolAuthGuard implements CanActivate {
             fullName: true,
             role: true,
             active: true,
+            mustChangePassword: true,
             tokenVersion: true,
             classes: { select: { classId: true } },
             school: { select: { status: true } },
@@ -84,6 +87,15 @@ export class SchoolAuthGuard implements CanActivate {
       ip: request.ip,
     };
     request.schoolActor = actor;
+
+    // Vaqtinchalik parol: almashtirilguncha faqat `/me` va parol almashtirish.
+    const tempOk = this.reflector.getAllAndOverride<boolean | undefined>(SCHOOL_TEMP_PASSWORD_OK_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (staff.mustChangePassword && !tempOk) {
+      throw new ForbiddenException({ code: 'PASSWORD_CHANGE_REQUIRED', message: 'Password change required' });
+    }
 
     const required = this.reflector.getAllAndOverride<SchoolPermission[] | undefined>(
       SCHOOL_PERMISSIONS_KEY,

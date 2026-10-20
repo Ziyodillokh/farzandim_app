@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 import { AuthGuard, HttpSessionGate, HydrationGate, RouteGuard } from '@/auth/guards';
 import { AppShell } from '@/components/layout/app-shell';
+import { ForcePasswordChange } from '@/features/auth/components/force-password-change';
 import { BrandFromUrl } from '@/features/engine/brand-from-url';
 import { DemoEngine } from '@/features/engine/demo-engine';
 import { DemoPanel } from '@/features/engine/demo-panel';
@@ -15,9 +16,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       {isHttpMode ? (
         <HttpSessionGate>
           <AuthGuard>
-            <AppShell>
-              <RouteGuard>{children}</RouteGuard>
-            </AppShell>
+            <ForcePasswordChange>
+              <AppShell>
+                <RouteGuard>{children}</RouteGuard>
+              </AppShell>
+            </ForcePasswordChange>
           </AuthGuard>
         </HttpSessionGate>
       ) : (
