@@ -3,12 +3,12 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, SchoolStaff, SchoolStaffRole } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
-import { CLASS_SCOPED_ROLES, SCHOOL_ROLES } from '../auth/permissions';
+import { CLASS_SCOPED_ROLES, isProtectedRole, SCHOOL_ROLES } from '../auth/permissions';
 import { assertCan, assertCanAny, SchoolActor } from '../auth/school-actor';
 import { hashStaffPassword } from '../auth/school-auth.service';
 import { compareUz, runListQuery } from '../common/list-query';
 import { SchoolAuditService } from '../common/school-audit.service';
-import { conflict, invalid, notFound } from '../common/school-errors';
+import { conflict, forbidden, invalid, notFound } from '../common/school-errors';
 import { staffAccountSchema, staffFormSchema } from '../common/school-schemas';
 import { ListQuery, listQuerySchema, parseOrThrow } from '../common/school-zod';
 
@@ -32,6 +32,9 @@ export function toStaffView(s: StaffWithClasses) {
 
 /** Audit uchun — rasm baytlarisiz. */
 const auditView = (s: StaffWithClasses) => ({ ...toStaffView(s), photo: undefined });
+
+/** Himoyalangan rol (psixolog) — faqat operator beradi. */
+const protectedRole = () => forbidden('role: protected');
 
 @Injectable()
 export class StaffService {
@@ -100,6 +103,7 @@ export class StaffService {
   async create(actor: SchoolActor, input: unknown) {
     assertCan(actor, 'staff.manage');
     const data = parseOrThrow(staffFormSchema, input);
+    if (isProtectedRole(data.role)) throw protectedRole();
     return this.prisma.$transaction(async (tx) => {
       const classIds = await normalizeClassIds(tx, actor.schoolId, data.role, data.classIds);
       const staff = await tx.schoolStaff.create({
@@ -139,6 +143,8 @@ export class StaffService {
     return this.prisma.$transaction(async (tx) => {
       const before = await this.find(tx, actor.schoolId, id);
       if (id === actor.staffId && data.role !== before.role) throw conflict('self role');
+      // Himoyalangan rolga ko'tarish yo'q (pasaytirish — kirishni olib tashlaydi, ruxsat).
+      if (isProtectedRole(data.role) && !isProtectedRole(before.role)) throw protectedRole();
       const classIds = await normalizeClassIds(tx, actor.schoolId, data.role, data.classIds);
       await tx.schoolStaffClass.deleteMany({ where: { staffId: id } });
       const next = await tx.schoolStaff.update({
@@ -210,10 +216,14 @@ export class StaffService {
   /** Panel hisobi: login + vaqtinchalik parol (birinchi kirishda almashtiriladi). */
   async setAccount(actor: SchoolActor, id: string, input: unknown) {
     assertCan(actor, 'staff.manage');
+    // O'z parolini joriy parolsiz almashtirib bo'lmaydi — profil (`/auth/password`) orqali.
+    if (id === actor.staffId) throw conflict('self');
     const data = parseOrThrow(staffAccountSchema, input);
     const passwordHash = await hashStaffPassword(data.password);
     return this.prisma.$transaction(async (tx) => {
       const staff = await this.find(tx, actor.schoolId, id);
+      // Himoyalangan xodimning login / parolini direktor o'rnata olmaydi (hisobni egallash).
+      if (isProtectedRole(staff.role)) throw protectedRole();
       const taken = await tx.schoolStaff.findUnique({
         where: { schoolId_username: { schoolId: actor.schoolId, username: data.username } },
       });
@@ -223,7 +233,7 @@ export class StaffService {
         data: {
           username: data.username,
           passwordHash,
-          mustChangePassword: id !== actor.staffId,
+          mustChangePassword: true,
           failedLogins: 0,
           lockedUntil: null,
           tokenVersion: { increment: 1 },
@@ -231,7 +241,7 @@ export class StaffService {
         include: { classes: { select: { classId: true } } },
       });
       await tx.schoolStaffSession.updateMany({
-        where: { staffId: id, revokedAt: null, ...(id === actor.staffId && { id: { not: actor.sessionId } }) },
+        where: { staffId: id, revokedAt: null },
         data: { revokedAt: new Date() },
       });
       await this.audit.write(
@@ -284,7 +294,12 @@ export class StaffService {
     });
   }
 
+  /**
+   * Qatorni qulflab o'qiydi: rol tekshiruvi va yozuv bir navbatda — parallel
+   * "pasaytirish + hisob o'rnatish + qayta ko'tarish" himoyalangan rolni chetlab o'tmaydi.
+   */
   private async find(tx: Prisma.TransactionClient, schoolId: string, id: string) {
+    await tx.$queryRaw`SELECT id FROM school_staff WHERE id = ${id} AND school_id = ${schoolId} FOR UPDATE`;
     const staff = await tx.schoolStaff.findFirst({
       where: { id, schoolId },
       include: { classes: { select: { classId: true } } },

@@ -14,6 +14,8 @@ export const staffHttp: typeof staffService = {
   create: (input: StaffInput) => http<Staff>('POST', '/school/staff', { body: input }),
   update: (staffId, input: StaffInput) => http<Staff>('PUT', `/school/staff/${id(staffId)}`, { body: input }),
   setActive: (staffId, active) => http<Staff>('PATCH', `/school/staff/${id(staffId)}/active`, { body: { active } }),
+  setAccount: (staffId, input) => http<Staff>('PUT', `/school/staff/${id(staffId)}/account`, { body: input }),
+  removeAccount: (staffId) => http<Staff>('DELETE', `/school/staff/${id(staffId)}/account`),
   roles: () => http<RoleDefinition[]>('GET', '/school/staff/roles'),
 };
 

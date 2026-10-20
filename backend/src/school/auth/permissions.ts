@@ -178,5 +178,18 @@ export function roleHas(role: SchoolStaffRole, permission: SchoolPermission): bo
   return SCHOOL_ROLES[role].permissions.includes(permission);
 }
 
+/**
+ * Himoyalangan rollar — bolaning maxfiy ma'lumotiga (murojaat matni, test
+ * javoblari) kiradi. `staff.manage` (direktor) ularni yarata, ularga ko'tara
+ * yoki ularning login / parolini o'rnata olmaydi — aks holda direktor o'zi
+ * "psixolog" hisobi ochib, 403 matritsasini chetlab o'tardi. Faqat operator
+ * (`scripts/school/create-staff.ts`) beradi.
+ */
+export const PROTECTED_ROLES: readonly SchoolStaffRole[] = (Object.keys(SCHOOL_ROLES) as SchoolStaffRole[]).filter(
+  (role) => roleHas(role, 'care.individual') || roleHas(role, 'assessments.manage'),
+);
+
+export const isProtectedRole = (role: SchoolStaffRole) => PROTECTED_ROLES.includes(role);
+
 /** Sinf doirasidagi rollar — faqat shularda `classIds` saqlanadi. */
 export const CLASS_SCOPED_ROLES: readonly SchoolStaffRole[] = ['HOMEROOM', 'TEACHER'];

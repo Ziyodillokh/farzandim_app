@@ -12,7 +12,9 @@ import { Card } from '@/components/ui/card';
 import type { RoleKey } from '@/data/contracts';
 import type { StaffRow } from '@/data/mock/services/staff';
 import { useI18n } from '@/i18n';
-import { type StaffFilter, useSetStaffActive, useStaffList } from '../hooks';
+import { accountMenu, isProtectedRole } from '../account';
+import { type StaffFilter, useRemoveStaffAccount, useSetStaffActive, useStaffList } from '../hooks';
+import { StaffAccountDialog } from './staff-account-dialog';
 import { StaffFormDialog } from './staff-form-dialog';
 import { type StaffActions, useStaffColumns } from './use-staff-columns';
 
@@ -27,6 +29,9 @@ export function StaffTab({ createOpen, onCreateOpenChange }: { createOpen: boole
   const [filter, setFilter] = useState<StaffFilter>({ page: 1, limit: 20, sortBy: 'name', sortDir: 'asc' });
   const [editing, setEditing] = useState<StaffRow | null>(null);
   const [deactivating, setDeactivating] = useState<StaffRow | null>(null);
+  const [accountFor, setAccountFor] = useState<StaffRow | null>(null);
+  const [removingAccount, setRemovingAccount] = useState<StaffRow | null>(null);
+  const removeAccount = useRemoveStaffAccount();
   const staff = useStaffList(filter);
   const setActive = useSetStaffActive();
   const activate = setActive.mutate;
@@ -34,14 +39,22 @@ export function StaffTab({ createOpen, onCreateOpenChange }: { createOpen: boole
 
   const update = (patch: Partial<StaffFilter>) => setFilter((f) => ({ ...f, page: 1, ...patch }));
 
+  const selfId = session?.staffId ?? null;
   const actions = useMemo<StaffActions>(
     () => ({
       canManage,
-      selfId: session?.staffId ?? null,
+      selfId,
       onEdit: setEditing,
       onToggleActive: (row) => (row.active ? setDeactivating(row) : activate({ id: row.id, active: true })),
+      // Menyu bandi nofaol bo'lsa ham qayta tekshiriladi: o'z qatori uchun oyna ochilmaydi (server — 409 'self').
+      onAccount: (row) => {
+        if (accountMenu(row, selfId).canSet) setAccountFor(row);
+      },
+      onRemoveAccount: (row) => {
+        if (accountMenu(row, selfId).canRemove) setRemovingAccount(row);
+      },
     }),
-    [canManage, session?.staffId, activate],
+    [canManage, selfId, activate],
   );
   const columns = useStaffColumns(actions);
 
@@ -98,6 +111,22 @@ export function StaffTab({ createOpen, onCreateOpenChange }: { createOpen: boole
       )}
 
       <StaffFormDialog open={createOpen} onOpenChange={onCreateOpenChange} />
+      <StaffAccountDialog row={accountFor} onOpenChange={(open) => !open && setAccountFor(null)} />
+      <ConfirmDialog
+        open={Boolean(removingAccount)}
+        onOpenChange={(open) => !open && setRemovingAccount(null)}
+        title={t('staff.account.remove')}
+        description={t(removingAccount && isProtectedRole(removingAccount.role) ? 'staff.account.removeConfirmProtected' : 'staff.account.removeConfirm', {
+          name: removingAccount?.fullName ?? '',
+        })}
+        confirmLabel={t('staff.account.remove')}
+        destructive
+        loading={removeAccount.isPending}
+        onConfirm={() => {
+          if (!removingAccount) return;
+          removeAccount.mutate(removingAccount.id, { onSettled: () => setRemovingAccount(null) });
+        }}
+      />
       <StaffFormDialog open={Boolean(editing)} onOpenChange={(open) => !open && setEditing(null)} row={editing ?? undefined} />
       <ConfirmDialog
         open={Boolean(deactivating)}

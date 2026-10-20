@@ -1,6 +1,6 @@
 'use client';
 
-import { Lock, MoreHorizontal, Pencil, Power, PowerOff } from 'lucide-react';
+import { KeyRound, Lock, MoreHorizontal, Pencil, Power, PowerOff, ShieldCheck, UserX } from 'lucide-react';
 import { useMemo } from 'react';
 
 import type { Column } from '@/components/common/data-table';
@@ -9,8 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { StaffRow } from '@/data/mock/services/staff';
+import { isHttpMode } from '@/data/source';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { accountMenu } from '../account';
 import { RoleBadge } from './role-badge';
 
 const MAX_CLASS_BADGES = 3;
@@ -21,11 +23,18 @@ export type StaffActions = {
   selfId: string | null;
   onEdit: (row: StaffRow) => void;
   onToggleActive: (row: StaffRow) => void;
+  onAccount: (row: StaffRow) => void;
+  onRemoveAccount: (row: StaffRow) => void;
 };
 
 function RowMenu({ row, actions }: { row: StaffRow; actions: StaffActions }) {
   const { t } = useI18n();
-  const locked = Boolean(row.username) || row.id === actions.selfId;
+  // Demo hisoblar qat'iy; haqiqiy rejimda faqat o'zini faolsizlantirib bo'lmaydi.
+  const self = row.id === actions.selfId;
+  const locked = isHttpMode ? self : Boolean(row.username) || self;
+  // O'z qatorida: panel hisobi nofaol (izoh bilan), o'chirish yo'q — o'z paroli "Profilim" oynasida.
+  const account = accountMenu(row, actions.selfId);
+  const AccountIcon = account.note === 'protected' ? ShieldCheck : account.note === 'self' ? Lock : KeyRound;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -38,6 +47,27 @@ function RowMenu({ row, actions }: { row: StaffRow; actions: StaffActions }) {
           <Pencil className="h-4 w-4" />
           {t('common.edit')}
         </DropdownMenuItem>
+        {isHttpMode && (
+          <>
+            <DropdownMenuItem disabled={!account.canSet} onClick={() => actions.onAccount(row)} className="items-start">
+              <AccountIcon className="mt-0.5 h-4 w-4" />
+              <span className="grid">
+                {t('staff.account.action')}
+                {account.note && (
+                  <span className="max-w-[220px] text-2xs font-normal text-muted-foreground">
+                    {t(account.note === 'self' ? 'staff.account.selfHint' : 'staff.account.protected')}
+                  </span>
+                )}
+              </span>
+            </DropdownMenuItem>
+            {account.canRemove && (
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => actions.onRemoveAccount(row)}>
+                <UserX className="h-4 w-4" />
+                {t('staff.account.remove')}
+              </DropdownMenuItem>
+            )}
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           disabled={locked}
@@ -49,7 +79,7 @@ function RowMenu({ row, actions }: { row: StaffRow; actions: StaffActions }) {
             {row.active ? t('staff.actions.deactivate') : t('staff.actions.activate')}
             {locked && (
               <span className="max-w-[220px] text-2xs font-normal text-muted-foreground">
-                {row.username ? t('staff.demoLocked') : t('staff.selfLocked')}
+                {self ? t('staff.selfLocked') : t('staff.demoLocked')}
               </span>
             )}
           </span>
@@ -75,7 +105,7 @@ export function useStaffColumns(actions: StaffActions): Column<StaffRow>[] {
                 <span className="truncate">{r.fullName}</span>
                 {r.username && (
                   <Badge variant="info" size="sm">
-                    {t('staff.demoBadge', { username: r.username })}
+                    {t(isHttpMode ? 'staff.loginBadge' : 'staff.demoBadge', { username: r.username })}
                   </Badge>
                 )}
                 {r.id === actions.selfId && <Badge size="sm">{t('staff.youBadge')}</Badge>}
