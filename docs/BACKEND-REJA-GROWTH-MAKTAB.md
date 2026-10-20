@@ -199,3 +199,31 @@ http adapteri (`NEXT_PUBLIC_DATA_SOURCE=http`).
 - Production: `SCHOOL_DATA_KEY` (32 bayt base64) env'ga qo'shilishi kerak —
   aks holda Bola ovozi / testlar yozuvi 503.
 - Pilot: `scripts/school/create-school.ts` bilan maktab, panel http rejimda.
+
+## 6. Deploy va pilot yo'riqnomasi
+
+`main`ga merge = production deploy (backend + `prisma migrate deploy` +
+web). Faqat egasining ruxsati bilan.
+
+1. **Server `.env`** (deploydan OLDIN):
+   - `SCHOOL_DATA_KEY` — 32 bayt, base64 (`openssl rand -base64 32`). Bola
+     ovozi javoblari, murojaatlar va psixologik test javoblari shu kalit
+     bilan shifrlanadi; yo'qolsa ma'lumotni ochib bo'lmaydi — xavfsiz joyda
+     zaxira nusxasi saqlansin. Yo'q bo'lsa shu bo'limlar 503 qaytaradi.
+   - `SCHOOL_JWT_SECRET` (ixtiyoriy, ≥ 32 belgi) — yo'q bo'lsa
+     `JWT_ACCESS_SECRET`dan hosila olinadi.
+   - `CORS_ORIGINS` — panel boshqa domenda bo'lsa, shu domen.
+2. **Migratsiyalar** — 8 ta, hammasi qo'shuvchi (DROP / RENAME / DELETE
+   yo'q): learning (4), school core / wave2 / session grace, savollar 2-to'lqin.
+3. **Maktab yaratish:** `npx tsx scripts/school/create-school.ts` — kod,
+   nom va direktor; vaqtinchalik parol chiqadi (birinchi kirishda
+   almashtirish majburiy).
+4. **Haqiqiy panel:** `NEXT_PUBLIC_DATA_SOURCE=http NEXT_PUBLIC_API_BASE=/api
+   PANEL_BASE_PATH=/maktab npm run build` → `out/` statik fayllar. Demo
+   (`/school`) mock rejimda qoladi. Refresh cookie `/api/school/auth` yo'lida,
+   SameSite=Strict — panel va API bir saytda bo'lishi kerak.
+5. **Tekshiruv:** direktor kiradi → parolni almashtiradi → sinflar →
+   o'quvchilar (CSV) → xodimlar → ota-onalarga taklif kodlari → kiosk.
+6. **Ilovalar:** Android bola ilovasida School Mode hech qanday yangilanishsiz
+   ishlaydi (virtual "Maktab" jadvallari). Ota-ona ilovasida maktab bo'limi va
+   bola ilovasida QR / so'rovnoma / test ekranlari — keyingi bosqich.
