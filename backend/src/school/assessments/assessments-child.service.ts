@@ -12,16 +12,13 @@ import { SchoolCryptoService } from '../common/school-crypto.service';
 import { parseOrThrow } from '../common/school-zod';
 import { submitInputSchema } from './assessments-inputs.schemas';
 import { AssessmentsStore } from './assessments-store';
+import { submitGraceMs } from './assessments-view';
 import { ChildLang, childLang, pick, toAnswerVector, toChildTest } from './child-view';
 import { ageBandOf, ageOn, encodeAnswers, rawScores } from './psych/scoring';
 import type { PsychTest } from './psych/types';
 
 type Tx = Prisma.TransactionClient;
 type Student = { id: string; schoolId: string; classId: string; grade: number; birthDate: string; lang: ChildLang };
-
-/** Yopilish vaqtidan keyin topshirish uchun qo'shimcha vaqt (test vaqt chegarasi, bo'lmasa 30 daqiqa). */
-const DEFAULT_GRACE_MIN = 30;
-const MINUTE_MS = 60_000;
 
 const notEnrolled = () => new NotFoundException({ code: 'NOT_ENROLLED', message: 'Child is not linked to a school' });
 const notOpen = () => new NotFoundException({ code: 'ASSIGNMENT_NOT_FOUND', message: 'Assignment is not open' });
@@ -90,7 +87,7 @@ export class AssessmentsChildService {
     await this.prisma.$transaction(async (tx) => {
       // Bitta tayinlash bo'yicha navbat: takroriy yuborish va bildirishnoma soni aniq.
       await this.store.lock(tx, `psych-assignment:${assignmentId}`);
-      const { assignment, test } = await this.openFor(tx, student, assignmentId, graceMs);
+      const { assignment, test } = await this.openFor(tx, student, assignmentId, submitGraceMs);
       if (await this.submitted(tx, assignment.id, student.id)) throw alreadySubmitted();
       const vector = toAnswerVector(test, input.answers);
       const now = new Date();
@@ -170,9 +167,4 @@ export class AssessmentsChildService {
     if (!s || s.archived || !s.classId || !s.class || s.school.status !== 'ACTIVE') return null;
     return { id: s.id, schoolId: s.schoolId, classId: s.classId, grade: s.class.grade, birthDate: s.birthDate, lang: childLang(child.childUser?.language) };
   }
-}
-
-/** Yopilgandan keyin topshirish uchun qo'shimcha vaqt: test vaqti chegarasi (bo'lmasa 30 daqiqa). */
-function graceMs(test: PsychTest): number {
-  return (test.timeLimitMin ?? DEFAULT_GRACE_MIN) * MINUTE_MS;
 }

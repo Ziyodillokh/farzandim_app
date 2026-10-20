@@ -42,6 +42,19 @@ export type AssignmentRow = PsychAssignment & {
   classNames: string[];
 };
 
+/** Yopilishdan keyin topshirish uchun qo'shimcha vaqt: test vaqt chegarasi, bo'lmasa 30 daqiqa. */
+export const DEFAULT_SUBMIT_GRACE_MIN = 30;
+
+export function submitGraceMs(test: Pick<PsychTest, 'timeLimitMin'>): number {
+  return (test.timeLimitMin ?? DEFAULT_SUBMIT_GRACE_MIN) * 60_000;
+}
+
+/** Tayinlash yakuniy: yopilgan / bekor qilingan yoki muddati (qo'shimcha vaqt bilan) o'tgan — natijalar endi o'zgarmaydi. */
+export function isAssignmentFinal(a: { status: string; closesAt: Date }, test: Pick<PsychTest, 'timeLimitMin'> | undefined, nowMs: number): boolean {
+  if (a.status !== 'OPEN') return true;
+  return nowMs > a.closesAt.getTime() + submitGraceMs(test ?? { timeLimitMin: null });
+}
+
 export type RowsContext = { active: ReadonlyMap<string, number>; results: ReadonlyMap<string, number> };
 
 export function toTestRow(test: PsychTest, ctx: RowsContext): PsychTestRow {

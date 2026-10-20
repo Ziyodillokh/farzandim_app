@@ -2,6 +2,7 @@
 // rol va sinf doirasi, maxfiylik (xavfsizlik signalida tafsilot yo'q).
 
 import { addDays, tashkentDay } from '../../src/common/time/tashkent';
+import { termOf } from '../../src/school/assessments/psych/terms';
 import { resetDb } from './db';
 import { createSchool, createStaff, login, LoggedIn } from './school-fixtures';
 import { createClass, createGuardian, createStudent } from './school-students-fixtures';
@@ -100,8 +101,10 @@ describe('School insights', () => {
       parents: { students: { linked: 1, total: 2 } },
       openRequests: { earlyExits: 1, verifications: 0, total: 1 },
       careInbox: null,
-      development: null,
+      // Natija yo'q — joriy chorak, qamrov 0, soha indekslari yo'q (K=5).
+      development: { mode: 'AGGREGATE', termKey: termOf(tashkentDay()).key, participation: 0 },
     });
+    expect(overview.development.domains.every((d: { index: unknown }) => d.index === null)).toBe(true);
     expect(overview.classes.map((c: { className: string }) => c.className)).toEqual(['7-A', '7-B']);
     expect(overview.schoolMode).toMatchObject({ emergency: false, devices: { NO_PERMISSION: 2 } });
     expect(overview.alerts.map((x: { kind: string }) => x.kind)).toEqual(['ABSENT', 'NO_PERMISSION']);

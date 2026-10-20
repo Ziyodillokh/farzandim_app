@@ -101,11 +101,14 @@ export type ScoredResult = {
   takenAt: string;
   origin: PsychResultOrigin;
   raw: Record<string, number>;
+  durationSec: number | null;
+  /** Yozuv yaratilgan lahza (CSV import partiyasi — bitta tranzaksiyada bir xil). */
+  createdAt: string;
   scales: ScaleScore[];
   topCodes: string | null;
 };
 
-export type ScorableRow = Omit<StoredResult, 'answersEnc' | 'durationSec'> & { grade: number; testId: string; version: number };
+export type ScorableRow = Omit<StoredResult, 'answersEnc'> & { grade: number; testId: string; version: number; createdAt: Date };
 
 /** Saqlangan xom ball → standart ball, persentil, daraja (joriy me'yorlar bo'yicha). */
 export function scoreStoredResult(test: PsychTest, r: ScorableRow): ScoredResult {
@@ -123,6 +126,8 @@ export function scoreStoredResult(test: PsychTest, r: ScorableRow): ScoredResult
     takenAt: r.takenAt.toISOString(),
     origin: ORIGINS.includes(r.origin as PsychResultOrigin) ? (r.origin as PsychResultOrigin) : 'APP',
     raw,
+    durationSec: r.durationSec,
+    createdAt: r.createdAt.toISOString(),
     ...scoreResult(test, { raw, ageBand }),
   };
 }

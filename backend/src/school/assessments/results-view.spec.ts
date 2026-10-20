@@ -62,8 +62,8 @@ describe('results-view', () => {
 
   it('scoreStoredResult: joriy me\'yorlar bilan baholaydi, javoblarsiz', () => {
     const r = stored('r1', 's1', '2026-10-01', 13);
-    const scored = scoreStoredResult({ ...logic, norms: { total: [{ band: 'A13_14', mean: 10, sd: 3 }] } }, { ...r, grade: 7, testId: logic.id, version: 1 });
-    expect(scored).toMatchObject({ id: 'r1', grade: 7, testId: 'tpl-logic', raw: { total: 13 }, topCodes: null });
+    const scored = scoreStoredResult({ ...logic, norms: { total: [{ band: 'A13_14', mean: 10, sd: 3 }] } }, { ...r, grade: 7, testId: logic.id, version: 1, createdAt: new Date('2026-10-01T05:00:00.000Z') });
+    expect(scored).toMatchObject({ id: 'r1', grade: 7, testId: 'tpl-logic', raw: { total: 13 }, topCodes: null, durationSec: 120, createdAt: '2026-10-01T05:00:00.000Z' });
     expect(scored.scales[0]).toMatchObject({ z: 1, standard: 115, percentile: 84, band: 'HIGH' });
     expect(scored).not.toHaveProperty('answersEnc');
   });

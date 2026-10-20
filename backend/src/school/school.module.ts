@@ -11,6 +11,7 @@ import { SchoolAuthService } from './auth/school-auth.service';
 import { ClassesController } from './classes/classes.controller';
 import { ClassesService } from './classes/classes.service';
 import { CommsModule } from './comms/comms.module';
+import { DevelopmentModule } from './development/development.module';
 import { InsightsModule } from './insights/insights.module';
 import { SchoolLearningModule } from './learning/school-learning.module';
 import { ProfileController } from './profile/profile.controller';
@@ -24,7 +25,7 @@ import { SchoolInfoController } from './structure/school-info.controller';
 import { SchoolInfoService } from './structure/school-info.service';
 
 @Module({
-  imports: [SchoolCoreModule, StudentsModule, AttendanceModule, CommsModule, SchoolModeModule, CareModule, InsightsModule, SchoolLearningModule, AssessmentsModule],
+  imports: [SchoolCoreModule, StudentsModule, AttendanceModule, CommsModule, SchoolModeModule, CareModule, InsightsModule, SchoolLearningModule, AssessmentsModule, DevelopmentModule],
   controllers: [
     SchoolAuthController,
     SchoolInfoController,

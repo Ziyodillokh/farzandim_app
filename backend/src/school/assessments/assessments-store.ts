@@ -83,7 +83,7 @@ export class AssessmentsStore {
       this.prisma.schoolPsychResult.findMany({
         where: { ...where, schoolId },
         orderBy: [{ takenAt: 'asc' }, { id: 'asc' }],
-        select: { id: true, studentId: true, classId: true, grade: true, ageBand: true, testId: true, version: true, assignmentId: true, takenAt: true, origin: true, raw: true },
+        select: { id: true, studentId: true, classId: true, grade: true, ageBand: true, testId: true, version: true, assignmentId: true, takenAt: true, origin: true, raw: true, durationSec: true, createdAt: true },
       }),
     ]);
     const byId = new Map(tests.map((t) => [t.id, t]));
