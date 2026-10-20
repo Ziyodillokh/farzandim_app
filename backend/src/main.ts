@@ -6,7 +6,7 @@ import {
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
-import { configureApp } from './bootstrap/configure-app';
+import { configureApp, JSON_BODY_LIMIT } from './bootstrap/configure-app';
 import { EnvConfig } from './common/config/env.schema';
 import { resolveTrustProxy } from './common/helpers/trust-proxy';
 
@@ -16,7 +16,8 @@ async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({
-      bodyLimit: 100 * 1024 * 1024, // 100 MB
+      // Standart (text/plain va h.k.); fayllar multipart'da — configure-app.
+      bodyLimit: JSON_BODY_LIMIT,
       forceCloseConnections: true,
       // nginx orqasida — FAQAT lokal proksiga ishonamiz, shunda `request.ip`
       // klient soxtalashtira olmaydigan haqiqiy IP bo'ladi (rate-limit, admin

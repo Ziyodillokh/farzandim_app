@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { EnvConfig } from '../common/config/env.schema';
+import { applyRouteBodyLimits } from '../common/decorators/body-limit.decorator';
 import { GlobalExceptionFilter } from '../common/filters/global-exception.filter';
 
 export interface ConfigureAppOptions {
@@ -14,10 +15,22 @@ export interface ConfigureAppOptions {
   swagger?: boolean;
 }
 
+/**
+ * JSON / urlencoded (va adapterdagi standart) so'rov chegarasi. Body
+ * autentifikatsiyadan OLDIN o'qiladi — avvalgi 100 MB bitta so'rov bilan
+ * xotira va event loop'ni band qilardi. Eng og'ir oddiy JSON: o'quvchilar
+ * importi (2000 qator). Kattaroq kerak bo'lsa — endpointda `@BodyLimit`.
+ * Fayllar (multipart) bunga kirmaydi: o'z `fileSize` chegarasi bor.
+ */
+export const JSON_BODY_LIMIT = 5 * 1024 * 1024;
+
 export async function configureApp(
   app: NestFastifyApplication,
   options: ConfigureAppOptions = {},
 ): Promise<void> {
+  // Marshrutlar `app.init()` da ro'yxatga olinadi — hook undan oldin turishi shart.
+  applyRouteBodyLimits(app.getHttpAdapter().getInstance());
+
   // Fastify default JSON parser bo'sh body bo'lganda 400 qaytaradi —
   // ko'plab DELETE so'rovlari (DELETE /users/me kabi) Content-Type:
   // application/json yuboradi lekin body bo'sh. Standart Dio/Axios
@@ -27,7 +40,7 @@ export async function configureApp(
   // almashtiramiz.
   app.useBodyParser(
     'application/json',
-    { bodyLimit: 100 * 1024 * 1024 },
+    { bodyLimit: JSON_BODY_LIMIT },
     (_req: unknown, body: Buffer, done: (err: Error | null, body?: unknown) => void) => {
       if (!body || body.length === 0) {
         return done(null, undefined);
@@ -48,7 +61,7 @@ export async function configureApp(
   // URLSearchParams orqali obyektga aylantiriladi (@Body() / req.body oladi).
   app.useBodyParser(
     'application/x-www-form-urlencoded',
-    { bodyLimit: 100 * 1024 * 1024 },
+    { bodyLimit: JSON_BODY_LIMIT },
     (
       _req: unknown,
       body: Buffer,
@@ -99,8 +112,9 @@ export async function configureApp(
 
   // Multipart/form-data — Fastify adapter ostida Multer (platform-express)
   // ISHLAMAYDI. Shu plugin avatar/video/voice/photo upload'larini parse qiladi.
-  // req.file() / req.parts() orqali fayllar o'qiladi. fileSize bodyLimit bilan
-  // mos (100 MB); har endpoint o'z service'ida kichikroq cheklov qo'yadi.
+  // req.file() / req.parts() orqali fayllar o'qiladi. Oqim adapter bodyLimit'iga
+  // bo'ysunmaydi — fayl chegarasi shu yerda (100 MB); har endpoint o'z
+  // service'ida kichikroq cheklov qo'yadi.
   await app.register(
     await import('@fastify/multipart').then((m) => m.default),
     { limits: { fileSize: 100 * 1024 * 1024 } },
