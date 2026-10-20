@@ -22,6 +22,10 @@ type EnrolledStudent = Prisma.SchoolStudentGetPayload<{ include: typeof enrolled
 
 export type CheckInAction = 'IN' | 'OUT' | 'NONE';
 
+/** QR faqat o'quv kunida, smenadan shuncha oldin / keyin qabul qilinadi (rasm orqali "uzoqdan" belgilashga qarshi). */
+export const QR_OPEN_BEFORE_MINUTES = 120;
+export const QR_CLOSE_AFTER_MINUTES = 180;
+
 @Injectable()
 export class AttendanceChildService {
   constructor(
@@ -43,6 +47,7 @@ export class AttendanceChildService {
     });
     const cls = student?.class;
     if (!student || !cls) throw new CheckInError('NOT_ENROLLED');
+    await this.assertSchoolHours(schoolId, cls.shift, now);
     const ctx = { schoolId, studentId: student.id, classId: cls.id, source: 'QR' as const, now };
     const existing = await this.prisma.schoolAttendance.findUnique({
       where: { studentId_date: { studentId: student.id, date: tashkentDay(now) } },
@@ -76,6 +81,17 @@ export class AttendanceChildService {
         })
       : null;
     return { today: student ? await this.todayView(student, this.clock.now()) : null };
+  }
+
+  private async assertSchoolHours(schoolId: string, shift: { start: string; end: string; weekdays: number[] }, now: Date) {
+    const date = tashkentDay(now);
+    const minute = tashkentMinute(now);
+    const holiday = await this.prisma.schoolHoliday.findUnique({ where: { schoolId_date: { schoolId, date } } });
+    const open = hhmmToMinutes(shift.start) - QR_OPEN_BEFORE_MINUTES;
+    const close = hhmmToMinutes(shift.end) + QR_CLOSE_AFTER_MINUTES;
+    if (!isSchoolDay(date, shift, new Set(holiday ? [date] : [])) || minute < open || minute > close) {
+      throw new CheckInError('OUTSIDE_SCHOOL_HOURS');
+    }
   }
 
   private async childIdOf(userId: string): Promise<string> {

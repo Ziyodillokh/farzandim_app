@@ -12,7 +12,7 @@ import { deviceChildSelect, deviceStateOf } from '../common/device-state';
 import { SchoolAuditService } from '../common/school-audit.service';
 import { conflict, invalid, notFound } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
-import { allowedAppsOf, SchoolModeStore, toPolicyView, toShiftLike } from './school-mode-store';
+import { AllowedApp, allowedAppsOf, SchoolModeStore, toPolicyView, toShiftLike } from './school-mode-store';
 import { SchoolModeSyncService } from './school-mode-sync.service';
 import { numberPeriods } from './school-mode-time';
 import { remindText } from './school-mode.i18n';
@@ -75,39 +75,28 @@ export class SchoolModePolicyService {
   async addAllowedApp(actor: SchoolActor, input: unknown) {
     assertCan(actor, 'schoolMode.manage');
     const data = parseOrThrow(allowedAppSchema, input);
-    const policy = await this.store.policy(actor.schoolId);
-    const apps = allowedAppsOf(policy);
-    if (apps.some((a) => a.name.toLowerCase() === data.name.toLowerCase())) throw conflict(`name: ${smMsg.appExists}`);
-    if (apps.length >= MAX_ALLOWED_APPS) throw invalid('name: errors.form.tooLong');
     const app = { id: randomUUID(), ...data };
-    const next = await this.savePolicyApps(actor, policy.id, [...apps, app], {
-      action: 'policy.appAdd',
-      summary: `Ruxsat etilgan ilova qo'shildi: ${app.name}`,
-      entityId: app.id,
-      after: app,
-      params: { name: app.name },
+    const next = await this.savePolicyApps(actor, (apps) => {
+      if (apps.some((a) => a.name.toLowerCase() === data.name.toLowerCase())) throw conflict(`name: ${smMsg.appExists}`);
+      if (apps.length >= MAX_ALLOWED_APPS) throw invalid('name: errors.form.tooLong');
+      return {
+        apps: [...apps, app],
+        entry: { action: 'policy.appAdd', summary: `Ruxsat etilgan ilova qo'shildi: ${app.name}`, entityId: app.id, after: app, params: { name: app.name } },
+      };
     });
     return toPolicyView(next);
   }
 
   async removeAllowedApp(actor: SchoolActor, appId: string) {
     assertCan(actor, 'schoolMode.manage');
-    const policy = await this.store.policy(actor.schoolId);
-    const apps = allowedAppsOf(policy);
-    const app = apps.find((a) => a.id === appId);
-    if (!app) throw notFound(appId);
-    const next = await this.savePolicyApps(
-      actor,
-      policy.id,
-      apps.filter((a) => a.id !== appId),
-      {
-        action: 'policy.appRemove',
-        summary: `Ruxsat etilgan ilova olib tashlandi: ${app.name}`,
-        entityId: appId,
-        before: app,
-        params: { name: app.name },
-      },
-    );
+    const next = await this.savePolicyApps(actor, (apps) => {
+      const app = apps.find((a) => a.id === appId);
+      if (!app) throw notFound(appId);
+      return {
+        apps: apps.filter((a) => a.id !== appId),
+        entry: { action: 'policy.appRemove', summary: `Ruxsat etilgan ilova olib tashlandi: ${app.name}`, entityId: appId, before: app, params: { name: app.name } },
+      };
+    });
     return toPolicyView(next);
   }
 
@@ -192,14 +181,20 @@ export class SchoolModePolicyService {
     return { sent: notified.length, skipped: ids.length - notified.length };
   }
 
+  /** Ruxsat etilgan ilovalar: siyosat qatori qulflanadi — parallel qo'shish / o'chirish yo'qolmaydi. */
   private async savePolicyApps(
     actor: SchoolActor,
-    policyId: string,
-    apps: Array<{ id: string; name: string; category: string }>,
-    entry: { action: string; summary: string; entityId: string; before?: unknown; after?: unknown; params: Record<string, string> },
+    change: (apps: AllowedApp[]) => {
+      apps: AllowedApp[];
+      entry: { action: string; summary: string; entityId: string; before?: unknown; after?: unknown; params: Record<string, string> };
+    },
   ) {
+    const policy = await this.store.policy(actor.schoolId);
     const next = await this.prisma.$transaction(async (tx) => {
-      const updated = await tx.schoolModePolicy.update({ where: { id: policyId }, data: { allowedApps: apps } });
+      await tx.$queryRaw`SELECT id FROM school_mode_policies WHERE id = ${policy.id} FOR UPDATE`;
+      const current = await tx.schoolModePolicy.findUniqueOrThrow({ where: { id: policy.id } });
+      const { apps, entry } = change(allowedAppsOf(current));
+      const updated = await tx.schoolModePolicy.update({ where: { id: policy.id }, data: { allowedApps: apps as unknown as Prisma.InputJsonValue } });
       await this.audit.write(actor, { module: 'SCHOOL_MODE', ...entry }, tx);
       return updated;
     });

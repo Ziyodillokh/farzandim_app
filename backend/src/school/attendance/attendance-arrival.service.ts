@@ -117,6 +117,9 @@ export class AttendanceArrivalService {
       include: recordInclude,
     });
     if (existing?.inAt) return { record: existing, alreadyIn: true };
+    // Bola o'zi skanerlagan QR xodim qarorini (qo'lda / kiosk) bosib ketmaydi —
+    // faqat tizim yozgan "kelmadi"ni tuzatadi (rasm orqali uzoqdan skanerlashga qarshi).
+    if (existing && ctx.source === 'QR' && existing.source !== 'SYSTEM') return { record: existing, alreadyIn: true };
 
     const late = isLateAt(minute, ctx.shiftStart, ctx.lateAfterMinutes);
     const status: AttendanceStatus = late ? 'LATE' : 'PRESENT';

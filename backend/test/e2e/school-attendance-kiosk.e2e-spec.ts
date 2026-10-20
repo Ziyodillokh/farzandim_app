@@ -47,7 +47,8 @@ describe('School attendance (S3): kiosk, QR va cron', () => {
     const code = (await t.prisma.schoolStudent.findUniqueOrThrow({ where: { id: w.vali } })).studentCode;
     const first = (await staffCall(t, w.duty, 'POST', '/kiosk/check-in', { code: code.toLowerCase() })).json();
     expect(first).toMatchObject({ className: '7-A', status: 'PRESENT', alreadyIn: false });
-    expect(first.student).toMatchObject({ id: w.vali, guardianIds: [w.guardianId], classId: w.classA });
+    expect(first.student).toMatchObject({ id: w.vali, classId: w.classA });
+    expect(first.student).not.toHaveProperty('guardianIds');
     const again = (await staffCall(t, w.duty, 'POST', '/kiosk/check-in', { code })).json();
     expect(again).toMatchObject({ alreadyIn: true, status: 'PRESENT' });
     expect(pushKinds()).toEqual(['ARRIVED']);

@@ -108,12 +108,14 @@ export class StudentsService {
   /** Doiradagi o'quvchilar qatorlari (ota-ona huquqi yo'q rol uchun — qisqartirilgan). */
   private async rows(actor: SchoolActor, filter: StudentFilter): Promise<StudentRow[]> {
     const allowed = allowedClassIds(actor);
+    const minimal = !actorCan(actor, 'guardians.link');
     const where: Prisma.SchoolStudentWhereInput = {
       schoolId: actor.schoolId,
       ...(allowed && { classId: { in: allowed } }),
       ...(filter.classId && { classId: filter.classId }),
       ...(!filter.includeArchived && { archived: false }),
-      ...(filter.device && { device: filter.device }),
+      // Qisqartirilgan rol uchun yashirin maydon bo'yicha filtr ham yo'q (qurilma ochilmasin).
+      ...(filter.device && !minimal && { device: filter.device }),
     };
     const now = new Date();
     const [students, todays] = await Promise.all([
@@ -124,7 +126,6 @@ export class StudentsService {
       }),
     ]);
     const todayStatus = new Map(todays.map((r) => [r.studentId, r.status]));
-    const minimal = !actorCan(actor, 'guardians.link');
     return students
       .map((s) => toStudentRow(s, todayStatus.get(s.id) ?? null, now))
       .map((r) => (minimal ? redact(r) : r))

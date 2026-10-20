@@ -149,6 +149,8 @@ export class CareRequestsService {
     change: (request: SchoolCareRequest, tx: Parameters<Parameters<PrismaService['$transaction']>[0]>[0]) => object | Promise<object>,
   ) {
     const updated = await this.prisma.$transaction(async (tx) => {
+      // Qator qulfi: parallel eslatma / protokol bir-birini yo'qotmasin (o'qish-o'zgartirish-yozish).
+      await tx.$queryRaw`SELECT id FROM school_care_requests WHERE id = ${id} FOR UPDATE`;
       const request = await tx.schoolCareRequest.findFirst({ where: { id, schoolId: actor.schoolId } });
       if (!request) throw notFound(id);
       const next = await tx.schoolCareRequest.update({ where: { id }, data: await change(request, tx) });

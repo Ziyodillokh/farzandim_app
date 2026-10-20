@@ -40,23 +40,9 @@ export class AuditService {
   async list(actor: SchoolActor, raw: Record<string, unknown>) {
     assertCan(actor, 'audit.view');
     const query = parseOrThrow(auditFilterSchema, raw);
+    // Ko'rinish cheklovi (masalan, CARE yozuvlari) filtrlar bilan AND — so'rov uni bekor qila olmaydi.
     const where: Prisma.SchoolAuditLogWhereInput = {
-      ...this.visible(actor),
-      ...(query.module && { module: query.module }),
-      ...(query.actorId && { actorId: query.actorId }),
-      ...((query.from || query.to) && {
-        at: {
-          ...(query.from && { gte: tashkentDayRange(query.from).gte }),
-          ...(query.to && { lt: tashkentDayRange(query.to).lt }),
-        },
-      }),
-      ...(query.search && {
-        OR: [
-          { actorName: { contains: query.search, mode: 'insensitive' } },
-          { summary: { contains: query.search, mode: 'insensitive' } },
-          { action: { contains: query.search, mode: 'insensitive' } },
-        ],
-      }),
+      AND: [this.visible(actor), this.filters(query)],
     };
     const dir = query.sortDir ?? 'desc';
     const orderBy: Prisma.SchoolAuditLogOrderByWithRelationInput =
@@ -88,6 +74,26 @@ export class AuditService {
     return [...seen.entries()]
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => compareUz(a.name, b.name));
+  }
+
+  private filters(query: z.output<typeof auditFilterSchema>): Prisma.SchoolAuditLogWhereInput {
+    return {
+      ...(query.module && { module: query.module }),
+      ...(query.actorId && { actorId: query.actorId }),
+      ...((query.from || query.to) && {
+        at: {
+          ...(query.from && { gte: tashkentDayRange(query.from).gte }),
+          ...(query.to && { lt: tashkentDayRange(query.to).lt }),
+        },
+      }),
+      ...(query.search && {
+        OR: [
+          { actorName: { contains: query.search, mode: 'insensitive' } },
+          { summary: { contains: query.search, mode: 'insensitive' } },
+          { action: { contains: query.search, mode: 'insensitive' } },
+        ],
+      }),
+    };
   }
 
   private visible(actor: SchoolActor): Prisma.SchoolAuditLogWhereInput {

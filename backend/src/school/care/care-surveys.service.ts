@@ -89,6 +89,8 @@ export class CareSurveysService {
     if (survey.status !== 'DRAFT') throw conflict(`status ${survey.status}`);
     const invited = await this.store.invitedFor(actor.schoolId, survey.ageGroups);
     return this.prisma.$transaction(async (tx) => {
+      // Bir vaqtda bitta faol so'rovnoma — parallel faollashtirishlar navbat bilan.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`care-survey-activate:${actor.schoolId}`}, 0))`;
       await tx.schoolCareSurvey.updateMany({ where: { schoolId: actor.schoolId, status: 'ACTIVE' }, data: { status: 'CLOSED' } });
       const res = await tx.schoolCareSurvey.updateMany({
         where: { id, status: 'DRAFT' },

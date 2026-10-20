@@ -21,22 +21,12 @@ const SEARCH_LIMIT = 8;
 const RECENT_LIMIT = 6;
 const MIN_QUERY = 2;
 
-/** Panel `Student` kontrakti. */
-function toStudentView(s: SchoolStudent & { guardians: Array<{ guardianId: string }> }) {
-  return {
-    id: s.id,
-    lastName: s.lastName,
-    firstName: s.firstName,
-    middleName: s.middleName,
-    gender: s.gender,
-    birthDate: s.birthDate,
-    classId: s.classId ?? '',
-    device: s.device,
-    guardianIds: s.guardians.map((g) => g.guardianId),
-    studentCode: s.studentCode,
-    enrolledAt: s.enrolledAt,
-    archived: s.archived,
-  };
+/**
+ * Kiosk javobi — faqat ekranda ko'rsatiladigan maydonlar (navbatchi o'quvchilar
+ * ro'yxatini ko'ra olmaydi: tug'ilgan sana, ota-onalar va qurilma chiqmaydi).
+ */
+function toKioskStudent(s: SchoolStudent) {
+  return { id: s.id, lastName: s.lastName, firstName: s.firstName, classId: s.classId ?? '', studentCode: s.studentCode };
 }
 
 @Injectable()
@@ -69,7 +59,7 @@ export class AttendanceKioskService {
         archived: false,
         OR: [{ studentCode: { equals: code, mode: 'insensitive' } }, { id: code }],
       },
-      include: { class: { include: { shift: true } }, guardians: { select: { guardianId: true } } },
+      include: { class: { include: { shift: true } } },
     });
     if (!student) throw notFound(code);
     const cls = student.class;
@@ -104,7 +94,7 @@ export class AttendanceKioskService {
         ),
     );
     return {
-      student: toStudentView(student),
+      student: toKioskStudent(student),
       className: cls.name,
       status: result.record.status,
       alreadyIn: result.alreadyIn,

@@ -9,12 +9,13 @@ import { PrismaService } from '../../common/database/prisma.service';
 
 export const KIOSK_SLOT_MS = 30_000;
 
-export type CheckInErrorCode = 'KIOSK_TOKEN_INVALID' | 'KIOSK_TOKEN_EXPIRED' | 'NOT_ENROLLED';
+export type CheckInErrorCode = 'KIOSK_TOKEN_INVALID' | 'KIOSK_TOKEN_EXPIRED' | 'NOT_ENROLLED' | 'OUTSIDE_SCHOOL_HOURS';
 
 const CHECK_IN_STATUS: Record<CheckInErrorCode, HttpStatus> = {
   KIOSK_TOKEN_INVALID: HttpStatus.BAD_REQUEST,
   KIOSK_TOKEN_EXPIRED: HttpStatus.BAD_REQUEST,
   NOT_ENROLLED: HttpStatus.FORBIDDEN,
+  OUTSIDE_SCHOOL_HOURS: HttpStatus.BAD_REQUEST,
 };
 
 /** Bola ilovasi uchun barqaror xato kodlari: javob `{ statusCode, code, message }`. */

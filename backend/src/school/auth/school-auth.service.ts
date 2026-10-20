@@ -303,15 +303,17 @@ export class SchoolAuthService {
     if (!staff || !staff.active || staff.school.status !== 'ACTIVE') throw sessionExpired();
   }
 
+  /** Atomik hisob: parallel noto'g'ri urinishlar ham bloklashga yetadi (eski qiymatdan yozilmaydi). */
   private async recordFailure(staff: SchoolStaff): Promise<void> {
-    const failed = staff.failedLogins + 1;
-    const lock = failed >= MAX_FAILED_LOGINS;
-    await this.prisma.schoolStaff.update({
+    const { failedLogins } = await this.prisma.schoolStaff.update({
       where: { id: staff.id },
-      data: {
-        failedLogins: lock ? 0 : failed,
-        ...(lock && { lockedUntil: new Date(Date.now() + LOCK_MINUTES * 60_000) }),
-      },
+      data: { failedLogins: { increment: 1 } },
+      select: { failedLogins: true },
+    });
+    if (failedLogins < MAX_FAILED_LOGINS) return;
+    await this.prisma.schoolStaff.updateMany({
+      where: { id: staff.id, failedLogins: { gte: MAX_FAILED_LOGINS } },
+      data: { failedLogins: 0, lockedUntil: new Date(Date.now() + LOCK_MINUTES * 60_000) },
     });
   }
 

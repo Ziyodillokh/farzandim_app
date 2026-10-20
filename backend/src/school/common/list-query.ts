@@ -47,7 +47,7 @@ export function runListQuery<T>(
   const searched = query.search
     ? items.filter((i) => matchesSearch(options.searchText(i), query.search ?? ''))
     : [...items];
-  const sortKey = query.sortBy && options.sorters[query.sortBy] ? query.sortBy : options.defaultSort;
+  const sortKey = query.sortBy && Object.hasOwn(options.sorters, query.sortBy) ? query.sortBy : options.defaultSort;
   const sorted = sortKey
     ? sortItems(searched, options.sorters[sortKey]!, query.sortDir ?? 'asc')
     : searched;
