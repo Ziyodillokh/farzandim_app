@@ -1,4 +1,5 @@
 import type { IsoDate } from '@/data/contracts';
+import { isHttpMode } from '@/data/source';
 import { readPref, removePref, writePref } from '@/lib/prefs';
 import { addDays, isoWeekday, toIsoDate } from './calendar';
 
@@ -121,6 +122,8 @@ function scenarioMinute(s: ClockState): number {
 
 /** Demo vaqti (SCENARIO'da virtual). */
 export function clockNow(): Date {
+  // Haqiqiy (backend) rejimda demo ssenariy soati yo'q.
+  if (isHttpMode) return new Date();
   const s = load();
   if (s.mode === 'REAL') return new Date();
   const [y, m, d] = s.scenarioDate.split('-').map(Number);
