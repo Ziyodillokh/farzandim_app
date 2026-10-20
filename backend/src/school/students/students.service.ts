@@ -13,6 +13,7 @@ import {
   assertClassInScope,
   SchoolActor,
 } from '../auth/school-actor';
+import { toRecordView } from '../attendance/attendance-view';
 import { deviceStateOf } from '../common/device-state';
 import { runListQuery } from '../common/list-query';
 import { notFound } from '../common/school-errors';
@@ -21,7 +22,6 @@ import {
   redact,
   studentInclude,
   StudentRow,
-  toAttendanceRecordView,
   toExceptionView,
   toGuardianView,
   toStudentRow,
@@ -99,7 +99,7 @@ export class StudentsService {
       ...row,
       ...extra,
       guardians: guardians.map(toGuardianView),
-      today: today ? toAttendanceRecordView(today) : null,
+      today: today ? toRecordView(today) : null,
       exceptions: exceptions.map(toExceptionView),
       deviceState: deviceStateOf(student, student.child, now),
     };

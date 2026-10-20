@@ -6,8 +6,6 @@ import {
   AttendanceStatus,
   GuardianLinkStatus,
   Prisma,
-  SchoolAttendance,
-  SchoolAttendanceCorrection,
   SchoolGuardian,
   SchoolModeException,
   SchoolStudent,
@@ -104,27 +102,6 @@ export function toGuardianView(g: SchoolGuardian) {
     inviteCode: g.inviteCode,
     inviteExpiresAt: iso(g.inviteExpiresAt),
     linkedAt: iso(g.linkedAt),
-  };
-}
-
-export function toAttendanceRecordView(r: SchoolAttendance & { corrections: SchoolAttendanceCorrection[] }) {
-  return {
-    id: r.id,
-    date: r.date,
-    studentId: r.studentId,
-    classId: r.classId ?? '',
-    status: r.status,
-    inAt: r.inAt,
-    outAt: r.outAt,
-    source: r.source,
-    corrections: r.corrections.map((c) => ({
-      at: c.at.toISOString(),
-      byStaffId: c.byStaffId,
-      from: c.from,
-      to: c.to,
-      reason: c.reason,
-    })),
-    parentNotified: r.parentNotified,
   };
 }
 
