@@ -62,5 +62,21 @@
     "PARVOZ-Q206": "I",
     "PARVOZ-Q207": "S",
     "PARVOZ-Q209": "E"
+  },
+  "_scaleLabels": "Shkala yorliqlari: savollar \"-mi?\" shaklida, \"To'g'ri / To'g'ri emas\" javobi o'zbekchada mos emas edi (2026-10-21, egasi talabi). Qiymatlar o'zgarmaydi; prod'dagi qatorlar 20261021130000_kelajak_scale_labels migratsiyasi bilan yangilandi.",
+  "scaleLabels": {
+    "likert_5": [
+      "Yo‘q",
+      "Ko‘proq yo‘q",
+      "Ba’zan",
+      "Ko‘proq ha",
+      "Ha"
+    ],
+    "interest_4": [
+      "Yo‘q",
+      "Unchalik emas",
+      "Ha",
+      "Ha, juda"
+    ]
   }
 }

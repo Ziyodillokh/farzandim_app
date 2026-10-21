@@ -47,20 +47,24 @@ export const KELAJAK_ANSWER_TYPES = [
 
 export const TEXT_ANSWER_TYPE = 'text';
 
-/** Standart variantlar — JSON `answer_scales` bilan aynan bir xil. */
+/**
+ * Standart variantlar. interest_4 va likert_5 — backend `review-overrides.json`
+ * `scaleLabels` bilan bir xil ("-mi?" savolga mos "Ha / Yo'q"); qolganlari JSON
+ * `answer_scales` bilan aynan bir xil.
+ */
 export const ANSWER_TYPE_PRESETS: Record<string, readonly KelajakOptionPreset[]> = {
   interest_4: [
-    { value: 1, uz: 'Umuman yoqmaydi' },
-    { value: 2, uz: 'Unchalik yoqmaydi' },
-    { value: 3, uz: 'Yoqadi' },
-    { value: 4, uz: 'Juda yoqadi' },
+    { value: 1, uz: 'Yo‘q' },
+    { value: 2, uz: 'Unchalik emas' },
+    { value: 3, uz: 'Ha' },
+    { value: 4, uz: 'Ha, juda' },
   ],
   likert_5: [
-    { value: 1, uz: 'Umuman to‘g‘ri emas' },
-    { value: 2, uz: 'Ko‘proq to‘g‘ri emas' },
-    { value: 3, uz: 'Ba’zan / qisman' },
-    { value: 4, uz: 'Ko‘proq to‘g‘ri' },
-    { value: 5, uz: 'To‘liq to‘g‘ri' },
+    { value: 1, uz: 'Yo‘q' },
+    { value: 2, uz: 'Ko‘proq yo‘q' },
+    { value: 3, uz: 'Ba’zan' },
+    { value: 4, uz: 'Ko‘proq ha' },
+    { value: 5, uz: 'Ha' },
   ],
   career_lab_5: [
     { value: 1, uz: 'Juda yoqmadi' },

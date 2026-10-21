@@ -72,6 +72,11 @@ export interface ReviewOverrides {
   knowledge: readonly string[];
   /** Career Lab faoliyati → RIASEC kodi (`scoring.riasec`). */
   careerLab: Readonly<Record<string, RiasecCode>>;
+  /**
+   * Shkala yorliqlari (javob turi → tartib bo'yicha uz matnlar). Qiymatlar
+   * o'zgarmaydi — faqat ko'rinadigan matn ("-mi?" savolga mos "Ha / Yo'q").
+   */
+  scaleLabels: Readonly<Record<string, readonly string[]>>;
 }
 
 export const NO_OVERRIDES: ReviewOverrides = {
@@ -80,6 +85,7 @@ export const NO_OVERRIDES: ReviewOverrides = {
   reverse: [],
   knowledge: [],
   careerLab: {},
+  scaleLabels: {},
 };
 
 export type ParseResult<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -211,6 +217,11 @@ export function parseKelajakQuestion(
   }
 
   const id = externalId as string | null;
+  const labels = has(overrides.scaleLabels, answerType) ? overrides.scaleLabels[answerType] : null;
+  const shownOptions =
+    labels && labels.length === options.value.length
+      ? options.value.map((o, i) => ({ value: o.value, label: { uz: labels[i] } }))
+      : options.value;
   const inactiveReason = id !== null && has(overrides.inactive, id) ? overrides.inactive[id] : null;
   const overrideNote = id !== null && has(overrides.reviewNotes, id) ? overrides.reviewNotes[id] : null;
 
@@ -222,7 +233,7 @@ export function parseKelajakQuestion(
       ageGroup,
       text: text.value,
       answerType,
-      options: options.value,
+      options: shownOptions,
       scoring: withScoringTags(scoring.value, {
         knowledge: id !== null && overrides.knowledge.includes(id),
         riasec: id !== null && has(overrides.careerLab, id) ? overrides.careerLab[id] : null,
@@ -258,6 +269,19 @@ function idList(value: unknown, field: string): ParseResult<string[]> {
     : { ok: false, error: `${field}: satrlar massivi kerak` };
 }
 
+function labelRecord(value: unknown): ParseResult<Record<string, string[]>> {
+  if (value === undefined) return { ok: true, value: {} };
+  if (!isPlainObject(value)) return { ok: false, error: 'scaleLabels: obyekt kerak' };
+  for (const [type, list] of Object.entries(value)) {
+    if (!isKelajakAnswerType(type) || type === TEXT_ANSWER_TYPE) {
+      return { ok: false, error: `scaleLabels.${type}: shkala turi kerak` };
+    }
+    const ok = Array.isArray(list) && list.every((t) => typeof t === 'string' && t.trim().length > 0 && t.length <= TEXT_LIMITS.option);
+    if (!ok) return { ok: false, error: `scaleLabels.${type}: bo'sh bo'lmagan matnlar massivi kerak` };
+  }
+  return { ok: true, value: value as Record<string, string[]> };
+}
+
 function riasecRecord(value: unknown): ParseResult<Record<string, RiasecCode>> {
   if (value === undefined) return { ok: true, value: {} };
   if (!isPlainObject(value)) return { ok: false, error: 'careerLab: obyekt kerak' };
@@ -280,6 +304,8 @@ export function parseReviewOverrides(raw: unknown): ParseResult<ReviewOverrides>
   if (!knowledge.ok) return knowledge;
   const careerLab = riasecRecord(raw.careerLab);
   if (!careerLab.ok) return careerLab;
+  const scaleLabels = labelRecord(raw.scaleLabels);
+  if (!scaleLabels.ok) return scaleLabels;
   return {
     ok: true,
     value: {
@@ -288,6 +314,7 @@ export function parseReviewOverrides(raw: unknown): ParseResult<ReviewOverrides>
       reverse: reverse.value,
       knowledge: knowledge.value,
       careerLab: careerLab.value,
+      scaleLabels: scaleLabels.value,
     },
   };
 }
