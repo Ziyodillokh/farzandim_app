@@ -253,4 +253,64 @@ class AppRoutes {
   /// Pair requests per child (Sprint 4.4.25).
   static const String pairRequestsPattern = '/pair-requests/:childId';
   static String pairRequestsPath(String childId) => '/pair-requests/$childId';
+
+  // ─── Parvoz School (maktab) va Growth ───────────────────────────
+
+  /// Maktab bosh sahifasi — maktablar, o'quvchilar va bo'limlar.
+  static const String school = '/school';
+
+  /// School Mode eslatmasi (push `SCHOOL_MODE_REMIND`): maktab sahifasi
+  /// o'quvchi uchun kerakli qadamni (moslash / ulash / ruxsat) ochadi.
+  static String schoolRemindPath(String studentId) =>
+      _withQuery(school, {'remind': studentId});
+
+  /// Maktab taklif kodini kiritish (yoki QR skanerlash).
+  static const String schoolLink = '/school/link';
+
+  /// Maktab e'lonlari.
+  static const String schoolAnnouncements = '/school/announcements';
+
+  /// E'lonlar, push'dagi e'lon ochilgan holda ([focus] — `announcementId`).
+  /// Push matni URL'ga YOZILMAYDI (tashqi havola bilan soxta "e'lon"
+  /// ko'rsatib bo'lmasin) — u `GoRouter` `extra`sida keladi
+  /// (`SchoolAnnouncementPreview`).
+  static String schoolAnnouncementsPath({String? focus}) =>
+      _withQuery(schoolAnnouncements, {'focus': ?focus});
+
+  /// To'lov eslatmalari va "to'laganman" so'rovlari.
+  static const String schoolPayments = '/school/payments';
+
+  /// To'lovlar, [verification] so'rovi ajratilgan holda (push
+  /// `SCHOOL_VERIFICATION_ANSWERED`).
+  static String schoolPaymentsPath({String? verification}) =>
+      _withQuery(schoolPayments, {'verification': ?verification});
+
+  /// Erta ketish so'rovlari.
+  static const String schoolEarlyExits = '/school/early-exits';
+
+  /// O'quvchining oylik davomati (`?month=YYYY-MM` ixtiyoriy — berilmasa
+  /// joriy oy). Navigatsiya uchun [schoolAttendancePath].
+  static const String schoolAttendancePattern = '/school/attendance/:studentId';
+
+  static String schoolAttendancePath(String studentId, {String? month}) {
+    final path = '/school/attendance/$studentId';
+    return month == null
+        ? path
+        : '$path?month=${Uri.encodeQueryComponent(month)}';
+  }
+
+  /// Bolaning Growth (kunlik testlar) natijalari.
+  static const String growthPattern = '/growth/:childId';
+
+  static String growthPath(String childId) => '/growth/$childId';
+
+  /// Bo'sh qiymatlarsiz so'rov qatori; hech narsa qolmasa — yo'lning o'zi.
+  static String _withQuery(String path, Map<String, String> query) {
+    final params = {
+      for (final entry in query.entries)
+        if (entry.value.trim().isNotEmpty) entry.key: entry.value,
+    };
+    if (params.isEmpty) return path;
+    return Uri(path: path, queryParameters: params).toString();
+  }
 }

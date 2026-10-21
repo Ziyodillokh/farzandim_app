@@ -238,7 +238,13 @@
       "openSchedules": "Open schedules",
       "giveTime": "Grant time",
       "deny": "Deny",
-      "openChildSettings": "Open child settings"
+      "openChildSettings": "Open child settings",
+      "openSchool": "Open School",
+      "openAnnouncements": "Open announcement",
+      "openAttendance": "View attendance",
+      "openEarlyExits": "View requests",
+      "openPayments": "View payments",
+      "openGrowth": "View results"
     },
     "unlock": {
       "granted": "Granted {minutes} minutes.",
@@ -396,7 +402,15 @@
     "donBalance": "DON balance",
     "dailySteps": "Daily steps",
     "dailyStreak": "Daily streak",
-    "streakDays": "{count} days"
+    "streakDays": "{count} days",
+    "school": {
+      "inviteTitle": "Have a school invite code?",
+      "inviteSubtitle": "Enter it to see attendance and announcements here",
+      "matchTitle": "Link the student to your child",
+      "matchSubtitle": "Students not linked yet: {count}",
+      "matchCta": "Link",
+      "unread": "{count} new"
+    }
   },
   "schedules": {
     "headerTitle": "Schedules",
@@ -1040,6 +1054,10 @@
       "children": {
         "title": "My children",
         "subtitle": "{count} children"
+      },
+      "school": {
+        "title": "School",
+        "subtitle": "Invite code, announcements, attendance"
       },
       "sessions": {
         "title": "Active sessions",
@@ -1753,5 +1771,229 @@
     "permissionOn": "Enabled",
     "permissionOff": "Disabled",
     "permissionUnknown": "Unknown"
+  },
+  "school": {
+    "title": "School",
+    "classLabel": "Class {name}",
+    "errorTitle": "Couldn't load",
+    "home": {
+      "emptyTitle": "Connect with your school",
+      "emptySubtitle": "With the invite code from your school, you will follow your child's attendance, school announcements and payment reminders here.",
+      "enterCode": "Enter invite code",
+      "addAnother": "Add another school",
+      "noStudents": "No students are assigned to you at this school yet.",
+      "matchedTo": "Child: {child}",
+      "notMatched": "Not linked to a child",
+      "linkedByOther": "Linked by another family member",
+      "match": "Link to a child",
+      "changeMatch": "Change",
+      "pickStudent": "Which student?",
+      "unlink": "Disconnect",
+      "unlinkTitle": "Disconnect from the school?",
+      "unlinkBody": "Announcements, attendance and payment reminders from {school} will no longer come to this app. To reconnect, you will need a new code from the school.",
+      "unlinkConfirm": "Disconnect",
+      "unlinked": "School disconnected"
+    },
+    "link": {
+      "title": "Connect to a school",
+      "heading": "Enter the invite code",
+      "body": "Your school gives you an 8-character code or a QR code. Once connected, your child's attendance, school announcements and payment reminders will come to this app.",
+      "codeLabel": "Invite code",
+      "codeHint": "XXXX-XXXX",
+      "scan": "Scan QR code",
+      "submit": "Connect",
+      "success": "School connected",
+      "scanTitle": "Scan the QR code",
+      "scanHint": "Place the QR code from your school inside the frame",
+      "invalidQr": "This QR code is not a school invite. Scan the code your school gave you.",
+      "cameraError": "Couldn't open the camera. Allow camera access or enter the code manually."
+    },
+    "match": {
+      "title": "Which of your children is {student}?",
+      "explain": "Choose your child — school attendance and messages will appear on their page.",
+      "progress": "{current} / {total}",
+      "none": "None — don't link",
+      "currentlyWith": "Currently: {student}",
+      "save": "Save",
+      "later": "Later",
+      "saved": "Student linked to your child",
+      "removed": "Link removed",
+      "linkedByOther": "Another family member has linked this student to their child. If it needs changing, please agree with them.",
+      "noChildren": "First add your child to the app, then link the student to them.",
+      "addChild": "Add a child"
+    },
+    "attendance": {
+      "title": "Attendance",
+      "inAt": "In {time}",
+      "outAt": "Out {time}",
+      "status": {
+        "present": "Present",
+        "late": "Late",
+        "absent": "Absent",
+        "leftEarly": "Left early",
+        "excused": "Excused",
+        "pending": "Not marked yet",
+        "holiday": "Day off",
+        "unknown": "No data"
+      },
+      "rate": "Attendance rate",
+      "noMarks": "No days have been marked this month yet.",
+      "days": "Days",
+      "noDays": "There have been no school days this month yet.",
+      "today": "Today",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month"
+    },
+    "announcements": {
+      "title": "Announcements",
+      "emptyTitle": "No announcements yet",
+      "emptyBody": "When the school sends an announcement, it will appear here and you'll get a notification.",
+      "important": "Important",
+      "unread": "Unread",
+      "unreadCount": "Unread announcements: {count}",
+      "loadMore": "Load more",
+      "fromPush": "From a notification"
+    },
+    "earlyExit": {
+      "title": "Early pickup",
+      "new": "New request",
+      "sheetTitle": "Early pickup request",
+      "sheetSubtitle": "The school will review the request and reply",
+      "todayOnly": "The request is for today only. You'll get a notification when the school approves or declines it.",
+      "student": "Student",
+      "time": "Pickup time",
+      "timeHint": "Choose a time",
+      "reason": "Reason",
+      "reasonHint": "For example: a doctor's appointment",
+      "pickupBy": "Who will pick up",
+      "pickupHint": "For example: mother — Malika",
+      "submit": "Send request",
+      "sent": "Request sent to the school",
+      "emptyTitle": "No requests yet",
+      "emptyBody": "If you need to pick your child up before classes end, send the school a request here.",
+      "pickupLine": "Picked up by: {name}",
+      "bySchool": "Added by school staff",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Declined",
+        "unknown": "Unknown"
+      }
+    },
+    "payments": {
+      "title": "Payments",
+      "emptyTitle": "No payment reminders",
+      "emptyBody": "When the school sets a payment date, it will appear here.",
+      "nextDate": "Next payment date",
+      "dateLine": "Payment date: {date}",
+      "prepaid": "Paid in advance: {count} mo.",
+      "paused": "Reminders paused",
+      "note": "The school sets the payment date. If you have already paid, let the school know with “I've paid, please check”.",
+      "verify": "I've paid, please check",
+      "verifyPending": "Being checked",
+      "verifyTitle": "Payment check",
+      "verifyLabel": "Message to the school",
+      "verifyHint": "For example: paid on November 3 via Click",
+      "verifyNote": "The school will check the payment and reply. You'll get a notification when they answer.",
+      "verifySubmit": "Send",
+      "verifySent": "Your request was sent to the school"
+    },
+    "errors": {
+      "validation": "Please check the details and try again.",
+      "inviteFormat": "The code has 8 characters: Latin letters and digits. Please check it and try again.",
+      "inviteInvalid": "This code didn't work: it's incorrect or has expired. Ask the school for a new code.",
+      "tooManyAttempts": "Too many attempts. Please wait a little and try again.",
+      "studentNotFound": "Student not found. Please refresh the list.",
+      "childNotFound": "Child not found. Please refresh the list.",
+      "linkedElsewhere": "Another family member has already matched this student to their child.",
+      "linkNotFound": "This school connection has already been removed.",
+      "notFound": "Nothing was found. Please refresh the list.",
+      "earlyExitPending": "Today's request has already been sent and is still being reviewed.",
+      "verificationOpen": "The school is already reviewing your request for this payment.",
+      "conflict": "This action couldn't be completed right now. Refresh the list and try again.",
+      "unavailable": "This section isn't available yet. Please try again later.",
+      "server": "Temporary server issue. Please try again a bit later."
+    },
+    "todayAt": "Today, {time}",
+    "verifications": {
+      "title": "My requests",
+      "answer": "School's reply",
+      "status": {
+        "open": "Under review",
+        "answered": "Answered",
+        "closed": "Closed",
+        "unknown": "Unknown"
+      }
+    },
+    "mode": {
+      "permissionTitle": "School: phone mode",
+      "permissionBodyAndroid": "For the lesson-time phone mode to work, open the Parvoz child app on {child}'s phone and turn on the Accessibility permission.",
+      "permissionBodyIos": "For the lesson-time phone mode to work, open the Parvoz child app on {child}'s iPhone and allow Screen Time.",
+      "permissionHint": "You can check whether the permission is on in the child's settings.",
+      "openSettings": "Child settings",
+      "gotIt": "Got it"
+    }
+  },
+  "growth": {
+    "title": "Learning growth",
+    "period7": "7 days",
+    "period30": "30 days",
+    "periodLabel": "Period",
+    "periodTitle": "Last {days} days",
+    "overall": "Average score",
+    "vsPrevious": "vs the previous {days} days",
+    "answers": "{correct}/{total} correct",
+    "tests": "Tests",
+    "activeDays": "Active days",
+    "streak": "Days in a row",
+    "bySubject": "By subject",
+    "subjectTests": "Tests: {count}",
+    "strong": "Strongest subject",
+    "focus": "Worth practising",
+    "focusHint": "Reviewing this subject together will help the score grow quickly.",
+    "noTests": {
+      "title": "No tests in this period",
+      "body": "When your child solves daily tests in the Parvoz Growth app, the results appear here."
+    },
+    "noProfile": {
+      "title": "Grade and subjects not chosen",
+      "body": "Choose a grade and subjects so daily tests fit your child.",
+      "action": "Choose"
+    },
+    "editProfile": "Change",
+    "results": "Recent results",
+    "resultsEmpty": "No results yet.",
+    "loadMore": "Show more",
+    "daily": "Daily",
+    "unavailable": "Learning growth is not available yet. Please try again later.",
+    "card": {
+      "summary": "Last {days} days · tests: {count} · average {percent}",
+      "empty": "Daily test results and progress by subject"
+    },
+    "profile": {
+      "title": "Grade and subjects",
+      "subtitle": "Daily tests are matched to this grade and these subjects.",
+      "grade": "Grade",
+      "gradeValue": "Grade {grade}",
+      "subjects": "Subjects",
+      "subjectsCount": "{count}/{max}",
+      "pickGradeFirst": "Choose a grade first to see the subjects taught in it.",
+      "maxHint": "You can choose up to {max} subjects. Remove one to add another.",
+      "save": "Save",
+      "saved": "Saved"
+    },
+    "subjects": {
+      "math": "Math",
+      "english": "English",
+      "native": "Native language",
+      "history": "History",
+      "biology": "Biology",
+      "geography": "Geography",
+      "physics": "Physics",
+      "chemistry": "Chemistry",
+      "informatics": "Computer science",
+      "russian": "Russian",
+      "unknown": "Other subject"
+    }
   }
 }

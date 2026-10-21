@@ -18,6 +18,7 @@ import 'package:farzandim/features/notifications/presentation/widgets/notificati
     show appIconProxyUrl;
 import 'package:farzandim/features/notifications/presentation/widgets/unlock_decision_sheet.dart';
 import 'package:farzandim/features/pair_requests/data/repositories/backend_pair_request_repository.dart';
+import 'package:farzandim/features/school/presentation/school_push.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
@@ -343,6 +344,23 @@ class _Actions extends ConsumerWidget {
             'notifications.review'.tr(),
             () => context.push(AppRoutes.sessionAccessApprove),
           ),
+        ];
+      case NotificationType.schoolAttendance:
+      case NotificationType.schoolEarlyExit:
+      case NotificationType.schoolAnnouncement:
+      case NotificationType.schoolReminder:
+      case NotificationType.schoolPayment:
+      case NotificationType.schoolVerification:
+      case NotificationType.schoolMode:
+      case NotificationType.learningReport:
+        // Maktab eslatmasida (API yo'q) tugma bo'lmaydi.
+        final target = schoolPushTarget(n);
+        return [
+          if (target != null)
+            primary(
+              target.labelKey.tr(),
+              () => context.push(target.route, extra: target.extra),
+            ),
         ];
     }
   }

@@ -1,6 +1,7 @@
 // "Tizim so'zlamalari" — Parvoz dizayn. Tepada orqa tugma + sarlavha,
-// so'ng premium tarif banneri (Batafsil → Parvoz Premium sahifasi) va 6 ta
-// sozlama qatori: Akkount, Faol sessiyalar, Bildirishnomalar, Ilova tili,
+// so'ng premium tarif banneri (Batafsil → Parvoz Premium sahifasi) va
+// sozlama qatorlari: Akkount, Bolalarim, Maktab (faqat backend'da maktab
+// bo'limi bo'lsa), Faol sessiyalar, Bildirishnomalar, Ilova tili,
 // Qo'llab quvvatlash, Biz haqimizda.
 //
 // Chiqish / hisobni o'chirish "Akkount" (profil) sahifasiga ko'chirildi.
@@ -11,6 +12,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/profile/presentation/screens/profile_screen.dart';
+import 'package:farzandim/features/school/presentation/providers/school_providers.dart';
 import 'package:farzandim/features/settings/presentation/providers/language_provider.dart';
 import 'package:farzandim/features/settings/presentation/providers/sessions_provider.dart';
 import 'package:farzandim/features/settings/presentation/screens/language_sheet.dart';
@@ -61,6 +63,8 @@ class SettingsScreen extends ConsumerWidget {
         .watch(childrenProvider)
         .maybeWhen(data: (list) => list.length, orElse: () => 0);
     final langLabel = AppLanguage.fromCode(context.locale.languageCode).label;
+    // Maktab bo'limi backend'da bo'lsagina (404 `code`siz → yashirin).
+    final schoolAvailable = ref.watch(schoolAvailableProvider);
 
     return Scaffold(
       backgroundColor: _bg,
@@ -92,6 +96,15 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       onTap: () => context.push(AppRoutes.settingsChildren),
                     ),
+                    if (schoolAvailable) ...[
+                      const SizedBox(height: 4),
+                      _SettingRow(
+                        icon: SolarIconsBold.squareAcademicCap,
+                        title: 'settings.rows.school.title'.tr(),
+                        subtitle: 'settings.rows.school.subtitle'.tr(),
+                        onTap: () => context.push(AppRoutes.school),
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     _SettingRow(
                       icon: SolarIconsBold.devices,

@@ -43,6 +43,7 @@ import 'package:farzandim/features/gamification/presentation/screens/leaderboard
 import 'package:farzandim/features/geo_zones/presentation/screens/add_edit_geo_zone_screen.dart';
 import 'package:farzandim/features/geo_zones/presentation/screens/addresses_setup_screen.dart';
 import 'package:farzandim/features/geo_zones/presentation/screens/geo_zones_list_screen.dart';
+import 'package:farzandim/features/growth/presentation/screens/growth_screen.dart';
 import 'package:farzandim/features/legal/presentation/screens/privacy_policy_screen.dart';
 import 'package:farzandim/features/legal/presentation/screens/terms_of_service_screen.dart';
 import 'package:farzandim/features/listen/presentation/screens/listen_screen.dart';
@@ -61,6 +62,13 @@ import 'package:farzandim/features/quick_actions/presentation/screens/permission
 import 'package:farzandim/features/quick_actions/presentation/screens/voice_messages_screen.dart';
 import 'package:farzandim/features/reports/presentation/screens/reports_screen.dart';
 import 'package:farzandim/features/schedules/presentation/screens/schedules_list_screen.dart';
+import 'package:farzandim/features/school/presentation/school_push.dart';
+import 'package:farzandim/features/school/presentation/screens/school_announcements_screen.dart';
+import 'package:farzandim/features/school/presentation/screens/school_attendance_screen.dart';
+import 'package:farzandim/features/school/presentation/screens/school_early_exits_screen.dart';
+import 'package:farzandim/features/school/presentation/screens/school_home_screen.dart';
+import 'package:farzandim/features/school/presentation/screens/school_link_screen.dart';
+import 'package:farzandim/features/school/presentation/screens/school_payments_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/about_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/active_sessions_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/delete_account_screen.dart';
@@ -78,9 +86,14 @@ import 'package:go_router/go_router.dart';
 
 /// Slide right-to-left page transition — Dashboard'dan boshqa ekranga
 /// ochilganda zamonaviy "drill-down" his. 250ms, easeOutCubic.
-CustomTransitionPage<T> _slidePage<T>(Widget child) {
+///
+/// [key] — sahifa kaliti. Berilmasa ekran turi: o'sha turdagi ekran
+/// stack'da bo'lsa, uning holati qayta ishlatiladi. Push parametrli maktab va
+/// Growth ekranlari `state.pageKey` beradi — har ochilish yangi sahifa (yangi
+/// `?remind=`, `?focus=`, `?month=` e'tiborsiz qolmaydi).
+CustomTransitionPage<T> _slidePage<T>(Widget child, {LocalKey? key}) {
   return CustomTransitionPage<T>(
-    key: ValueKey(child.runtimeType),
+    key: key ?? ValueKey(child.runtimeType),
     transitionDuration: const Duration(milliseconds: 250),
     reverseTransitionDuration: const Duration(milliseconds: 200),
     child: child,
@@ -623,6 +636,72 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.pairRequestsPattern,
       pageBuilder: (context, state) => _slidePage(
         PairRequestsScreen(childId: state.pathParameters['childId']!),
+      ),
+    ),
+
+    // Parvoz School — maktab bo'limi (taklif kodi, davomat, e'lonlar,
+    // erta ketish, to'lovlar). Backend'da bo'lim yo'q bo'lsa sahifalar
+    // "hozircha mavjud emas" deydi; kirish nuqtalari esa yashirin.
+    GoRoute(
+      path: AppRoutes.school,
+      pageBuilder: (context, state) => _slidePage(
+        SchoolHomeScreen(remindStudentId: state.uri.queryParameters['remind']),
+        key: state.pageKey,
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.schoolLink,
+      pageBuilder: (context, state) =>
+          _slidePage(const SchoolLinkScreen(), key: state.pageKey),
+    ),
+    GoRoute(
+      path: AppRoutes.schoolAnnouncements,
+      pageBuilder: (context, state) {
+        // Push matni faqat ilova ichidan (`extra`) — URL'dan emas.
+        final preview = state.extra is SchoolAnnouncementPreview
+            ? state.extra! as SchoolAnnouncementPreview
+            : null;
+        return _slidePage(
+          SchoolAnnouncementsScreen(
+            focusId: state.uri.queryParameters['focus'],
+            focusTitle: preview?.title,
+            focusBody: preview?.body,
+          ),
+          key: state.pageKey,
+        );
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.schoolPayments,
+      pageBuilder: (context, state) => _slidePage(
+        SchoolPaymentsScreen(
+          focusVerificationId: state.uri.queryParameters['verification'],
+        ),
+        key: state.pageKey,
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.schoolEarlyExits,
+      pageBuilder: (context, state) =>
+          _slidePage(const SchoolEarlyExitsScreen(), key: state.pageKey),
+    ),
+    GoRoute(
+      path: AppRoutes.schoolAttendancePattern,
+      pageBuilder: (context, state) => _slidePage(
+        SchoolAttendanceScreen(
+          studentId: state.pathParameters['studentId']!,
+          month: state.uri.queryParameters['month'],
+        ),
+        key: state.pageKey,
+      ),
+    ),
+
+    // Growth (kunlik testlar) — ota-ona ko'rinishi.
+    GoRoute(
+      path: AppRoutes.growthPattern,
+      pageBuilder: (context, state) => _slidePage(
+        GrowthScreen(childId: state.pathParameters['childId']!),
+        key: state.pageKey,
       ),
     ),
   ];

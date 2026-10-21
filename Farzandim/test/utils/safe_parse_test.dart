@@ -68,4 +68,53 @@ void main() {
       );
     });
   });
+
+  group('JsonFieldReader — tur mos kelmasa zaxira qiymat, otmaydi', () {
+    const json = <String, dynamic>{
+      'name': 'Aziz',
+      'empty': '',
+      'count': 3,
+      'double': 4.7,
+      'numeric': ' 12 ',
+      'flag': true,
+      'at': '2026-10-20T05:00:00.000Z',
+      'bad': 'kecha',
+      'nested': {'id': 'x'},
+      'list': [1, 2],
+    };
+
+    test('readString / readStringOrNull', () {
+      expect(json.readString('name'), 'Aziz');
+      expect(json.readString('count'), '');
+      expect(json.readString('missing', fallback: '—'), '—');
+      expect(json.readStringOrNull('empty'), isNull);
+      expect(json.readStringOrNull('count'), isNull);
+    });
+
+    test('readInt / readIntOrNull', () {
+      expect(json.readInt('count'), 3);
+      expect(json.readInt('double'), 4);
+      expect(json.readInt('numeric'), 12);
+      expect(json.readInt('name', fallback: -1), -1);
+      expect(json.readIntOrNull('missing'), isNull);
+    });
+
+    test('readBool, readDateTime, readMapOrNull, readList', () {
+      expect(json.readBool('flag'), isTrue);
+      expect(json.readBool('name'), isFalse);
+      expect(json.readDateTime('at'), DateTime.utc(2026, 10, 20, 5).toLocal());
+      expect(json.readDateTime('bad'), isNull);
+      expect(json.readDateTime('count'), isNull);
+      expect(json.readMapOrNull('nested'), {'id': 'x'});
+      expect(json.readMapOrNull('list'), isNull);
+      expect(json.readList('list'), [1, 2]);
+      expect(json.readList('nested'), isEmpty);
+    });
+
+    test('asJsonMap: oddiy Map ham, satr bo`lmagan kalitlar tashlanadi', () {
+      expect(asJsonMap(null), isNull);
+      expect(asJsonMap('x'), isNull);
+      expect(asJsonMap(<Object, Object>{'a': 1, 2: 'b'}), {'a': 1});
+    });
+  });
 }

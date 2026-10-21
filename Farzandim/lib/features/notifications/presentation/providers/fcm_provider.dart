@@ -7,6 +7,7 @@ import 'package:farzandim/features/notifications/data/models/app_notification.da
 import 'package:farzandim/features/notifications/data/repositories/backend_fcm_repository.dart';
 import 'package:farzandim/features/notifications/data/services/fcm_service.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
+import 'package:farzandim/features/school/presentation/providers/school_refresh.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -28,12 +29,15 @@ final fcmInitializerProvider = FutureProvider<void>((ref) async {
   final service = ref.read(fcmServiceProvider)
     ..onForegroundMessage = (notif) {
       ref.read(notificationsProvider.notifier).addFromFcm(notif);
+      // Maktab/Growth push'i — ochiq ekrandagi ma'lumot eskirdi (WS yo'q).
+      refreshForSchoolPush(notif, ref.invalidate);
     }
     ..onMessageTap = (notif) {
       // Tray'dan bosilgan push ham ro'yxatga tushsin — aks holda fonda
       // kelgan xabar Bildirishnomalar sahifasida ko'rinmaydi. messageId
       // bo'yicha dedup bor, bg handler pending'i bilan takrorlanmaydi.
       ref.read(notificationsProvider.notifier).addFromFcm(notif);
+      refreshForSchoolPush(notif, ref.invalidate);
       final router = ref.read(routerProvider);
       // Chat xabari (ovozli `voice` / video `video` / matn) bosilsa —
       // to'g'ridan-to'g'ri o'sha bola bilan chatga kiradi.

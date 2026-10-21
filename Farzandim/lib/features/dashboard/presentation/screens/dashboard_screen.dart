@@ -24,6 +24,8 @@ import 'package:farzandim/features/location/presentation/providers/child_place_p
 import 'package:farzandim/features/location/presentation/widgets/request_location_button.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/features/notifications/presentation/screens/notifications_sheet.dart';
+import 'package:farzandim/features/school/presentation/providers/school_refresh.dart';
+import 'package:farzandim/features/school/presentation/widgets/school_dashboard_card.dart';
 import 'package:farzandim/features/settings/data/entitlement.dart';
 import 'package:farzandim/features/settings/presentation/plan_gate.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
@@ -246,6 +248,9 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
       // Tarif (entitlement)ni qayta o'qiymiz — tarmoq blip'ida `free`ga
       // qamalib qolgan bo'lsa (fail-open bilan birga) tuzatiladi.
       ref.invalidate(entitlementProvider);
+      // Maktab: bugungi davomat va e'lonlar fonda o'zgargan bo'lishi mumkin
+      // (WS event yo'q).
+      invalidateSchoolData(ref.invalidate);
     }
   }
 
@@ -265,6 +270,7 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
       ..invalidate(weeklyChildUsageProvider(childId))
       ..invalidate(childProfileProvider(childId))
       ..invalidate(childLocationProvider(childId));
+    invalidateSchoolData(ref.invalidate);
     if (!isIos) ref.invalidate(todayUsageProvider(childId));
     try {
       await Future.wait([
@@ -309,6 +315,9 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                   child: Column(
                     children: [
                       _LocationCard(child: child),
+                      // Maktab (o'zi yashirinadi: yuklanmoqda / xato / bo'lim
+                      // yo'q); ko'rinsa tepasida 4px oraliq bilan.
+                      SchoolDashboardCard(childId: child.id),
                       const SizedBox(height: 4),
                       IntrinsicHeight(
                         child: Row(

@@ -90,6 +90,14 @@ Parol: PlayReview2026!
 - ✅ Demo bola profili allaqachon bog'langan ("demo child", oila kodi `31995`).
 - ✅ Login **haqiqatan tekshirildi** (2026-08-18, `POST /api/auth/login` orqali,
   200 OK, token qaytdi).
+- ⚠️ **Parvoz School (2026-10 build'idan):** maktabga bog'lanmagan har ota-ona
+  dashboard'da "Maktab taklif kodi bormi?" kartasini va Sozlamalar → "Maktab"
+  qatorini ko'radi; ichkariga faqat 8 belgili taklif kodi bilan kiriladi, kod
+  **7 kunda** eskiradi. Reviewer bo'limni ochib ko'ra olishi uchun (Play va
+  App Store 2.1): demo maktabni demo akkauntga oldindan bog'lang YOKI har
+  topshirishda yangi kod yaratib (ko'rib chiqishdan ≤ 7 kun oldin) quyidagi
+  ko'rsatma matniga qo'shing: "Optional: to try the school section, tap
+  'Have a school invite code?' on the dashboard and enter <CODE>."
 
 **"Учетные данные"** bo'limida tanlang: **"Все функции доступны без особых
 ограничений"**, keyin yuqoridagi email/parolni kiriting. Qo'shimcha

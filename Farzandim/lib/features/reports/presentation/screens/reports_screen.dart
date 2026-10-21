@@ -25,6 +25,7 @@ import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_ch
 import 'package:farzandim/features/gamification/data/models/leaderboard_models.dart';
 import 'package:farzandim/features/gamification/presentation/providers/gamification_provider.dart';
 import 'package:farzandim/features/gamification/presentation/providers/leaderboard_provider.dart';
+import 'package:farzandim/features/growth/presentation/widgets/growth_report_card.dart';
 import 'package:farzandim/shared/widgets/ios_info_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -106,6 +107,11 @@ class ReportsScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
                 children: [
                   _StatGrid(childId: childId),
+                  // Growth (kunlik testlar) — mavjud bo'lmasa joy olmaydi.
+                  GrowthReportCard(
+                    childId: childId,
+                    padding: const EdgeInsets.only(top: 12),
+                  ),
                   const SizedBox(height: 12),
                   _DonCard(childId: childId),
                   const SizedBox(height: 18),

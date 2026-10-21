@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:farzandim/features/notifications/data/repositories/backend_fcm_repository.dart';
+import 'package:farzandim/features/school/presentation/school_push.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -300,10 +301,10 @@ class FcmService {
 /// ilovadan chiqib ketardi. Endi dashboard asos qilinib ustiga `push` —
 /// "orqaga" har doim dashboard'ga qaytadi.
 void handleFcmTap(AppNotification notif, GoRouter router) {
-  void open(String path) {
+  void open(String path, {Object? extra}) {
     router
       ..go(AppRoutes.dashboard)
-      ..push(path);
+      ..push(path, extra: extra);
   }
 
   switch (notif.type) {
@@ -365,5 +366,23 @@ void handleFcmTap(AppNotification notif, GoRouter router) {
     case NotificationType.offline:
     case NotificationType.online:
       open(AppRoutes.notifications);
+    case NotificationType.schoolAttendance:
+    case NotificationType.schoolEarlyExit:
+    case NotificationType.schoolAnnouncement:
+    case NotificationType.schoolReminder:
+    case NotificationType.schoolPayment:
+    case NotificationType.schoolVerification:
+    case NotificationType.schoolMode:
+    case NotificationType.learningReport:
+      // Maktab/Growth ekrani; eslatma (API yo'q) yoki bolasiz Growth
+      // push'i — bildirishnomaning o'z sahifasi.
+      final target = schoolPushTarget(notif);
+      if (target != null) {
+        open(target.route, extra: target.extra);
+      } else {
+        router
+          ..go(AppRoutes.dashboard)
+          ..push(AppRoutes.notificationDetail, extra: notif);
+      }
   }
 }

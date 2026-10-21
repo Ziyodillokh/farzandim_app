@@ -400,6 +400,9 @@ class ParvozTextField extends StatefulWidget {
     this.prefix,
     this.inputFormatters,
     this.maxLength,
+    this.textCapitalization = TextCapitalization.none,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
     super.key,
   });
 
@@ -412,6 +415,14 @@ class ParvozTextField extends StatefulWidget {
   final Widget? prefix;
   final List<TextInputFormatter>? inputFormatters;
   final int? maxLength;
+
+  /// Klaviatura registri (masalan kodlar uchun `characters`).
+  final TextCapitalization textCapitalization;
+
+  /// Kod kabi maydonlarda `false` — avtotuzatish va takliflar matnni
+  /// buzmasin.
+  final bool autocorrect;
+  final bool enableSuggestions;
 
   @override
   State<ParvozTextField> createState() => _ParvozTextFieldState();
@@ -491,6 +502,9 @@ class _ParvozTextFieldState extends State<ParvozTextField> {
                       keyboardType: widget.keyboardType,
                       inputFormatters: widget.inputFormatters,
                       maxLength: widget.maxLength,
+                      textCapitalization: widget.textCapitalization,
+                      autocorrect: widget.autocorrect,
+                      enableSuggestions: widget.enableSuggestions,
                       onChanged: widget.onChanged,
                       cursorColor: ParvozColors.blue,
                       style: GoogleFonts.poppins(
