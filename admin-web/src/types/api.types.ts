@@ -404,6 +404,59 @@ export interface AdminNotification {
   createdAt: string;
 }
 
+// ─── Kelajak (savollar banki) ───────────────────────────────────
+/** Ko'p tilli matn (docs/KELAJAK-REJA.md `L`): `ru`/`en` bo'lmasa ilova `uz`ni ko'rsatadi. */
+export interface KelajakText {
+  uz: string;
+  ru?: string;
+  en?: string;
+}
+
+export interface KelajakOption {
+  value: number;
+  label: KelajakText;
+}
+
+/** `AdminQuestionView` (§6). */
+export interface KelajakQuestion {
+  id: string;
+  externalId: string;
+  category: string;
+  categoryName: KelajakText;
+  ageGroup: string;
+  text: KelajakText;
+  answerType: string;
+  /** `text` turida bo'sh massiv. */
+  options: KelajakOption[];
+  scoring: Record<string, unknown> | null;
+  /** Yuqori qiymat = tashvish. */
+  reverse: boolean;
+  required: boolean;
+  followUp: string | null;
+  notes: string | null;
+  reviewNote: string | null;
+  sourceType: string;
+  sourceName: string;
+  sourceVersion: string;
+  active: boolean;
+  /** > 0 bo'lsa kategoriya/yosh/javob turi/variantlar/teskari belgisi o'zgarmaydi. */
+  answerCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** `GET /admin/kelajak/stats` (§6). */
+export interface KelajakStats {
+  total: number;
+  active: number;
+  inactive: number;
+  needsReview: number;
+  byCategory: Array<{ category: string; name: KelajakText | string; total: number; active: number }>;
+  byAgeGroup: Array<{ ageGroup: string; total: number; active: number }>;
+  byAnswerType: Array<{ answerType: string; total: number; active: number }>;
+  sessions: { total: number; completed: number; completedLast7Days: number };
+}
+
 // ─── Audit Log ──────────────────────────────────────────────────
 export interface AuditLogEntry {
   id: string;
