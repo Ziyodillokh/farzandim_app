@@ -44,6 +44,7 @@ import { LeaderboardModule } from './modules/leaderboard/leaderboard.module';
 import { ConsumerContentModule } from './modules/consumer-content/consumer-content.module';
 import { ConsumerOlympiadsModule } from './modules/consumer-olympiads/consumer-olympiads.module';
 import { LearningModule } from './modules/learning/learning.module';
+import { KelajakModule } from './modules/kelajak/kelajak.module';
 import { SchoolModule } from './school/school.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { RetentionModule } from './modules/retention/retention.module';
@@ -57,6 +58,7 @@ import { AdminMonetizationModule } from './admin/admin-monetization/admin-moneti
 import { AdminNotificationsModule } from './admin/admin-notifications/admin-notifications.module';
 import { AdminOlympiadsModule } from './admin/admin-olympiads/admin-olympiads.module';
 import { AdminLearningModule } from './admin/admin-learning/admin-learning.module';
+import { AdminKelajakModule } from './admin/admin-kelajak/admin-kelajak.module';
 import { AdminAnalyticsModule } from './admin/admin-analytics/admin-analytics.module';
 import { AdminContentModule } from './admin/admin-content/admin-content.module';
 import { AdminAuditLogModule } from './admin/admin-audit-log/admin-audit-log.module';
@@ -122,6 +124,7 @@ import { AppController } from './app.controller';
     ConsumerContentModule,
     ConsumerOlympiadsModule,
     LearningModule,
+    KelajakModule,
     SchoolModule,
     PaymentsModule,
     RetentionModule,
@@ -136,6 +139,7 @@ import { AppController } from './app.controller';
     AdminNotificationsModule,
     AdminOlympiadsModule,
     AdminLearningModule,
+    AdminKelajakModule,
     AdminAnalyticsModule,
     AdminContentModule,
     AdminAuditLogModule,

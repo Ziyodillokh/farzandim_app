@@ -127,7 +127,10 @@ describe('School attendance (S3): erta ketish va hisobotlar', () => {
     });
     await staffCall(t, w.admin, 'POST', '/mark', { studentId: w.vali, status: 'PRESENT' });
     const list = (await staffCall(t, w.admin, 'GET', '/notifications?limit=10')).json();
-    expect(list.map((n: { date?: string; at: string }) => n.at.slice(0, 10))).toEqual(['2026-10-20', '2026-10-19']);
+    // `at` — bazadagi haqiqiy vaqt (davomat soati emas): sanani qotirmay, tartibni tekshiramiz.
+    expect(list).toHaveLength(2);
+    expect(list[1].at.slice(0, 10)).toBe('2026-10-19');
+    expect(Date.parse(list[0].at)).toBeGreaterThan(Date.parse(list[1].at));
     expect(list[0]).toMatchObject({ studentName: 'Aliyev Vali', className: '7-A', guardianName: 'Aliyeva Nodira', kind: 'ARRIVED', delivered: true });
     expect((await staffCall(t, w.duty, 'GET', '/notifications')).json()).toHaveLength(1);
     expect((await staffCall(t, w.teacher, 'GET', '/notifications')).json()).toEqual([]);

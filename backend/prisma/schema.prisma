@@ -202,6 +202,7 @@ model Child {
   learningProfile        LearningProfile?
   learningAttempts       LearningAttempt[]
   learningReports        LearningReportDispatch[]
+  kelajakSessions        KelajakSession[]
   schoolStudents         SchoolStudent[]
 
   // Sprint 5.4 — admin Olympiad attempts
@@ -1675,6 +1676,93 @@ model LearningReportDispatch {
 
   @@unique([childId, weekStart])
   @@map("learning_report_dispatches")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Parvoz Kelajak — o'z-o'zini baholash savollari (kasbiy qiziqishlar,
+// o'qish, farovonlik, Career Lab). Kontrakt: docs/KELAJAK-REJA.md.
+// ─────────────────────────────────────────────────────────────────────
+
+enum KelajakSessionStatus {
+  STARTED // yaratildi, hali javob yo'q
+  IN_PROGRESS // kamida bitta javob
+  COMPLETED
+  ABANDONED // o'tgan kunda yakunlanmay qolgan
+}
+
+/// Kelajak savollar banki. Matn va variantlar `{uz, ru?, en?}` JSON;
+/// `externalId` ("PARVOZ-Q001") — import uchun barqaror kalit.
+model KelajakQuestion {
+  id            String   @id @default(uuid())
+  externalId    String   @unique @map("external_id")
+  category      String // career_interest, learning, ...
+  ageGroup      String   @map("age_group") // "7-9" | "10-12" | "13-15" | "16-18"
+  text          Json // {uz, ru?, en?}
+  answerType    String   @map("answer_type") // interest_4 | likert_5 | career_lab_5 | text | ...
+  options       Json // [{value, label: {uz, ru?, en?}}], text uchun []
+  scoring       Json? // JSON'dagi scoring obyekti, text uchun null
+  reverse       Boolean  @default(false) // yuqori qiymat = tashvish
+  required      Boolean  @default(true)
+  followUp      String?  @map("follow_up")
+  notes         String?
+  reviewNote    String?  @map("review_note")
+  sourceType    String   @map("source_type")
+  sourceName    String   @map("source_name")
+  sourceVersion String   @map("source_version")
+  active        Boolean  @default(true)
+  createdBy     String?  @map("created_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  answers KelajakAnswer[]
+
+  @@index([ageGroup, active, category])
+  @@map("kelajak_questions")
+}
+
+/// Bitta test sessiyasi (tur + Toshkent kuni). `questionIds` — tartib bilan
+/// snapshot; `result` — yakunda faqat kodlar va ballar (matn emas).
+model KelajakSession {
+  id             String               @id @default(uuid())
+  childId        String               @map("child_id")
+  type           String // daily | career | wellbeing | learning | self | career_lab | voice
+  ageGroup       String               @map("age_group") // boshlangandagi snapshot
+  day            String // Toshkent kuni YYYY-MM-DD
+  status         KelajakSessionStatus @default(STARTED)
+  questionIds    String[]             @map("question_ids")
+  total          Int
+  result         Json?
+  scoringVersion Int?                 @map("scoring_version")
+  startedAt      DateTime             @default(now()) @map("started_at")
+  completedAt    DateTime?            @map("completed_at")
+  updatedAt      DateTime             @updatedAt @map("updated_at")
+
+  child   Child           @relation(fields: [childId], references: [id], onDelete: Cascade)
+  answers KelajakAnswer[]
+
+  @@index([childId, type, day])
+  @@index([childId, status, completedAt(sort: Desc)])
+  @@map("kelajak_sessions")
+}
+
+/// Savolga javob — sessiya ochiq ekan o'zgartirish mumkin. Ochiq matn
+/// `SchoolCryptoService` bilan shifrlanadi.
+model KelajakAnswer {
+  id         String   @id @default(uuid())
+  sessionId  String   @map("session_id")
+  questionId String   @map("question_id")
+  position   Int
+  value      Int? // shkala qiymati
+  textEnc    String?  @map("text_enc") // ochiq javob (shifrlangan)
+  answeredAt DateTime @default(now()) @map("answered_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  session  KelajakSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question KelajakQuestion @relation(fields: [questionId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, questionId])
+  @@index([questionId])
+  @@map("kelajak_answers")
 }
 
 // ─────────────────────────────────────────────────────────────────────

@@ -1,0 +1,66 @@
+{
+  "_comment": "Parvoz Kelajak banki uchun import paytidagi ko'rib chiqish qarorlari. parvoz_question_bank_278.json O'ZGARTIRILMAYDI; bu fayl faqat DB ustunlarini (active, reverse, review_note) va scoring teglarini (knowledge -> scoring.signal='knowledge', careerLab -> scoring.riasec) belgilaydi. Mazmun egasi savolni tuzatgach admin paneldan faollashtiradi. Migratsiya muzlatilgan nusxadan (review-overrides.20261021090100.json) yaratilgan; keyingi qarorlar faqat import CLI (--update) yoki admin orqali bazaga yetadi.",
+  "_knowledge": "Xavfsizlik bilimi / ko'nikmasi savollari ('...ni bilasanmi?', 'e'tibor berasanmi?'): bolaning holatini emas, qoidani bilishini so'raydi — qo'llab-quvvatlash signaliga kirmaydi, past bo'lsa 'Xavfsizlik qoidalari' maslahati beriladi. Qolgan wellbeing/safety savollari — holat (distress).",
+  "_careerLab": "Career Lab faoliyati -> RIASEC yo'nalishi (umumiy refleksiya savollari Q193, Q208, Q210-Q212 — kodsiz).",
+  "version": 1,
+  "inactive": {
+    "PARVOZ-Q061": "Savol ochiq shaklda (\"Qaysi fan...?\"), javoblar esa \"to'g'ri / to'g'ri emas\" shkalasi — mos javob berib bo'lmaydi.",
+    "PARVOZ-Q067": "Savol ochiq shaklda (\"Qaysi fanlarda...?\"), javoblar esa \"to'g'ri / to'g'ri emas\" shkalasi — mos javob berib bo'lmaydi.",
+    "PARVOZ-Q072": "Savol ochiq shaklda (\"Qaysi fanlarda...?\"), javoblar esa \"to'g'ri / to'g'ri emas\" shkalasi — mos javob berib bo'lmaydi.",
+    "PARVOZ-Q073": "Savol ochiq shaklda (\"Qaysi fanlar...?\"), javoblar esa \"to'g'ri / to'g'ri emas\" shkalasi — mos javob berib bo'lmaydi.",
+    "PARVOZ-Q090": "Savol ochiq shaklda (\"...eng yoqimli qismi qaysi?\"), javoblar esa \"to'g'ri / to'g'ri emas\" shkalasi — mos javob berib bo'lmaydi.",
+    "PARVOZ-Q213": "Savol ochiq shaklda (\"Qaysi ishlarni...?\"), javoblar esa \"to'g'ri / to'g'ri emas\" shkalasi — mos javob berib bo'lmaydi.",
+    "PARVOZ-Q214": "Savol ochiq shaklda (\"...kim yordam berishi mumkin?\"), javoblar esa \"to'g'ri / to'g'ri emas\" shkalasi — mos javob berib bo'lmaydi.",
+    "PARVOZ-Q212": "Savol \"rejangni o'zgartirdimi?\" deb so'raydi, javoblar esa \"yoqdi / yoqmadi\" — mos emas."
+  },
+  "reviewNotes": {
+    "PARVOZ-Q050": "Ifoda noaniq (ikki marta inkor: \"aytishdan ko'ra ... qochmaslikka\"). Faol, lekin qayta yozish tavsiya etiladi.",
+    "PARVOZ-Q210": "\"Tasavvuringga mos keldimi?\" savoliga \"yoqdi / yoqmadi\" javoblari to'liq mos emas. Faol, qayta yozish tavsiya etiladi.",
+    "PARVOZ-Q211": "\"Yana tajriba qilishni xohlaysanmi?\" savoliga \"yoqdi / yoqmadi\" javoblari to'liq mos emas. Faol, qayta yozish tavsiya etiladi."
+  },
+  "reverse": [
+    "PARVOZ-Q156",
+    "PARVOZ-Q157",
+    "PARVOZ-Q160",
+    "PARVOZ-Q162",
+    "PARVOZ-Q164",
+    "PARVOZ-Q165",
+    "PARVOZ-Q167"
+  ],
+  "knowledge": [
+    "PARVOZ-Q131",
+    "PARVOZ-Q132",
+    "PARVOZ-Q133",
+    "PARVOZ-Q136",
+    "PARVOZ-Q137",
+    "PARVOZ-Q138",
+    "PARVOZ-Q140",
+    "PARVOZ-Q141",
+    "PARVOZ-Q142",
+    "PARVOZ-Q143",
+    "PARVOZ-Q144",
+    "PARVOZ-Q145",
+    "PARVOZ-Q146",
+    "PARVOZ-Q147",
+    "PARVOZ-Q148",
+    "PARVOZ-Q149",
+    "PARVOZ-Q150"
+  ],
+  "careerLab": {
+    "PARVOZ-Q194": "R",
+    "PARVOZ-Q195": "S",
+    "PARVOZ-Q196": "A",
+    "PARVOZ-Q197": "I",
+    "PARVOZ-Q198": "I",
+    "PARVOZ-Q199": "S",
+    "PARVOZ-Q200": "R",
+    "PARVOZ-Q201": "S",
+    "PARVOZ-Q202": "C",
+    "PARVOZ-Q203": "I",
+    "PARVOZ-Q204": "A",
+    "PARVOZ-Q205": "E",
+    "PARVOZ-Q206": "I",
+    "PARVOZ-Q207": "S",
+    "PARVOZ-Q209": "E"
+  }
+}

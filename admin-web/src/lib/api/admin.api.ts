@@ -19,6 +19,10 @@ import type {
   Article,
   ContentCategory,
   DashboardData,
+  KelajakOption,
+  KelajakQuestion,
+  KelajakStats,
+  KelajakText,
   LoginResponse,
   Moderator,
   Olympiad,
@@ -317,6 +321,64 @@ export interface OlympiadCreatePayload {
   certificateEnabled: boolean;
   questions: OlympiadQuestionInput[];
 }
+
+// ───────────────────────── KELAJAK (savollar banki) ─────────────────────────
+// Kontrakt: docs/KELAJAK-REJA.md §6, `manage_learning` ruxsati.
+export interface KelajakListParams {
+  page?: number;
+  /** Backend ≤100. */
+  limit?: number;
+  category?: string;
+  ageGroup?: string;
+  active?: 'true' | 'false';
+  answerType?: string;
+  sourceType?: string;
+  q?: string;
+}
+
+export interface KelajakQuestionCreatePayload {
+  /** Ixtiyoriy (`^[A-Z0-9-]{3,40}$`, `PARVOZ-` band); berilmasa backend `ADMIN-` + 8 belgi beradi. */
+  externalId?: string;
+  category: string;
+  ageGroup: string;
+  text: KelajakText;
+  answerType: string;
+  /** `text` turida `[]`. */
+  options: KelajakOption[];
+  /**
+   * Ball o'lchami: career_interest — `{method, dimension: R|I|A|S|E|C, min, max}`
+   * (majburiy); career_lab — `riasec`; wellbeing/safety — `signal`. Berilmasa `null`.
+   */
+  scoring?: Record<string, unknown> | null;
+  reverse: boolean;
+  /** `text` turida hech qachon `true` emas. */
+  required: boolean;
+  followUp?: string | null;
+  notes?: string | null;
+  reviewNote?: string | null;
+  active: boolean;
+}
+
+/**
+ * PATCH — faqat o'zgargan maydonlar. `answerCount > 0` (yoki savol bugungi
+ * ochiq sessiyada) bo'lsa backend faqat `text`, `notes`, `reviewNote`,
+ * `followUp`, `required`, `active`ni qabul qiladi (aks holda 409
+ * `QUESTION_IN_USE`). `null` — maydonni tozalash.
+ */
+export type KelajakQuestionPatch = Partial<Omit<KelajakQuestionCreatePayload, 'externalId'>>;
+
+export const kelajakApi = {
+  stats: () => api.get<KelajakStats>('/admin/kelajak/stats'),
+  list: (params: KelajakListParams = {}) =>
+    api
+      .get<RawPaginated<KelajakQuestion>>('/admin/kelajak/questions', { params })
+      .then(normalizePagination),
+  detail: (id: string) => api.get<KelajakQuestion>(`/admin/kelajak/questions/${id}`),
+  create: (data: KelajakQuestionCreatePayload) =>
+    api.post<KelajakQuestion>('/admin/kelajak/questions', data),
+  update: (id: string, data: KelajakQuestionPatch) =>
+    api.patch<KelajakQuestion>(`/admin/kelajak/questions/${id}`, data),
+};
 
 // ───────────────────────── ANALYTICS ─────────────────────────
 export const analyticsApi = {

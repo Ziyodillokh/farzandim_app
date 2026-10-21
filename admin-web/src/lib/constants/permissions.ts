@@ -69,6 +69,11 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { key: 'view_payments', label: "To'lovlarni ko'rish" },
     ],
   },
+  {
+    // Backend: Growth kunlik testlari va Kelajak savollar banki bitta ruxsatda.
+    group: 'Savollar banki',
+    permissions: [{ key: 'manage_learning', label: 'Growth va Kelajak savollari' }],
+  },
 ];
 
 export const ALL_PERMISSION_KEYS = PERMISSION_GROUPS.flatMap((g) => g.permissions.map((p) => p.key));
@@ -80,6 +85,7 @@ export const ROLE_PRESETS: Record<string, string[]> = {
   content_maker: [
     'view_content', 'approve_content', 'reject_content', 'edit_content', 'delete_content',
     'upload_audiobooks', 'edit_audiobooks', 'delete_audiobooks', 'approve_audiobooks',
+    'manage_learning',
   ],
   support: ['view_users', 'warn_users', 'view_content', 'send_notifications'],
   custom: [],
