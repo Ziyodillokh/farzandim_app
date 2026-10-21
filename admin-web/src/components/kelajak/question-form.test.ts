@@ -72,7 +72,7 @@ describe('Kasbiy qiziqishlar (RIASEC)', () => {
     const form = withAnswerType(withCategory(formFromQuestion(original), 'career_interest'), 'interest_4');
     const patch = toPatchPayload({ ...form, scoringTag: 'I' }, original, false);
     assert.equal(patch.category, 'career_interest');
-    const labels = ['Umuman yoqmaydi', 'Unchalik yoqmaydi', 'Yoqadi', 'Juda yoqadi'];
+    const labels = ['Yo‘q', 'Unchalik emas', 'Ha', 'Ha, juda'];
     assert.deepEqual(patch.options, labels.map((uz, i) => ({ value: i + 1, label: { uz } })));
     assert.deepEqual(patch.scoring, { method: 'dimension_sum', dimension: 'I', min: 1, max: 4 });
   });

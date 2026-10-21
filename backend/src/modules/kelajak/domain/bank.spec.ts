@@ -87,7 +87,10 @@ describe('kelajak bank — haqiqiy JSON', () => {
   it('matn va variantlar {uz} shaklida; text turida variant va scoring yo\'q', () => {
     const q1 = byId.get('PARVOZ-Q001')!;
     expect(q1.text).toEqual({ uz: jsonQuestion.question_text });
-    expect(q1.options[3]).toEqual({ value: 4, label: { uz: 'Juda yoqadi' } });
+    // review-overrides.json `scaleLabels`: "-mi?" savolga mos o'zbekcha yorliq, qiymat o'zgarmaydi.
+    expect(q1.options[3]).toEqual({ value: 4, label: { uz: 'Ha, juda' } });
+    expect(byId.get('PARVOZ-Q099')!.options.map((o) => o.label.uz)).toEqual(['Yo‘q', 'Ko‘proq yo‘q', 'Ba’zan', 'Ko‘proq ha', 'Ha']);
+    expect(byId.get('PARVOZ-Q193')!.options[4]).toEqual({ value: 5, label: { uz: 'Juda yoqdi' } });
     expect(q1.scoring).toEqual(jsonQuestion.scoring);
     expect(q1.sourceType).toBe('parvoz_original');
     const text = byId.get('PARVOZ-Q247')!;
@@ -97,6 +100,8 @@ describe('kelajak bank — haqiqiy JSON', () => {
   it('overrides\'siz — hammasi faol, teskari yo\'q', () => {
     const plain = parseKelajakBank(rawBank);
     expect(plain.valid.every((q) => q.active && !q.reverse && q.reviewNote === null)).toBe(true);
+    // JSON'dagi asl yorliqlar overrides'siz o'zgarmaydi.
+    expect(plain.valid[0].options[3]).toEqual({ value: 4, label: { uz: 'Juda yoqadi' } });
   });
 });
 
