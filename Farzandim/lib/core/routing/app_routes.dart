@@ -254,7 +254,7 @@ class AppRoutes {
   static const String pairRequestsPattern = '/pair-requests/:childId';
   static String pairRequestsPath(String childId) => '/pair-requests/$childId';
 
-  // ─── Parvoz School (maktab) va Growth ───────────────────────────
+  // ─── Parvoz School (maktab), Growth va Kelajak ──────────────────
 
   /// Maktab bosh sahifasi — maktablar, o'quvchilar va bo'limlar.
   static const String school = '/school';
@@ -303,6 +303,11 @@ class AppRoutes {
   static const String growthPattern = '/growth/:childId';
 
   static String growthPath(String childId) => '/growth/$childId';
+
+  /// Bolaning Kelajak xulosasi (qiziqishlar, kuchli tomonlar, Career Lab).
+  static const String kelajakPattern = '/kelajak/:childId';
+
+  static String kelajakPath(String childId) => '/kelajak/$childId';
 
   /// Bo'sh qiymatlarsiz so'rov qatori; hech narsa qolmasa — yo'lning o'zi.
   static String _withQuery(String path, Map<String, String> query) {

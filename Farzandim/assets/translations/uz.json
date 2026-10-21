@@ -1995,5 +1995,80 @@
       "russian": "Rus tili",
       "unknown": "Boshqa fan"
     }
+  },
+  "kelajak": {
+    "title": "Kelajak",
+    "unavailable": "Kelajak bo'limi hozircha mavjud emas. Keyinroq qayta urinib ko'ring.",
+    "disclaimer": "Natijalar farzandingizning o'z javoblariga asoslangan va yo'nalish uchun tavsiya, qat'iy kasb hukmi emas.",
+    "card": {
+      "title": "Kelajak yo'nalishlari",
+      "interests": "Qiziqish yuqori: {names}",
+      "forming": "{count} ta test yechildi — qiziqishlar hali shakllanmoqda",
+      "empty": "Hali javob yo'q — savollar Parvoz Growth'dagi «Bugungi testlar» bo'limida",
+      "ageRequired": "Yoshini kiriting — savollar yoshiga mos tanlanadi"
+    },
+    "link": {
+      "title": "Kelajak yo'nalishlari",
+      "body": "Qiziqishlar, kuchli tomonlar va sinab ko'rsa bo'ladigan yo'nalishlar"
+    },
+    "header": {
+      "ageGroup": "{group} yosh guruhi",
+      "sessions": "Yechilgan testlar",
+      "lastActivity": "Oxirgi faollik",
+      "noActivity": "Hali yo'q"
+    },
+    "interests": {
+      "title": "Qiziqishlar",
+      "hint": "Farzandingiz javoblariga ko'ra qiziqishi yuqori bo'lgan yo'nalishlar. Bu hukm emas — sinab ko'rish uchun g'oyalar.",
+      "try": "Sinab ko'rishi mumkin",
+      "forming": "Yo'nalishlar haqida aytishga hali javoblar yetarli emas. Farzandingiz testlarni davom ettirsa, qiziqishlari aniqroq ko'rinadi."
+    },
+    "strengths": {
+      "title": "Kuchli tomonlar"
+    },
+    "growthAreas": {
+      "title": "Rivojlantirish mumkin bo'lgan jihatlar"
+    },
+    "careerLab": {
+      "title": "Career Lab",
+      "hint": "Farzandingiz sinab ko'rgan faoliyatlar va ulardan olgan taassurotlari",
+      "liked": "Yoqdi",
+      "neutral": "Fikri o'rtacha",
+      "disliked": "Unchalik yoqmadi",
+      "next": "Keyingi sinov"
+    },
+    "support": {
+      "titleWatch": "Kayfiyatiga e'tibor bering",
+      "titleSupport": "Farzandingizga qo'llab-quvvatlash muhim",
+      "areas": "Mavzular",
+      "day": "Javoblar sanasi: {date}",
+      "talkTitle": "Suhbat uchun maslahat",
+      "talk1": "Xotirjam vaqtni tanlang va ochiq savol bering: «Bugun kuning qanday o'tdi?»",
+      "talk2": "Diqqat bilan tinglang, ayblamang va tanbeh bermang.",
+      "talk3": "Farzandingizga har doim sizga murojaat qilishi mumkinligini ayting.",
+      "fallback": "Farzandingiz so'nggi javoblarida ba'zi qiyinchiliklarni belgiladi. Bu tashxis emas — e'tibor berish uchun signal, xolos."
+    },
+    "progress": {
+      "title": "O'zgarishlar",
+      "hint": "Oxirgi natija oldingisi bilan solishtirildi",
+      "first": "Birinchi natija",
+      "same": "O'zgarmadi",
+      "rising": "Qiziqishi ortayotgan yo'nalishlar"
+    },
+    "next": {
+      "title": "Keyingi tavsiya"
+    },
+    "empty": {
+      "title": "Hali javob yo'q",
+      "body": "Farzandingiz Parvoz Growth ilovasidagi «Bugungi testlar» bo'limida Kelajak savollariga javob berganda, qiziqishlari va kuchli tomonlari shu yerda ko'rinadi."
+    },
+    "age": {
+      "requiredTitle": "Farzandingiz yoshi kiritilmagan",
+      "requiredBody": "Savollar yoshga mos tanlanadi. Tug'ilgan sanasini kiriting — shundan keyin farzandingiz Kelajak savollariga javob bera oladi.",
+      "requiredAction": "Yoshini kiritish",
+      "outOfRangeTitle": "Bu bo'lim 7–18 yoshli bolalar uchun",
+      "outOfRangeBody": "Savollar 7 yoshdan 18 yoshgacha bo'lgan bolalarga mo'ljallangan. Yosh noto'g'ri kiritilgan bo'lsa, uni tahrirlashingiz mumkin.",
+      "outOfRangeAction": "Yoshni tahrirlash"
+    }
   }
 }

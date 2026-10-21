@@ -19,6 +19,7 @@ import 'package:farzandim/features/gamification/data/models/leaderboard_models.d
 import 'package:farzandim/features/gamification/presentation/providers/gamification_provider.dart';
 import 'package:farzandim/features/gamification/presentation/providers/leaderboard_provider.dart';
 import 'package:farzandim/features/gamification/presentation/widgets/ranking_avatar.dart';
+import 'package:farzandim/features/kelajak/presentation/widgets/kelajak_dashboard_card.dart';
 import 'package:farzandim/features/location/presentation/providers/child_location_provider.dart';
 import 'package:farzandim/features/location/presentation/providers/child_place_provider.dart';
 import 'package:farzandim/features/location/presentation/widgets/request_location_button.dart';
@@ -271,6 +272,7 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
       ..invalidate(childProfileProvider(childId))
       ..invalidate(childLocationProvider(childId));
     invalidateSchoolData(ref.invalidate);
+    refreshKelajakCard(ref, childId);
     if (!isIos) ref.invalidate(todayUsageProvider(childId));
     try {
       await Future.wait([
@@ -315,9 +317,8 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                   child: Column(
                     children: [
                       _LocationCard(child: child),
-                      // Maktab (o'zi yashirinadi: yuklanmoqda / xato / bo'lim
-                      // yo'q); ko'rinsa tepasida 4px oraliq bilan.
                       SchoolDashboardCard(childId: child.id),
+                      KelajakDashboardCard(childId: child.id),
                       const SizedBox(height: 4),
                       IntrinsicHeight(
                         child: Row(

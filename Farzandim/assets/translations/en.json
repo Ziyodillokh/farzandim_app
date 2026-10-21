@@ -1995,5 +1995,80 @@
       "russian": "Russian",
       "unknown": "Other subject"
     }
+  },
+  "kelajak": {
+    "title": "Future paths",
+    "unavailable": "The Future paths section isn't available yet. Please try again later.",
+    "disclaimer": "Results are based on your child's own answers and offer guidance, not a final career verdict.",
+    "card": {
+      "title": "Interests and future",
+      "interests": "Strong interest: {names}",
+      "forming": "{count} tests done — interests are still taking shape",
+      "empty": "No answers yet — questions are in “Today's tests” in Parvoz Growth",
+      "ageRequired": "Add your child's age — questions are picked by age"
+    },
+    "link": {
+      "title": "Interests and future",
+      "body": "Interests, strengths and directions worth trying"
+    },
+    "header": {
+      "ageGroup": "Age group {group}",
+      "sessions": "Tests completed",
+      "lastActivity": "Last activity",
+      "noActivity": "Not yet"
+    },
+    "interests": {
+      "title": "Interests",
+      "hint": "Directions your child shows strong interest in, based on their answers. Not a verdict — just ideas to try.",
+      "try": "Worth trying",
+      "forming": "There aren't enough answers yet to talk about directions. As your child keeps taking tests, their interests will become clearer."
+    },
+    "strengths": {
+      "title": "Strengths"
+    },
+    "growthAreas": {
+      "title": "Areas to develop"
+    },
+    "careerLab": {
+      "title": "Career Lab",
+      "hint": "Activities your child has tried and how they felt about them",
+      "liked": "Liked",
+      "neutral": "Neutral",
+      "disliked": "Didn't enjoy much",
+      "next": "What to try next"
+    },
+    "support": {
+      "titleWatch": "Keep an eye on their mood",
+      "titleSupport": "Your support matters now",
+      "areas": "Topics",
+      "day": "Answers from: {date}",
+      "talkTitle": "How to talk",
+      "talk1": "Pick a calm moment and ask an open question: “How was your day?”",
+      "talk2": "Listen carefully, without blame or scolding.",
+      "talk3": "Let your child know they can always come to you.",
+      "fallback": "In recent answers your child noted some difficulties. This is not a diagnosis — just a signal to pay attention."
+    },
+    "progress": {
+      "title": "Changes",
+      "hint": "Latest result compared with the previous one",
+      "first": "First result",
+      "same": "No change",
+      "rising": "Rising interests"
+    },
+    "next": {
+      "title": "Next step"
+    },
+    "empty": {
+      "title": "No answers yet",
+      "body": "When your child answers the questions in “Today's tests” in the Parvoz Growth app, their interests and strengths will appear here."
+    },
+    "age": {
+      "requiredTitle": "Your child's age is missing",
+      "requiredBody": "Questions are picked by age. Add the date of birth — then your child can answer the questions.",
+      "requiredAction": "Add age",
+      "outOfRangeTitle": "This section is for ages 7–18",
+      "outOfRangeBody": "The questions are designed for children aged 7 to 18. If the age is wrong, you can edit it.",
+      "outOfRangeAction": "Edit age"
+    }
   }
 }

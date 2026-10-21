@@ -44,6 +44,7 @@ import 'package:farzandim/features/geo_zones/presentation/screens/add_edit_geo_z
 import 'package:farzandim/features/geo_zones/presentation/screens/addresses_setup_screen.dart';
 import 'package:farzandim/features/geo_zones/presentation/screens/geo_zones_list_screen.dart';
 import 'package:farzandim/features/growth/presentation/screens/growth_screen.dart';
+import 'package:farzandim/features/kelajak/presentation/screens/kelajak_screen.dart';
 import 'package:farzandim/features/legal/presentation/screens/privacy_policy_screen.dart';
 import 'package:farzandim/features/legal/presentation/screens/terms_of_service_screen.dart';
 import 'package:farzandim/features/listen/presentation/screens/listen_screen.dart';
@@ -701,6 +702,15 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.growthPattern,
       pageBuilder: (context, state) => _slidePage(
         GrowthScreen(childId: state.pathParameters['childId']!),
+        key: state.pageKey,
+      ),
+    ),
+
+    // Kelajak (qiziqishlar va kelajak yo'nalishlari) — ota-ona ko'rinishi.
+    GoRoute(
+      path: AppRoutes.kelajakPattern,
+      pageBuilder: (context, state) => _slidePage(
+        KelajakScreen(childId: state.pathParameters['childId']!),
         key: state.pageKey,
       ),
     ),

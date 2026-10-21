@@ -7,7 +7,8 @@
 // o'zgarish, testlar / faol kunlar / ketma-ket kunlar, fanlar bo'yicha
 // chiziqlar, eng yaxshi va mashq qilishga arziydigan fan. Pastda oxirgi
 // natijalar (`nextBefore` bilan sahifalanadi). Sinf va fanlar
-// `LearningProfileSheet`da o'zgartiriladi. Pull-to-refresh.
+// `LearningProfileSheet`da o'zgartiriladi. Kelajak sahifasiga havola
+// (mavjud bo'lsa). Pull-to-refresh.
 // Growth backend'da yo'q (404 `code`siz) — "hozircha mavjud emas".
 
 import 'dart:async';
@@ -21,6 +22,7 @@ import 'package:farzandim/features/growth/presentation/widgets/growth_header.dar
 import 'package:farzandim/features/growth/presentation/widgets/growth_results_section.dart';
 import 'package:farzandim/features/growth/presentation/widgets/growth_summary_cards.dart';
 import 'package:farzandim/features/growth/presentation/widgets/learning_profile_sheet.dart';
+import 'package:farzandim/features/kelajak/presentation/widgets/kelajak_growth_link.dart';
 import 'package:farzandim/features/school/data/school_failure.dart';
 import 'package:farzandim/features/school/presentation/widgets/school_ui.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
@@ -161,6 +163,8 @@ class _GrowthScreenState extends ConsumerState<GrowthScreen> {
               ),
               const SizedBox(height: 10),
               content,
+              // Kelajak (qiziqishlar) — mavjud bo'lsagina ko'rinadi.
+              KelajakGrowthLink(childId: widget.childId),
               if (summary != null) ...[
                 const SizedBox(height: 18),
                 GrowthResultsSection(childId: widget.childId),

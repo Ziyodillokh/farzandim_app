@@ -13,6 +13,9 @@ import 'package:farzandim/features/growth/data/models/learning_subject.dart';
 import 'package:farzandim/features/growth/data/models/learning_summary.dart';
 import 'package:farzandim/features/growth/presentation/growth_view_models.dart';
 import 'package:farzandim/features/growth/presentation/screens/growth_screen.dart';
+import 'package:farzandim/features/kelajak/data/kelajak_repository.dart';
+import 'package:farzandim/features/kelajak/data/models/kelajak_summary.dart';
+import 'package:farzandim/features/school/data/school_failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -53,11 +56,21 @@ class _FakeLearningRepository extends LearningRepository {
   }
 }
 
+/// Kelajak havolasi (sahifada) — bo'lim yo'q, tarmoqqa chiqmaydi.
+class _NoKelajakRepository extends KelajakRepository {
+  _NoKelajakRepository() : super(dio: Dio());
+
+  @override
+  Future<KelajakSummary> fetchSummary(String childId) async =>
+      throw const SchoolFailure(SchoolFailureKind.unavailable);
+}
+
 Future<void> _pump(WidgetTester tester, _FakeLearningRepository repo) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         learningRepositoryProvider.overrideWithValue(repo),
+        kelajakRepositoryProvider.overrideWithValue(_NoKelajakRepository()),
         childByIdProvider.overrideWith((ref, id) => null),
       ],
       child: const MaterialApp(home: GrowthScreen(childId: 'kid-1')),

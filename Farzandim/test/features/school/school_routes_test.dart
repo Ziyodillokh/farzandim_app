@@ -1,4 +1,5 @@
-// Maktab va Growth marshrutlari: yo'l quruvchilar, ro'yxatdan o'tganligi
+// Maktab, Growth va Kelajak marshrutlari: yo'l quruvchilar, ro'yxatdan
+// o'tganligi
 // va `/school/attendance/:studentId?month=` to'g'ri ajralishi. Push
 // parametrlari (`remind`, `focus`, `verification`) ham. E'lon push matni
 // faqat `extra`dan — URL'dagi `title`/`body` (tashqi havola) e'tiborsiz.
@@ -50,6 +51,7 @@ void main() {
       '/school/attendance/st-1?month=2026-10',
     );
     expect(AppRoutes.growthPath('kid-1'), '/growth/kid-1');
+    expect(AppRoutes.kelajakPath('kid-1'), '/kelajak/kid-1');
     expect(AppRoutes.schoolRemindPath('st-1'), '/school?remind=st-1');
     expect(
       AppRoutes.schoolPaymentsPath(verification: 'v-1'),
@@ -151,6 +153,7 @@ void main() {
       AppRoutes.schoolLink,
       AppRoutes.schoolAttendancePath('st-1', month: '2026-10'),
       AppRoutes.growthPath('kid-1'),
+      AppRoutes.kelajakPath('kid-1'),
     ]) {
       final first = _pageFor(context, router, location, pageKey: 'p-1');
       final second = _pageFor(context, router, location, pageKey: 'p-2');
@@ -178,7 +181,7 @@ void main() {
     expect(attendance.month, '2026-09');
   });
 
-  test('barcha maktab va Growth marshrutlari ro`yxatdan o`tgan', () {
+  test('barcha maktab, Growth va Kelajak marshrutlari ro`yxatdan o`tgan', () {
     final paths = buildAppRoutes()
         .whereType<GoRoute>()
         .map((route) => route.path)
@@ -193,6 +196,7 @@ void main() {
         AppRoutes.schoolEarlyExits,
         AppRoutes.schoolAttendancePattern,
         AppRoutes.growthPattern,
+        AppRoutes.kelajakPattern,
       ]),
     );
   });
@@ -219,5 +223,12 @@ void main() {
     );
     expect(growth.last.route.path, AppRoutes.growthPattern);
     expect(growth.pathParameters['childId'], 'kid-1');
+
+    final kelajak = router.configuration.findMatch(
+      Uri.parse(AppRoutes.kelajakPath('kid-1')),
+    );
+    expect(kelajak.isError, isFalse);
+    expect(kelajak.last.route.path, AppRoutes.kelajakPattern);
+    expect(kelajak.pathParameters['childId'], 'kid-1');
   });
 }

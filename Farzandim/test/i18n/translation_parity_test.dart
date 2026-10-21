@@ -1,14 +1,17 @@
 // Tarjima fayllari (uz/ru/en) bir xil kalitlarga ega bo'lishi shart:
 // yetishmagan kalit ekranda xom "school.errors.x" matni bo'lib chiqadi.
 // Barcha qiymatlar bo'sh bo'lmagan satr va `{name}` o'rin-bosarlari uchala
-// tilda bir xil. Maktab (`school.*`) va Growth (`growth.*`) guruhlari
-// alohida ham tekshiriladi. Maktab to'lov matnlarida "qarz" so'zi yo'q.
+// tilda bir xil. Maktab (`school.*`), Growth (`growth.*`) va Kelajak
+// (`kelajak.*`) guruhlari alohida ham tekshiriladi. Maktab to'lov
+// matnlarida "qarz" so'zi yo'q; Kelajak matnlarida qat'iy kasb hukmi va
+// "100%" yo'q.
 
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:farzandim/features/growth/data/models/learning_subject.dart';
 import 'package:farzandim/features/growth/presentation/growth_view_models.dart';
+import 'package:farzandim/features/kelajak/presentation/widgets/kelajak_support_card.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:farzandim/features/school/data/models/school_attendance.dart';
 import 'package:farzandim/features/school/data/models/school_payment.dart';
@@ -118,6 +121,15 @@ void main() {
     'school.payments.',
     'school.verifications.status.',
     'school.mode.',
+    'kelajak.card.',
+    'kelajak.link.',
+    'kelajak.header.',
+    'kelajak.interests.',
+    'kelajak.careerLab.',
+    'kelajak.support.',
+    'kelajak.progress.',
+    'kelajak.empty.',
+    'kelajak.age.',
   ]) {
     test('$group guruhi uchala tilda mavjud', () {
       for (final lang in _languages) {
@@ -130,14 +142,18 @@ void main() {
     });
   }
 
-  test('maktab/Growth kodidagi `.tr()` kalitlari tarjimada bor', () {
+  test('maktab/Growth/Kelajak kodidagi `.tr()` kalitlari tarjimada bor', () {
     // 'a.b.c'.tr( — literal kalitlar (interpolyatsiyali kalit alohida
     // testda: SchoolDayStatus.labelKey).
     final keyPattern = RegExp(
       r"'([a-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)+)'\s*\.tr\(",
     );
     final files = [
-      for (final dir in ['lib/features/school', 'lib/features/growth'])
+      for (final dir in [
+        'lib/features/school',
+        'lib/features/growth',
+        'lib/features/kelajak',
+      ])
         ...Directory(dir)
             .listSync(recursive: true)
             .whereType<File>()
@@ -171,9 +187,36 @@ void main() {
       ..._schoolPushLabelKeys(),
       for (final days in kGrowthPeriods) growthPeriodLabelKey(days),
       for (final subject in LearningSubject.values) subject.labelKey,
+      ...kKelajakTalkTipKeys,
+      'kelajak.careerLab.liked',
+      'kelajak.careerLab.neutral',
+      'kelajak.careerLab.disliked',
+      'kelajak.support.titleWatch',
+      'kelajak.support.titleSupport',
+      'kelajak.age.requiredTitle',
+      'kelajak.age.requiredBody',
+      'kelajak.age.requiredAction',
+      'kelajak.age.outOfRangeTitle',
+      'kelajak.age.outOfRangeBody',
+      'kelajak.age.outOfRangeAction',
     ];
     for (final key in keys) {
       expect(reference.containsKey(key), isTrue, reason: key);
+    }
+  });
+
+  test('Kelajak matnlarida qat`iy kasb hukmi va "100%" yo`q', () {
+    // Backend `texts-policy.spec.ts` bilan bir xil taqiqlar.
+    final verdict = RegExp(
+      "bo['‘’]lishing kerak|mos ekansan|100%|должен стать|"
+      'тебе нужно стать|you should become|you must become',
+      caseSensitive: false,
+    );
+    for (final lang in _languages) {
+      final offending = flat[lang]!.entries.where(
+        (e) => e.key.startsWith('kelajak.') && verdict.hasMatch('${e.value}'),
+      );
+      expect(offending.map((e) => e.key), isEmpty, reason: lang);
     }
   });
 
