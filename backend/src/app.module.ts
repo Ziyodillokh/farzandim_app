@@ -45,6 +45,7 @@ import { ConsumerContentModule } from './modules/consumer-content/consumer-conte
 import { ConsumerOlympiadsModule } from './modules/consumer-olympiads/consumer-olympiads.module';
 import { LearningModule } from './modules/learning/learning.module';
 import { KelajakModule } from './modules/kelajak/kelajak.module';
+import { IqModule } from './modules/iq/iq.module';
 import { SchoolModule } from './school/school.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { RetentionModule } from './modules/retention/retention.module';
@@ -125,6 +126,7 @@ import { AppController } from './app.controller';
     ConsumerOlympiadsModule,
     LearningModule,
     KelajakModule,
+    IqModule,
     SchoolModule,
     PaymentsModule,
     RetentionModule,
