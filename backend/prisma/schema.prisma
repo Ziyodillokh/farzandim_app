@@ -203,6 +203,7 @@ model Child {
   learningAttempts       LearningAttempt[]
   learningReports        LearningReportDispatch[]
   kelajakSessions        KelajakSession[]
+  iqSessions             IqSession[]
   schoolStudents         SchoolStudent[]
 
   // Sprint 5.4 — admin Olympiad attempts
@@ -1763,6 +1764,93 @@ model KelajakAnswer {
   @@unique([sessionId, questionId])
   @@index([questionId])
   @@map("kelajak_answers")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Parvoz IQ test (docs/IQ-REJA.md) — rasmli matritsalar, Rasch baholash.
+// Natijada faqat xom javoblar; standart ball / persentil o'qilganda.
+// ─────────────────────────────────────────────────────────────────────
+
+/// Matritsa savoli. `answer` — SIR, hech qachon klientga yuborilmaydi.
+model IqItem {
+  id         String   @id @default(uuid())
+  externalId String   @unique @map("external_id")
+  level      Int // 1..5
+  forms      String[] // "L1A", "L2A" — anchor savol ikki formada; [] — zaxira
+  gridSvg    String   @map("grid_svg")
+  options    Json // [{key: "A".."F", svg}]
+  answer     String   @db.Char(1)
+  b          Float // Rasch qiyinligi (logit)
+  rule       String
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  answers IqAnswer[]
+
+  @@index([level, active])
+  @@map("iq_items")
+}
+
+enum IqSessionStatus {
+  STARTED
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED // 24 soatda yakunlanmagan yoki yosh darajasi o'zgargan
+}
+
+model IqSession {
+  id             String          @id @default(uuid())
+  childId        String          @map("child_id")
+  level          Int
+  form           String // "L1A"
+  ageYears       Int             @map("age_years") // boshlangandagi
+  status         IqSessionStatus @default(STARTED)
+  itemIds        String[]        @map("item_ids") // tartib snapshot (b o'sishi)
+  total          Int
+  firstAttempt   Boolean         @map("first_attempt") // normaga faqat birinchisi
+  normGroup      String?         @map("norm_group") // yakunlash kunidagi yosh: "9".."16" | "17-20"
+  result         Json? // {correct, total, responses: number[]} — FAQAT xom
+  scoringVersion Int?            @map("scoring_version")
+  startedAt      DateTime        @default(now()) @map("started_at")
+  completedAt    DateTime?       @map("completed_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  child   Child      @relation(fields: [childId], references: [id], onDelete: Cascade)
+  answers IqAnswer[]
+
+  @@index([childId, status, completedAt(sort: Desc)])
+  @@map("iq_sessions")
+}
+
+model IqAnswer {
+  id         String   @id @default(uuid())
+  sessionId  String   @map("session_id")
+  itemId     String   @map("item_id")
+  position   Int
+  choice     String   @db.Char(1)
+  correct    Boolean
+  durationMs Int?     @map("duration_ms")
+  answeredAt DateTime @default(now()) @map("answered_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  session IqSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  item    IqItem    @relation(fields: [itemId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, itemId])
+  @@index([itemId])
+  @@map("iq_answers")
+}
+
+/// Yosh guruhi normasi (θ bo'yicha, Welford): sd = √(m2 / (n − 1)).
+model IqNorm {
+  group     String   @id // "9".."16" | "17-20"
+  n         Int      @default(0)
+  mean      Float    @default(0)
+  m2        Float    @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("iq_norms")
 }
 
 // ─────────────────────────────────────────────────────────────────────
