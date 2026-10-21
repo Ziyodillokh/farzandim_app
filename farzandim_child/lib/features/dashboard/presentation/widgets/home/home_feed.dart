@@ -15,6 +15,7 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/home/hom
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/library_section.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/recent_results_card.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/today_tests_card.dart';
+import 'package:farzandim_child/features/iq/presentation/widgets/iq_entry_card.dart';
 import 'package:farzandim_child/features/kelajak/presentation/widgets/kelajak_today_card.dart';
 import 'package:farzandim_child/features/school/presentation/widgets/school_today_card.dart';
 import 'package:flutter/material.dart';
@@ -90,6 +91,8 @@ class HomeFeed extends StatelessWidget {
         _Padded(TodayTestsCard()),
         // O'z bo'shlig'i bilan; Kelajak mavjud bo'lmasa balandligi 0.
         _Padded(KelajakTodayCard()),
+        // O'z bo'shlig'i bilan; IQ test mavjud bo'lmasa balandligi 0.
+        _Padded(IqEntryCard()),
         SizedBox(height: 10),
         _Padded(RecentResultsCard()),
         SizedBox(height: 9),

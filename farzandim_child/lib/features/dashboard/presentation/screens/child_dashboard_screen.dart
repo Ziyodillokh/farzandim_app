@@ -28,6 +28,7 @@ import 'package:farzandim_child/features/contests/presentation/providers/contest
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_feed.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
+import 'package:farzandim_child/features/iq/presentation/providers/iq_providers.dart';
 import 'package:farzandim_child/features/kelajak/presentation/providers/kelajak_refresh.dart';
 import 'package:farzandim_child/features/location/presentation/widgets/location_enable_modal.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
@@ -153,6 +154,7 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     }
     if (_kelajakRefresh.shouldRun(force: !isPeriodic)) {
       unawaited(refreshKelajak(ref));
+      unawaited(refreshIq(ref));
     }
     // Avval yozilmagan ilova tili (oflayn edi) — qayta; yozilgan bo'lsa
     // so'rov ketmaydi.

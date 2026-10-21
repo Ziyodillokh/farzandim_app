@@ -19,6 +19,8 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/home/des
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_header.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
+import 'package:farzandim_child/features/iq/presentation/providers/iq_providers.dart';
+import 'package:farzandim_child/features/iq/presentation/widgets/iq_entry_card.dart';
 import 'package:farzandim_child/features/kelajak/presentation/providers/kelajak_refresh.dart';
 import 'package:farzandim_child/features/kelajak/presentation/widgets/kelajak_tests_entry.dart';
 import 'package:farzandim_child/features/tests/presentation/widgets/latest_tests_section.dart';
@@ -59,6 +61,7 @@ class TestsScreen extends ConsumerWidget {
                   ref.read(backendContestsProvider.future),
                   refreshLearning(ref),
                   refreshKelajak(ref),
+                  refreshIq(ref),
                 ]);
               },
               child: ListView(
@@ -100,6 +103,11 @@ class TestsScreen extends ConsumerWidget {
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 13),
                     child: KelajakTestsEntry(),
+                  ),
+                  // O'z bo'shlig'i bilan; IQ test mavjud bo'lmasa balandligi 0.
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 13),
+                    child: IqEntryCard(topGap: 14),
                   ),
                   const SizedBox(height: 14),
                   const Padding(

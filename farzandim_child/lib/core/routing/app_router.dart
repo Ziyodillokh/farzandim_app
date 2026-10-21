@@ -22,6 +22,7 @@
 import 'package:farzandim_child/core/feature_flags.dart';
 import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/core/routing/growth_routes.dart';
+import 'package:farzandim_child/core/routing/iq_routes.dart';
 import 'package:farzandim_child/core/routing/kelajak_routes.dart';
 import 'package:farzandim_child/core/routing/route_pages.dart';
 import 'package:farzandim_child/core/routing/school_routes.dart';
@@ -403,6 +404,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ...growthRoutes,
       ...schoolRoutes,
       ...kelajakRoutes,
+      ...iqRoutes,
       GoRoute(
         path: '/liked-tests',
         pageBuilder: (context, state) =>

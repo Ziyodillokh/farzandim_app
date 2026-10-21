@@ -1641,5 +1641,68 @@
       "network": "Internet bilan aloqa yo‘q. Ulanishni tekshirib, qayta urinib ko‘ring.",
       "unknown": "Nimadir xato ketdi. Qayta urinib ko‘ring."
     }
+  },
+  "iq": {
+    "title": "IQ test",
+    "disclaimer": "Bu skrining natijasi, tashxis emas. Natija kayfiyat, charchoq va diqqatga qarab o'zgarishi mumkin.",
+    "band": {
+      "veryHigh": "Juda yuqori",
+      "high": "Yuqori",
+      "aboveAverage": "O'rtachadan yuqori",
+      "average": "O'rtacha",
+      "belowAverage": "O'rtachadan pastroq",
+      "low": "Rivojlanish zonasi",
+      "veryLow": "Rivojlanish zonasi"
+    },
+    "result": {
+      "title": "IQ test natijasi",
+      "range": "95% ishonch oralig'i: {low}–{high}",
+      "percentile": "Tengdoshlaringizning {p}% idan yuqori natija",
+      "correct": "{total} tadan {correct} ta to'g'ri javob",
+      "provisional": "Taxminiy",
+      "provisionalNote": "Natija hozircha taxminiy: IQ raqami sizning yoshingizdagi yetarlicha bola testni ishlagach ko'rsatiladi."
+    },
+    "entry": {
+      "body": "Rasmli mantiqiy savollar — 20 ta, vaqt cheklanmagan",
+      "continue": "Davom ettirish: {n}/{total}",
+      "last": "Oxirgi natija: {band}"
+    },
+    "hub": {
+      "level": "{level}-daraja",
+      "ageRequired": "IQ test yoshga qarab tanlanadi. Profilingizda yoshingizni kiriting.",
+      "ageAction": "Yoshni kiritish",
+      "history": "Oldingi natijalar",
+      "intro": "Har bir savolda 3×3 jadval bor, bitta katak bo'sh. Qonuniyatni toping va bo'sh katakka mos rasmni tanlang.",
+      "rule1": "20 ta savol, osondan qiyinga",
+      "rule2": "Vaqt cheklanmagan — shoshilmang, diqqat bilan o'ylang",
+      "rule3": "Har savolda faqat bitta to'g'ri javob bor",
+      "rule4": "Javoblar saqlanadi: 24 soat ichida davom ettirish mumkin. Test 6 oyda bir marta topshiriladi",
+      "continue": "Davom ettirish ({n}/{total})",
+      "start": "Testni boshlash",
+      "nextAt": "Keyingi test {date} dan keyin ochiladi"
+    },
+    "error": {
+      "ageRequired": "IQ test yoshga qarab tanlanadi. Profilingizda yoshingizni kiriting.",
+      "ageOutOfRange": "IQ test 9 yoshdan 20 yoshgacha bo'lganlar uchun.",
+      "retakeTooSoon": "Testni qayta topshirish hali mumkin emas.",
+      "noItems": "Bu yosh uchun savollar hali tayyor emas.",
+      "sessionClosed": "Bu test yopilgan. Yangisini boshlang.",
+      "unanswered": "Avval hamma savolga javob bering.",
+      "invalidChoice": "Javob saqlanmadi. Qayta tanlang.",
+      "sessionNotFound": "Test topilmadi.",
+      "unavailable": "IQ test hozircha mavjud emas.",
+      "network": "Internet bilan aloqa yo'q. Qayta urinib ko'ring.",
+      "unknown": "Nimadir xato ketdi. Qayta urinib ko'ring."
+    },
+    "test": {
+      "prompt": "Qaysi rasm so'roq belgisi o'rniga mos keladi?",
+      "position": "{n} / {total}",
+      "next": "Keyingi",
+      "toMissing": "Javobsiz savolga o'tish",
+      "finish": "Yakunlash",
+      "finishing": "Natija hisoblanmoqda…",
+      "doneTitle": "Test tugadi! Barakalla!",
+      "done": "Tayyor"
+    }
   }
 }

@@ -1648,5 +1648,68 @@
       "network": "No internet connection. Check your connection and try again.",
       "unknown": "Something went wrong. Please try again."
     }
+  },
+  "iq": {
+    "title": "IQ test",
+    "disclaimer": "This is a screening, not a diagnosis. Results can vary with mood, tiredness and attention.",
+    "band": {
+      "veryHigh": "Very high",
+      "high": "High",
+      "aboveAverage": "Above average",
+      "average": "Average",
+      "belowAverage": "Slightly below average",
+      "low": "Growth zone",
+      "veryLow": "Growth zone"
+    },
+    "result": {
+      "title": "IQ test result",
+      "range": "95% confidence range: {low}–{high}",
+      "percentile": "Higher than {p}% of peers your age",
+      "correct": "{correct} of {total} correct",
+      "provisional": "Preliminary",
+      "provisionalNote": "This result is preliminary: the IQ number will appear once enough children your age have taken the test."
+    },
+    "entry": {
+      "body": "20 picture logic puzzles, no time limit",
+      "continue": "Continue: {n}/{total}",
+      "last": "Last result: {band}"
+    },
+    "hub": {
+      "level": "Level {level}",
+      "ageRequired": "The IQ test depends on your age. Please add your age in your profile.",
+      "ageAction": "Add age",
+      "history": "Previous results",
+      "intro": "Each puzzle is a 3×3 grid with one empty cell. Find the pattern and choose the picture that fits.",
+      "rule1": "20 puzzles, from easy to hard",
+      "rule2": "No time limit — take your time and think carefully",
+      "rule3": "Each puzzle has exactly one correct answer",
+      "rule4": "Answers are saved: you can continue within 24 hours. The test can be taken once every 6 months",
+      "continue": "Continue ({n}/{total})",
+      "start": "Start the test",
+      "nextAt": "The next test opens after {date}"
+    },
+    "error": {
+      "ageRequired": "The IQ test depends on your age. Please add your age in your profile.",
+      "ageOutOfRange": "The IQ test is for ages 9 to 20.",
+      "retakeTooSoon": "You can't retake the test yet.",
+      "noItems": "Puzzles for this age aren't ready yet.",
+      "sessionClosed": "This test is closed. Please start a new one.",
+      "unanswered": "Please answer all puzzles first.",
+      "invalidChoice": "The answer wasn't saved. Please choose again.",
+      "sessionNotFound": "Test not found.",
+      "unavailable": "The IQ test isn't available yet.",
+      "network": "No internet connection. Please try again.",
+      "unknown": "Something went wrong. Please try again."
+    },
+    "test": {
+      "prompt": "Which picture fits in place of the question mark?",
+      "position": "{n} / {total}",
+      "next": "Next",
+      "toMissing": "Go to unanswered puzzle",
+      "finish": "Finish",
+      "finishing": "Calculating…",
+      "doneTitle": "Test complete! Well done!",
+      "done": "Done"
+    }
   }
 }
