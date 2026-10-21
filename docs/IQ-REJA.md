@@ -126,9 +126,30 @@ Ota-ona to'liq natijani ko'radi, lekin savollar va bolaning javoblari yo'q.
 - Boshlang'ich `b` — dizayn bo'yicha (daraja + qiyinlik). Ma'lumot yig'ilgach
   Rasch kalibrovkasi bilan yangilanadi (2-bosqich).
 
-## 7. 2-bosqich (hozir qilinmaydi)
+## 7. Maktab orqali IQ (2026-10-21, qilindi)
 
-- Maktab: `school/assessments` moduliga "Parvoz IQ" formasini tayinlash
-  (psixolog), natija `development` REASONING sohasiga.
+Egasining qarorlari: natijani ism bilan **psixolog va o'z sinfi rahbari** ko'radi;
+maktab tayinlovi **umumiy tarixga** (180 kunlik cheklov, norma) hisoblanadi;
+rozilik — `PARENTS_INFORMED` (boshqa psixologik testlar kabi).
+
+- **Tayinlash:** psixolog `POST /school/assessments/assignments` bilan
+  `testId: "parvoz-iq"` (savollar IQ bankida, maktab testlari omborida emas);
+  sinflar — har qanday parallel (yoshni IQ moduli tekshiradi, 9–20).
+- **Bola:** `GET /child/school/assessments` ro'yxatida `{testId: "parvoz-iq",
+  kind: "IQ", itemCount: 20}` — bola oynada (ochilishdan 180 kun oldin →
+  hozir) IQ testni yakunlamagan bo'lsa. Bosilganda odatdagi `/iq` oqimi;
+  `IqSession`ga yangi ustun yo'q (umumiy tarix).
+- **Natija:** tayinlov natijasi — bolaning oynadagi eng so'nggi yakunlangan
+  sessiyasi. `GET /school/assessments/iq/results?classId=` → `{classId,
+  className, mode: INDIVIDUAL|AGGREGATE, students, linked, completed, bands,
+  suppressed, rows: [{studentId, name, linked, result: ResultView|null}]}`.
+  - psixolog (`assessments.manage`) — har qanday sinf, ism bilan;
+  - sinf rahbari (`development.individual`) — faqat o'z sinfi, ism bilan;
+  - direktor / admin (`development.view`) — faqat `bands`, 5 dan kam — yashirin.
+- **Panel:** "Tayinlash" oynasida "Parvoz IQ" (faqat `/maktab`), Rivojlanish →
+  "Parvoz IQ" tabi (psixolog), sinf rahbari va direktorga sahifa pastida.
+
+### Keyin
+- Natijani `development` REASONING sohasiga ulash.
 - Admin: savollar sahifasi, `b` kalibrovkasi, norma holati.
 - Moslashuvchan (CAT) test.

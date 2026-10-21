@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { addDays } from '@/data/mock/calendar';
 import { clockNow } from '@/data/mock/clock';
 import { assignInputSchema, type AssignInput } from '@/data/schemas/assessments';
+import { isHttpMode } from '@/data/source';
 import { TILE } from '@/features/dashboard/lib/tile';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
@@ -20,6 +21,14 @@ import { useAssign, useClassOptions, useTests } from '../hooks';
 import { fieldMessage, gradesLabel, toLocalInput } from '../lib/labels';
 import { GradesPicker } from './grades-picker';
 import { isAssignable } from './test-card';
+
+/** Parvoz IQ (docs/IQ-REJA.md §7) — savollar IQ bankida; faqat haqiqiy panelda tayinlanadi. */
+export const PARVOZ_IQ_ID = 'parvoz-iq';
+const PARVOZ_IQ_OPTION = {
+  id: PARVOZ_IQ_ID,
+  title: { uz: 'Parvoz IQ — mantiqiy fikrlash', ru: 'Parvoz IQ — логическое мышление' },
+  grades: Array.from({ length: 11 }, (_, i) => i + 1),
+};
 
 type Mode = 'CLASSES' | 'GRADES';
 type Errors = Partial<Record<'testId' | 'target' | 'opensAt' | 'closesAt' | 'consent', string>>;
@@ -65,7 +74,10 @@ export function AssignDialog({
     setErrors({});
   }, [open, initialTestId, classId]);
 
-  const assignable = (tests.data ?? []).filter(isAssignable);
+  const assignable: Array<Pick<typeof PARVOZ_IQ_OPTION, 'id' | 'title' | 'grades'>> = [
+    ...(isHttpMode ? [PARVOZ_IQ_OPTION] : []),
+    ...(tests.data ?? []).filter(isAssignable),
+  ];
   const test = assignable.find((x) => x.id === testId);
   const eligible = useMemo(() => (classes.data ?? []).filter((c) => test?.grades.includes(c.grade)), [classes.data, test]);
   const selected = mode === 'CLASSES' ? eligible.filter((c) => classIds.includes(c.id)) : eligible.filter((c) => grades.includes(c.grade));

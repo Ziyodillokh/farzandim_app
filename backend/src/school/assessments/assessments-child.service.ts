@@ -11,6 +11,7 @@ import { tashkentDay, tashkentDayRange } from '../../common/time/tashkent';
 import { SchoolCryptoService } from '../common/school-crypto.service';
 import { parseOrThrow } from '../common/school-zod';
 import { submitInputSchema } from './assessments-inputs.schemas';
+import { AssessmentsIqService, IQ_FORM_SIZE, PARVOZ_IQ_DESCRIPTION, PARVOZ_IQ_TEST_ID, PARVOZ_IQ_TITLE } from './assessments-iq.service';
 import { AssessmentsStore } from './assessments-store';
 import { submitGraceMs } from './assessments-view';
 import { ChildLang, childLang, pick, toAnswerVector, toChildTest } from './child-view';
@@ -18,7 +19,7 @@ import { ageBandOf, ageOn, encodeAnswers, rawScores } from './psych/scoring';
 import type { PsychTest } from './psych/types';
 
 type Tx = Prisma.TransactionClient;
-type Student = { id: string; schoolId: string; classId: string; grade: number; birthDate: string; lang: ChildLang };
+type Student = { id: string; childId: string; schoolId: string; classId: string; grade: number; birthDate: string; lang: ChildLang };
 
 const notEnrolled = () => new NotFoundException({ code: 'NOT_ENROLLED', message: 'Child is not linked to a school' });
 const notOpen = () => new NotFoundException({ code: 'ASSIGNMENT_NOT_FOUND', message: 'Assignment is not open' });
@@ -36,6 +37,7 @@ export class AssessmentsChildService {
     private readonly prisma: PrismaService,
     private readonly store: AssessmentsStore,
     private readonly crypto: SchoolCryptoService,
+    private readonly iq: AssessmentsIqService,
   ) {}
 
   /** Bolaning sinfiga ochiq, hali yechilmagan tayinlashlar (opensAt ≤ hozir ≤ closesAt). */
@@ -55,6 +57,21 @@ export class AssessmentsChildService {
     const doneIds = new Set(done.map((d) => d.assignmentId));
     const assignments = [];
     for (const a of rows.filter((r) => !doneIds.has(r.id))) {
+      // Parvoz IQ — odatdagi /iq oqimida yechiladi; umumiy tarix: oynada yakunlangan bo'lsa ko'rinmaydi.
+      if (a.testId === PARVOZ_IQ_TEST_ID) {
+        if (await this.iq.childDone(student.childId, a.opensAt)) continue;
+        assignments.push({
+          assignmentId: a.id,
+          testId: PARVOZ_IQ_TEST_ID,
+          kind: 'IQ',
+          title: pick(PARVOZ_IQ_TITLE, student.lang),
+          description: pick(PARVOZ_IQ_DESCRIPTION, student.lang),
+          itemCount: IQ_FORM_SIZE,
+          timeLimitMin: null,
+          closesAt: a.closesAt.toISOString(),
+        });
+        continue;
+      }
       const test = await this.store.findTest(student.schoolId, a.testId);
       if (!test || test.items.length === 0) continue;
       assignments.push({
@@ -173,6 +190,6 @@ export class AssessmentsChildService {
       select: { id: true, schoolId: true, classId: true, archived: true, birthDate: true, class: { select: { grade: true } }, school: { select: { status: true } } },
     });
     if (!s || s.archived || !s.classId || !s.class || s.school.status !== 'ACTIVE') return null;
-    return { id: s.id, schoolId: s.schoolId, classId: s.classId, grade: s.class.grade, birthDate: s.birthDate, lang: childLang(child.childUser?.language) };
+    return { id: s.id, childId: child.id, schoolId: s.schoolId, classId: s.classId, grade: s.class.grade, birthDate: s.birthDate, lang: childLang(child.childUser?.language) };
   }
 }
