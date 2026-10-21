@@ -1,0 +1,404 @@
+{
+  "id": "f850a42d-1254-4050-9cd1-89bac3232548",
+  "type": "wellbeing",
+  "title": {
+    "uz": "Kayfiyat va farovonlik",
+    "ru": "Настроение и самочувствие",
+    "en": "Mood and wellbeing"
+  },
+  "ageGroup": "10-12",
+  "day": "2026-10-21",
+  "status": "STARTED",
+  "startedAt": "2026-10-21T04:05:51.392Z",
+  "completedAt": null,
+  "total": 8,
+  "answeredCount": 0,
+  "questions": [
+    {
+      "id": "34d2e1f3-eb21-5f6b-969e-54156dfaa002",
+      "externalId": "PARVOZ-Q134",
+      "category": "safety",
+      "categoryName": {
+        "uz": "Xavfsizlik va bullying",
+        "ru": "Безопасность и буллинг",
+        "en": "Safety and bullying"
+      },
+      "text": {
+        "uz": "Internetda haqorat yoki tahdid bo‘lsa, uni kattaga ayta olasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "17bad203-a6ba-5174-aaa1-0acc6bcbbebd",
+      "externalId": "PARVOZ-Q136",
+      "category": "safety",
+      "categoryName": {
+        "uz": "Xavfsizlik va bullying",
+        "ru": "Безопасность и буллинг",
+        "en": "Safety and bullying"
+      },
+      "text": {
+        "uz": "Do‘stingni kimdir mazax qilsa, unga yordam berishga harakat qilasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "da10a843-d3de-564d-9ecc-4bef3880446a",
+      "externalId": "PARVOZ-Q135",
+      "category": "safety",
+      "categoryName": {
+        "uz": "Xavfsizlik va bullying",
+        "ru": "Безопасность и буллинг",
+        "en": "Safety and bullying"
+      },
+      "text": {
+        "uz": "Maktabda xavfli vaziyat haqida xabar berish osonmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "4746cd32-cd75-55bc-bff5-eb59602849a0",
+      "externalId": "PARVOZ-Q159",
+      "category": "wellbeing",
+      "categoryName": {
+        "uz": "Ruhiy farovonlik va stress",
+        "ru": "Эмоциональное благополучие и стресс",
+        "en": "Wellbeing and stress"
+      },
+      "text": {
+        "uz": "Seni tinglaydigan ishonchli odam bormi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "7bd71ba0-c146-5824-aba4-063b09a20ed6",
+      "externalId": "PARVOZ-Q157",
+      "category": "wellbeing",
+      "categoryName": {
+        "uz": "Ruhiy farovonlik va stress",
+        "ru": "Эмоциональное благополучие и стресс",
+        "en": "Wellbeing and stress"
+      },
+      "text": {
+        "uz": "Oxirgi paytlarda ko‘p narsadan xavotir olayotganingni sezasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "19b20ca1-0fa0-58ec-a8db-6fa5b1ed3dc0",
+      "externalId": "PARVOZ-Q160",
+      "category": "wellbeing",
+      "categoryName": {
+        "uz": "Ruhiy farovonlik va stress",
+        "ru": "Эмоциональное благополучие и стресс",
+        "en": "Wellbeing and stress"
+      },
+      "text": {
+        "uz": "Maktabdagi vazifalar seni haddan tashqari bosim ostida qoldiradimi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "e140507d-5972-5091-a69d-a1a9ac269b8a",
+      "externalId": "PARVOZ-Q161",
+      "category": "wellbeing",
+      "categoryName": {
+        "uz": "Ruhiy farovonlik va stress",
+        "ru": "Эмоциональное благополучие и стресс",
+        "en": "Wellbeing and stress"
+      },
+      "text": {
+        "uz": "Uyqu va dam olish uchun yetarli vaqt topa olasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "6961c0bf-3744-5dee-acc5-dcb4707a7b7b",
+      "externalId": "PARVOZ-Q158",
+      "category": "wellbeing",
+      "categoryName": {
+        "uz": "Ruhiy farovonlik va stress",
+        "ru": "Эмоциональное благополучие и стресс",
+        "en": "Wellbeing and stress"
+      },
+      "text": {
+        "uz": "Xafa bo‘lganingda o‘zingni tinchlantirish usulini bilasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    }
+  ],
+  "answers": [],
+  "result": null
+}

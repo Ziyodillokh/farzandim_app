@@ -17,6 +17,10 @@
 //     --dart-define=SHOT_STATE=fresh             # fresh | partial | done | nosetup (kunlik reja)
 //     --dart-define=SHOT_SCHOOL=none             # school_shots.dart: maktab holati
 //                                                # (SHOT_PAGE=school | check_in)
+//     --dart-define=SHOT_KELAJAK=profile         # kelajak_shots.dart: overview holati
+//                                                # (SHOT_PAGE=kelajak_hub | kelajak_scale |
+//                                                #  kelajak_text | kelajak_result |
+//                                                #  kelajak_progress)
 //
 // Ma'lumotlar namunaviy (provider override'lar), tarmoq yo'q.
 
@@ -50,6 +54,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'kelajak_shots.dart';
 import 'learning_shots.dart';
 import 'school_shots.dart';
 
@@ -117,6 +122,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       await performLearningActions(tester, _page);
       await performSchoolActions(tester, _page);
+      await performKelajakActions(tester, _page);
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 200)),
       );
@@ -141,6 +147,7 @@ Widget _app() {
     initialLocation: switch (_page) {
       _ when learningLocation(_page) != null => learningLocation(_page)!,
       _ when schoolLocation(_page) != null => schoolLocation(_page)!,
+      _ when kelajakLocation(_page) != null => kelajakLocation(_page)!,
       'tests' => '/contests',
       'progress' => '/progress',
       'library' || 'library_audio' => '/content',
@@ -149,6 +156,7 @@ Widget _app() {
     routes: [
       ...learningShotRoutes(),
       ...schoolShotRoutes(),
+      ...kelajakShotRoutes(_page),
       GoRoute(
         path: '/dashboard',
         builder: (_, __) => HomeScaffold(
@@ -187,6 +195,7 @@ Widget _app() {
       overrides: [
         ...learningOverrides(),
         ...schoolOverrides(),
+        ...kelajakOverrides(_page),
         backendGamificationProvider.overrideWith(
           (ref) => Stream.value(
             const BackendGamification(
@@ -407,7 +416,8 @@ Future<void> _precacheImages(WidgetTester tester) async {
   if (_page == 'progress' ||
       _page.startsWith('library') ||
       learningPages.contains(_page) ||
-      schoolLocation(_page) != null) {
+      schoolLocation(_page) != null ||
+      kelajakLocation(_page) != null) {
     return;
   }
   if (_page == 'tests') {

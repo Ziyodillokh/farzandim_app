@@ -6,6 +6,8 @@
 //   • Header: "Rivojlanish" + kalendar (kunlik rivojlanish / streak)
 //   • Haftalik rivojlanish — umumiy o'sish, natija halqasi, 3 ko'rsatkich
 //   • Kuchli fanlar — fanlar bo'yicha foiz + progress
+//   • Kelajak profilim — qiziqishlar va kuchli tomonlar (Kelajak mavjud
+//     bo'lsa; batafsil — /kelajak/progress)
 //   • So'nggi natijalar — oxirgi 3 ta test (barchasi alohida sahifada)
 //   • Tavsiya — eng past natijali fandan test ishlash
 //
@@ -19,6 +21,8 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/home/des
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_header.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
+import 'package:farzandim_child/features/kelajak/presentation/providers/kelajak_refresh.dart';
+import 'package:farzandim_child/features/kelajak/presentation/widgets/kelajak_profile_section.dart';
 import 'package:farzandim_child/features/learning/presentation/learning_navigation.dart';
 import 'package:farzandim_child/features/learning/presentation/providers/learning_providers.dart';
 import 'package:farzandim_child/features/learning/presentation/providers/progress_providers.dart';
@@ -64,7 +68,8 @@ class ProgressScreen extends ConsumerWidget {
               color: HomeColors.primary,
               backgroundColor: HomeColors.card,
               edgeOffset: insets.top,
-              onRefresh: () => refreshLearning(ref),
+              onRefresh: () =>
+                  Future.wait([refreshLearning(ref), refreshKelajak(ref)]),
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
@@ -108,6 +113,8 @@ class ProgressScreen extends ConsumerWidget {
                       ),
                     ),
                   ],
+                  // O'z bo'shlig'i bilan; Kelajak mavjud bo'lmasa — yo'q.
+                  const KelajakProfileSection(topGap: _sectionGap),
                   if (results.isNotEmpty) ...[
                     const SizedBox(height: _sectionGap),
                     ProgressSection(

@@ -1,0 +1,488 @@
+{
+  "id": "334ea53c-90f1-4870-8e70-372a8b89cfc3",
+  "type": "daily",
+  "title": {
+    "uz": "Kunlik savollar",
+    "ru": "Вопросы дня",
+    "en": "Daily questions"
+  },
+  "ageGroup": "10-12",
+  "day": "2026-10-21",
+  "status": "STARTED",
+  "startedAt": "2026-10-21T04:05:51.365Z",
+  "completedAt": null,
+  "total": 10,
+  "answeredCount": 0,
+  "questions": [
+    {
+      "id": "d878f32c-f38a-5710-9bc2-4f5c9e433bf3",
+      "externalId": "PARVOZ-Q034",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Kichikroq bolalarga biror ishni o‘rgatish qiziq tuyuladimi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "ac70de69-34a2-57bd-b5fa-9a99b6b00c50",
+      "externalId": "PARVOZ-Q022",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Hikoya, she’r yoki kichik matn yozishdan zavqlanasanmi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "a8b8afd7-3135-53f6-8fee-ed1de45436ae",
+      "externalId": "PARVOZ-Q068",
+      "category": "learning",
+      "categoryName": {
+        "uz": "Fanlar va o‘rganish tajribasi",
+        "ru": "Предметы и опыт обучения",
+        "en": "Subjects and learning experience"
+      },
+      "text": {
+        "uz": "Yangi mavzuni mustaqil o‘rganib ko‘rishni yoqtirasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "7797c9c2-6e79-573f-9aa7-c90168db7233",
+      "externalId": "PARVOZ-Q092",
+      "category": "school_quality",
+      "categoryName": {
+        "uz": "Maktab sifati va darslar",
+        "ru": "Школа и уроки",
+        "en": "School and lessons"
+      },
+      "text": {
+        "uz": "Topshiriqlar nima qilish kerakligini aniq tushuntiradimi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "b7500c22-ab39-5a51-8e94-e2fd9d3b0ca6",
+      "externalId": "PARVOZ-Q115",
+      "category": "teacher_relation",
+      "categoryName": {
+        "uz": "O‘qituvchi bilan munosabat",
+        "ru": "Отношения с учителями",
+        "en": "Relationship with teachers"
+      },
+      "text": {
+        "uz": "Xatolaringni tushunib olish uchun o‘qituvchidan yordam so‘ray olasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "cb6c01e3-a296-5748-8021-66640c6518ea",
+      "externalId": "PARVOZ-Q117",
+      "category": "teacher_relation",
+      "categoryName": {
+        "uz": "O‘qituvchi bilan munosabat",
+        "ru": "Отношения с учителями",
+        "en": "Relationship with teachers"
+      },
+      "text": {
+        "uz": "O‘qituvchi topshiriqni bajarish usulini tushuntirib beradimi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "34d2e1f3-eb21-5f6b-969e-54156dfaa002",
+      "externalId": "PARVOZ-Q134",
+      "category": "safety",
+      "categoryName": {
+        "uz": "Xavfsizlik va bullying",
+        "ru": "Безопасность и буллинг",
+        "en": "Safety and bullying"
+      },
+      "text": {
+        "uz": "Internetda haqorat yoki tahdid bo‘lsa, uni kattaga ayta olasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "6961c0bf-3744-5dee-acc5-dcb4707a7b7b",
+      "externalId": "PARVOZ-Q158",
+      "category": "wellbeing",
+      "categoryName": {
+        "uz": "Ruhiy farovonlik va stress",
+        "ru": "Эмоциональное благополучие и стресс",
+        "en": "Wellbeing and stress"
+      },
+      "text": {
+        "uz": "Xafa bo‘lganingda o‘zingni tinchlantirish usulini bilasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "e1c0815b-191b-50fc-ac35-46d85b8ab824",
+      "externalId": "PARVOZ-Q182",
+      "category": "social_self",
+      "categoryName": {
+        "uz": "Ijtimoiy ko‘nikmalar va o‘zini anglash",
+        "ru": "Социальные навыки и самопознание",
+        "en": "Social skills and self-awareness"
+      },
+      "text": {
+        "uz": "O‘zingdagi kuchli tomonlardan kamida bir nechtasini ayta olasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "bf107726-c74c-5270-a5b2-c0296126aff0",
+      "externalId": "PARVOZ-Q238",
+      "category": "parent_communication",
+      "categoryName": {
+        "uz": "Ota-ona bilan muloqot",
+        "ru": "Общение с родителями",
+        "en": "Communication with parents"
+      },
+      "text": {
+        "uz": "Yordam kerak bo‘lsa, ota-onangga murojaat qila olasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    }
+  ],
+  "answers": [],
+  "result": null
+}

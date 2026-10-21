@@ -1,0 +1,71 @@
+{
+  "id": "735f7b7d-7fc8-4cb4-b07a-34686844acb8",
+  "type": "voice",
+  "title": {
+    "uz": "Mening fikrim",
+    "ru": "Моё мнение",
+    "en": "My voice"
+  },
+  "ageGroup": "10-12",
+  "day": "2026-10-21",
+  "status": "STARTED",
+  "startedAt": "2026-10-21T04:05:51.429Z",
+  "completedAt": null,
+  "total": 3,
+  "answeredCount": 0,
+  "questions": [
+    {
+      "id": "0ff51699-a296-5afe-baa0-dafbf052e635",
+      "externalId": "PARVOZ-Q251",
+      "category": "child_voice",
+      "categoryName": {
+        "uz": "Bola ovozi — ochiq fikr va murojaat",
+        "ru": "Голос ребёнка — открытое мнение",
+        "en": "Child’s voice — open feedback"
+      },
+      "text": {
+        "uz": "Senga o‘qishda eng ko‘p nima yordam beradi?"
+      },
+      "answerType": "text",
+      "options": [],
+      "required": false,
+      "maxLength": 1000
+    },
+    {
+      "id": "12fe4ba4-b411-5b72-b4ed-4967fcd448c8",
+      "externalId": "PARVOZ-Q252",
+      "category": "child_voice",
+      "categoryName": {
+        "uz": "Bola ovozi — ochiq fikr va murojaat",
+        "ru": "Голос ребёнка — открытое мнение",
+        "en": "Child’s voice — open feedback"
+      },
+      "text": {
+        "uz": "Maktabda o‘zingni yaxshiroq his qilish uchun nima o‘zgarishi kerak?"
+      },
+      "answerType": "text",
+      "options": [],
+      "required": false,
+      "maxLength": 1000
+    },
+    {
+      "id": "b807bfa8-20ac-557d-aa91-905a052747c7",
+      "externalId": "PARVOZ-Q250",
+      "category": "child_voice",
+      "categoryName": {
+        "uz": "Bola ovozi — ochiq fikr va murojaat",
+        "ru": "Голос ребёнка — открытое мнение",
+        "en": "Child’s voice — open feedback"
+      },
+      "text": {
+        "uz": "Maktabda kattalar bilishi kerak deb o‘ylaydigan biror muammo bormi?"
+      },
+      "answerType": "text",
+      "options": [],
+      "required": false,
+      "maxLength": 1000
+    }
+  ],
+  "answers": [],
+  "result": null
+}

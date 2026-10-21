@@ -1,0 +1,325 @@
+{
+  "sessionsCompleted": 7,
+  "firstCompletedAt": "2026-10-17T04:05:51.619Z",
+  "lastCompletedAt": "2026-10-21T04:05:52.146Z",
+  "categories": [
+    {
+      "category": "learning",
+      "name": {
+        "uz": "Fanlar va o‘rganish tajribasi",
+        "ru": "Предметы и опыт обучения",
+        "en": "Subjects and learning experience"
+      },
+      "latest": 0,
+      "previous": null,
+      "delta": null,
+      "points": [
+        {
+          "day": "2026-10-17",
+          "score": 0
+        }
+      ]
+    },
+    {
+      "category": "school_quality",
+      "name": {
+        "uz": "Maktab sifati va darslar",
+        "ru": "Школа и уроки",
+        "en": "School and lessons"
+      },
+      "latest": 25,
+      "previous": 0,
+      "delta": 25,
+      "points": [
+        {
+          "day": "2026-10-17",
+          "score": 0
+        },
+        {
+          "day": "2026-10-21",
+          "score": 25
+        }
+      ]
+    },
+    {
+      "category": "teacher_relation",
+      "name": {
+        "uz": "O‘qituvchi bilan munosabat",
+        "ru": "Отношения с учителями",
+        "en": "Relationship with teachers"
+      },
+      "latest": 25,
+      "previous": 0,
+      "delta": 25,
+      "points": [
+        {
+          "day": "2026-10-17",
+          "score": 0
+        },
+        {
+          "day": "2026-10-21",
+          "score": 25
+        }
+      ]
+    },
+    {
+      "category": "social_self",
+      "name": {
+        "uz": "Ijtimoiy ko‘nikmalar va o‘zini anglash",
+        "ru": "Социальные навыки и самопознание",
+        "en": "Social skills and self-awareness"
+      },
+      "latest": 100,
+      "previous": 100,
+      "delta": 0,
+      "points": [
+        {
+          "day": "2026-10-17",
+          "score": 100
+        },
+        {
+          "day": "2026-10-21",
+          "score": 100
+        }
+      ]
+    },
+    {
+      "category": "career_planning",
+      "name": {
+        "uz": "Kasbga tayyorgarlik va rejalashtirish",
+        "ru": "Подготовка к профессии и планирование",
+        "en": "Career readiness and planning"
+      },
+      "latest": 100,
+      "previous": 100,
+      "delta": 0,
+      "points": [
+        {
+          "day": "2026-10-19",
+          "score": 100
+        },
+        {
+          "day": "2026-10-21",
+          "score": 100
+        }
+      ]
+    },
+    {
+      "category": "parent_communication",
+      "name": {
+        "uz": "Ota-ona bilan muloqot",
+        "ru": "Общение с родителями",
+        "en": "Communication with parents"
+      },
+      "latest": 100,
+      "previous": 100,
+      "delta": 0,
+      "points": [
+        {
+          "day": "2026-10-17",
+          "score": 100
+        },
+        {
+          "day": "2026-10-21",
+          "score": 100
+        }
+      ]
+    },
+    {
+      "category": "personal_traits",
+      "name": {
+        "uz": "Shaxsiy xususiyatlar",
+        "ru": "Личные качества",
+        "en": "Personal traits"
+      },
+      "latest": 100,
+      "previous": 100,
+      "delta": 0,
+      "points": [
+        {
+          "day": "2026-10-17",
+          "score": 100
+        },
+        {
+          "day": "2026-10-21",
+          "score": 100
+        }
+      ]
+    }
+  ],
+  "interests": [
+    {
+      "code": "R",
+      "name": {
+        "uz": "Amaliy",
+        "ru": "Практический",
+        "en": "Realistic"
+      },
+      "latest": 0,
+      "previous": 0,
+      "delta": 0
+    },
+    {
+      "code": "I",
+      "name": {
+        "uz": "Tadqiqotchi",
+        "ru": "Исследовательский",
+        "en": "Investigative"
+      },
+      "latest": 100,
+      "previous": 100,
+      "delta": 0
+    },
+    {
+      "code": "A",
+      "name": {
+        "uz": "Ijodiy",
+        "ru": "Творческий",
+        "en": "Artistic"
+      },
+      "latest": 100,
+      "previous": 100,
+      "delta": 0
+    },
+    {
+      "code": "S",
+      "name": {
+        "uz": "Ijtimoiy",
+        "ru": "Социальный",
+        "en": "Social"
+      },
+      "latest": 100,
+      "previous": 0,
+      "delta": 100
+    },
+    {
+      "code": "E",
+      "name": {
+        "uz": "Tashabbuskor",
+        "ru": "Предприимчивый",
+        "en": "Enterprising"
+      },
+      "latest": 0,
+      "previous": 0,
+      "delta": 0
+    },
+    {
+      "code": "C",
+      "name": {
+        "uz": "Tartibli",
+        "ru": "Организационный",
+        "en": "Conventional"
+      },
+      "latest": 0,
+      "previous": 0,
+      "delta": 0
+    }
+  ],
+  "improved": [
+    "school_quality",
+    "teacher_relation"
+  ],
+  "interestsRising": [
+    "S"
+  ],
+  "history": [
+    {
+      "id": "cf1d09be-f323-4789-8305-e0bf3ec04ab8",
+      "type": "daily",
+      "title": {
+        "uz": "Kunlik savollar",
+        "ru": "Вопросы дня",
+        "en": "Daily questions"
+      },
+      "day": "2026-10-21",
+      "status": "COMPLETED",
+      "completedAt": "2026-10-21T04:05:52.146Z",
+      "answered": 10,
+      "total": 10
+    },
+    {
+      "id": "aa7ee940-15c2-4bfc-b252-fe20c5252ecf",
+      "type": "career",
+      "title": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "day": "2026-10-21",
+      "status": "COMPLETED",
+      "completedAt": "2026-10-21T04:05:52.075Z",
+      "answered": 19,
+      "total": 19
+    },
+    {
+      "id": "e9f568f8-bfbe-4d0e-9813-0d0a03757ed7",
+      "type": "career_lab",
+      "title": {
+        "uz": "Career Lab",
+        "ru": "Career Lab",
+        "en": "Career Lab"
+      },
+      "day": "2026-10-20",
+      "status": "COMPLETED",
+      "completedAt": "2026-10-20T04:05:51.946Z",
+      "answered": 4,
+      "total": 5
+    },
+    {
+      "id": "c9fa37ce-dbb1-413a-b539-09de1adfe924",
+      "type": "career",
+      "title": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "day": "2026-10-19",
+      "status": "COMPLETED",
+      "completedAt": "2026-10-19T04:05:51.894Z",
+      "answered": 19,
+      "total": 19
+    },
+    {
+      "id": "0cd2a658-d018-442c-ac5c-b27c0670f476",
+      "type": "wellbeing",
+      "title": {
+        "uz": "Kayfiyat va farovonlik",
+        "ru": "Настроение и самочувствие",
+        "en": "Mood and wellbeing"
+      },
+      "day": "2026-10-18",
+      "status": "COMPLETED",
+      "completedAt": "2026-10-18T04:05:51.772Z",
+      "answered": 8,
+      "total": 8
+    },
+    {
+      "id": "eea8b28d-7f81-47c9-bed7-b1209db26763",
+      "type": "self",
+      "title": {
+        "uz": "Men va atrofimdagilar",
+        "ru": "Я и окружающие",
+        "en": "Me and others"
+      },
+      "day": "2026-10-17",
+      "status": "COMPLETED",
+      "completedAt": "2026-10-17T04:05:51.705Z",
+      "answered": 10,
+      "total": 10
+    },
+    {
+      "id": "47d7bc31-9156-4395-b345-80ad6dfc828c",
+      "type": "learning",
+      "title": {
+        "uz": "O‘qish va maktab",
+        "ru": "Учёба и школа",
+        "en": "Learning and school"
+      },
+      "day": "2026-10-17",
+      "status": "COMPLETED",
+      "completedAt": "2026-10-17T04:05:51.619Z",
+      "answered": 10,
+      "total": 10
+    }
+  ]
+}

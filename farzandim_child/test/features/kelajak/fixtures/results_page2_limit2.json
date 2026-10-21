@@ -1,0 +1,33 @@
+{
+  "items": [
+    {
+      "id": "e9f568f8-bfbe-4d0e-9813-0d0a03757ed7",
+      "type": "career_lab",
+      "title": {
+        "uz": "Career Lab",
+        "ru": "Career Lab",
+        "en": "Career Lab"
+      },
+      "day": "2026-10-20",
+      "status": "COMPLETED",
+      "completedAt": "2026-10-20T04:05:51.946Z",
+      "answered": 4,
+      "total": 5
+    },
+    {
+      "id": "c9fa37ce-dbb1-413a-b539-09de1adfe924",
+      "type": "career",
+      "title": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "day": "2026-10-19",
+      "status": "COMPLETED",
+      "completedAt": "2026-10-19T04:05:51.894Z",
+      "answered": 19,
+      "total": 19
+    }
+  ],
+  "nextBefore": "2026-10-19T04:05:51.894Z"
+}

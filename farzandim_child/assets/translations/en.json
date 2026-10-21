@@ -1520,5 +1520,133 @@
       "done": "Done",
       "bookNotFound": "This book isn't in the library right now. Try finding it in the audiobooks list."
     }
+  },
+  "kelajak": {
+    "title": "My future",
+    "questions": "{count} questions",
+    "minutes": "{count} min",
+    "status": {
+      "new": "New",
+      "inProgress": "In progress",
+      "completed": "Done"
+    },
+    "action": {
+      "start": "Start",
+      "continue": "Continue",
+      "result": "See result"
+    },
+    "age": {
+      "line": "Age {age} · questions for ages {group}",
+      "requiredTitle": "Add your age",
+      "requiredBody": "Add your date of birth in your profile so the questions fit your age.",
+      "requiredAction": "Open profile",
+      "outOfRangeTitle": "This section is for other ages",
+      "outOfRangeBody": "“My future” questions are made for children aged 7 to 18. All other sections of the app are available as usual."
+    },
+    "hub": {
+      "intro": "There are no right or wrong answers here. Answer the way things really are for you — this helps us learn about your interests and strengths.",
+      "tests": "Tests",
+      "empty": "Today’s tests aren’t ready yet. Please check back a bit later.",
+      "topics": "Question topics",
+      "topicsHint": "Questions come from these topics and are picked for your age",
+      "profileBody": "See how your results are changing",
+      "profileAnswered": "{answered} of {total} questions answered"
+    },
+    "session": {
+      "optional": "Optional",
+      "chooseHint": "Pick one of the answers to continue",
+      "needOneAnswer": "Answer at least one question to finish",
+      "back": "Back",
+      "next": "Next",
+      "finish": "Finish",
+      "skip": "Skip",
+      "textHint": "Write your thoughts here…",
+      "counter": "{count}/{max}",
+      "closedTitle": "This test is closed",
+      "closedBody": "This test belonged to a previous day. You can start today’s questions from the beginning.",
+      "reload": "Open today’s test"
+    },
+    "leave": {
+      "title": "Leave the test?",
+      "body": "Your answers are saved — you can continue from here any time today.",
+      "leave": "Leave",
+      "stay": "Keep going"
+    },
+    "result": {
+      "title": "Your results today",
+      "answered": "{answered} of {total} questions answered",
+      "strengths": "Your strengths",
+      "interests": "Your interests",
+      "liked": "Directions you liked",
+      "growth": "Things you can develop",
+      "next": "Next suggestion",
+      "strengthsEmpty": "The more questions you answer, the clearer your strengths will show up here.",
+      "interestsEmpty": "To learn about your interests, try the “Career interests” test too.",
+      "interestsEarly": "This is a first impression. It gets clearer as you answer more questions.",
+      "likedEmpty": "Try activities in Career Lab and rate them — the ones you like will show up here.",
+      "growthEmpty": "Nothing needs special attention right now. Keep it up!",
+      "nextEmpty": "Come back tomorrow for new questions.",
+      "tryLabel": "Worth trying: {list}",
+      "toHub": "My future",
+      "toHome": "Home",
+      "disclaimer": "These results are a hint, not a final verdict. Interests change over time, so trying different things helps."
+    },
+    "progress": {
+      "title": "My future profile",
+      "subtitle": "Tests completed: {count}",
+      "topics": "Changes by topic",
+      "topicsHint": "Your previous and latest result",
+      "before": "Before",
+      "now": "Now",
+      "first": "First result",
+      "same": "No change",
+      "rising": "Growing interests",
+      "risingHint": "Your recent answers show more interest in these directions",
+      "history": "Completed tests",
+      "historyItem": "{answered}/{total} questions",
+      "historyEmpty": "No completed tests yet.",
+      "more": "Show more",
+      "moreFailed": "Couldn’t load — try again",
+      "emptyTitle": "No results yet",
+      "emptyBody": "Take your first test — your progress will show up here.",
+      "toHub": "Open tests",
+      "note": "These changes are based only on your answers. They are not a grade — interests change over time."
+    },
+    "home": {
+      "fresh": "Today: {meta}",
+      "startDaily": "Start today’s questions",
+      "unfinished": "Finish the questions you started",
+      "done": "You answered today’s questions. Well done!",
+      "noDaily": "Pick a test to discover your interests",
+      "ageHint": "Add your age in your profile so the questions fit you",
+      "openHub": "See tests"
+    },
+    "tests": {
+      "entryBody": "Your interests, strengths and the world of careers"
+    },
+    "profile": {
+      "title": "My future profile",
+      "subtitle": "Your interests and strengths",
+      "interests": "Interests",
+      "strengths": "Strengths",
+      "grown": "What has grown",
+      "empty": "Take the “My future” tests — your interests will show up here.",
+      "early": "Your profile is still taking shape. Take a few more tests and your interests will show up here."
+    },
+    "errors": {
+      "ageRequired": "Add your age in your profile first.",
+      "ageOutOfRange": "“My future” questions are for children aged 7–18.",
+      "noQuestions": "There are no questions for this test yet. Please check back later.",
+      "unknownType": "This test wasn’t found.",
+      "sessionClosed": "This test is closed. Open today’s test again.",
+      "unanswered": "Answer all the required questions first.",
+      "invalidAnswer": "The answer wasn’t saved. Please choose again.",
+      "questionNotInSession": "This question was updated. Please open the test again.",
+      "sessionNotFound": "Test not found. Please try again.",
+      "notConfigured": "Open answers can’t be saved right now. You can skip this question.",
+      "unavailable": "The “My future” section is coming soon.",
+      "network": "No internet connection. Check your connection and try again.",
+      "unknown": "Something went wrong. Please try again."
+    }
   }
 }

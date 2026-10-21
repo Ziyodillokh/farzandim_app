@@ -28,6 +28,7 @@ import 'package:farzandim_child/features/contests/presentation/providers/contest
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_feed.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
+import 'package:farzandim_child/features/kelajak/presentation/providers/kelajak_refresh.dart';
 import 'package:farzandim_child/features/location/presentation/widgets/location_enable_modal.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/features/school/presentation/providers/school_providers.dart';
@@ -68,6 +69,10 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
   /// Maktab ma'lumoti kamdan-kam o'zgaradi: daqiqalik taymerda besh daqiqada
   /// bir marta so'raladi (ilovaga qaytganda — har doim).
   final _schoolRefresh = RefreshThrottle(const Duration(minutes: 5));
+
+  /// Kelajak holati kuniga bir necha marta o'zgaradi (yakunlash o'zi
+  /// yangilaydi): taymerda besh daqiqada bir, qaytganda / tortganda — har doim.
+  final _kelajakRefresh = RefreshThrottle(const Duration(minutes: 5));
 
   @override
   void initState() {
@@ -145,6 +150,9 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     // Maktab testlari, so'rovnoma va topshiriqlar push'siz keladi — shu yerda.
     if (_schoolRefresh.shouldRun(force: !isPeriodic)) {
       unawaited(refreshSchool(ref));
+    }
+    if (_kelajakRefresh.shouldRun(force: !isPeriodic)) {
+      unawaited(refreshKelajak(ref));
     }
     // Avval yozilmagan ilova tili (oflayn edi) — qayta; yozilgan bo'lsa
     // so'rov ketmaydi.

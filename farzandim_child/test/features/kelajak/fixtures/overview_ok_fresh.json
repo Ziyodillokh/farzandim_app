@@ -1,0 +1,253 @@
+{
+  "age": {
+    "status": "OK",
+    "age": 11,
+    "ageGroup": "10-12"
+  },
+  "tests": [
+    {
+      "type": "daily",
+      "title": {
+        "uz": "Kunlik savollar",
+        "ru": "Вопросы дня",
+        "en": "Daily questions"
+      },
+      "description": {
+        "uz": "Har kuni bir nechta qisqa savol: o‘qish, maktab, do‘stlar va qiziqishlar haqida.",
+        "ru": "Каждый день несколько коротких вопросов об учёбе, школе, друзьях и интересах.",
+        "en": "A few short questions every day about learning, school, friends and interests."
+      },
+      "questionCount": 10,
+      "estimatedMinutes": 3,
+      "today": {
+        "status": "NEW",
+        "sessionId": null
+      }
+    },
+    {
+      "type": "career",
+      "title": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "description": {
+        "uz": "Qaysi faoliyatlar senga yoqishini bilib ol — bu yo‘nalishlarni o‘rganishga yordam beradi.",
+        "ru": "Узнай, какие занятия тебе нравятся, — это поможет исследовать направления.",
+        "en": "Find out which activities you enjoy — it helps you explore directions."
+      },
+      "questionCount": 19,
+      "estimatedMinutes": 6,
+      "today": {
+        "status": "NEW",
+        "sessionId": null
+      }
+    },
+    {
+      "type": "wellbeing",
+      "title": {
+        "uz": "Kayfiyat va farovonlik",
+        "ru": "Настроение и самочувствие",
+        "en": "Mood and wellbeing"
+      },
+      "description": {
+        "uz": "O‘zingni qanday his qilayotganing va maktabda o‘zingni qanchalik xavfsiz his qilishing haqida. Ota-onang javoblaringni emas, faqat umumiy xulosani ko‘radi.",
+        "ru": "О том, как ты себя чувствуешь и насколько безопасно тебе в школе. Родители видят не твои ответы, а только общий вывод.",
+        "en": "About how you feel and how safe you feel at school. Your parents see only a general summary, not your answers."
+      },
+      "questionCount": 8,
+      "estimatedMinutes": 3,
+      "today": {
+        "status": "NEW",
+        "sessionId": null
+      }
+    },
+    {
+      "type": "learning",
+      "title": {
+        "uz": "O‘qish va maktab",
+        "ru": "Учёба и школа",
+        "en": "Learning and school"
+      },
+      "description": {
+        "uz": "Darslar, fanlar va o‘qituvchilar bilan munosabating haqida.",
+        "ru": "Об уроках, предметах и отношениях с учителями.",
+        "en": "About lessons, subjects and your relationship with teachers."
+      },
+      "questionCount": 10,
+      "estimatedMinutes": 3,
+      "today": {
+        "status": "NEW",
+        "sessionId": null
+      }
+    },
+    {
+      "type": "self",
+      "title": {
+        "uz": "Men va atrofimdagilar",
+        "ru": "Я и окружающие",
+        "en": "Me and others"
+      },
+      "description": {
+        "uz": "Do‘stlar, oila va o‘zingning xususiyatlaring haqida.",
+        "ru": "О друзьях, семье и твоих личных качествах.",
+        "en": "About friends, family and your personal traits."
+      },
+      "questionCount": 10,
+      "estimatedMinutes": 3,
+      "today": {
+        "status": "NEW",
+        "sessionId": null
+      }
+    },
+    {
+      "type": "career_lab",
+      "title": {
+        "uz": "Career Lab",
+        "ru": "Career Lab",
+        "en": "Career Lab"
+      },
+      "description": {
+        "uz": "Kasbga oid faoliyatni sinab ko‘rgach, taassurotingni baholab qo‘y.",
+        "ru": "Попробовал занятие, связанное с профессией? Оцени свои впечатления.",
+        "en": "Tried a career-related activity? Rate how it felt."
+      },
+      "questionCount": 5,
+      "estimatedMinutes": 2,
+      "today": {
+        "status": "NEW",
+        "sessionId": null
+      }
+    },
+    {
+      "type": "voice",
+      "title": {
+        "uz": "Mening fikrim",
+        "ru": "Моё мнение",
+        "en": "My voice"
+      },
+      "description": {
+        "uz": "O‘z fikringni erkin yoz. Javob berish ixtiyoriy. Bu javoblarni ota-onang ko‘rmaydi va ularni hech kim o‘qib javob qaytarmaydi — yordam kerak bo‘lsa, ishonchli kattaga ayt yoki ilovadagi SOS tugmasini bos.",
+        "ru": "Напиши своё мнение свободно. Отвечать необязательно. Родители не видят эти ответы, и никто не прочитает их и не ответит — если нужна помощь, скажи взрослому, которому доверяешь, или нажми кнопку SOS в приложении.",
+        "en": "Share your thoughts freely. Answering is optional. Your parents do not see these answers and no one reads or replies to them — if you need help, tell an adult you trust or press the SOS button in the app."
+      },
+      "questionCount": 3,
+      "estimatedMinutes": 3,
+      "today": {
+        "status": "NEW",
+        "sessionId": null
+      }
+    }
+  ],
+  "categories": [
+    {
+      "id": "career_interest",
+      "name": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "order": 1
+    },
+    {
+      "id": "learning",
+      "name": {
+        "uz": "Fanlar va o‘rganish tajribasi",
+        "ru": "Предметы и опыт обучения",
+        "en": "Subjects and learning experience"
+      },
+      "order": 2
+    },
+    {
+      "id": "school_quality",
+      "name": {
+        "uz": "Maktab sifati va darslar",
+        "ru": "Школа и уроки",
+        "en": "School and lessons"
+      },
+      "order": 3
+    },
+    {
+      "id": "teacher_relation",
+      "name": {
+        "uz": "O‘qituvchi bilan munosabat",
+        "ru": "Отношения с учителями",
+        "en": "Relationship with teachers"
+      },
+      "order": 4
+    },
+    {
+      "id": "safety",
+      "name": {
+        "uz": "Xavfsizlik va bullying",
+        "ru": "Безопасность и буллинг",
+        "en": "Safety and bullying"
+      },
+      "order": 5
+    },
+    {
+      "id": "wellbeing",
+      "name": {
+        "uz": "Ruhiy farovonlik va stress",
+        "ru": "Эмоциональное благополучие и стресс",
+        "en": "Wellbeing and stress"
+      },
+      "order": 6
+    },
+    {
+      "id": "social_self",
+      "name": {
+        "uz": "Ijtimoiy ko‘nikmalar va o‘zini anglash",
+        "ru": "Социальные навыки и самопознание",
+        "en": "Social skills and self-awareness"
+      },
+      "order": 7
+    },
+    {
+      "id": "career_lab",
+      "name": {
+        "uz": "Career Lab — kasbni amalda sinash",
+        "ru": "Career Lab — пробуем профессии на практике",
+        "en": "Career Lab — trying careers in practice"
+      },
+      "order": 8
+    },
+    {
+      "id": "career_planning",
+      "name": {
+        "uz": "Kasbga tayyorgarlik va rejalashtirish",
+        "ru": "Подготовка к профессии и планирование",
+        "en": "Career readiness and planning"
+      },
+      "order": 9
+    },
+    {
+      "id": "parent_communication",
+      "name": {
+        "uz": "Ota-ona bilan muloqot",
+        "ru": "Общение с родителями",
+        "en": "Communication with parents"
+      },
+      "order": 10
+    },
+    {
+      "id": "child_voice",
+      "name": {
+        "uz": "Bola ovozi — ochiq fikr va murojaat",
+        "ru": "Голос ребёнка — открытое мнение",
+        "en": "Child’s voice — open feedback"
+      },
+      "order": 11
+    },
+    {
+      "id": "personal_traits",
+      "name": {
+        "uz": "Shaxsiy xususiyatlar",
+        "ru": "Личные качества",
+        "en": "Personal traits"
+      },
+      "order": 12
+    }
+  ],
+  "profile": null
+}

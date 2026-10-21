@@ -1513,5 +1513,133 @@
       "done": "Bajarildi",
       "bookNotFound": "Bu kitob hozir kutubxonada topilmadi. Audiokitoblar ro‘yxatidan qidirib ko‘ring."
     }
+  },
+  "kelajak": {
+    "title": "Kelajagim",
+    "questions": "{count} ta savol",
+    "minutes": "{count} daqiqa",
+    "status": {
+      "new": "Yangi",
+      "inProgress": "Davom etmoqda",
+      "completed": "Bajarildi"
+    },
+    "action": {
+      "start": "Boshlash",
+      "continue": "Davom etish",
+      "result": "Natijani ko‘rish"
+    },
+    "age": {
+      "line": "{age} yosh · savollar {group} yoshlar uchun",
+      "requiredTitle": "Yoshingizni kiriting",
+      "requiredBody": "Savollar yoshingizga mos bo‘lishi uchun profilingizda tug‘ilgan kuningizni kiriting.",
+      "requiredAction": "Profilni ochish",
+      "outOfRangeTitle": "Bu bo‘lim boshqa yoshdagilar uchun",
+      "outOfRangeBody": "“Kelajagim” savollari 7 yoshdan 18 yoshgacha bo‘lgan bolalar uchun tayyorlangan. Ilovaning boshqa bo‘limlaridan bemalol foydalanishingiz mumkin."
+    },
+    "hub": {
+      "intro": "Bu yerda to‘g‘ri yoki noto‘g‘ri javob yo‘q. O‘zingizga qanday bo‘lsa, shunday javob bering — shunda qiziqishlaringiz va kuchli tomonlaringizni yaxshiroq bilib olamiz.",
+      "tests": "Testlar",
+      "empty": "Bugun uchun testlar hali tayyor emas. Keyinroq qaytib ko‘ring.",
+      "topics": "Savollar mavzulari",
+      "topicsHint": "Savollar shu mavzulardan, yoshingizga moslab tanlanadi",
+      "profileBody": "Natijalaringiz qanday o‘zgarayotganini ko‘ring",
+      "profileAnswered": "{answered} / {total} ta savolga javob berdingiz"
+    },
+    "session": {
+      "optional": "Ixtiyoriy",
+      "chooseHint": "Davom etish uchun javoblardan birini tanlang",
+      "needOneAnswer": "Yakunlash uchun kamida bitta savolga javob bering",
+      "back": "Orqaga",
+      "next": "Keyingi",
+      "finish": "Yakunlash",
+      "skip": "O‘tkazib yuborish",
+      "textHint": "Fikringizni shu yerga yozing…",
+      "counter": "{count}/{max}",
+      "closedTitle": "Bu test yopilgan",
+      "closedBody": "Bu test o‘tgan kunga tegishli edi. Bugungi savollarni yangidan boshlashingiz mumkin.",
+      "reload": "Bugungi testni ochish"
+    },
+    "leave": {
+      "title": "Testdan chiqasizmi?",
+      "body": "Javoblaringiz saqlandi — bugun istalgan payt shu joydan davom etasiz.",
+      "leave": "Chiqish",
+      "stay": "Davom etish"
+    },
+    "result": {
+      "title": "Bugungi natijangiz",
+      "answered": "{answered}/{total} ta savolga javob berdingiz",
+      "strengths": "Kuchli tomonlaringiz",
+      "interests": "Qiziqishlaringiz",
+      "liked": "Sizga yoqqan yo‘nalishlar",
+      "growth": "Rivojlantirish mumkin bo‘lgan jihatlar",
+      "next": "Keyingi tavsiya",
+      "strengthsEmpty": "Ko‘proq savollarga javob berganingiz sari kuchli tomonlaringiz shu yerda ko‘rinadi.",
+      "interestsEmpty": "Qiziqishlaringizni bilish uchun “Kasbiy qiziqishlar” testini ham yechib ko‘ring.",
+      "interestsEarly": "Bu dastlabki kuzatuv. Yana javob berganingiz sari aniqroq bo‘ladi.",
+      "likedEmpty": "Career Lab’da faoliyatlarni sinab ko‘rib baholasangiz, yoqqanlari shu yerda chiqadi.",
+      "growthEmpty": "Hozircha alohida e’tibor talab qiladigan jihat ko‘rinmadi. Shunday davom eting!",
+      "nextEmpty": "Ertaga yangi savollar bilan qayting.",
+      "tryLabel": "Sinab ko‘rish mumkin: {list}",
+      "toHub": "Kelajagim bo‘limi",
+      "toHome": "Bosh sahifa",
+      "disclaimer": "Bu natijalar — tavsiya, qat’iy hukm emas. Qiziqishlar vaqt bilan o‘zgaradi, turli faoliyatlarni sinab ko‘rish foydali."
+    },
+    "progress": {
+      "title": "Kelajak profilim",
+      "subtitle": "{count} ta test yakunlangan",
+      "topics": "Mavzular bo‘yicha o‘zgarish",
+      "topicsHint": "Oldingi va oxirgi natijangiz",
+      "before": "Oldin",
+      "now": "Hozir",
+      "first": "Birinchi natija",
+      "same": "O‘zgarmadi",
+      "rising": "O‘sib borayotgan qiziqishlar",
+      "risingHint": "Oxirgi javoblaringizda bu yo‘nalishlarga qiziqish ortdi",
+      "history": "Yechilgan testlar",
+      "historyItem": "{answered}/{total} savol",
+      "historyEmpty": "Hali yechilgan test yo‘q.",
+      "more": "Yana ko‘rsatish",
+      "moreFailed": "Yuklanmadi — qayta urinish",
+      "emptyTitle": "Hali natija yo‘q",
+      "emptyBody": "Birinchi testni yeching — rivojlanishingiz shu yerda ko‘rinadi.",
+      "toHub": "Testlarni ochish",
+      "note": "Bu o‘zgarishlar faqat sizning javoblaringizga asoslangan. Ular baho emas — qiziqishlar vaqt bilan o‘zgarib boradi."
+    },
+    "home": {
+      "fresh": "Bugun: {meta}",
+      "startDaily": "Kunlik savollarni boshlash",
+      "unfinished": "Boshlagan savollaringizni yakunlang",
+      "done": "Bugungi savollarga javob berdingiz. Barakalla!",
+      "noDaily": "Qiziqishlaringizni bilish uchun testlardan birini tanlang",
+      "ageHint": "Savollar yoshingizga mos bo‘lishi uchun profilda yoshingizni kiriting",
+      "openHub": "Testlarni ko‘rish"
+    },
+    "tests": {
+      "entryBody": "Qiziqishlaringiz, kuchli tomonlaringiz va kasblar olami"
+    },
+    "profile": {
+      "title": "Kelajak profilim",
+      "subtitle": "Qiziqishlaringiz va kuchli tomonlaringiz",
+      "interests": "Qiziqishlar",
+      "strengths": "Kuchli tomonlar",
+      "grown": "O‘sgan yo‘nalishlar",
+      "empty": "“Kelajagim” testlarini yeching — qiziqishlaringiz shu yerda paydo bo‘ladi.",
+      "early": "Profilingiz shakllanmoqda. Yana bir nechta test yechsangiz, qiziqishlaringiz shu yerda ko‘rinadi."
+    },
+    "errors": {
+      "ageRequired": "Avval profilingizda yoshingizni kiriting.",
+      "ageOutOfRange": "“Kelajagim” savollari 7–18 yoshdagi bolalar uchun.",
+      "noQuestions": "Bu test uchun hozircha savollar yo‘q. Keyinroq qaytib ko‘ring.",
+      "unknownType": "Bu test topilmadi.",
+      "sessionClosed": "Bu test yopilgan. Bugungi testni qaytadan oching.",
+      "unanswered": "Avval barcha majburiy savollarga javob bering.",
+      "invalidAnswer": "Javob saqlanmadi. Qaytadan tanlab ko‘ring.",
+      "questionNotInSession": "Bu savol yangilangan. Testni qaytadan oching.",
+      "sessionNotFound": "Test topilmadi. Qayta urinib ko‘ring.",
+      "notConfigured": "Ochiq javobni hozircha saqlab bo‘lmaydi. Bu savolni o‘tkazib yuborishingiz mumkin.",
+      "unavailable": "“Kelajagim” bo‘limi tez orada ochiladi.",
+      "network": "Internet bilan aloqa yo‘q. Ulanishni tekshirib, qayta urinib ko‘ring.",
+      "unknown": "Nimadir xato ketdi. Qayta urinib ko‘ring."
+    }
   }
 }

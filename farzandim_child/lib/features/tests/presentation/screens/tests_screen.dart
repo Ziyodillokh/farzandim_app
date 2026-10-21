@@ -5,6 +5,7 @@
 // Tartib:
 //   • Header: "Testlar" + qidiruv + ♡ (sevimli testlar)
 //   • "Bugungi testlar" hero — kunlik reja (preview) + illyustratsiya
+//   • "Kelajagim" qatori — Kelajak testlari hub'i (mavjud bo'lsa)
 //   • "So‘nggi natijalar" qatori — o'rtacha natija (preview)
 //   • "Fanlar bo‘yicha" — HAQIQIY backend testlari fan bo'yicha
 //   • "Yangi testlar" — so'nggi testlar ro'yxati (bosilsa test ochiladi)
@@ -18,6 +19,8 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/home/des
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_header.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_icons.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
+import 'package:farzandim_child/features/kelajak/presentation/providers/kelajak_refresh.dart';
+import 'package:farzandim_child/features/kelajak/presentation/widgets/kelajak_tests_entry.dart';
 import 'package:farzandim_child/features/tests/presentation/widgets/latest_tests_section.dart';
 import 'package:farzandim_child/features/tests/presentation/widgets/results_summary_row.dart';
 import 'package:farzandim_child/features/tests/presentation/widgets/subject_grid.dart';
@@ -55,6 +58,7 @@ class TestsScreen extends ConsumerWidget {
                 await Future.wait([
                   ref.read(backendContestsProvider.future),
                   refreshLearning(ref),
+                  refreshKelajak(ref),
                 ]);
               },
               child: ListView(
@@ -91,6 +95,11 @@ class TestsScreen extends ConsumerWidget {
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 13),
                     child: TestsHeroCard(),
+                  ),
+                  // O'z bo'shlig'i bilan; Kelajak mavjud bo'lmasa balandligi 0.
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 13),
+                    child: KelajakTestsEntry(),
                   ),
                   const SizedBox(height: 14),
                   const Padding(

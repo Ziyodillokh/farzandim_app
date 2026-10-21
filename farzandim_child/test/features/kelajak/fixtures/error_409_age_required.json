@@ -1,0 +1,5 @@
+{
+  "statusCode": 409,
+  "message": "Child age or birth date is required",
+  "code": "AGE_REQUIRED"
+}
