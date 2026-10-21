@@ -21,6 +21,7 @@ IconData psychKindIcon(PsychKind kind) => switch (kind) {
   PsychKind.selfEsteem => SolarIconsOutline.starFall,
   PsychKind.career => SolarIconsOutline.target,
   PsychKind.social => SolarIconsOutline.usersGroupRounded,
+  PsychKind.iq => SolarIconsOutline.lightbulb,
   PsychKind.custom || PsychKind.unknown => SolarIconsOutline.clipboardList,
 };
 

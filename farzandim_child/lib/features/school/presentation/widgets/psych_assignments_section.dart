@@ -4,6 +4,7 @@
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
+import 'package:farzandim_child/features/iq/presentation/iq_display.dart';
 import 'package:farzandim_child/features/school/domain/psych_models.dart';
 import 'package:farzandim_child/features/school/presentation/providers/school_providers.dart';
 import 'package:farzandim_child/features/school/presentation/psych_display.dart';
@@ -11,6 +12,7 @@ import 'package:farzandim_child/features/school/presentation/school_navigation.d
 import 'package:farzandim_child/features/school/presentation/widgets/school_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 class PsychAssignmentsSection extends ConsumerWidget {
@@ -47,7 +49,16 @@ class PsychAssignmentsSection extends ConsumerWidget {
             const SizedBox(height: 10),
             _AssignmentTile(
               assignment: item,
-              onTap: () => openPsychTest(context, item.assignmentId),
+              onTap: () async {
+                if (item.kind != PsychKind.iq) {
+                  openPsychTest(context, item.assignmentId);
+                  return;
+                }
+                // Parvoz IQ — odatdagi IQ sahifasi; qaytgach ro'yxat yangilanadi
+                // (yakunlangan bo'lsa topshiriq yo'qoladi).
+                await context.push(IqRoutes.hub);
+                ref.invalidate(psychAssignmentsProvider);
+              },
             ),
           ],
         ],

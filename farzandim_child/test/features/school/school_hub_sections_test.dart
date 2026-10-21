@@ -7,6 +7,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/school/data/school_repository.dart';
 import 'package:farzandim_child/features/school/domain/care_models.dart';
+import 'package:farzandim_child/features/iq/presentation/iq_display.dart';
 import 'package:farzandim_child/features/school/domain/psych_models.dart';
 import 'package:farzandim_child/features/school/presentation/care_display.dart';
 import 'package:farzandim_child/features/school/presentation/school_navigation.dart';
@@ -49,6 +50,7 @@ Future<void> _pumpHub(
     markerRoute(SchoolRoutes.survey),
     markerRoute(SchoolRoutes.newRequest),
     markerRoute(SchoolRoutes.requests),
+    markerRoute(IqRoutes.hub),
   ],
 );
 
@@ -89,6 +91,31 @@ void main() {
       await _tap(tester, find.text('Diqqat testi'));
       expect(find.text('test:assign-1'), findsOneWidget);
     });
+
+    testWidgets(
+      'Parvoz IQ topshirig\'i — IQ sahifasi ochiladi (maktab testi emas)',
+      (tester) async {
+        final iq = PsychAssignmentSummary.tryFromJson({
+          ...psychSummaryJson,
+          'assignmentId': 'assign-iq',
+          'testId': 'parvoz-iq',
+          'kind': 'IQ',
+          'title': 'Parvoz IQ — mantiqiy fikrlash',
+          'timeLimitMin': null,
+        })!;
+        expect(iq.kind, PsychKind.iq);
+        final repo = FakeSchoolRepository(
+          today: todayWith({}),
+          psychAssignments: [iq],
+        );
+        await _pumpHub(tester, repo);
+        expect(find.text(_t('school.psych.kinds.iq')), findsOneWidget);
+
+        await _tap(tester, find.text('Parvoz IQ — mantiqiy fikrlash'));
+        expect(find.text('page:${IqRoutes.hub}'), findsOneWidget);
+        expect(find.textContaining('test:'), findsNothing);
+      },
+    );
 
     testWidgets('test bo\'lmasa — bo\'lim yo\'q', (tester) async {
       await _pumpHub(tester, FakeSchoolRepository(today: todayWith({})));

@@ -13,6 +13,8 @@ enum PsychKind implements WireEnum {
   career('CAREER'),
   social('SOCIAL'),
   custom('CUSTOM'),
+  // Parvoz IQ (maktab tayinlovi) — odatdagi /iq oqimida yechiladi.
+  iq('IQ'),
   unknown('');
 
   const PsychKind(this.wire);

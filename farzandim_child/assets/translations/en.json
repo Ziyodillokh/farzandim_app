@@ -1415,6 +1415,7 @@
         "career": "Career interests",
         "social": "Social skills",
         "custom": "Special test",
+        "iq": "Parvoz IQ",
         "unknown": "Psychology test"
       }
     },
