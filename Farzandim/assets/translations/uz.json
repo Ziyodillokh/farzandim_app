@@ -2077,5 +2077,26 @@
       "outOfRangeBody": "Savollar 7 yoshdan 18 yoshgacha bo'lgan bolalarga mo'ljallangan. Yosh noto'g'ri kiritilgan bo'lsa, uni tahrirlashingiz mumkin.",
       "outOfRangeAction": "Yoshni tahrirlash"
     }
+  },
+  "iq": {
+    "card": {
+      "title": "Mantiqiy fikrlash testi",
+      "provisional": "Taxminiy",
+      "percentile": "Tengdoshlarining {p}% idan yuqori natija",
+      "score": "Standart ball: {score}",
+      "scoreCi": "Standart ball: {score} (95% oraliq: {lo}–{hi})",
+      "correct": "{correct}/{total} to'g'ri javob · {date}",
+      "previous": "Oldingi natija: tengdoshlarining {p}% idan yuqori ({date})",
+      "retake": "Qayta topshirish mumkin: {date} dan keyin",
+      "disclaimer": "Skrining, tashxis emas. Natija bolaning qobiliyati haqida yakuniy xulosa emas — kayfiyat va charchoq ham ta'sir qiladi."
+    },
+    "band": {
+      "veryHigh": "Juda yuqori daraja",
+      "high": "Yuqori daraja",
+      "aboveAverage": "O'rtachadan yuqori",
+      "average": "O'rtacha daraja",
+      "belowAverage": "O'rtachadan biroz past",
+      "growthZone": "Rivojlanish zonasi"
+    }
   }
 }

@@ -19,6 +19,7 @@ import 'package:farzandim/features/gamification/data/models/leaderboard_models.d
 import 'package:farzandim/features/gamification/presentation/providers/gamification_provider.dart';
 import 'package:farzandim/features/gamification/presentation/providers/leaderboard_provider.dart';
 import 'package:farzandim/features/gamification/presentation/widgets/ranking_avatar.dart';
+import 'package:farzandim/features/iq/presentation/iq_dashboard_card.dart';
 import 'package:farzandim/features/kelajak/presentation/widgets/kelajak_dashboard_card.dart';
 import 'package:farzandim/features/location/presentation/providers/child_location_provider.dart';
 import 'package:farzandim/features/location/presentation/providers/child_place_provider.dart';
@@ -273,6 +274,7 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
       ..invalidate(childLocationProvider(childId));
     invalidateSchoolData(ref.invalidate);
     refreshKelajakCard(ref, childId);
+    refreshIqCard(ref, childId);
     if (!isIos) ref.invalidate(todayUsageProvider(childId));
     try {
       await Future.wait([
@@ -319,6 +321,7 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                       _LocationCard(child: child),
                       SchoolDashboardCard(childId: child.id),
                       KelajakDashboardCard(childId: child.id),
+                      IqDashboardCard(childId: child.id),
                       const SizedBox(height: 4),
                       IntrinsicHeight(
                         child: Row(

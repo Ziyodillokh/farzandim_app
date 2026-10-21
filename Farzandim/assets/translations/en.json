@@ -2077,5 +2077,26 @@
       "outOfRangeBody": "The questions are designed for children aged 7 to 18. If the age is wrong, you can edit it.",
       "outOfRangeAction": "Edit age"
     }
+  },
+  "iq": {
+    "card": {
+      "title": "Logical thinking test",
+      "provisional": "Provisional",
+      "percentile": "Scored higher than {p}% of peers",
+      "score": "Standard score: {score}",
+      "scoreCi": "Standard score: {score} (95% range: {lo}–{hi})",
+      "correct": "{correct}/{total} correct · {date}",
+      "previous": "Previous result: higher than {p}% of peers ({date})",
+      "retake": "Can retake after {date}",
+      "disclaimer": "A screening, not a diagnosis. The result is not a final judgement of your child's ability — mood and tiredness affect it too."
+    },
+    "band": {
+      "veryHigh": "Very high",
+      "high": "High",
+      "aboveAverage": "Above average",
+      "average": "Average",
+      "belowAverage": "Slightly below average",
+      "growthZone": "Growth zone"
+    }
   }
 }
