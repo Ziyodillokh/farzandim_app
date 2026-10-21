@@ -8,6 +8,7 @@ import 'package:farzandim/features/notifications/data/models/app_notification.da
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/features/notifications/presentation/screens/sos_sheet.dart';
 import 'package:farzandim/features/notifications/presentation/widgets/notifications_list_view.dart';
+import 'package:farzandim/features/school/presentation/widgets/school_payment_pin.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -91,6 +92,14 @@ class NotificationsSheet extends ConsumerWidget {
               const SizedBox(height: 18),
               Text('notifications.listTitle'.tr(), style: _unb(17)),
               const SizedBox(height: 12),
+              // Xususiy maktab to'lovi kelgan bo'lsa — eng tepada, yopilmaydi.
+              SchoolPaymentPin(
+                onOpen: () {
+                  final router = GoRouter.of(context);
+                  Navigator.of(context).pop();
+                  router.push(AppRoutes.schoolPaymentsPath());
+                },
+              ),
               Expanded(
                 child: items.isEmpty
                     ? const _Empty()

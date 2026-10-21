@@ -1896,7 +1896,14 @@
       "verifyHint": "For example: paid on November 3 via Click",
       "verifyNote": "The school will check the payment and reply. You'll get a notification when they answer.",
       "verifySubmit": "Send",
-      "verifySent": "Your request was sent to the school"
+      "verifySent": "Your request was sent to the school",
+      "pin": {
+        "title": "Payment is due today",
+        "overdue": "Payment date has passed",
+        "body": "{school}: payment date for {children} — {date}.",
+        "checking": "The school is checking your payment.",
+        "open": "Go to payments"
+      }
     },
     "errors": {
       "validation": "Please check the details and try again.",

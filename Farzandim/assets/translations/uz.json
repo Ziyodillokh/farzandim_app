@@ -1896,7 +1896,14 @@
       "verifyHint": "Masalan: 3-noyabr kuni Click orqali to'ladim",
       "verifyNote": "Maktab to'lovni tekshirib, javob beradi. Javob kelganda sizga xabar keladi.",
       "verifySubmit": "Yuborish",
-      "verifySent": "So'rovingiz maktabga yuborildi"
+      "verifySent": "So'rovingiz maktabga yuborildi",
+      "pin": {
+        "title": "Bugun to'lov kuni",
+        "overdue": "To'lov sanasi o'tdi",
+        "body": "{school}: {children} uchun to'lov sanasi — {date}.",
+        "checking": "Maktab to'lovingizni tekshiryapti.",
+        "open": "To'lovlarga o'tish"
+      }
     },
     "errors": {
       "validation": "Ma'lumotlarni tekshirib, qaytadan urinib ko'ring.",
