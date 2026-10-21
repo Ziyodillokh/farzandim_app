@@ -142,6 +142,23 @@ void main() {
     expect(adapter.requests.last.data, {'subject': 'math'});
   });
 
+  test('SUBJECT_NOT_IN_GRADE — fan sinfda o\'qitilmaydi', () async {
+    final (api, adapter) = repo(
+      (o) => (400, {'statusCode': 400, 'code': 'SUBJECT_NOT_IN_GRADE'}),
+    );
+    await expectLater(
+      api.startAttempt(Subject.chemistry),
+      throwsA(
+        isA<LearningException>().having(
+          (e) => e.code,
+          'code',
+          LearningErrorCode.subjectNotInGrade,
+        ),
+      ),
+    );
+    expect(adapter.requests.single.data, {'subject': 'chemistry'});
+  });
+
   test('NO_QUESTIONS va tarmoq xatosi', () async {
     final (api, _) = repo((o) => (404, {'code': 'NO_QUESTIONS'}));
     await expectLater(

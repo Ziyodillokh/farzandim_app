@@ -70,6 +70,15 @@ https://farzandimedu.uz/privacy.html
 | **Ilova faolligi** (o'rnatilgan ilovalar, ekran vaqti) | Ha | Yo'q | Ha | Ilova funksionalligi (ota-ona nazorati) |
 | **Qurilma ID** | Ha | Yo'q | Ha | Ilova funksionalligi (push xabar) |
 | **Sog'liq/fitnes** (qadamlar) | Ha | Yo'q | Yo'q | Ilova funksionalligi (gamifikatsiya) |
+| **Sog'liq ma'lumoti** (Parvoz School: psixologik test javoblari, "Bola ovozi" so'rovnomasi) | Ha | Yo'q* | Yo'q | Ilova funksionalligi (maktab psixologi) |
+| **Boshqa ilova ichidagi xabarlar** (Parvoz School: psixologga murojaat matni) | Ha | Yo'q* | Yo'q | Ilova funksionalligi |
+| **Ilova faolligi → boshqa harakatlar** (Parvoz School: QR davomat — kelish/ketish vaqti) | Ha | Yo'q* | Yo'q | Ilova funksionalligi |
+
+\* Maktabga uzatish bola o'zi boshlagan va kutgan amal (testni yuborish,
+psixologga yozish, QR skanerlash) — Play qoidasida bu "ulashish" emas, lekin
+**yig'ish** albatta belgilanadi. Maxfiylik siyosatiga "Maktab va psixolog"
+bo'limi (nima, kim ko'radi, qachon — faqat maktab bolani bog'lagan bo'lsa)
+shu build'dan OLDIN qo'shilsin.
 
 > ⚠️ **Muhim:** "Ulashiladi" hammasida **Yo'q** — ma'lumot faqat bolaning
 > o'z ota-onasiga ko'rinadi, bu Play tilida "ulashish" emas.

@@ -1,6 +1,6 @@
 /* Parvoz Growth — Info.plist ruxsat matnlari (lokalizatsiya). */
 
-"NSCameraUsageDescription" = "Parvoz kameradan ota-onangizning ulanish QR kodini skanerlash hamda ota-onangizga rasm va video xabar yuborish uchun foydalanadi.";
+"NSCameraUsageDescription" = "Parvoz kameradan ota-onangizning ulanish QR kodini va maktabingizdagi davomat QR kodini skanerlash hamda ota-onangizga rasm va video xabar yuborish uchun foydalanadi.";
 "NSMicrophoneUsageDescription" = "Parvoz mikrofondan ota-onangizga ovozli va video xabar yozish uchun foydalanadi.";
 "NSPhotoLibraryUsageDescription" = "Parvoz ota-onangizga yuborish uchun galereyadan rasm tanlash imkonini beradi.";
 "NSLocationWhenInUseUsageDescription" = "Parvoz xavfsizligingiz uchun joylashuvingizni ota-onangizga ko'rsatadi.";

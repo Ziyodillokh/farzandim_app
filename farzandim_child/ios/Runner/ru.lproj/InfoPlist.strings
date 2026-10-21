@@ -1,6 +1,6 @@
 /* Parvoz Growth — Info.plist ruxsat matnlari (lokalizatsiya). */
 
-"NSCameraUsageDescription" = "Parvoz использует камеру, чтобы сканировать QR-код подключения родителя и отправлять родителям фото- и видеосообщения.";
+"NSCameraUsageDescription" = "Parvoz использует камеру, чтобы сканировать QR-код подключения родителя и QR-код посещаемости в школе, а также отправлять родителям фото- и видеосообщения.";
 "NSMicrophoneUsageDescription" = "Parvoz использует микрофон, чтобы записывать голосовые и видеосообщения для родителей.";
 "NSPhotoLibraryUsageDescription" = "Parvoz позволяет выбрать фото из галереи, чтобы отправить его родителям.";
 "NSLocationWhenInUseUsageDescription" = "Parvoz показывает родителям ваше местоположение, чтобы они знали, что вы в безопасности.";

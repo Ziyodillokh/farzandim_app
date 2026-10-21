@@ -15,6 +15,8 @@
 //     --dart-define=SHOT_PAGE=home               # home | tests | progress | library | library_audio
 //                                                # + learning_shots.dart: quiz, result, setup, calendar…
 //     --dart-define=SHOT_STATE=fresh             # fresh | partial | done | nosetup (kunlik reja)
+//     --dart-define=SHOT_SCHOOL=none             # school_shots.dart: maktab holati
+//                                                # (SHOT_PAGE=school | check_in)
 //
 // Ma'lumotlar namunaviy (provider override'lar), tarmoq yo'q.
 
@@ -49,6 +51,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'learning_shots.dart';
+import 'school_shots.dart';
 
 const _out = String.fromEnvironment('SHOT_OUT', defaultValue: 'build/home.png');
 const _imagesDir = String.fromEnvironment('SHOT_IMAGES');
@@ -113,6 +116,7 @@ void main() {
       });
       await tester.pump(const Duration(milliseconds: 300));
       await performLearningActions(tester, _page);
+      await performSchoolActions(tester, _page);
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 200)),
       );
@@ -136,6 +140,7 @@ Widget _app() {
   final router = GoRouter(
     initialLocation: switch (_page) {
       _ when learningLocation(_page) != null => learningLocation(_page)!,
+      _ when schoolLocation(_page) != null => schoolLocation(_page)!,
       'tests' => '/contests',
       'progress' => '/progress',
       'library' || 'library_audio' => '/content',
@@ -143,6 +148,7 @@ Widget _app() {
     },
     routes: [
       ...learningShotRoutes(),
+      ...schoolShotRoutes(),
       GoRoute(
         path: '/dashboard',
         builder: (_, __) => HomeScaffold(
@@ -180,6 +186,7 @@ Widget _app() {
     child: ProviderScope(
       overrides: [
         ...learningOverrides(),
+        ...schoolOverrides(),
         backendGamificationProvider.overrideWith(
           (ref) => Stream.value(
             const BackendGamification(
@@ -399,7 +406,8 @@ Future<void> _preloadGoogleFonts() async {
 Future<void> _precacheImages(WidgetTester tester) async {
   if (_page == 'progress' ||
       _page.startsWith('library') ||
-      learningPages.contains(_page)) {
+      learningPages.contains(_page) ||
+      schoolLocation(_page) != null) {
     return;
   }
   if (_page == 'tests') {

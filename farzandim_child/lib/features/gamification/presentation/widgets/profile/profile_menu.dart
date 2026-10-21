@@ -1,9 +1,14 @@
 // Profil — bo'limlar menyusi: rangli ikon kvadrat + nom + chevron,
-// qatorlar orasida ingichka chiziq.
+// qatorlar orasida ingichka chiziq. "Maktabim" — faqat maktabga bog'langan
+// bolada (birinchi qator).
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
+import 'package:farzandim_child/features/school/presentation/providers/school_providers.dart';
+import 'package:farzandim_child/features/school/presentation/school_navigation.dart';
+import 'package:farzandim_child/features/school/presentation/school_style.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 
@@ -22,6 +27,13 @@ class _MenuEntry {
   final Color tint;
   final String path;
 }
+
+const _schoolEntry = _MenuEntry(
+  'school.hub.title',
+  SolarIconsBold.squareAcademicCap,
+  SchoolColors.accent,
+  SchoolRoutes.hub,
+);
 
 const _entries = <_MenuEntry>[
   _MenuEntry(
@@ -57,11 +69,15 @@ const _entries = <_MenuEntry>[
   ),
 ];
 
-class ProfileMenu extends StatelessWidget {
+class ProfileMenu extends ConsumerWidget {
   const ProfileMenu({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final entries = [
+      if (ref.watch(isSchoolLinkedProvider)) _schoolEntry,
+      ..._entries,
+    ];
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: homeCardDecoration(),
@@ -69,7 +85,7 @@ class ProfileMenu extends StatelessWidget {
         type: MaterialType.transparency,
         child: Column(
           children: [
-            for (var i = 0; i < _entries.length; i++) ...[
+            for (var i = 0; i < entries.length; i++) ...[
               if (i > 0)
                 Container(
                   height: 1,
@@ -78,7 +94,7 @@ class ProfileMenu extends StatelessWidget {
                   ),
                   color: _divider,
                 ),
-              _MenuRow(entry: _entries[i]),
+              _MenuRow(entry: entries[i]),
             ],
           ],
         ),

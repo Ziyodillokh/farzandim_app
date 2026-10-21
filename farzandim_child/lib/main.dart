@@ -15,6 +15,7 @@ import 'package:farzandim_child/core/realtime/socket_providers.dart';
 import 'package:farzandim_child/core/routing/app_router.dart';
 import 'package:farzandim_child/core/theme/app_theme.dart';
 import 'package:farzandim_child/core/utils/release_logging.dart';
+import 'package:farzandim_child/features/account/presentation/providers/language_sync_provider.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/unlock_request_provider.dart';
 import 'package:farzandim_child/core/theme/theme_mode_provider.dart';
 import 'package:farzandim_child/features/app_update/data/models/app_version_info.dart';
@@ -210,6 +211,10 @@ class ChildApp extends ConsumerWidget {
     // qiladi, app ochiq paytdagi onUnlockRequested push'lari uchun).
     ref.watch(unlockPendingCheckProvider);
 
+    // Ilova tili bola hisobiga yoziladi (maktab so'rovnomasi va testlari shu
+    // tilda keladi) — ulangandan keyin va til almashganda.
+    ref.watch(languageSyncProvider);
+
     // Sprint 4.4.28: app startup'da Backend'dan version tekshirish.
     // Force update kerak bo'lsa modal dialog ochish.
     // Birinchi qiymat — ref.watch (initial), keyingilari — ref.listen.
@@ -251,6 +256,11 @@ class ChildApp extends ConsumerWidget {
       final localeNotifier = ref.read(localeRefreshProvider.notifier);
       if (localeNotifier.state != localeCode) {
         localeNotifier.state = localeCode;
+      }
+      // Server bilan til sinxronizatsiyasi (`languageSyncProvider`).
+      final languageNotifier = ref.read(appLanguageProvider.notifier);
+      if (languageNotifier.state != localeCode) {
+        languageNotifier.state = localeCode;
       }
     });
 

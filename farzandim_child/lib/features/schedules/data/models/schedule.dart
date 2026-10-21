@@ -10,6 +10,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum ScheduleType { school, sport, sleep, meal, custom }
 
+/// Server maktab "School Mode" virtual jadvalini shu `source` bilan
+/// yuboradi (faqat bolaning o'z so'rovida, faqat bugun uchun).
+const kSchoolModeSource = 'SCHOOL_MODE';
+
 enum Weekday {
   monday,
   tuesday,
@@ -52,6 +56,10 @@ class Schedule {
   /// "Ilova cheklovlar" — jadval oynasida bloklanadigan paketlar.
   final List<String> blockedApps;
 
+  /// Maktab belgilagan "Maktab rejimi" (ota-ona jadvali emas) — ekranda
+  /// alohida nom bilan ko'rsatiladi; cheklov oddiy jadvaldek qo'llanadi.
+  final bool isSchoolMode;
+
   const Schedule({
     required this.id,
     required this.title,
@@ -63,6 +71,7 @@ class Schedule {
     required this.weekdays,
     required this.isActive,
     this.blockedApps = const [],
+    this.isSchoolMode = false,
   });
 
   /// Backend REST `Routine` JSON'idan parse (Sprint 4.4.9 Day 3).
@@ -104,6 +113,7 @@ class Schedule {
       blockedApps: ((json['blockedApps'] as List?) ?? const [])
           .map((e) => '$e')
           .toList(growable: false),
+      isSchoolMode: json['source'] == kSchoolModeSource,
     );
   }
 

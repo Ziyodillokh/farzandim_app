@@ -80,7 +80,7 @@
 		<key>NSLocationAlwaysUsageDescription</key>
 		<string>Parvoz shares your location with your parents even when the app is closed, so they know you are safe.</string>
 		<key>NSCameraUsageDescription</key>
-		<string>Parvoz uses the camera to scan your parent's pairing QR code and to send photo and video messages to your parents.</string>
+		<string>Parvoz uses the camera to scan your parent's pairing QR code and your school's attendance QR code, and to send photo and video messages to your parents.</string>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>Parvoz uses the microphone to record voice and video messages for your parents.</string>
 		<key>NSPhotoLibraryUsageDescription</key>

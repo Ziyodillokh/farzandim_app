@@ -5,7 +5,8 @@
 //
 // - ParvozHeader (push-screen, orqaga bor)
 // - Status card: "Hozir: ..." yoki "Keyingi: ..." — parvozGlass
-// - Bugungi jadvallar list (vaqt bo'yicha sort) — ScheduleTile (night)
+// - Bugungi jadvallar list (vaqt bo'yicha sort) — ScheduleTile (night);
+//   maktab belgilagan "Maktab rejimi" ham shu ro'yxatda (alohida nom bilan)
 // - Auto-refresh har daqiqa (current/next yangilanish)
 // - LOGIKA O'ZGARMAGAN: provider'lar, .tr(), Timer — saqlanishi shart
 
@@ -17,6 +18,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
+import 'package:farzandim_child/core/utils/tashkent_time.dart';
 import 'package:farzandim_child/features/schedules/data/models/schedule.dart';
 import 'package:farzandim_child/features/schedules/presentation/providers/schedule_providers.dart';
 import 'package:farzandim_child/features/schedules/presentation/widgets/schedule_tile.dart';
@@ -35,11 +37,23 @@ class SchedulesScreen extends ConsumerStatefulWidget {
 class _SchedulesScreenState extends ConsumerState<SchedulesScreen> {
   Timer? _refreshTimer;
 
+  /// Ro'yxat qaysi kun (Toshkent) uchun yuklangan — kun almashsa qayta.
+  int _day = tashkentNow().day;
+
   @override
   void initState() {
     super.initState();
+    // "Maktab rejimi" har kunga alohida (bayram, istisno) — eskirgan
+    // kunning oynasi qolib ketmasin.
+    refreshTodaySchedules(ref);
     _refreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
-      if (mounted) setState(() {});
+      if (!mounted) return;
+      final day = tashkentNow().day;
+      if (day != _day) {
+        _day = day;
+        refreshTodaySchedules(ref);
+      }
+      setState(() {});
     });
   }
 
@@ -70,16 +84,12 @@ class _SchedulesScreenState extends ConsumerState<SchedulesScreen> {
     final diff = start.difference(now).inMinutes;
 
     if (diff < 60) {
-      return 'schedules.minutesUntil'.tr(
-        namedArgs: {'minutes': '$diff'},
-      );
+      return 'schedules.minutesUntil'.tr(namedArgs: {'minutes': '$diff'});
     }
     final hours = diff ~/ 60;
     final mins = diff % 60;
     if (mins == 0) {
-      return 'schedules.hoursUntil'.tr(
-        namedArgs: {'hours': '$hours'},
-      );
+      return 'schedules.hoursUntil'.tr(namedArgs: {'hours': '$hours'});
     }
     return 'schedules.hoursMinutesUntil'.tr(
       namedArgs: {'hours': '$hours', 'minutes': '$mins'},
@@ -88,9 +98,16 @@ class _SchedulesScreenState extends ConsumerState<SchedulesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final today = ref.watch(todaySchedulesProvider);
-    final current = ref.watch(currentScheduleProvider);
-    final next = ref.watch(nextScheduleProvider);
+    final today = ref.watch(todayScheduleListProvider);
+    // "Maktab rejimi" `/today`da yo'q — "Hozir" / "Keyingi" ro'yxatdan ham
+    // olinadi (Toshkent vaqti, server oynasi).
+    final now = tashkentNow();
+    final current = currentScheduleAt(
+      today,
+      ref.watch(currentScheduleProvider),
+      now,
+    );
+    final next = nextScheduleAt(today, ref.watch(nextScheduleProvider), now);
     final activeAsync = ref.watch(activeSchedulesProvider);
 
     return Scaffold(
@@ -124,16 +141,16 @@ class _SchedulesScreenState extends ConsumerState<SchedulesScreen> {
                     // ─── "Bugungi jadval" sarlavhasi ────────────────
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: ParvozSectionLabel(
-                        'schedules.todayList'.tr(),
-                      ),
+                      child: ParvozSectionLabel('schedules.todayList'.tr()),
                     ),
                     const SizedBox(height: 4),
                     // ─── Jadval qatorlari ───────────────────────────
                     ...today.map(
                       (s) => ScheduleTile(
                         schedule: s,
-                        isCurrent: s.id == current?.id,
+                        isCurrent:
+                            s.id == current?.id ||
+                            (s.isSchoolMode && isScheduleActiveAt(s, now)),
                       ),
                     ),
                   ],
@@ -216,7 +233,7 @@ class _StatusCard extends StatelessWidget {
               iconSize: 10,
               text: 'schedules.current'.tr(
                 namedArgs: {
-                  'title': current!.title,
+                  'title': scheduleDisplayTitle(current!),
                   'endTime': current!.endTimeFormatted,
                 },
               ),
@@ -228,7 +245,7 @@ class _StatusCard extends StatelessWidget {
               iconSize: 16,
               text: 'schedules.next'.tr(
                 namedArgs: {
-                  'title': next!.title,
+                  'title': scheduleDisplayTitle(next!),
                   'until': minutesUntil(next!),
                 },
               ),
@@ -270,10 +287,7 @@ class _StatusRow extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              color: AppColors.parvozText,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: AppColors.parvozText, fontSize: 14),
           ),
         ),
       ],

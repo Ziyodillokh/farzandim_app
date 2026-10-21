@@ -20,6 +20,7 @@ import 'package:farzandim_child/features/learning/presentation/providers/learnin
 import 'package:farzandim_child/features/learning/presentation/widgets/quiz/quiz_body.dart';
 import 'package:farzandim_child/features/learning/presentation/widgets/quiz/quiz_result_view.dart';
 import 'package:farzandim_child/features/learning/presentation/widgets/quiz/quiz_top_bar.dart';
+import 'package:farzandim_child/features/school/presentation/providers/school_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -109,6 +110,9 @@ class _DailyQuizScreenState extends ConsumerState<DailyQuizScreen> {
     try {
       final result = await _repository.completeAttempt(_session!.attemptId);
       ref.read(storedResultsProvider.notifier).add(result);
+      // Shu fandagi maktab topshirig'i endi "bajarildi" bo'lishi mumkin
+      // (bog'lanmagan bolada so'rovsiz).
+      ref.invalidate(schoolAssignmentsProvider);
       if (mounted) setState(() => _result = result);
     } on LearningException catch (e) {
       debugPrint('[learning] yakunlanmadi: $e');
@@ -251,6 +255,14 @@ class _DailyQuizScreenState extends ConsumerState<DailyQuizScreen> {
         icon: SolarIconsOutline.notebookBookmark,
         message: 'learn.profileRequired'.tr(),
         actionLabel: 'learn.setupCtaButton'.tr(),
+        onAction: () => context.pushReplacement(LearningRoutes.setup),
+      ),
+      // Masalan, maktab topshirig'idagi fan profildagi sinfda o'qitilmaydi —
+      // qayta urinish yordam bermaydi, sinfni tekshirish kerak.
+      LearningErrorCode.subjectNotInGrade => QuizStatus(
+        icon: SolarIconsOutline.notebookBookmark,
+        message: 'learn.subjectNotInGrade'.tr(),
+        actionLabel: 'learn.checkGrade'.tr(),
         onAction: () => context.pushReplacement(LearningRoutes.setup),
       ),
       _ => QuizStatus(

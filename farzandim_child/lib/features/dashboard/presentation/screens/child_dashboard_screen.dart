@@ -16,6 +16,8 @@
 import 'dart:async';
 
 import 'package:farzandim_child/core/platform/platform_capabilities.dart';
+import 'package:farzandim_child/core/utils/refresh_throttle.dart';
+import 'package:farzandim_child/features/account/presentation/providers/language_sync_provider.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_device_policy_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/uninstall_protection_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
@@ -28,6 +30,7 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/home/hom
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:farzandim_child/features/location/presentation/widgets/location_enable_modal.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
+import 'package:farzandim_child/features/school/presentation/providers/school_providers.dart';
 import 'package:farzandim_child/features/screen_time/data/screen_time_channel.dart';
 import 'package:farzandim_child/features/screen_time/presentation/providers/screen_time_providers.dart';
 import 'package:farzandim_child/features/screen_time/presentation/widgets/ios_setup_banner.dart';
@@ -62,6 +65,10 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
   /// xizmat yoqilgach `false`ga qaytadi, keyingi o'chishda yana so'raladi).
   bool _locationModalShown = false;
 
+  /// Maktab ma'lumoti kamdan-kam o'zgaradi: daqiqalik taymerda besh daqiqada
+  /// bir marta so'raladi (ilovaga qaytganda — har doim).
+  final _schoolRefresh = RefreshThrottle(const Duration(minutes: 5));
+
   @override
   void initState() {
     super.initState();
@@ -80,7 +87,7 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     Future.microtask(_checkPendingTimeRequest);
     _autoRefreshTimer = Timer.periodic(
       const Duration(seconds: 60),
-      (_) => _refresh(),
+      (_) => _refresh(isPeriodic: true),
     );
   }
 
@@ -124,7 +131,7 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     }
   }
 
-  void _refresh() {
+  void _refresh({bool isPeriodic = false}) {
     if (!mounted) return;
     // Qadamni telefon soniga yaqinlashtirish — Health Connect'dan HAQIQIY
     // jamini darhol tortamiz (davriy 5 daqiqani kutmasdan). onStepsUpdated
@@ -135,6 +142,13 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
       ..invalidate(todayStepsProvider)
       ..invalidate(backendContestsProvider);
     unawaited(refreshLearning(ref));
+    // Maktab testlari, so'rovnoma va topshiriqlar push'siz keladi — shu yerda.
+    if (_schoolRefresh.shouldRun(force: !isPeriodic)) {
+      unawaited(refreshSchool(ref));
+    }
+    // Avval yozilmagan ilova tili (oflayn edi) — qayta; yozilgan bo'lsa
+    // so'rov ketmaydi.
+    retryLanguageSync(ref);
     // Deaktivatsiya (ota-ona o'chirsa) darhol; faollashtirish dialogi YO'Q
     // (loop bo'lmasin — dialog faqat app ochilganda, initState'da).
     unawaited(_syncUninstallProtection(allowPrompt: false));

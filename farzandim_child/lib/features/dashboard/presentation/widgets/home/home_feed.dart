@@ -1,5 +1,6 @@
 // Bosh sahifa ("Asosiy") bo'limlari — maketdagi tartibda:
-// header → stat kartalar → Bugungi testlar → So‘nggi natijalar → Kutubxona.
+// header → stat kartalar → (Maktabim) → Bugungi testlar → So‘nggi natijalar
+// → Kutubxona. "Maktabim" kartasi faqat maktabga bog'langan bolada.
 //
 // Kutubxona butun kenglikda (lenta ekran chetigacha), qolganlari 16pt
 // ichkarida. Ekran (`ChildDashboardScreen`) faqat aylantirish, yangilash
@@ -13,6 +14,7 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/home/hom
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/library_section.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/recent_results_card.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/today_tests_card.dart';
+import 'package:farzandim_child/features/school/presentation/widgets/school_today_card.dart';
 import 'package:flutter/material.dart';
 
 /// Bosh sahifa qobig'i — fon, pull-to-refresh, aylantirish, suzuvchi nav.
@@ -80,6 +82,8 @@ class HomeFeed extends StatelessWidget {
         _Padded(HomeHeader()),
         SizedBox(height: 5),
         _Padded(HomeStatCards()),
+        // O'z bo'shlig'i bilan; bog'lanmagan bolada balandligi 0.
+        _Padded(SchoolTodayCard()),
         SizedBox(height: 8),
         _Padded(TodayTestsCard()),
         SizedBox(height: 10),

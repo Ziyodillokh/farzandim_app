@@ -2,8 +2,8 @@
 // "Boshlash" va o'ngda illyustratsiya.
 //
 // Fan plitkasi — shu fanning kunlik testi, "Boshlash" — navbatdagi
-// yechilmagan fan (bosh sahifadagi karta bilan bir xil holatlar).
-// Fan tanlanmagan bo'lsa — sozlash kartasi.
+// yechilmagan fan (bosh sahifadagi karta bilan bir xil holatlar, jumladan
+// "Maktab topshirig'i" belgisi). Fan tanlanmagan bo'lsa — sozlash kartasi.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/home/home_style.dart';
@@ -14,6 +14,8 @@ import 'package:farzandim_child/features/learning/presentation/providers/learnin
 import 'package:farzandim_child/features/learning/presentation/widgets/done_badge_icon.dart';
 import 'package:farzandim_child/features/learning/presentation/widgets/learning_setup_card.dart';
 import 'package:farzandim_child/features/learning/presentation/widgets/subject_icon.dart';
+import 'package:farzandim_child/features/school/presentation/providers/school_providers.dart';
+import 'package:farzandim_child/features/school/presentation/widgets/school_task_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -101,7 +103,10 @@ class TestsHeroCard extends ConsumerWidget {
                       padding: const EdgeInsets.only(left: 3.8),
                       child: SizedBox(
                         width: left - 3.8,
-                        child: _PlanTiles(items: plan.items),
+                        child: _PlanTiles(
+                          items: plan.items,
+                          schoolSubjects: ref.watch(schoolTestSubjectsProvider),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -149,9 +154,12 @@ class _Illustration extends StatelessWidget {
 }
 
 class _PlanTiles extends StatelessWidget {
-  const _PlanTiles({required this.items});
+  const _PlanTiles({required this.items, required this.schoolSubjects});
 
   final List<DailyPlanItem> items;
+
+  /// Maktab topshirig'i bo'lgan (hali yechilmagan) fanlar.
+  final Set<Subject> schoolSubjects;
 
   @override
   Widget build(BuildContext context) {
@@ -165,6 +173,7 @@ class _PlanTiles extends StatelessWidget {
           Expanded(
             child: _PlanTile(
               item: shown[i],
+              isSchoolTask: schoolSubjects.contains(shown[i].subject),
               onTap: () => openSubjectQuiz(context, shown[i].subject),
             ),
           ),
@@ -180,9 +189,14 @@ class _PlanTiles extends StatelessWidget {
 }
 
 class _PlanTile extends StatelessWidget {
-  const _PlanTile({required this.item, required this.onTap});
+  const _PlanTile({
+    required this.item,
+    required this.isSchoolTask,
+    required this.onTap,
+  });
 
   final DailyPlanItem item;
+  final bool isSchoolTask;
   final VoidCallback onTap;
 
   /// Maketdagi balandlik va matn bloki (nom + oraliq + savollar soni) —
@@ -210,10 +224,13 @@ class _PlanTile extends StatelessWidget {
           children: [
             DoneBadgeIcon(
               done: done,
-              child: SubjectIcon(
-                subject: item.subject,
-                size: 27.5,
-                background: _iconSquare,
+              child: SchoolTaskBadge(
+                show: isSchoolTask,
+                child: SubjectIcon(
+                  subject: item.subject,
+                  size: 27.5,
+                  background: _iconSquare,
+                ),
               ),
             ),
             const Spacer(),

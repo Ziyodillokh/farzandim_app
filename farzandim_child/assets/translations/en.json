@@ -584,7 +584,9 @@
     "todayList": "Today's schedule",
     "emptyTitle": "No events today",
     "emptySubtitle": "Take a break!",
-    "nowBadge": "NOW"
+    "nowBadge": "NOW",
+    "schoolModeTitle": "School mode",
+    "schoolModeHint": "Set by your school: some apps may be closed during lessons."
   },
   "settings": {
     "title": "Settings",
@@ -1030,7 +1032,8 @@
       "streakWeekly": "Weekly activity",
       "contentPost": "Content",
       "videos": "Videos",
-      "other": "Other"
+      "other": "Other",
+      "dailyLearning": "Daily tests"
     }
   },
   "photo": {
@@ -1287,6 +1290,235 @@
     "profileRequired": "First choose your grade and subjects",
     "finishing": "Calculating your result…",
     "completeFailed": "Couldn't save the result. Check your connection and try again.",
-    "practiceNote": "This was a practice test: DON is awarded for the first test of the day in each subject."
+    "practiceNote": "This was a practice test: DON is awarded for the first test of the day in each subject.",
+    "subjectNotInGrade": "This subject isn't taught in your grade yet. Check that your grade is set correctly.",
+    "checkGrade": "Check my grade"
+  },
+  "school": {
+    "errors": {
+      "notEnrolled": "You're not on this school's student list. Tell your parents or class teacher.",
+      "kioskInvalid": "This QR code didn't work. Scan the code on the entrance screen again.",
+      "kioskExpired": "This QR code has expired. Scan the new code on the screen.",
+      "outsideHours": "Attendance can't be marked right now: there are no classes today or it's outside school hours.",
+      "surveyNotFound": "This survey has ended.",
+      "alreadyAnswered": "You've already answered this survey. Thank you!",
+      "assignmentNotFound": "This test is closed or its deadline has passed.",
+      "alreadySubmitted": "You've already completed this test. Thank you!",
+      "tooManyRequests": "Too many attempts. Please try again a little later.",
+      "notConfigured": "This section isn't set up at your school yet. Please try again later.",
+      "validation": "Some information is missing. Check it and send it again.",
+      "unavailable": "This feature is coming soon.",
+      "network": "No internet connection. Check your connection and try again.",
+      "unknown": "Something went wrong. Please try again.",
+      "qrPairing": "This is a pairing code from the parents' app. To mark attendance, scan the QR code at the school entrance.",
+      "qrUnknown": "This isn't a school QR code. Scan the code on the entrance screen."
+    },
+    "hub": {
+      "title": "My school",
+      "notLinkedTitle": "Your school isn't connected yet",
+      "notLinkedBody": "Your parents can connect your school in the Parvoz app. Your attendance will then show up here.",
+      "sectionError": "This section couldn't be loaded."
+    },
+    "today": {
+      "title": "Today's attendance",
+      "dateLine": "Today, {date}",
+      "className": "Class {name}",
+      "timeRange": "{start}–{end}",
+      "hours": "Classes: {start}–{end}",
+      "arrived": "Arrived",
+      "left": "Left",
+      "scanIn": "Check in with QR",
+      "scanOut": "Check out with QR",
+      "hints": {
+        "notMarked": "When you arrive at school, scan the QR code at the entrance.",
+        "inSchool": "After classes, scan the QR code again on your way out.",
+        "checkedOut": "Today's attendance is complete. See you tomorrow!",
+        "dayOff": "No classes today. Have a good rest!",
+        "noClass": "Your class hasn't been set yet. Tell your class teacher.",
+        "staffMarked": "Your school marked today's attendance. If it's wrong, tell your class teacher."
+      }
+    },
+    "status": {
+      "notMarked": "Not marked",
+      "dayOff": "Day off",
+      "present": "Present",
+      "late": "Late",
+      "absent": "Absent",
+      "leftEarly": "Left early",
+      "excused": "Excused",
+      "marked": "Marked"
+    },
+    "checkIn": {
+      "title": "Attendance QR code",
+      "hint": "Point the frame at the QR code on the entrance screen",
+      "checking": "Checking…",
+      "cameraStarting": "Opening the camera…",
+      "cameraFailed": "The camera didn't open",
+      "cameraFailedBody": "Another app may be using the camera. Close it and try again.",
+      "cameraErrorCode": "The camera didn't open ({code}). Please try again.",
+      "permissionTitle": "Camera access needed",
+      "permissionBody": "Allow camera access to scan the attendance QR code. If you said no before, turn it on in Settings.",
+      "restrictedTitle": "Camera is restricted",
+      "restrictedBody": "The camera is turned off by Screen Time on this phone. Ask a parent to allow it in Settings → Screen Time.",
+      "arrivedTitle": "You're at school!",
+      "lateBadge": "Late arrival",
+      "lateHint": "Try to leave home a little earlier tomorrow.",
+      "departedTitle": "You've left school",
+      "departedBody": "Get home safely!",
+      "parentsNotified": "Your parents will be notified.",
+      "alreadyTitle": "Attendance is already marked",
+      "exitLater": "Check-out is recorded after classes end.",
+      "recordedTitle": "Attendance recorded",
+      "failedTitle": "Attendance wasn't marked",
+      "scanAgain": "Scan again",
+      "done": "Done"
+    },
+    "psych": {
+      "title": "Psychology tests",
+      "hubHint": "Tests from your school psychologist. Read the questions calmly — this isn't a school grade.",
+      "homeBadge": "Psychology tests: {count}",
+      "minutes": "{count} min",
+      "noLimit": "No time limit",
+      "until": "Until {date}",
+      "instructions": "Instructions",
+      "introNote": "Your answers go to the school psychologist. This isn't a school grade, so take your time.",
+      "timeNote": "Once you start, you'll have {count} min. When time runs out, the answers you've chosen are sent automatically.",
+      "start": "Start",
+      "next": "Next",
+      "finish": "Finish",
+      "remember": "Remember this!",
+      "seconds": "{sec} s",
+      "toQuestion": "Go to the question",
+      "multiHint": "You can pick more than one. If none fit, just tap “Next”.",
+      "timeLeft": "Time left: {time}",
+      "sending": "Sending your answers…",
+      "sendFailedTitle": "Your answers weren't sent",
+      "doneTitle": "Thank you!",
+      "doneBody": "Your answers have been sent to the school psychologist.",
+      "timeUpTitle": "Time's up",
+      "timeUpBody": "The answers you managed to choose have been sent to the school psychologist. Thank you!",
+      "timeUpEmptyBody": "You didn't choose any answers, so nothing was sent. You can open the test again from “My school”.",
+      "closedTitle": "Test closed",
+      "done": "Done",
+      "likert": {
+        "1": "Never",
+        "2": "Rarely",
+        "3": "Sometimes",
+        "4": "Often",
+        "5": "Always"
+      },
+      "kinds": {
+        "cognitive": "Logical thinking",
+        "attention": "Attention and memory",
+        "emotional": "Emotional state",
+        "selfEsteem": "Self-confidence",
+        "career": "Career interests",
+        "social": "Social skills",
+        "custom": "Special test",
+        "unknown": "Psychology test"
+      }
+    },
+    "survey": {
+      "title": "Kids' voice",
+      "hubBody": "A short survey about how you feel at school: {questions}.",
+      "answer": "Answer",
+      "answered": "You've already answered this survey. Thank you!",
+      "privacyShort": "Anonymous: the school only sees combined results for groups of 5 or more students.",
+      "privacy": "Your answers are anonymous. The school doesn't see your name or your individual answers — only combined results for groups of 5 or more students.",
+      "intro": "For each question, pick the answer that fits you. There are no right or wrong answers.",
+      "scale": {
+        "1": "No",
+        "2": "Not really",
+        "3": "Partly",
+        "4": "Mostly yes",
+        "5": "Yes, very"
+      },
+      "progress": "Answered: {done}/{total}",
+      "allRequired": "Answer every question to send.",
+      "submit": "Send",
+      "doneTitle": "Thank you!",
+      "doneBody": "Your answers were sent anonymously. They help make school better for everyone.",
+      "alreadyTitle": "Already answered",
+      "noneTitle": "No survey right now",
+      "noneBody": "When there's a new survey, you'll find it in “My school”.",
+      "closedTitle": "Survey closed",
+      "sendFailedTitle": "Your answers weren't sent",
+      "done": "Done"
+    },
+    "requests": {
+      "title": "My requests",
+      "newTitle": "Message the psychologist",
+      "hubTitle": "Talk to the psychologist",
+      "hubBody": "Is something bothering you? Write to your school psychologist — only they will read your message.",
+      "write": "Write to the psychologist",
+      "intro": "Only the school psychologist will read your message. They may set a time to talk with you.",
+      "topicLabel": "What's it about?",
+      "messageLabel": "Your message",
+      "messageHint": "Describe what happened in your own words…",
+      "urgentTitle": "Urgent",
+      "urgentBody": "Turn this on if you need help today.",
+      "sos": "If you're in danger right now, don't wait: send an SOS message or call 112.",
+      "send": "Send",
+      "required": "Choose a topic and write your message.",
+      "limitReached": "Too many requests were sent today. Write again tomorrow. If it's urgent, go to the psychologist or send an SOS message.",
+      "sentTitle": "Your request was sent",
+      "sentBody": "The psychologist will look at it. You can follow its status in “My requests”.",
+      "done": "Done",
+      "emptyTitle": "No requests yet",
+      "emptyBody": "When you write to the psychologist, your request's status will show up here.",
+      "privacy": "Only the school psychologist reads your requests.",
+      "newRequest": "New request",
+      "sentAt": "Sent: {date}",
+      "meeting": "Meeting: {date}",
+      "nextMeeting": "Meeting with the psychologist: {date}",
+      "dateTime": "{date}, {time}",
+      "topics": {
+        "learning": "Schoolwork",
+        "peers": "Classmates",
+        "bullying": "Teasing / pressure",
+        "family": "Family",
+        "emotions": "Mood",
+        "safety": "Safety",
+        "other": "Other",
+        "unknown": "Other"
+      },
+      "status": {
+        "sent": "Sent",
+        "inProgress": "In review",
+        "scheduled": "Meeting set",
+        "resolved": "Resolved",
+        "unknown": "Received"
+      }
+    },
+    "leave": {
+      "stay": "Keep going",
+      "leave": "Leave",
+      "testTitle": "Leave the test?",
+      "testBody": "Your answers won't be saved — you'll start the test over later.",
+      "surveyTitle": "Leave the survey?",
+      "surveyBody": "The answers you've chosen won't be saved.",
+      "requestTitle": "Leave without sending?",
+      "requestBody": "What you've written won't be saved."
+    },
+    "assignments": {
+      "title": "School assignments",
+      "hubHint": "Assignments from your school in Parvoz. When you finish the subject test, the assignment is marked as done.",
+      "badge": "School assignment",
+      "testTitle": "Daily test: {subject}",
+      "kinds": {
+        "test": "Subject test",
+        "audiobook": "Audiobook",
+        "video": "Video",
+        "unknown": "Assignment"
+      },
+      "due": {
+        "today": "Due today",
+        "tomorrow": "Due tomorrow",
+        "date": "Due {date}",
+        "overdue": "Overdue"
+      },
+      "done": "Done",
+      "bookNotFound": "This book isn't in the library right now. Try finding it in the audiobooks list."
+    }
   }
 }

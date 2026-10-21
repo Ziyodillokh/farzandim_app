@@ -14,6 +14,7 @@ class InnerPageHeader extends StatelessWidget {
     this.subtitle,
     this.trailing,
     this.fallbackRoute = '/contests',
+    this.onBack,
   });
 
   final String title;
@@ -23,14 +24,20 @@ class InnerPageHeader extends StatelessWidget {
   /// Orqaga qaytib bo'lmasa (deep-link) ochiladigan sahifa.
   final String fallbackRoute;
 
+  /// Berilsa — "orqaga" shu bilan (masalan, saqlanmagan ma'lumot bo'lsa
+  /// tasdiq so'rash uchun).
+  final VoidCallback? onBack;
+
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         HeaderIconButton(
           semanticLabel: 'common.back'.tr(),
-          onTap: () =>
-              context.canPop() ? context.pop() : context.go(fallbackRoute),
+          onTap:
+              onBack ??
+              () =>
+                  context.canPop() ? context.pop() : context.go(fallbackRoute),
           child: const HomeSvgIcon(homeBackSvg, size: 20),
         ),
         const SizedBox(width: 12),

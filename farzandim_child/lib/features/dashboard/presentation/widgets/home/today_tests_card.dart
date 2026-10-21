@@ -2,7 +2,8 @@
 //
 // Reja `dailyPlanProvider`dan. Fan plitkasi — shu fan testi, "Boshlash" —
 // navbatdagi yechilmagan fan ("Davom etish"), hammasi bajarilsa — kalendar.
-// Bajarilgan fan plitkasida natija (9/10) va yashil belgi. Fan tanlanmagan
+// Bajarilgan fan plitkasida natija (9/10) va yashil belgi; maktab shu fandan
+// test bergan bo'lsa — "Maktab topshirig'i" belgisi. Fan tanlanmagan
 // bo'lsa — sozlash kartasi.
 
 import 'package:easy_localization/easy_localization.dart';
@@ -15,6 +16,8 @@ import 'package:farzandim_child/features/learning/presentation/providers/learnin
 import 'package:farzandim_child/features/learning/presentation/widgets/done_badge_icon.dart';
 import 'package:farzandim_child/features/learning/presentation/widgets/learning_setup_card.dart';
 import 'package:farzandim_child/features/learning/presentation/widgets/subject_icon.dart';
+import 'package:farzandim_child/features/school/presentation/providers/school_providers.dart';
+import 'package:farzandim_child/features/school/presentation/widgets/school_task_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -77,7 +80,10 @@ class TodayTestsCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 11),
-          _SubjectTiles(items: plan.items),
+          _SubjectTiles(
+            items: plan.items,
+            schoolSubjects: ref.watch(schoolTestSubjectsProvider),
+          ),
           const SizedBox(height: 3),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -129,9 +135,12 @@ class _CalendarButton extends StatelessWidget {
 /// Fan plitkalari — kengligi matn uzunligiga mos (maketdagidek), umumiy
 /// kenglikka sig'diriladi.
 class _SubjectTiles extends StatelessWidget {
-  const _SubjectTiles({required this.items});
+  const _SubjectTiles({required this.items, required this.schoolSubjects});
 
   final List<DailyPlanItem> items;
+
+  /// Maktab topshirig'i bo'lgan (hali yechilmagan) fanlar.
+  final Set<Subject> schoolSubjects;
 
   static const _gap = 6.0;
   static const _iconSize = 34.0;
@@ -181,6 +190,7 @@ class _SubjectTiles extends StatelessWidget {
           width: width,
           child: _SubjectTile(
             item: items[i],
+            isSchoolTask: schoolSubjects.contains(items[i].subject),
             name: labels[i].name,
             count: labels[i].count,
             nameStyle: nameStyle,
@@ -215,6 +225,7 @@ class _SubjectTiles extends StatelessWidget {
 class _SubjectTile extends StatelessWidget {
   const _SubjectTile({
     required this.item,
+    required this.isSchoolTask,
     required this.name,
     required this.count,
     required this.nameStyle,
@@ -222,6 +233,7 @@ class _SubjectTile extends StatelessWidget {
   });
 
   final DailyPlanItem item;
+  final bool isSchoolTask;
   final String name;
   final String count;
   final TextStyle nameStyle;
@@ -251,9 +263,12 @@ class _SubjectTile extends StatelessWidget {
             children: [
               DoneBadgeIcon(
                 done: done,
-                child: SubjectIcon(
-                  subject: item.subject,
-                  size: _SubjectTiles._iconSize,
+                child: SchoolTaskBadge(
+                  show: isSchoolTask,
+                  child: SubjectIcon(
+                    subject: item.subject,
+                    size: _SubjectTiles._iconSize,
+                  ),
                 ),
               ),
               const SizedBox(width: 6),

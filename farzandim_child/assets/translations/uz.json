@@ -584,7 +584,9 @@
     "todayList": "Bugungi jadval",
     "emptyTitle": "Bugun tadbir yo'q",
     "emptySubtitle": "Dam olib oling!",
-    "nowBadge": "HOZIR"
+    "nowBadge": "HOZIR",
+    "schoolModeTitle": "Maktab rejimi",
+    "schoolModeHint": "Maktab belgilagan: dars paytida ayrim ilovalar yopiq bo‘lishi mumkin."
   },
   "settings": {
     "title": "Sozlamalar",
@@ -1030,7 +1032,8 @@
       "streakWeekly": "Haftalik faollik",
       "contentPost": "Kontent",
       "videos": "Videolar",
-      "other": "Boshqa"
+      "other": "Boshqa",
+      "dailyLearning": "Kunlik testlar"
     }
   },
   "photo": {
@@ -1280,6 +1283,235 @@
     "profileRequired": "Avval sinf va fanlaringizni tanlang",
     "finishing": "Natija hisoblanmoqda…",
     "completeFailed": "Natijani saqlab bo‘lmadi. Internetni tekshirib, qayta urinib ko‘ring.",
-    "practiceNote": "Bu mashq testi edi: DON fan bo‘yicha kunning birinchi testiga beriladi."
+    "practiceNote": "Bu mashq testi edi: DON fan bo‘yicha kunning birinchi testiga beriladi.",
+    "subjectNotInGrade": "Bu fan sizning sinfingizda hali o‘tilmaydi. Sinfingiz to‘g‘ri tanlanganini tekshiring.",
+    "checkGrade": "Sinfni tekshirish"
+  },
+  "school": {
+    "errors": {
+      "notEnrolled": "Siz bu maktab ro‘yxatida topilmadingiz. Ota-onangiz yoki sinf rahbaringizga ayting.",
+      "kioskInvalid": "Bu QR kod ishlamadi. Kirish nuqtasidagi ekrandan qayta skanerlang.",
+      "kioskExpired": "QR kod eskirdi. Ekrandagi yangi kodni skanerlang.",
+      "outsideHours": "Hozir davomat belgilanmaydi: bugun dars yo‘q yoki dars vaqti emas.",
+      "surveyNotFound": "Bu so‘rovnoma yakunlangan.",
+      "alreadyAnswered": "Siz bu so‘rovnomaga javob bergansiz. Rahmat!",
+      "assignmentNotFound": "Bu test yopilgan yoki muddati tugagan.",
+      "alreadySubmitted": "Siz bu testni topshirgansiz. Rahmat!",
+      "tooManyRequests": "Juda ko‘p urinish bo‘ldi. Birozdan keyin qayta urinib ko‘ring.",
+      "notConfigured": "Bu bo‘lim maktabda hali sozlanmagan. Keyinroq qayta urinib ko‘ring.",
+      "validation": "Ma’lumot to‘liq emas. Tekshirib, qayta yuboring.",
+      "unavailable": "Bu imkoniyat tez orada ishga tushadi.",
+      "network": "Internet aloqasi yo‘q. Ulanishni tekshirib, qayta urinib ko‘ring.",
+      "unknown": "Nimadir xato ketdi. Qayta urinib ko‘ring.",
+      "qrPairing": "Bu ota-ona ilovasining ulanish kodi. Davomat uchun maktab kirish nuqtasidagi QR kodni skanerlang.",
+      "qrUnknown": "Bu maktab QR kodi emas. Kirish nuqtasidagi ekrandan skanerlang."
+    },
+    "hub": {
+      "title": "Maktabim",
+      "notLinkedTitle": "Maktab hali ulanmagan",
+      "notLinkedBody": "Ota-onangiz Parvoz ilovasida maktabingizni ulashi mumkin. Shundan so‘ng davomatingiz shu yerda ko‘rinadi.",
+      "sectionError": "Bu bo‘limni yuklab bo‘lmadi."
+    },
+    "today": {
+      "title": "Bugungi davomat",
+      "dateLine": "Bugun, {date}",
+      "className": "{name} sinf",
+      "timeRange": "{start}–{end}",
+      "hours": "Dars vaqti: {start}–{end}",
+      "arrived": "Kelgan vaqt",
+      "left": "Ketgan vaqt",
+      "scanIn": "QR orqali kirish",
+      "scanOut": "QR orqali chiqish",
+      "hints": {
+        "notMarked": "Maktabga kelganingizda kirish nuqtasidagi QR kodni skanerlang.",
+        "inSchool": "Darslar tugagach, chiqishda ham QR kodni skanerlang.",
+        "checkedOut": "Bugungi davomat yakunlandi. Ertaga ko‘rishguncha!",
+        "dayOff": "Bugun dars yo‘q. Yaxshi dam oling!",
+        "noClass": "Sinfingiz hali belgilanmagan. Sinf rahbaringizga ayting.",
+        "staffMarked": "Bugungi davomatni maktab belgiladi. Xato bo‘lsa, sinf rahbaringizga ayting."
+      }
+    },
+    "status": {
+      "notMarked": "Belgilanmagan",
+      "dayOff": "Dam olish kuni",
+      "present": "Keldi",
+      "late": "Kechikdi",
+      "absent": "Kelmadi",
+      "leftEarly": "Erta ketdi",
+      "excused": "Sababli",
+      "marked": "Belgilangan"
+    },
+    "checkIn": {
+      "title": "Davomat QR kodi",
+      "hint": "Kirish nuqtasidagi QR kodni ramka ichiga to‘g‘rilang",
+      "checking": "Tekshirilmoqda…",
+      "cameraStarting": "Kamera ochilmoqda…",
+      "cameraFailed": "Kamera ochilmadi",
+      "cameraFailedBody": "Kamerani boshqa ilova ishlatayotgan bo‘lishi mumkin. Uni yopib, qayta urinib ko‘ring.",
+      "cameraErrorCode": "Kamera ochilmadi ({code}). Qayta urinib ko‘ring.",
+      "permissionTitle": "Kameraga ruxsat kerak",
+      "permissionBody": "Davomat QR kodini skanerlash uchun kameraga ruxsat bering. Avval rad etgan bo‘lsangiz, uni Sozlamalardan yoqing.",
+      "restrictedTitle": "Kamera cheklangan",
+      "restrictedBody": "Bu telefonda kamera Ekran vaqti cheklovi bilan o‘chirilgan. Ota-onangizdan uni Sozlamalar → Ekran vaqti bo‘limida yoqib berishini so‘rang.",
+      "arrivedTitle": "Maktabga keldingiz!",
+      "lateBadge": "Kechikib keldingiz",
+      "lateHint": "Ertaga biroz ertaroq yo‘lga chiqishga harakat qiling.",
+      "departedTitle": "Maktabdan chiqdingiz",
+      "departedBody": "Uyga ehtiyot bo‘lib boring!",
+      "parentsNotified": "Ota-onangiz bundan xabardor bo‘ladi.",
+      "alreadyTitle": "Davomat allaqachon belgilangan",
+      "exitLater": "Chiqish darslar tugagach belgilanadi.",
+      "recordedTitle": "Davomat qayd etildi",
+      "failedTitle": "Davomat belgilanmadi",
+      "scanAgain": "Qayta skanerlash",
+      "done": "Tayyor"
+    },
+    "psych": {
+      "title": "Psixologik testlar",
+      "hubHint": "Maktab psixologi yuborgan testlar. Savollarni shoshilmasdan o‘qing — bu dars bahosi emas.",
+      "homeBadge": "Psixologik testlar: {count}",
+      "minutes": "{count} daqiqa",
+      "noLimit": "Vaqt cheklanmagan",
+      "until": "{date}gacha",
+      "instructions": "Ko‘rsatma",
+      "introNote": "Javoblaringiz maktab psixologiga yuboriladi. Bu dars bahosi emas, shuning uchun shoshilmang.",
+      "timeNote": "Boshlaganingizdan keyin {count} daqiqa vaqtingiz bo‘ladi. Vaqt tugasa, belgilagan javoblaringiz o‘zi yuboriladi.",
+      "start": "Boshlash",
+      "next": "Keyingi",
+      "finish": "Yakunlash",
+      "remember": "Eslab qoling!",
+      "seconds": "{sec} s",
+      "toQuestion": "Savolga o‘tish",
+      "multiHint": "Bir nechtasini tanlash mumkin. Hech biri mos kelmasa, «Keyingi»ni bosing.",
+      "timeLeft": "Qolgan vaqt: {time}",
+      "sending": "Javoblar yuborilmoqda…",
+      "sendFailedTitle": "Javoblar yuborilmadi",
+      "doneTitle": "Rahmat!",
+      "doneBody": "Javoblaringiz maktab psixologiga yuborildi.",
+      "timeUpTitle": "Vaqt tugadi",
+      "timeUpBody": "Ulgurgan javoblaringiz maktab psixologiga yuborildi. Rahmat!",
+      "timeUpEmptyBody": "Birorta ham javob belgilanmagani uchun hech narsa yuborilmadi. Testni «Maktabim» bo‘limidan qayta ochishingiz mumkin.",
+      "closedTitle": "Test yopilgan",
+      "done": "Tayyor",
+      "likert": {
+        "1": "Hech qachon",
+        "2": "Kamdan-kam",
+        "3": "Ba’zan",
+        "4": "Ko‘pincha",
+        "5": "Doim"
+      },
+      "kinds": {
+        "cognitive": "Mantiqiy fikrlash",
+        "attention": "Diqqat va xotira",
+        "emotional": "Hissiy holat",
+        "selfEsteem": "O‘ziga ishonch",
+        "career": "Kasbiy qiziqish",
+        "social": "Ijtimoiy ko‘nikmalar",
+        "custom": "Maxsus test",
+        "unknown": "Psixologik test"
+      }
+    },
+    "survey": {
+      "title": "Bola ovozi",
+      "hubBody": "Maktabda o‘zingizni qanday his qilayotganingiz haqida qisqa so‘rovnoma: {questions}.",
+      "answer": "Javob berish",
+      "answered": "Siz bu so‘rovnomaga javob bergansiz. Rahmat!",
+      "privacyShort": "Anonim: maktab faqat kamida 5 o‘quvchidan iborat guruhlarning umumiy natijasini ko‘radi.",
+      "privacy": "Javoblaringiz anonim. Maktab ismingizni va alohida javoblaringizni ko‘rmaydi — faqat kamida 5 o‘quvchidan iborat guruhlarning umumiy natijasi ko‘rinadi.",
+      "intro": "Har bir savolga o‘zingizga mos javobni tanlang. To‘g‘ri yoki noto‘g‘ri javob yo‘q.",
+      "scale": {
+        "1": "Yo‘q",
+        "2": "Unchalik",
+        "3": "Qisman",
+        "4": "Asosan ha",
+        "5": "Ha, juda"
+      },
+      "progress": "Javob berildi: {done}/{total}",
+      "allRequired": "Yuborish uchun barcha savollarga javob bering.",
+      "submit": "Yuborish",
+      "doneTitle": "Rahmat!",
+      "doneBody": "Javoblaringiz anonim tarzda yuborildi. Ular maktabni hamma uchun qulayroq qilishga yordam beradi.",
+      "alreadyTitle": "Javob berilgan",
+      "noneTitle": "Hozircha so‘rovnoma yo‘q",
+      "noneBody": "Yangi so‘rovnoma bo‘lsa, «Maktabim» bo‘limida ko‘rinadi.",
+      "closedTitle": "So‘rovnoma yakunlangan",
+      "sendFailedTitle": "Javoblar yuborilmadi",
+      "done": "Tayyor"
+    },
+    "requests": {
+      "title": "Murojaatlarim",
+      "newTitle": "Psixologga murojaat",
+      "hubTitle": "Psixolog bilan gaplashing",
+      "hubBody": "Biror narsa bezovta qilyaptimi? Maktab psixologiga yozing — xabaringizni faqat u o‘qiydi.",
+      "write": "Psixologga yozish",
+      "intro": "Xabaringizni faqat maktab psixologi o‘qiydi. U siz bilan gaplashish uchun vaqt belgilashi mumkin.",
+      "topicLabel": "Nima haqida?",
+      "messageLabel": "Xabaringiz",
+      "messageHint": "Nima bo‘lganini o‘z so‘zlaringiz bilan yozing…",
+      "urgentTitle": "Shoshilinch",
+      "urgentBody": "Bugunoq yordam kerak bo‘lsa, yoqing.",
+      "sos": "Hozir xavf ostida bo‘lsangiz, kutmang: SOS xabar yuboring yoki 112 ga qo‘ng‘iroq qiling.",
+      "send": "Yuborish",
+      "required": "Mavzuni tanlang va xabaringizni yozing.",
+      "limitReached": "Bugun juda ko‘p murojaat yuborildi. Ertaga qayta yozing. Shoshilinch bo‘lsa, psixologning oldiga boring yoki SOS xabar yuboring.",
+      "sentTitle": "Murojaatingiz yuborildi",
+      "sentBody": "Psixolog uni ko‘rib chiqadi. Holatini «Murojaatlarim» bo‘limida kuzatishingiz mumkin.",
+      "done": "Tayyor",
+      "emptyTitle": "Hali murojaat yo‘q",
+      "emptyBody": "Psixologga yozsangiz, murojaatingiz holati shu yerda ko‘rinadi.",
+      "privacy": "Murojaatlaringizni faqat maktab psixologi o‘qiydi.",
+      "newRequest": "Yangi murojaat",
+      "sentAt": "Yuborilgan: {date}",
+      "meeting": "Suhbat: {date}",
+      "nextMeeting": "Psixolog bilan suhbat: {date}",
+      "dateTime": "{date}, {time}",
+      "topics": {
+        "learning": "O‘qish",
+        "peers": "Tengdoshlar",
+        "bullying": "Masxara / tazyiq",
+        "family": "Oila",
+        "emotions": "Kayfiyat",
+        "safety": "Xavfsizlik",
+        "other": "Boshqa",
+        "unknown": "Boshqa"
+      },
+      "status": {
+        "sent": "Yuborildi",
+        "inProgress": "Ko‘rib chiqilmoqda",
+        "scheduled": "Suhbat belgilandi",
+        "resolved": "Yakunlandi",
+        "unknown": "Qabul qilindi"
+      }
+    },
+    "leave": {
+      "stay": "Davom etish",
+      "leave": "Chiqish",
+      "testTitle": "Testdan chiqasizmi?",
+      "testBody": "Javoblaringiz saqlanmaydi — testni keyinroq boshidan yechasiz.",
+      "surveyTitle": "So‘rovnomadan chiqasizmi?",
+      "surveyBody": "Belgilagan javoblaringiz saqlanmaydi.",
+      "requestTitle": "Yubormasdan chiqasizmi?",
+      "requestBody": "Yozgan matningiz saqlanmaydi."
+    },
+    "assignments": {
+      "title": "Maktab topshiriqlari",
+      "hubHint": "Maktabingiz Parvozda bergan topshiriqlar. Fan testini yechsangiz, topshiriq bajarildi deb belgilanadi.",
+      "badge": "Maktab topshirig‘i",
+      "testTitle": "Kunlik test: {subject}",
+      "kinds": {
+        "test": "Fan testi",
+        "audiobook": "Audiokitob",
+        "video": "Video",
+        "unknown": "Topshiriq"
+      },
+      "due": {
+        "today": "Muddati: bugun",
+        "tomorrow": "Muddati: ertaga",
+        "date": "Muddati: {date}",
+        "overdue": "Muddati o‘tgan"
+      },
+      "done": "Bajarildi",
+      "bookNotFound": "Bu kitob hozir kutubxonada topilmadi. Audiokitoblar ro‘yxatidan qidirib ko‘ring."
+    }
   }
 }

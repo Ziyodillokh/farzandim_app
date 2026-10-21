@@ -4,7 +4,8 @@
 //
 // `isCurrent` rost bo'lsa — aqua aksent border + "HOZIR" badge.
 // Fon: parvozGlassFlat (soyasiz glass) — ro'yxat itemlar uchun mos.
-// Logika (schedule model, isCurrent, type icon) O'ZGARMAGAN.
+// Logika (schedule model, isCurrent, type icon) O'ZGARMAGAN. Maktab
+// "Maktab rejimi" — tarjima qilingan nom va "maktab belgilagan" izohi.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,11 @@ import 'package:flutter/material.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/schedules/data/models/schedule.dart';
 import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
+
+/// Jadval nomi: maktab "Maktab rejimi" joriy tilda (server nomi
+/// "Maktab (School Mode)"), qolganlari — ota-ona yozgan nom.
+String scheduleDisplayTitle(Schedule schedule) =>
+    schedule.isSchoolMode ? 'schedules.schoolModeTitle'.tr() : schedule.title;
 
 class ScheduleTile extends StatelessWidget {
   const ScheduleTile({
@@ -99,7 +105,7 @@ class ScheduleTile extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        schedule.title,
+                        scheduleDisplayTitle(schedule),
                         style: TextStyle(
                           color: isCurrent
                               ? AppColors.parvozText
@@ -121,6 +127,17 @@ class ScheduleTile extends StatelessWidget {
                     fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
+                if (schedule.isSchoolMode) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'schedules.schoolModeHint'.tr(),
+                    style: const TextStyle(
+                      color: AppColors.parvozTextDim,
+                      fontSize: 12,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

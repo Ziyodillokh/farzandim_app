@@ -32,6 +32,10 @@ abstract interface class LearningRepository {
 /// Server xato kodlari (UI tegishli matnni tanlaydi).
 enum LearningErrorCode {
   profileRequired,
+
+  /// Fan bolaning (profildagi) sinfida hali o'qitilmaydi — masalan, maktab
+  /// topshirig'idagi fan yoki sinf noto'g'ri tanlangan.
+  subjectNotInGrade,
   noQuestions,
   attemptClosed,
   network,

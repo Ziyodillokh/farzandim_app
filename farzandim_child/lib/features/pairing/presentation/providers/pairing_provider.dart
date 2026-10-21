@@ -20,6 +20,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/auth/session_events.dart';
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/platform/platform_capabilities.dart';
+import 'package:farzandim_child/features/account/data/language_sync_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/restrictions_sync_provider.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/usage_providers.dart';
@@ -630,6 +631,9 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
     // BootReceiver servisni qayta boshlasa ham enforce qiladigan narsa qolmasin.
     await prefs.remove('restriction.blocked_packages');
     await prefs.remove('restriction.limits');
+    // Keyingi ulanishda server yangi bola hisobini yaratadi (tili "uz") —
+    // ilova tili unga qayta yozilsin.
+    await prefs.remove(kSyncedLanguageKey);
 
     await _safeReset(_auth.signOut);
 

@@ -140,24 +140,35 @@ SDK yo'q (`pubspec.yaml`da `firebase_analytics` yo'q; `GoogleService-Info.plist`
 |---|---|---|---|
 | Location | **Precise Location** | Yes | `location_service.dart` → `POST /location` (lat/lon, aniqlik, tezlik, yo'nalish, balandlik, vaqt); `sos_provider.dart` SOS bilan joylashuv. Geo-zona xabarlari serverda hisoblanadi. Coarse Location alohida belgilanmaydi (Precise uni qamraydi, IP orqali joylashuv aniqlanmaydi) |
 | Contact Info | **Name** | Yes | Bola ismi (`child_repository.dart` `PUT /children/me`) |
-| Health & Fitness | **Fitness** | Yes | Kunlik qadamlar, Core Motion (`MotionStepsPlugin.swift`). Health (HealthKit) — **No** |
+| Health & Fitness | **Fitness** | Yes | Kunlik qadamlar, Core Motion (`MotionStepsPlugin.swift`). HealthKit ishlatilmaydi |
+| Health & Fitness | **Health** | Yes | **Parvoz School (2026-10):** maktab psixologik testlari javoblari va "Bola ovozi" farovonlik so'rovnomasi baholari (`api_school_repository.dart` → `POST /child/school/assessments/.../submit`, `/child/school/care/survey/.../responses`) — maktab psixologi ko'radi. Faqat maktab bolani bog'lagan bo'lsa yig'iladi |
 | User Content | **Emails or Text Messages** | Yes | Oila chatidagi matnli xabarlar (ehtiyotkor tanlov; Apple "in-app messages"ni shu yerga kiritadi) |
 | User Content | **Photos or Videos** | Yes | Video xabarlar, chatdagi rasmlar, ota-ona so'ragan rasm, profil rasmi |
 | User Content | **Audio Data** | Yes | Ovozli xabarlar (va video xabarning ovozi) |
-| User Content | **Other User Content** | Yes | Chatdagi fayllar (`file_picker`), test/olimpiada javoblari, qo'shimcha vaqt so'rovining sababi, qiziqishlar |
+| User Content | **Other User Content** | Yes | Chatdagi fayllar (`file_picker`), test/olimpiada javoblari, qo'shimcha vaqt so'rovining sababi, qiziqishlar; **Parvoz School:** maktab psixologiga murojaat (mavzu — masalan, tengdoshlar, oila, xavfsizlik; shoshilinchlik va erkin matn, `POST /child/school/care/requests`) |
 | Identifiers | **User ID** | Yes | Bola akkaunti ID, Firebase anonim UID (`pairing_provider.dart` `signInAnonymously`) |
 | Identifiers | **Device ID** | Yes | Push (FCM/APNs) token, Firebase Installation ID. IDFA ishlatilmaydi |
 | Usage Data | **Product Interaction** | Yes | Ko'rilgan videolar/sevimlilar/tarix, audiokitob progressi, o'qilgan kitob/maqolalar, DON va streak (Firestore `xp_service.dart`) — F20 |
 | Diagnostics | **Crash Data** | **No** (not linked) | Firebase Crashlytics (`main.dart`), `setUserIdentifier` chaqirilmaydi — F21 |
 | Diagnostics | **Other Diagnostic Data** | Yes | Batareya, zaryadlanish, model, iOS va ilova versiyasi, ruxsat holatlari, Ekran vaqti yoqilganmi + tanlangan ilova/toifa/sayt SONI (`device_info_service.dart`, `ios_restrictions_sync_service.dart`) |
-| Other Data | **Other Data Types** | Yes | Yosh/tug'ilgan sana, jins, viloyat, qiziqishlar |
+| Other Data | **Other Data Types** | Yes | Yosh/tug'ilgan sana, jins, viloyat, qiziqishlar; **Parvoz School:** maktab kiosk QR'i bilan kelish/ketish vaqti (`POST /child/school/check-in`), ilova tili (`PUT /users/me {language}` — test va so'rovnoma tili uchun) |
 
 **Yig'ilMAYDI (No):** Contact Info (Email, Phone, Physical Address, Other),
-Health, Financial Info, Purchases, Contacts, Browsing History, Search
+Financial Info, Purchases, Contacts, Browsing History, Search
 History, Sensitive Info, Advertising Data, **Other Usage Data** (iOS'da
 ilovalar ro'yxati va ilovalardan foydalanish statistikasi qurilmadan
 chiqmaydi — Family Controls sharti), Gameplay Content (test javoblari Other
 User Content'da), Customer Support, Performance Data, Coarse Location.
+
+> **Parvoz School bilan build (2026-10) — topshirishdan OLDIN:** yuqoridagi
+> Health va School qatorlarini App Store Connect'da belgilang (maqsad — App
+> Functionality, tracking — No), maxfiylik siyosatiga "Maktab va psixolog"
+> bo'limini qo'shing (nima yig'iladi: test va so'rovnoma javoblari,
+> psixologga murojaat, QR davomat; kim ko'radi: bola bog'langan maktabning
+> psixologi / xodimi; qachon: faqat maktab bolani bog'lagan bo'lsa) va
+> `ios/Runner/PrivacyInfo.xcprivacy`ga Health va Other User Content turlarini
+> qo'shing. Busiz voyaga yetmaganlar ilovasi 5.1.1/5.1.2 bo'yicha rad etilishi
+> mumkin.
 
 > **Kod bilan moslik (egasi uchun):** `ios/Runner/PrivacyInfo.xcprivacy`
 > hozircha Product Interaction, Emails or Text Messages va Crash Data'ni

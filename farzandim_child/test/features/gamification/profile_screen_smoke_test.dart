@@ -17,6 +17,7 @@ import 'package:farzandim_child/features/learning/domain/learning_models.dart';
 import 'package:farzandim_child/features/learning/presentation/providers/learning_providers.dart';
 import 'package:farzandim_child/features/pairing/data/models/pairing_state.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
+import 'package:farzandim_child/features/school/presentation/providers/school_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -24,6 +25,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:solar_icons/solar_icons.dart';
+
+import '../school/fake_school_repository.dart';
 
 const _childName = 'Aziza Karimova';
 
@@ -112,6 +115,8 @@ Future<void> _pumpProfile(
         todayStepsProvider.overrideWith((ref) async => 6842),
         learningProfileProvider.overrideWithValue(profile),
         needsLearningSetupProvider.overrideWithValue(needsSetup),
+        // Maktabga bog'lanmagan bola ("Maktabim" qatori yo'q, tarmoq yo'q).
+        schoolRepositoryProvider.overrideWithValue(FakeSchoolRepository()),
       ],
       child: Builder(
         builder: (context) => MaterialApp.router(

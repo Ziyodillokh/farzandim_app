@@ -23,6 +23,7 @@ import 'package:farzandim_child/core/feature_flags.dart';
 import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/core/routing/growth_routes.dart';
 import 'package:farzandim_child/core/routing/route_pages.dart';
+import 'package:farzandim_child/core/routing/school_routes.dart';
 import 'package:farzandim_child/features/learning/presentation/screens/learning_setup_screen.dart';
 import 'package:farzandim_child/features/consent/presentation/providers/consent_provider.dart';
 import 'package:farzandim_child/features/consent/presentation/screens/consent_screen.dart';
@@ -399,6 +400,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       ...growthRoutes,
+      ...schoolRoutes,
       GoRoute(
         path: '/liked-tests',
         pageBuilder: (context, state) =>

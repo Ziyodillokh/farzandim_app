@@ -42,7 +42,8 @@ class DonHistoryEntry {
 /// DON manbasi — XpEvent turini foydalanuvchi-friendly ko'rinishga xaritalaydi.
 ///
 /// `DAILY_GOAL` = qadam mukofoti, `BOOK_READ` = audiokitob, `CONTEST_*` =
-/// test/konkurs, `OTHER` = video (backend `completeVideo` shu turni beradi).
+/// test/konkurs, `DAILY_LEARNING` = Growth kunlik fan testlari, `OTHER` =
+/// video (backend `completeVideo` shu turni beradi).
 class DonSource {
   const DonSource(this.labelKey, this.icon, this.color);
 
@@ -67,6 +68,12 @@ class DonSource {
           'donHistory.source.audiobooks',
           Icons.headphones_rounded,
           Color(0xFF216BFF),
+        );
+      case 'DAILY_LEARNING':
+        return const DonSource(
+          'donHistory.source.dailyLearning',
+          Icons.fact_check_rounded,
+          Color(0xFF4DA4FE),
         );
       case 'CONTEST_JOIN':
         return const DonSource(

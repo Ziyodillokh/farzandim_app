@@ -105,6 +105,7 @@ class ApiLearningRepository implements LearningRepository {
     final code = data is Map ? data['code'] : null;
     return switch (code) {
       'PROFILE_REQUIRED' => LearningErrorCode.profileRequired,
+      'SUBJECT_NOT_IN_GRADE' => LearningErrorCode.subjectNotInGrade,
       'NO_QUESTIONS' => LearningErrorCode.noQuestions,
       'ATTEMPT_CLOSED' => LearningErrorCode.attemptClosed,
       _ when e.response == null => LearningErrorCode.network,
