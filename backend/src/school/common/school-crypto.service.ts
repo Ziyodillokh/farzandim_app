@@ -21,6 +21,11 @@ export class SchoolCryptoService {
     this.key = raw ? Buffer.from(raw, 'base64') : null;
   }
 
+  /** Kalit sozlanganmi — yo'q bo'lsa shifrlash 503 NOT_CONFIGURED beradi. */
+  isConfigured(): boolean {
+    return this.key !== null;
+  }
+
   encrypt(plain: string): string {
     const key = this.requireKey();
     const iv = randomBytes(IV_BYTES);

@@ -136,6 +136,15 @@ describe('School attendance (S3): kiosk, QR va cron', () => {
     expect(res.json()).toMatchObject({ code: 'NOT_ENROLLED' });
   });
 
+  it('sinfsiz o\'quvchi yoki to\'xtatilgan maktab: today — null (boshqa bola yo\'llari bilan bir xil)', async () => {
+    await t.prisma.schoolStudent.update({ where: { id: w.vali }, data: { classId: null } });
+    expect((await consumerCall(t, w.child.token, 'GET', '/child/school/today')).json()).toEqual({ today: null });
+    await t.prisma.schoolStudent.update({ where: { id: w.vali }, data: { classId: w.classA } });
+    expect((await consumerCall(t, w.child.token, 'GET', '/child/school/today')).json().today).not.toBeNull();
+    await t.prisma.school.update({ where: { id: w.schoolId }, data: { status: 'SUSPENDED' } });
+    expect((await consumerCall(t, w.child.token, 'GET', '/child/school/today')).json()).toEqual({ today: null });
+  });
+
   it('"kelmadi" cron: vaqtidan oldin yo\'q, keyin ABSENT + bir marta push, idempotent, qo\'lda yozuv saqlanadi', async () => {
     const cron = t.app.get(AttendanceAbsenceCron);
     await staffCall(t, w.admin, 'POST', '/mark', { studentId: w.malika, status: 'EXCUSED' });

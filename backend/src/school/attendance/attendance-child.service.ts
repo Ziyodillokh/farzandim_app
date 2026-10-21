@@ -71,12 +71,15 @@ export class AttendanceChildService {
     return { action, today: await this.todayView(student, now) };
   }
 
-  /** Bugungi holat (bog'lanmagan bola — `today: null`). */
+  /**
+   * Bugungi holat. Bog'lanmagan, sinfsiz yoki maktabi faol bo'lmagan bola — `today: null`
+   * (boshqa bola maktab yo'llari — so'rovnoma, testlar, topshiriqlar — bilan bir xil qoida).
+   */
   async today(userId: string) {
     const child = await this.prisma.child.findUnique({ where: { childUserId: userId }, select: { id: true } });
     const student = child
       ? await this.prisma.schoolStudent.findFirst({
-          where: { childId: child.id, archived: false },
+          where: { childId: child.id, archived: false, classId: { not: null }, school: { status: 'ACTIVE' } },
           include: enrolledInclude,
         })
       : null;

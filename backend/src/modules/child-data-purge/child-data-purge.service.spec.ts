@@ -31,6 +31,7 @@ describe('ChildDataPurgeService', () => {
         deleteMany: jest.fn().mockResolvedValue({}),
       },
       aiMessage: { deleteMany: jest.fn().mockResolvedValue({}) },
+      kelajakSession: { deleteMany: jest.fn().mockResolvedValue({ count: 2 }) },
       voiceMessage: {
         findMany: jest
           .fn()
@@ -117,6 +118,10 @@ describe('ChildDataPurgeService', () => {
       });
       expect(prisma.supportMessage.deleteMany).toHaveBeenCalledWith({
         where: { userId: CHILD_USER },
+      });
+      // Kelajak javoblari (farovonlik, ochiq matn) ham o'chadi — javoblar cascade.
+      expect(prisma.kelajakSession.deleteMany).toHaveBeenCalledWith({
+        where: { childId: CHILD_ID },
       });
       const deleted = storage.delete.mock.calls.map((c) => `${c[0]}:${c[1]}`);
       expect(deleted).toEqual(

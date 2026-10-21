@@ -3,7 +3,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
-import { addDays, tashkentDay, tashkentDayRange } from '../../common/time/tashkent';
+import { addDays, tashkentDay } from '../../common/time/tashkent';
 import {
   actorCan,
   allowedClassIds,
@@ -55,7 +55,8 @@ export class AttendanceReportsService {
       where: {
         schoolId: actor.schoolId,
         ...(scoped && { studentId: { in: scoped.map((s) => s.id) } }),
-        ...(onlyToday && { at: tashkentDayRange(tashkentDay(this.clock.now())) }),
+        // "Bugun" — xabarning davomat kuni (`date`), yozilgan lahza emas.
+        ...(onlyToday && { date: tashkentDay(this.clock.now()) }),
       },
       orderBy: { at: 'desc' },
       take: limit,

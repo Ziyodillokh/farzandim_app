@@ -27,7 +27,7 @@ export interface PurgeableChild {
  *
  *  1) `deleteChildAccount` — bola ilovada "Uzish va ma'lumotlarimni
  *     o'chirish" (DELETE /users/me, role=CHILD). Bola QURILMA akkaunti
- *     (User), xabarlari, rasmlari, sessiya/push token'lari o'chadi; ota-ona
+ *     (User), xabarlari, rasmlari, Kelajak javoblari, sessiya/push token'lari o'chadi; ota-ona
  *     yaratgan bola PROFILI (Child) esa QOLADI va bo'shatiladi — xuddi shu
  *     oila kodi bilan qayta ulanish mumkin (reviewer demo kodi ham buzilmaydi).
  *     Ota-onaga push + bildirishnoma yuboriladi.
@@ -87,6 +87,9 @@ export class ChildDataPurgeService {
         });
         await tx.photoRequest.deleteMany({ where: { childId: child.id } });
         await tx.aiMessage.deleteMany({ where: { childId: child.id } });
+        // Kelajak: bolaning o'z javoblari (farovonlik, ochiq matn) va natijalari —
+        // javoblar sessiya bilan cascade o'chadi; keyingi qurilma ularni ko'rmaydi.
+        await tx.kelajakSession.deleteMany({ where: { childId: child.id } });
       }
       await tx.supportMessage.deleteMany({ where: { userId: childUserId } });
       // Cascade: ovozli/video xabarlar, FCM token'lar, sessiyalar.
