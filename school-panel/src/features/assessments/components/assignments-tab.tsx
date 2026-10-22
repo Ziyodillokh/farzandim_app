@@ -19,6 +19,7 @@ import { useI18n } from '@/i18n';
 import { percent } from '@/lib/utils';
 import { useAssignments, useCloseAssignment, useSimulateCompletion, useUnassign } from '../hooks';
 import { KindIcon, StateBadge } from './test-badges';
+import { PARVOZ_IQ_ID } from './assign-dialog';
 import { viewHref } from './test-card';
 
 const STATES: readonly AssignmentState[] = ['SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED'];
@@ -56,7 +57,7 @@ export function AssignmentsTab({ onAssign, testId }: { onAssign: () => void; tes
         cell: (a) => (
           <div className="flex min-w-[200px] items-center gap-3">
             {a.testKind && <KindIcon kind={a.testKind} className="h-8 w-8 [&_svg]:size-4" />}
-            <Link href={viewHref(a.testId)} className="font-medium hover:text-primary">
+            <Link href={a.testId === PARVOZ_IQ_ID ? '/development?tab=iq' : viewHref(a.testId)} className="font-medium hover:text-primary">
               {a.testTitle[locale]}
             </Link>
           </div>

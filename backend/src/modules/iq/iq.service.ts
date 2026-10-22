@@ -401,6 +401,28 @@ export class IqService {
 
   // ── Ichki ──────────────────────────────────────────────────────────
 
+  /**
+   * Maktab IQ natijalari (docs/IQ-REJA.md §7): har bola uchun [since..hozir]
+   * oralig'idagi ENG SO'NGGI yakunlangan sessiya — joriy normalar bilan baholangan.
+   * Tarix umumiy: test qayerdan boshlanganidan qat'i nazar (maktab tayinlovi yoki o'zi).
+   */
+  async latestScored(childIds: string[], since: Date): Promise<Map<string, IqHistoryEntry>> {
+    if (childIds.length === 0) return new Map();
+    const sessions = await this.prisma.iqSession.findMany({
+      where: { childId: { in: childIds }, status: IqSessionStatus.COMPLETED, completedAt: { gte: since } },
+      orderBy: [{ completedAt: 'desc' }, { id: 'asc' }],
+    });
+    const latest = new Map<string, IqSession>();
+    for (const s of sessions) if (!latest.has(s.childId)) latest.set(s.childId, s);
+    const scored = new Map((await this.history([...latest.values()])).map((e) => [e.sessionId, e]));
+    const result = new Map<string, IqHistoryEntry>();
+    for (const [childId, s] of latest) {
+      const entry = scored.get(s.id);
+      if (entry) result.set(childId, entry);
+    }
+    return result;
+  }
+
   private async ageOf(db: Db, childId: string, now: Date): Promise<IqAge> {
     const child = await db.child.findUnique({
       where: { id: childId },

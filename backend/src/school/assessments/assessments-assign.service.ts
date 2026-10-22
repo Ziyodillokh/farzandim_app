@@ -9,6 +9,7 @@ import { SchoolAuditService } from '../common/school-audit.service';
 import { conflict, invalid, notFound } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
 import { AssignInput, assignInputSchema, assignmentFilterSchema, toInstant } from './assessments-inputs.schemas';
+import { AssessmentsIqService, PARVOZ_IQ_TEST_ID, PARVOZ_IQ_TITLE } from './assessments-iq.service';
 import { AssessmentsStore, ClassRow } from './assessments-store';
 import { AssignmentRow, PsychAssignment, toAssignment, toAssignmentRow } from './assessments-view';
 import type { PsychTest } from './psych/types';
@@ -27,6 +28,7 @@ export class AssessmentsAssignService {
     private readonly prisma: PrismaService,
     private readonly store: AssessmentsStore,
     private readonly audit: SchoolAuditService,
+    private readonly iq: AssessmentsIqService,
   ) {}
 
   async listAssignments(actor: SchoolActor, query: unknown): Promise<AssignmentRow[]> {
@@ -44,14 +46,21 @@ export class AssessmentsAssignService {
     const nowMs = Date.now();
     const byId = new Map(tests.map((t) => [t.id, t]));
     const names = new Map(classes.map((c) => [c.id, c.name]));
+    const iqRows = rows.filter((a) => a.testId === PARVOZ_IQ_TEST_ID);
+    const iqDone = await this.iq.completedCounts(this.prisma, actor.schoolId, iqRows);
+    const done = new Map([...completed, ...iqDone]);
     return rows
-      .map((a) => toAssignmentRow(a, nowMs, completed, byId.get(a.testId), names))
+      .map((a) => {
+        const row = toAssignmentRow(a, nowMs, done, byId.get(a.testId), names);
+        return a.testId === PARVOZ_IQ_TEST_ID ? { ...row, testTitle: { ...PARVOZ_IQ_TITLE }, testKind: 'COGNITIVE' as const } : row;
+      })
       .filter((a) => !filter.state || a.state === filter.state);
   }
 
   async assign(actor: SchoolActor, input: unknown): Promise<PsychAssignment> {
     assertCan(actor, 'assessments.manage');
     const data = parseOrThrow(assignInputSchema, input);
+    if (data.testId === PARVOZ_IQ_TEST_ID) return this.assignIq(actor, data);
     return this.prisma.$transaction(async (tx) => {
       // Test tahriri / arxivi bilan bir navbatda — tayinlash eskirgan versiyaga bog'lanmasin.
       await this.store.lock(tx, `psych-test:${data.testId}`);
@@ -90,6 +99,47 @@ export class AssessmentsAssignService {
     });
   }
 
+  /**
+   * Parvoz IQ (docs/IQ-REJA.md §7): savollar maktab testlari omborida emas —
+   * IQ bankida; sinflar tanlovi yosh darajasidan qat'i nazar (yoshni IQ moduli
+   * tekshiradi: 9–20 dan tashqari bola topshiriqni ko'rmaydi).
+   */
+  private assignIq(actor: SchoolActor, data: AssignInput): Promise<PsychAssignment> {
+    return this.prisma.$transaction(async (tx) => {
+      const allGrades = { grades: Array.from({ length: 11 }, (_, i) => i + 1) };
+      const classIds = resolveClasses(await this.store.classes(actor.schoolId, tx), data.target, allGrades);
+      if (classIds.length === 0) throw invalid('target: assessments.validation.noClasses');
+      const invited = await tx.schoolStudent.count({ where: { schoolId: actor.schoolId, archived: false, classId: { in: classIds } } });
+      const row = await tx.schoolPsychAssignment.create({
+        data: {
+          schoolId: actor.schoolId,
+          testId: PARVOZ_IQ_TEST_ID,
+          testVersion: 1,
+          target: data.target as Prisma.InputJsonValue,
+          classIds,
+          opensAt: toInstant(data.opensAt),
+          closesAt: toInstant(data.closesAt),
+          status: 'OPEN',
+          invited,
+          consent: 'PARENTS_INFORMED',
+          createdBy: actor.staffId,
+        },
+      });
+      await this.audit.write(
+        actor,
+        {
+          module: 'ASSESSMENTS',
+          action: 'assessments.assign',
+          summary: `Test tayinlandi: ${PARVOZ_IQ_TITLE.uz}`,
+          entityId: row.id,
+          params: { classes: classIds.length, count: invited, title: PARVOZ_IQ_TITLE.uz },
+        },
+        tx,
+      );
+      return toAssignment(row);
+    });
+  }
+
   /** Natija yo'q — bekor qilinadi; natija bor — yopiladi (natijalar saqlanadi). */
   unassign(actor: SchoolActor, id: string): Promise<PsychAssignment> {
     return this.closeOrCancel(actor, id, 'unassign');
@@ -107,7 +157,10 @@ export class AssessmentsAssignService {
       const a = await tx.schoolPsychAssignment.findFirst({ where: { id, schoolId: actor.schoolId } });
       if (!a) throw notFound(id);
       if (a.status !== 'OPEN') throw conflict(`status ${a.status}`);
-      const hasResults = (await tx.schoolPsychResult.count({ where: { schoolId: actor.schoolId, assignmentId: id } })) > 0;
+      const hasResults =
+        a.testId === PARVOZ_IQ_TEST_ID
+          ? ((await this.iq.completedCounts(tx, actor.schoolId, [a])).get(a.id) ?? 0) > 0
+          : (await tx.schoolPsychResult.count({ where: { schoolId: actor.schoolId, assignmentId: id } })) > 0;
       const status = mode === 'close' || hasResults ? 'CLOSED' : 'CANCELLED';
       const next = await tx.schoolPsychAssignment.update({ where: { id }, data: { status } });
       await this.audit.write(

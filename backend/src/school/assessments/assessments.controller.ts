@@ -5,6 +5,7 @@ import { SchoolActor } from '../auth/school-actor';
 import { AssessmentsAssignService } from './assessments-assign.service';
 import { AssessmentsCsvService } from './assessments-csv.service';
 import { AssessmentsEditorService } from './assessments-editor.service';
+import { AssessmentsIqService } from './assessments-iq.service';
 import { AssessmentsLibraryService } from './assessments-library.service';
 import { AssessmentsResultsService } from './assessments-results.service';
 import { AssessmentsStatusService } from './assessments-status.service';
@@ -21,6 +22,7 @@ export class AssessmentsController {
     private readonly assignments: AssessmentsAssignService,
     private readonly results: AssessmentsResultsService,
     private readonly csv: AssessmentsCsvService,
+    private readonly iq: AssessmentsIqService,
   ) {}
 
   // ── Kutubxona va konstruktor (assessments.manage) ─────────────────
@@ -107,6 +109,12 @@ export class AssessmentsController {
   @Get('class-options')
   classOptions(@Actor() actor: SchoolActor) {
     return this.library.classOptions(actor);
+  }
+
+  @Get('iq/results')
+  @ApiOperation({ summary: 'Parvoz IQ: sinfning joriy natijalari (psixolog / sinf rahbari — ism bilan; direktor — K=5)' })
+  iqResults(@Actor() actor: SchoolActor, @Query() query: Record<string, unknown>) {
+    return this.iq.results(actor, query);
   }
 
   @Get('assignments')

@@ -8,5 +8,6 @@ import { IqService } from './iq.service';
   imports: [DatabaseModule],
   controllers: [IqController, IqParentController],
   providers: [IqService],
+  exports: [IqService],
 })
 export class IqModule {}

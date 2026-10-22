@@ -1,6 +1,6 @@
 'use client';
 
-import { School, UserRoundSearch, Users } from 'lucide-react';
+import { Brain, School, UserRoundSearch, Users } from 'lucide-react';
 import { Suspense } from 'react';
 
 import { useCan } from '@/auth/use-session';
@@ -10,11 +10,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AttentionList } from '@/features/development/components/attention-list';
 import { ClassView } from '@/features/development/components/class-view';
+import { IqResults } from '@/features/development/components/iq-results';
 import { DevPrivacyBanner, SchoolView } from '@/features/development/components/school-view';
 import { useI18n } from '@/i18n';
 import { useTabParam } from '@/lib/use-tab-param';
 
-const PSYCH_TABS = ['school', 'classes', 'attention'] as const;
+const PSYCH_TABS = ['school', 'classes', 'attention', 'iq'] as const;
 type PsychTab = (typeof PSYCH_TABS)[number];
 
 function PsychologistView() {
@@ -26,10 +27,12 @@ function PsychologistView() {
         <TabsTrigger value="school"><School />{t('development.tabs.school')}</TabsTrigger>
         <TabsTrigger value="classes"><Users />{t('development.tabs.classes')}</TabsTrigger>
         <TabsTrigger value="attention"><UserRoundSearch />{t('development.tabs.attention')}</TabsTrigger>
+        <TabsTrigger value="iq"><Brain />{t('development.iqSchool.tab')}</TabsTrigger>
       </TabsList>
       <TabsContent value="school" className="mt-6"><SchoolView /></TabsContent>
       <TabsContent value="classes" className="mt-6"><ClassView psychologist /></TabsContent>
       <TabsContent value="attention" className="mt-6"><AttentionList /></TabsContent>
+      <TabsContent value="iq" className="mt-6"><IqResults /></TabsContent>
     </Tabs>
   );
 }
@@ -37,11 +40,19 @@ function PsychologistView() {
 function DevelopmentContent() {
   const can = useCan();
   if (can('assessments.manage')) return <PsychologistView />;
-  if (can('development.individual')) return <ClassView psychologist={false} />;
+  if (can('development.individual')) {
+    return (
+      <div className="space-y-8">
+        <ClassView psychologist={false} />
+        <IqResults />
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       <DevPrivacyBanner />
       <SchoolView />
+      <IqResults />
     </div>
   );
 }
