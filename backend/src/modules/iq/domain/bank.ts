@@ -111,6 +111,10 @@ function parseText(r: Record<string, unknown>, kind: TextKind): Parsed {
   const base = parseBase(r, TEXT_ID[kind]);
   if (!base.ok) return base;
   if (r.gridSvg !== undefined && r.gridSvg !== null) return { ok: false, error: 'matnli savolda gridSvg' };
+  // Matnli savol faqat o'z darajasining aralash formasida (A/B — rasmli).
+  if (!base.value.forms.every((f) => f.startsWith(`L${base.value.level}`) && !CLASSIC_FORMS.some((c) => f.endsWith(c)))) {
+    return { ok: false, error: 'matnli savol formasi' };
+  }
   const stem = localized(r.stem);
   if (!stem) return { ok: false, error: 'stem' };
   const raw = r.options;

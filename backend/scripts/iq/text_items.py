@@ -208,7 +208,7 @@ NUMERIC = {
         ("second-order 2/3", 3.2, second_order(2, 3), -1),
     ],
     4: [
-        ("geom×3 gap", 2.6, geom(3, 1, 2), 2),
+        ("geom×3 gap", 2.6, geom(3, 4, 6), 2),
         ("doubling-diff", 2.8, doubling_diff(3, 15), -1),
         ("fib", 2.9, fib(8), -1),
         ("squares+1", 3.0, power(2, 1, (2, 5)), -1),
@@ -234,10 +234,14 @@ NUMERIC = {
 }
 
 
+SEEN_SERIES = set()
+
+
 def numeric_item(rule, c, make, hide, rng):
     for _ in range(50):
         terms, wrong = make(rng)
-        if min(terms) < 0 or max(terms) > 9999:
+        # Bir xil qator boshqa darajada takrorlanmasin (bola keyingi darajada ko'rmasin).
+        if min(terms) < 0 or max(terms) > 9999 or tuple(terms[:5]) in SEEN_SERIES:
             continue
         idx = len(terms) - 1 if hide == -1 else hide
         answer = terms[idx]
@@ -245,11 +249,18 @@ def numeric_item(rule, c, make, hide, rng):
         if hide != -1:
             # O'rtadagi had — atrofidagi "xato qoida" variantlari.
             wrong = [terms[idx - 1] + (terms[idx - 1] - terms[idx - 2]), terms[idx + 1] - 1, (terms[idx - 1] + terms[idx + 1]) // 2 + 1]
-        pool = [w for w in dict.fromkeys(wrong + [answer + d for d in (1, -1, 2, -2, 3, 10, -10, 5)]) if w != answer and w > 0]
-        if len(pool) < 5:
+        near = (1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 10, -10, 6, -6)
+        pool = [w for w in dict.fromkeys(wrong + [answer + d for d in near]) if w != answer and w > 0]
+        below = [w for w in pool if w < answer]
+        above = [w for w in pool if w > answer]
+        # To'g'ri javob o'rni (kattaligi bo'yicha) tasodifiy — eng katta/kichigini
+        # tashlab "taxmin qilish" ishlamasin.
+        k = min(max(rng.randint(0, 5), 5 - len(above)), len(below))
+        if k + len(above) < 5:
             continue
-        options = [answer] + pool[:3] + rng.sample(pool[3:], 2)
+        options = [answer] + below[:k] + above[: 5 - k]
         rng.shuffle(options)
+        SEEN_SERIES.add(tuple(terms[:5]))
         series = ", ".join(shown)
         lead = NEXT if hide == -1 else GAP
         return {

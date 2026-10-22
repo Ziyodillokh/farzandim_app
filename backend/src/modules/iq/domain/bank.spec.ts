@@ -59,6 +59,8 @@ describe('IQ savollar banki', () => {
     ["id turi mos emas", { externalId: 'iq-L2-N01' }],
     ["id darajasi mos emas", { externalId: 'iq-L3-V01' }],
     ["noma'lum tur", { kind: 'MEMORY' }],
+    ['rasmli formada', { forms: ['L2A'] }],
+    ['boshqa daraja formasida', { forms: ['L3C'] }],
   ])('matnli rad etiladi: %s', (_name, patch) => {
     expect(parseIqItem(textItem(patch)).ok).toBe(false);
   });
