@@ -1668,10 +1668,12 @@
       "percentile": "Higher than {p}% of peers your age",
       "correct": "{correct} of {total} correct",
       "provisional": "Preliminary",
-      "provisionalNote": "This result is preliminary: the IQ number will appear once enough children your age have taken the test."
+      "provisionalNote": "This result is preliminary: the IQ number will appear once enough children your age have taken the test.",
+      "domainsTitle": "By area",
+      "domainScore": "{right}/{total}"
     },
     "entry": {
-      "body": "20 picture logic puzzles, no time limit",
+      "body": "Pictures, numbers, words and logic — 20 puzzles, no time limit",
       "continue": "Continue: {n}/{total}",
       "last": "Last result: {band}"
     },
@@ -1680,7 +1682,7 @@
       "ageRequired": "The IQ test depends on your age. Please add your age in your profile.",
       "ageAction": "Add age",
       "history": "Previous results",
-      "intro": "Each puzzle is a 3×3 grid with one empty cell. Find the pattern and choose the picture that fits.",
+      "intro": "There are four kinds of puzzles: picture patterns (pick the missing cell), number sequences, word relations and logic problems. In each one, find the rule and choose the answer.",
       "rule1": "20 puzzles, from easy to hard",
       "rule2": "No time limit — take your time and think carefully",
       "rule3": "Each puzzle has exactly one correct answer",
@@ -1710,7 +1712,14 @@
       "finish": "Finish",
       "finishing": "Calculating…",
       "doneTitle": "Test complete! Well done!",
-      "done": "Done"
+      "done": "Done",
+      "promptText": "Choose the correct answer"
+    },
+    "kind": {
+      "figural": "Patterns",
+      "numeric": "Numbers",
+      "verbal": "Words",
+      "logic": "Logic"
     }
   }
 }

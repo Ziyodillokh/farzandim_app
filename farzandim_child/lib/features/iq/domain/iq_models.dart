@@ -1,7 +1,7 @@
-// IQ test modellari (docs/IQ-REJA.md §4) — server javobi xavfsiz o'qiladi.
+// IQ test modellari (docs/IQ-REJA.md §4, §8) — server javobi xavfsiz o'qiladi.
 // Majburiy maydon noto'g'ri bo'lsa `FormatException` (repozitoriy uni
 // `IqErrorCode.unknown`ga aylantiradi). To'g'ri javob kaliti serverdan
-// hech qachon kelmaydi.
+// hech qachon kelmaydi. Savol rasmli (SVG) yoki matnli (uch tilda).
 
 import 'package:farzandim_child/features/school/domain/school_json.dart';
 
@@ -20,6 +20,17 @@ enum IqBand {
 }
 
 enum IqSessionStatus { started, inProgress, completed, abandoned, unknown }
+
+/// Savol turi: rasmli naqsh, sonlar qatori, so'z munosabati, mantiq.
+enum IqItemKind { figural, numeric, verbal, logic }
+
+IqItemKind? _kindOf(Object? value) => switch (value) {
+  'FIGURAL' => IqItemKind.figural,
+  'NUMERIC' => IqItemKind.numeric,
+  'VERBAL' => IqItemKind.verbal,
+  'LOGIC' => IqItemKind.logic,
+  _ => null,
+};
 
 Map<String, dynamic> _map(Object? value, String what) =>
     value is Map<String, dynamic> ? value : throw FormatException(what);
@@ -52,6 +63,57 @@ class IqAge {
   final int? level;
 }
 
+/// Uch tilli matn (savol sharti / variant). `uz` majburiy, qolgani — zaxira.
+class IqText {
+  const IqText({required this.uz, required this.ru, required this.en});
+
+  factory IqText.fromJson(Object? json, String what) {
+    final m = _map(json, what);
+    final uz = _id(m['uz'], '$what.uz');
+    return IqText(
+      uz: uz,
+      ru: jsonNonEmpty(m['ru']) ?? uz,
+      en: jsonNonEmpty(m['en']) ?? uz,
+    );
+  }
+
+  final String uz;
+  final String ru;
+  final String en;
+
+  String of(String languageCode) => switch (languageCode) {
+    'ru' => ru,
+    'en' => en,
+    _ => uz,
+  };
+}
+
+/// Aralash formada tur bo'yicha xom natija.
+class IqDomainScore {
+  const IqDomainScore({
+    required this.kind,
+    required this.right,
+    required this.total,
+  });
+
+  final IqItemKind kind;
+  final int right;
+  final int total;
+
+  /// Buzuq yoki noma'lum tur — tashlab yuboriladi (natija baribir ko'rinadi).
+  static List<IqDomainScore> listFrom(Object? json) {
+    if (json is! List) return const [];
+    return [
+      for (final d in json)
+        if (d is Map<String, dynamic>)
+          if ((_kindOf(d['kind']), jsonInt(d['right']), jsonInt(d['total']))
+              case (final kind?, final right?, final total?)
+              when total > 0 && right >= 0 && right <= total)
+            IqDomainScore(kind: kind, right: right, total: total),
+    ];
+  }
+}
+
 class IqResult {
   const IqResult({
     required this.correct,
@@ -63,6 +125,7 @@ class IqResult {
     this.standardScore,
     this.ciLow,
     this.ciHigh,
+    this.domains = const [],
   });
 
   factory IqResult.fromJson(Object? json) {
@@ -80,6 +143,7 @@ class IqResult {
       standardScore: normed ? jsonInt(m['standardScore']) : null,
       ciLow: normed && ci is List && ci.length == 2 ? jsonInt(ci[0]) : null,
       ciHigh: normed && ci is List && ci.length == 2 ? jsonInt(ci[1]) : null,
+      domains: IqDomainScore.listFrom(m['domains']),
     );
   }
 
@@ -92,6 +156,9 @@ class IqResult {
   final int? standardScore;
   final int? ciLow;
   final int? ciHigh;
+
+  /// Faqat aralash formada (rasmli A/B formada bo'sh).
+  final List<IqDomainScore> domains;
 
   bool get isNormed => status == IqResultStatus.normed && standardScore != null;
 
@@ -180,19 +247,23 @@ class IqOverview {
   final List<IqHistoryEntry> history;
 }
 
+/// Variant: rasmli savolda `svg`, matnli savolda `text`.
 class IqOption {
-  const IqOption({required this.key, required this.svg});
+  const IqOption({required this.key, this.svg, this.text});
 
   final String key;
-  final String svg;
+  final String? svg;
+  final IqText? text;
 }
 
 class IqItem {
   const IqItem({
     required this.id,
     required this.position,
-    required this.gridSvg,
     required this.options,
+    this.kind = IqItemKind.figural,
+    this.gridSvg,
+    this.stem,
     this.choice,
   });
 
@@ -202,16 +273,31 @@ class IqItem {
     if (options is! List || options.isEmpty) {
       throw const FormatException('options');
     }
+    // `kind` yo'q (eski server) — rasmli.
+    final kind = m['kind'] == null
+        ? IqItemKind.figural
+        : _kindOf(m['kind']) ?? (throw const FormatException('kind'));
+    final isFigural = kind == IqItemKind.figural;
     return IqItem(
       id: _id(m['id'], 'item.id'),
       position: _int(m['position'], 'position'),
-      gridSvg: _id(m['gridSvg'], 'gridSvg'),
+      kind: kind,
+      gridSvg: isFigural ? _id(m['gridSvg'], 'gridSvg') : null,
+      stem: isFigural ? null : IqText.fromJson(m['stem'], 'stem'),
       options: [
         for (final o in options)
-          IqOption(
-            key: _id(_map(o, 'option')['key'], 'option.key'),
-            svg: _id(_map(o, 'option')['svg'], 'option.svg'),
-          ),
+          isFigural
+              ? IqOption(
+                  key: _id(_map(o, 'option')['key'], 'option.key'),
+                  svg: _id(_map(o, 'option')['svg'], 'option.svg'),
+                )
+              : IqOption(
+                  key: _id(_map(o, 'option')['key'], 'option.key'),
+                  text: IqText.fromJson(
+                    _map(o, 'option')['text'],
+                    'option.text',
+                  ),
+                ),
       ],
       choice: jsonNonEmpty(m['choice']),
     );
@@ -219,14 +305,24 @@ class IqItem {
 
   final String id;
   final int position;
-  final String gridSvg;
+  final IqItemKind kind;
+
+  /// Faqat rasmli savolda.
+  final String? gridSvg;
+
+  /// Faqat matnli savolda: 1-qator — ko'rsatma, qolgani — savolning o'zi.
+  final IqText? stem;
   final List<IqOption> options;
   final String? choice;
+
+  bool get isFigural => kind == IqItemKind.figural;
 
   IqItem withChoice(String? value) => IqItem(
     id: id,
     position: position,
+    kind: kind,
     gridSvg: gridSvg,
+    stem: stem,
     options: options,
     choice: value,
   );
@@ -273,6 +369,9 @@ class IqSession {
   int get answeredCount => items.where((i) => i.choice != null).length;
 
   bool get isAllAnswered => items.isNotEmpty && answeredCount == items.length;
+
+  /// Aralash forma (bir nechta savol turi) — savol turi belgisi ko'rsatiladi.
+  bool get isMixed => items.map((i) => i.kind).toSet().length > 1;
 
   /// Birinchi javobsiz savol (davom ettirish uchun), hammasi javobli — 0.
   int get resumeIndex {

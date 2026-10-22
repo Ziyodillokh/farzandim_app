@@ -2,7 +2,8 @@
 // IqTestScreen — IQ test yechish (`/iq/test`)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Savollar bittadan: matritsa + 6 ta variant. Javob darhol serverda
+// Savollar bittadan: rasmli (matritsa + 6 variant) yoki matnli (shart + 4–6
+// variant); aralash testda har savol ustida turi belgisi. Javob darhol serverda
 // saqlanadi — chiqib ketib, 24 soat ichida davom ettirish mumkin (tasdiq
 // so'ralmaydi). Vaqt cheklanmagan. Oxirgi savolda hamma javob berilgan
 // bo'lsa "Yakunlash"; natija shu sahifada.
@@ -18,6 +19,7 @@ import 'package:farzandim_child/features/iq/presentation/iq_display.dart';
 import 'package:farzandim_child/features/iq/presentation/providers/iq_test_provider.dart';
 import 'package:farzandim_child/features/iq/presentation/widgets/iq_matrix.dart';
 import 'package:farzandim_child/features/iq/presentation/widgets/iq_result_card.dart';
+import 'package:farzandim_child/features/iq/presentation/widgets/iq_text_item.dart';
 import 'package:farzandim_child/features/kelajak/presentation/widgets/kelajak_common.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,6 +65,10 @@ class _Runner extends ConsumerWidget {
     final total = s.session.items.length;
     final answered = s.session.answeredCount;
     final error = s.error;
+    final item = s.current;
+    final onSelect = s.isCompleting
+        ? null
+        : (String key) => unawaited(notifier.select(key));
     return Column(
       children: [
         _TopBar(index: s.index, total: total, answered: answered),
@@ -70,21 +76,29 @@ class _Runner extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             children: [
-              Text(
-                'iq.test.prompt'.tr(),
-                textAlign: TextAlign.center,
-                style: homeText(15, weight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
-              IqMatrixGrid(svg: s.current.gridSvg),
-              const SizedBox(height: 16),
-              IqOptions(
-                options: s.current.options,
-                selected: s.current.choice,
-                onSelect: s.isCompleting
-                    ? null
-                    : (key) => unawaited(notifier.select(key)),
-              ),
+              if (s.session.isMixed) ...[
+                IqKindChip(kind: item.kind),
+                const SizedBox(height: 12),
+              ],
+              if (item.isFigural) ...[
+                Text(
+                  'iq.test.prompt'.tr(),
+                  textAlign: TextAlign.center,
+                  style: homeText(15, weight: FontWeight.w600),
+                ),
+                const SizedBox(height: 12),
+                IqMatrixGrid(svg: item.gridSvg ?? ''),
+                const SizedBox(height: 16),
+                IqOptions(
+                  options: item.options,
+                  selected: item.choice,
+                  onSelect: onSelect,
+                ),
+              ] else ...[
+                IqStemCard(item: item),
+                const SizedBox(height: 16),
+                IqTextOptions(item: item, onSelect: onSelect),
+              ],
               if (error != null) ...[
                 const SizedBox(height: 10),
                 Text(

@@ -2097,6 +2097,12 @@
       "average": "Average",
       "belowAverage": "Slightly below average",
       "growthZone": "Growth zone"
+    },
+    "kind": {
+      "FIGURAL": "Patterns",
+      "NUMERIC": "Numbers",
+      "VERBAL": "Words",
+      "LOGIC": "Logic"
     }
   }
 }

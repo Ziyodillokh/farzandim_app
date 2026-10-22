@@ -2097,6 +2097,12 @@
       "average": "O'rtacha daraja",
       "belowAverage": "O'rtachadan biroz past",
       "growthZone": "Rivojlanish zonasi"
+    },
+    "kind": {
+      "FIGURAL": "Naqsh",
+      "NUMERIC": "Sonlar",
+      "VERBAL": "So'zlar",
+      "LOGIC": "Mantiq"
     }
   }
 }

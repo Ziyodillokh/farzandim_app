@@ -44,10 +44,40 @@ Map<String, Object?> _item(int i, [String? choice]) => {
   'choice': choice,
 };
 
+Map<String, Object?> _t(String uz) => {
+  'uz': uz,
+  'ru': '$uz (ru)',
+  'en': '$uz (en)',
+};
+
+Map<String, Object?> _verbal(int i, [String? choice]) => {
+  'id': 'item-$i',
+  'position': i,
+  'kind': 'VERBAL',
+  'gridSvg': null,
+  'stem': _t('Munosabatni toping:\nBaliq — suv, qush — ?'),
+  'options': [
+    for (final (k, v) in [
+      ('A', 'tosh'),
+      ('B', 'osmon'),
+      ('C', 'qum'),
+      ('D', 'qor'),
+    ])
+      {'key': k, 'text': _t(v)},
+  ],
+  'choice': choice,
+};
+
+const _domains = [
+  {'kind': 'FIGURAL', 'right': 1, 'total': 1},
+  {'kind': 'VERBAL', 'right': 1, 'total': 1},
+];
+
 Map<String, Object?> _session({
   String status = 'STARTED',
   int items = 2,
   Map<String, Object?>? result,
+  bool mixed = false,
 }) => {
   'id': 'session-1',
   'status': status,
@@ -58,12 +88,17 @@ Map<String, Object?> _session({
   'completedAt': result == null ? null : '2026-10-21T13:00:00.000Z',
   'items': [
     for (var i = 0; i < items; i++)
-      _item(i, status == 'COMPLETED' ? 'A' : null),
+      mixed && i.isOdd
+          ? _verbal(i, status == 'COMPLETED' ? 'B' : null)
+          : _item(i, status == 'COMPLETED' ? 'A' : null),
   ],
   'result': result,
 };
 
 class _FakeRepo implements IqRepository {
+  _FakeRepo({this.mixed = false});
+
+  final bool mixed;
   final saved = <String>[];
   var completed = false;
 
@@ -78,7 +113,8 @@ class _FakeRepo implements IqRepository {
   });
 
   @override
-  Future<IqSession> startSession() async => IqSession.fromJson(_session());
+  Future<IqSession> startSession() async =>
+      IqSession.fromJson(_session(mixed: mixed));
 
   @override
   Future<void> saveAnswer({
@@ -91,7 +127,13 @@ class _FakeRepo implements IqRepository {
   @override
   Future<IqSession> completeSession(String sessionId) async {
     completed = true;
-    return IqSession.fromJson(_session(status: 'COMPLETED', result: _result()));
+    return IqSession.fromJson(
+      _session(
+        status: 'COMPLETED',
+        mixed: mixed,
+        result: {..._result(), if (mixed) 'domains': _domains},
+      ),
+    );
   }
 }
 
@@ -170,6 +212,69 @@ void main() {
       expect(s.answeredCount, 2);
     });
 
+    test(
+      'matnli savol: tur, uch tilli shart va variantlar; eski server — rasmli',
+      () {
+        final item = IqItem.fromJson(_verbal(3));
+        expect(item.kind, IqItemKind.verbal);
+        expect(item.isFigural, isFalse);
+        expect(item.gridSvg, isNull);
+        expect(item.stem!.of('ru'), contains('(ru)'));
+        expect(
+          item.options.map((o) => o.text!.of('en')),
+          contains('osmon (en)'),
+        );
+        final noRu = IqText.fromJson({'uz': 'son', 'en': 'number'}, 'stem');
+        expect(
+          [noRu.of('ru'), noRu.of('en'), noRu.of('kk')],
+          ['son', 'number', 'son'],
+        );
+        final legacy = IqItem.fromJson(_item(0));
+        expect(legacy.kind, IqItemKind.figural);
+        expect(legacy.options.first.svg, isNotNull);
+        final s = IqSession.fromJson(_session(items: 3, mixed: true));
+        expect(s.isMixed, isTrue);
+        expect(IqSession.fromJson(_session(items: 3)).isMixed, isFalse);
+      },
+    );
+
+    test('matnli savol buzuq — FormatException; noma\'lum tur ham', () {
+      expect(
+        () => IqItem.fromJson({..._verbal(0), 'stem': null}),
+        throwsFormatException,
+      );
+      expect(
+        () => IqItem.fromJson({
+          ..._verbal(0),
+          'options': [
+            {'key': 'A', 'svg': _svg},
+          ],
+        }),
+        throwsFormatException,
+      );
+      expect(
+        () => IqItem.fromJson({..._verbal(0), 'kind': 'MEMORY'}),
+        throwsFormatException,
+      );
+    });
+
+    test('yo\'nalishlar natijasi: buzuq va noma\'lum yozuvlar tashlanadi', () {
+      final r = IqResult.fromJson({
+        ..._result(),
+        'domains': [
+          ..._domains,
+          {'kind': 'MEMORY', 'right': 1, 'total': 2},
+          {'kind': 'LOGIC', 'right': 5, 'total': 3},
+          'x',
+        ],
+      });
+      expect(r.domains.map((d) => (d.kind, d.right, d.total)), [
+        (IqItemKind.figural, 1, 1),
+        (IqItemKind.verbal, 1, 1),
+      ]);
+      expect(IqResult.fromJson(_result()).domains, isEmpty);
+    });
+
     test('buzuq javob — FormatException', () {
       expect(
         () => IqSession.fromJson({'id': 'x', 'items': 'yo\'q'}),
@@ -229,14 +334,11 @@ void main() {
       await EasyLocalization.ensureInitialized();
     });
 
-    testWidgets('tanlash → keyingi → yakunlash → taxminiy natija', (
-      tester,
-    ) async {
+    Future<void> pumpTest(WidgetTester tester, _FakeRepo repo) async {
       tester.view
         ..physicalSize = const Size(393, 852) * 2
         ..devicePixelRatio = 2;
       addTearDown(tester.view.reset);
-      final repo = _FakeRepo();
       final app = EasyLocalization(
         supportedLocales: const [Locale('uz'), Locale('ru'), Locale('en')],
         path: 'assets/translations',
@@ -266,8 +368,16 @@ void main() {
         await GoogleFonts.pendingFonts();
       });
       await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    testWidgets('tanlash → keyingi → yakunlash → taxminiy natija', (
+      tester,
+    ) async {
+      final repo = _FakeRepo();
+      await pumpTest(tester, repo);
 
       expect(find.text('1 / 2'), findsOneWidget);
+      expect(find.text('Naqsh'), findsNothing);
       await tester.tap(find.text('B'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Keyingi'));
@@ -286,6 +396,34 @@ void main() {
       expect(find.text('O\'rtachadan yuqori'), findsOneWidget);
       expect(find.textContaining('79%'), findsOneWidget);
       expect(find.textContaining('IQ 1'), findsNothing);
+      expect(find.text('Yo\'nalishlar bo\'yicha'), findsNothing);
+    });
+
+    testWidgets('aralash test: rasm → so\'z savoli → yo\'nalishlar natijasi', (
+      tester,
+    ) async {
+      final repo = _FakeRepo(mixed: true);
+      await pumpTest(tester, repo);
+
+      expect(find.text('Naqsh'), findsOneWidget);
+      await tester.tap(find.text('C'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Keyingi'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('So\'zlar'), findsOneWidget);
+      expect(find.text('Munosabatni toping:'), findsOneWidget);
+      expect(find.text('Baliq — suv, qush — ?'), findsOneWidget);
+      await tester.tap(find.text('osmon'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Yakunlash'));
+      await tester.pumpAndSettle();
+
+      expect(repo.saved, ['item-0=C', 'item-1=B']);
+      expect(find.text('Yo\'nalishlar bo\'yicha'), findsOneWidget);
+      expect(find.text('Naqsh'), findsOneWidget);
+      expect(find.text('So\'zlar'), findsOneWidget);
+      expect(find.text('1/1'), findsNWidgets(2));
     });
   });
 }

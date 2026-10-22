@@ -40,6 +40,16 @@ Color iqBandColor(IqBand band) => switch (band) {
 
 String iqErrorText(IqErrorCode code) => 'iq.error.${code.name}'.tr();
 
+/// Savol turi nomi: "Naqsh", "Sonlar", "So'zlar", "Mantiq".
+String iqKindLabel(IqItemKind kind) => 'iq.kind.${kind.name}'.tr();
+
+Color iqKindColor(IqItemKind kind) => switch (kind) {
+  IqItemKind.figural => HomeColors.blue,
+  IqItemKind.numeric => HomeColors.green,
+  IqItemKind.verbal => HomeColors.amber,
+  IqItemKind.logic => HomeColors.orange,
+};
+
 /// "21 aprel 2027" — joriy til bo'yicha.
 String iqDate(BuildContext context, DateTime instant) =>
     DateFormat.yMMMMd(context.locale.toLanguageTag()).format(instant.toLocal());

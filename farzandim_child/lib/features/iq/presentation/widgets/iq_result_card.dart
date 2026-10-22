@@ -1,6 +1,7 @@
 // Natija kartasi (bola sahifasi va test oxiri). Holatga qarab:
 // • NORMED — IQ raqami (100±15), 95% oraliq, daraja va persentil;
 // • PROVISIONAL — "Taxminiy" belgisi, daraja va persentil, IQ raqamisiz.
+// Aralash testda — yo'nalishlar bo'yicha (rasm / son / so'z / mantiq) xom natija.
 // Har doim "Skrining, tashxis emas" izohi.
 
 import 'package:easy_localization/easy_localization.dart';
@@ -76,6 +77,15 @@ class IqResultCard extends StatelessWidget {
             ),
             style: homeText(13, color: HomeColors.textDim),
           ),
+          if (result.domains.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Text(
+              'iq.result.domainsTitle'.tr(),
+              style: homeText(13, weight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            for (final d in result.domains) _DomainRow(score: d),
+          ],
           if (!result.isNormed) ...[
             const SizedBox(height: 10),
             Text(
@@ -87,6 +97,49 @@ class IqResultCard extends StatelessWidget {
           Text(
             'iq.disclaimer'.tr(),
             style: homeText(11.5, color: HomeColors.textDim, height: 1.35),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DomainRow extends StatelessWidget {
+  const _DomainRow({required this.score});
+
+  final IqDomainScore score;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = iqKindColor(score.kind);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 86,
+            child: Text(
+              iqKindLabel(score.kind),
+              style: homeText(12.5, color: HomeColors.textDim),
+            ),
+          ),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(99),
+              child: LinearProgressIndicator(
+                value: score.right / score.total,
+                minHeight: 7,
+                color: color,
+                backgroundColor: HomeColors.ringTrack,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'iq.result.domainScore'.tr(
+              namedArgs: {'right': '${score.right}', 'total': '${score.total}'},
+            ),
+            style: homeText(12.5, weight: FontWeight.w700),
           ),
         ],
       ),

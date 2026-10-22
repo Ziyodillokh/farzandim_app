@@ -18,6 +18,12 @@ const kIqBands = [
   'VERY_LOW',
 ];
 
+/// Aralash testda yo'nalish bo'yicha xom natija
+/// (`kind`: FIGURAL | NUMERIC | VERBAL | LOGIC).
+typedef IqDomainScore = ({String kind, int right, int total});
+
+const kIqDomains = ['FIGURAL', 'NUMERIC', 'VERBAL', 'LOGIC'];
+
 @immutable
 class IqResult {
   const IqResult({
@@ -29,6 +35,7 @@ class IqResult {
     required this.standardScore,
     required this.ci95,
     required this.completedAt,
+    this.domains = const [],
   });
 
   factory IqResult.fromJson(Map<String, dynamic> json) {
@@ -48,6 +55,17 @@ class IqResult {
       standardScore: json.readIntOrNull('standardScore'),
       ci95: lo is num && hi is num ? (lo.round(), hi.round()) : null,
       completedAt: json.readDateTime('completedAt'),
+      domains: [
+        for (final d in json.readList('domains'))
+          if (d is Map<String, dynamic>)
+            if ((d['kind'], d['right'], d['total'])
+                case (final String kind, final int right, final int total)
+                when kIqDomains.contains(kind) &&
+                    total > 0 &&
+                    right >= 0 &&
+                    right <= total)
+              (kind: kind, right: right, total: total),
+      ],
     );
   }
 
@@ -63,6 +81,9 @@ class IqResult {
   final int? standardScore;
   final (int, int)? ci95;
   final DateTime? completedAt;
+
+  /// Faqat aralash formada; eski (rasmli) testda bo'sh.
+  final List<IqDomainScore> domains;
 
   bool get isNormed => status == IqResultStatus.normed;
 }

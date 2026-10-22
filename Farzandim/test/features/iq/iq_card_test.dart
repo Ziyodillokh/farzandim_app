@@ -98,6 +98,24 @@ void main() {
       expect(s.previous!.percentile, 40);
     });
 
+    test("aralash: yo'nalishlar, buzuqlari tashlanadi; eskisida bo'sh", () {
+      final r = IqResult.fromJson({
+        ..._result(),
+        'domains': const [
+          {'kind': 'FIGURAL', 'right': 8, 'total': 10},
+          {'kind': 'NUMERIC', 'right': 3, 'total': 4},
+          {'kind': 'MEMORY', 'right': 1, 'total': 2},
+          {'kind': 'LOGIC', 'right': 4, 'total': 3},
+          'x',
+        ],
+      });
+      expect(r.domains, [
+        (kind: 'FIGURAL', right: 8, total: 10),
+        (kind: 'NUMERIC', right: 3, total: 4),
+      ]);
+      expect(IqResult.fromJson(_result()).domains, isEmpty);
+    });
+
     test('NORMED: standart ball va 95% oraliq', () {
       final s = IqSummary.fromJson(
         _summary(_result(status: 'NORMED', score: 104, ci: [96, 112])),
@@ -133,6 +151,24 @@ void main() {
       expect(find.text('iq.card.percentile'), findsOneWidget);
       expect(find.text('iq.card.scoreCi'), findsNothing);
       expect(find.text('iq.card.disclaimer'), findsOneWidget);
+      expect(find.textContaining('iq.kind.'), findsNothing);
+    });
+
+    testWidgets("aralash test: yo'nalishlar bir qatorda", (tester) async {
+      await _pump(
+        tester,
+        _summary({
+          ..._result(),
+          'domains': [
+            {'kind': 'FIGURAL', 'right': 8, 'total': 10},
+            {'kind': 'VERBAL', 'right': 2, 'total': 3},
+          ],
+        }),
+      );
+      expect(
+        find.text('iq.kind.FIGURAL 8/10 · iq.kind.VERBAL 2/3'),
+        findsOneWidget,
+      );
     });
 
     testWidgets(

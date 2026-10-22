@@ -133,6 +133,14 @@ class IqDashboardCard extends ConsumerWidget {
                 ),
                 style: _pop(13),
               ),
+              if (last.domains.isNotEmpty)
+                Text(
+                  [
+                    for (final d in last.domains)
+                      '${'iq.kind.${d.kind}'.tr()} ${d.right}/${d.total}',
+                  ].join(' · '),
+                  style: _pop(13),
+                ),
               if (summary.previous?.percentile != null)
                 Text(
                   'iq.card.previous'.tr(

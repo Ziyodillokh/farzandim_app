@@ -1661,10 +1661,12 @@
       "percentile": "Tengdoshlaringizning {p}% idan yuqori natija",
       "correct": "{total} tadan {correct} ta to'g'ri javob",
       "provisional": "Taxminiy",
-      "provisionalNote": "Natija hozircha taxminiy: IQ raqami sizning yoshingizdagi yetarlicha bola testni ishlagach ko'rsatiladi."
+      "provisionalNote": "Natija hozircha taxminiy: IQ raqami sizning yoshingizdagi yetarlicha bola testni ishlagach ko'rsatiladi.",
+      "domainsTitle": "Yo'nalishlar bo'yicha",
+      "domainScore": "{right}/{total}"
     },
     "entry": {
-      "body": "Rasmli mantiqiy savollar — 20 ta, vaqt cheklanmagan",
+      "body": "Rasmlar, sonlar, so'zlar va mantiq — 20 ta savol, vaqt cheklanmagan",
       "continue": "Davom ettirish: {n}/{total}",
       "last": "Oxirgi natija: {band}"
     },
@@ -1673,7 +1675,7 @@
       "ageRequired": "IQ test yoshga qarab tanlanadi. Profilingizda yoshingizni kiriting.",
       "ageAction": "Yoshni kiritish",
       "history": "Oldingi natijalar",
-      "intro": "Har bir savolda 3×3 jadval bor, bitta katak bo'sh. Qonuniyatni toping va bo'sh katakka mos rasmni tanlang.",
+      "intro": "Savollar to'rt xil: rasmli naqsh (bo'sh katakka mos rasm), sonlar qatori, so'zlar orasidagi bog'liqlik va mantiqiy masala. Har birida qonuniyatni toping va javobni tanlang.",
       "rule1": "20 ta savol, osondan qiyinga",
       "rule2": "Vaqt cheklanmagan — shoshilmang, diqqat bilan o'ylang",
       "rule3": "Har savolda faqat bitta to'g'ri javob bor",
@@ -1703,7 +1705,14 @@
       "finish": "Yakunlash",
       "finishing": "Natija hisoblanmoqda…",
       "doneTitle": "Test tugadi! Barakalla!",
-      "done": "Tayyor"
+      "done": "Tayyor",
+      "promptText": "To'g'ri javobni tanlang"
+    },
+    "kind": {
+      "figural": "Naqsh",
+      "numeric": "Sonlar",
+      "verbal": "So'zlar",
+      "logic": "Mantiq"
     }
   }
 }

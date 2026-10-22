@@ -109,7 +109,7 @@ class _OptionTile extends StatelessWidget {
                   ),
                 ),
                 child: SvgPicture.string(
-                  option.svg,
+                  option.svg ?? '',
                   excludeFromSemantics: true,
                 ),
               ),
