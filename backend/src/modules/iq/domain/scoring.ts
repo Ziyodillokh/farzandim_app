@@ -7,7 +7,8 @@
 
 import { toPercentile, toStandard } from '../../../school/assessments/psych/scoring';
 
-export const SCORING_VERSION = 1;
+/** 1 — rasmli A/B; 2 — aralash C/D (tur bo'yicha natija, alohida norma "mix:<guruh>"). */
+export const SCORING_VERSION = 2;
 export const MIN_EMPIRICAL_N = 30;
 export const NORMED_N = 300;
 const MIN_SD = 0.05;

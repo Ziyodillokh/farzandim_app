@@ -2,6 +2,7 @@
 // Savolning `answer` maydoni bu yerdagi hech bir ko'rinishga KIRMAYDI.
 
 import { IqSession, IqSessionStatus } from '@prisma/client';
+import { IQ_ITEM_KINDS, IqItemKind, LocalizedText } from './domain/bank';
 import { groupOffset, IqAge } from './domain/levels';
 import { eapAbility, IqBand, IqResultStatus, NormStats, scoreAbility } from './domain/scoring';
 
@@ -15,13 +16,32 @@ export interface IqResultView {
   ci95: [number, number] | null;
   normGroup: string | null;
   completedAt: string;
+  /** Aralash formada tur bo'yicha xom natija (rasm / son / so'z / mantiq); bitta turli formada yo'q. */
+  domains?: IqDomainScore[];
+}
+
+export interface IqDomainScore {
+  kind: IqItemKind;
+  right: number;
+  total: number;
+}
+
+/** Variant: rasmli savolda `svg`, matnli savolda `text` (uch tilda). */
+export interface IqOptionView {
+  key: string;
+  svg?: string;
+  text?: LocalizedText;
 }
 
 export interface IqItemView {
   id: string;
   position: number;
-  gridSvg: string;
-  options: Array<{ key: string; svg: string }>;
+  kind: IqItemKind;
+  /** Faqat rasmli savolda; matnli savolda null. */
+  gridSvg: string | null;
+  /** Faqat matnli savolda: shart (birinchi qator — ko'rsatma, qolgani — savolning o'zi). */
+  stem: LocalizedText | null;
+  options: IqOptionView[];
   choice: string | null;
 }
 
@@ -88,15 +108,26 @@ export function parseStoredResult(value: unknown): StoredIqResult | null {
 export const designCenter = (bs: readonly number[]): number =>
   bs.length ? bs.reduce((a, b) => a + b, 0) / bs.length : 0;
 
+/** Tur bo'yicha xom natija — faqat bir nechta tur bo'lsa (aralash forma). */
+export function domainScores(responses: readonly number[], kinds: ReadonlyArray<IqItemKind | undefined>): IqDomainScore[] | undefined {
+  const present = IQ_ITEM_KINDS.filter((k) => kinds.includes(k));
+  if (present.length < 2) return undefined;
+  return present.map((kind) => {
+    const own = responses.filter((_, i) => kinds[i] === kind);
+    return { kind, right: own.filter((r) => r === 1).length, total: own.length };
+  });
+}
+
 /**
- * Xom natija → baho. `bs` — sessiya tartibidagi savol qiyinliklari;
- * `norm` — guruh statistikasi (o'qilgan paytdagi).
+ * Xom natija → baho. `bs` / `kinds` — sessiya tartibidagi savol qiyinliklari va
+ * turlari; `norm` — guruh statistikasi (o'qilgan paytdagi).
  */
 export function scoreSession(
   session: Pick<IqSession, 'normGroup' | 'completedAt'>,
   stored: StoredIqResult,
   bs: readonly number[],
   norm: NormStats,
+  kinds: ReadonlyArray<IqItemKind | undefined> = [],
 ): IqResultView {
   const center = designCenter(bs);
   const ability = eapAbility(
@@ -105,11 +136,13 @@ export function scoreSession(
   );
   const offset = session.normGroup ? groupOffset(session.normGroup) : 0;
   const score = scoreAbility(ability, norm, { mean: center + offset, sd: 1 });
+  const domains = domainScores(stored.responses, kinds);
   return {
     correct: stored.correct,
     total: stored.total,
     ...score,
     normGroup: session.normGroup,
     completedAt: (session.completedAt ?? new Date(0)).toISOString(),
+    ...(domains ? { domains } : {}),
   };
 }

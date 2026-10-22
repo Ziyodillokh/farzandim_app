@@ -24,6 +24,7 @@ export const development: DeepString<typeof uz> = {
     error: 'Не удалось загрузить результаты',
     demoOnly: 'Результаты Parvoz IQ видны только в рабочей панели.',
     tab: 'Parvoz IQ',
+    domain: { FIGURAL: 'Фигуры', NUMERIC: 'Числа', VERBAL: 'Слова', LOGIC: 'Логика' },
     col: { student: 'Ученик', band: 'Уровень', percentile: 'Перцентиль', score: 'Стандартный балл', date: 'Дата' },
     band: {
       VERY_HIGH: 'Очень высокий',

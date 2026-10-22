@@ -21,6 +21,7 @@ export const development = {
     error: 'Natijalarni yuklab bo\'lmadi',
     demoOnly: 'Parvoz IQ natijalari faqat haqiqiy panelda ko\'rinadi.',
     tab: 'Parvoz IQ',
+    domain: { FIGURAL: 'Rasm', NUMERIC: 'Son', VERBAL: 'So\'z', LOGIC: 'Mantiq' },
     col: { student: 'O\'quvchi', band: 'Daraja', percentile: 'Persentil', score: 'Standart ball', date: 'Sana' },
     band: {
       VERY_HIGH: 'Juda yuqori',

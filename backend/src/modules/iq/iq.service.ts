@@ -18,20 +18,25 @@ import {
 import { IqSession, IqSessionStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { tashkentDay } from '../../common/time/tashkent';
+import { IqItemKind, LocalizedText } from './domain/bank';
 import {
   formFor,
   IqAge,
   isExpired,
   nextAvailableAt,
   normGroupForAge,
+  normKey,
   resolveIqAge,
   SESSION_TTL_HOURS,
 } from './domain/levels';
+import { orderSessionItems } from './domain/order';
 import { eapAbility, normStats, NormStats, SCORING_VERSION, welfordAdd } from './domain/scoring';
 import { IqAnswerDto } from './dto/iq.dto';
 import {
   designCenter,
   IqHistoryEntry,
+  IqItemView,
+  IqOptionView,
   IqOverview,
   IqParentSummary,
   IqSessionView,
@@ -87,6 +92,30 @@ function orderedBs(itemIds: readonly string[], items: ReadonlyArray<{ id: string
   const bs = itemIds.map((id) => byId.get(id));
   const center = designCenter(bs.filter((b): b is number => b !== undefined));
   return bs.map((b) => b ?? center);
+}
+
+/** Sessiya tartibidagi savol turlari (tur bo'yicha natija uchun). */
+function orderedKinds(itemIds: readonly string[], items: ReadonlyArray<{ id: string; kind: IqItemKind }>): Array<IqItemKind | undefined> {
+  const byId = new Map(items.map((i) => [i.id, i.kind]));
+  return itemIds.map((id) => byId.get(id));
+}
+
+type ItemRow = { id: string; kind: IqItemKind; gridSvg: string | null; stem: Prisma.JsonValue; options: Prisma.JsonValue };
+
+/** Klientga savol — faqat ko'rsatish uchun maydonlar (`answer`, `b` yo'q). */
+function itemView(item: ItemRow, position: number, choice: string | null): IqItemView {
+  const raw = (Array.isArray(item.options) ? item.options : []) as Array<{ key: string; svg?: string; text?: LocalizedText }>;
+  const options: IqOptionView[] =
+    item.kind === 'FIGURAL' ? raw.map(({ key, svg }) => ({ key, svg })) : raw.map(({ key, text }) => ({ key, text }));
+  return {
+    id: item.id,
+    position,
+    kind: item.kind,
+    gridSvg: item.kind === 'FIGURAL' ? item.gridSvg : null,
+    stem: item.kind === 'FIGURAL' ? null : ((item.stem as LocalizedText | null) ?? null),
+    options,
+    choice,
+  };
 }
 
 @Injectable()
@@ -168,7 +197,7 @@ export class IqService {
     const [items, answers] = await Promise.all([
       this.prisma.iqItem.findMany({
         where: { id: { in: session.itemIds } },
-        select: { id: true, gridSvg: true, options: true, b: true },
+        select: { id: true, kind: true, gridSvg: true, stem: true, options: true, b: true },
       }),
       this.prisma.iqAnswer.findMany({
         where: { sessionId },
@@ -188,24 +217,15 @@ export class IqService {
       completedAt: session.completedAt?.toISOString() ?? null,
       items: session.itemIds.flatMap((id, position) => {
         const item = byId.get(id);
-        if (!item) return [];
-        const options = (item.options as Array<{ key: string; svg: string }>).map(({ key, svg }) => ({ key, svg }));
-        return [
-          {
-            id,
-            position,
-            gridSvg: item.gridSvg,
-            options,
-            choice: choices.get(id) ?? null,
-          },
-        ];
+        return item ? [itemView(item, position, choices.get(id) ?? null)] : [];
       }),
       result: stored
         ? scoreSession(
             session,
             stored,
             orderedBs(session.itemIds, items),
-            await this.normOf(this.prisma, session.normGroup),
+            await this.normOf(this.prisma, session),
+            orderedKinds(session.itemIds, items),
           )
         : null,
     };
@@ -252,8 +272,7 @@ export class IqService {
       const form = formFor(age.level, completed.length);
       const items = await tx.iqItem.findMany({
         where: { active: true, forms: { has: form } },
-        orderBy: [{ b: 'asc' }, { externalId: 'asc' }],
-        select: { id: true },
+        select: { id: true, externalId: true, kind: true, b: true },
       });
       if (items.length === 0)
         throw new NotFoundException({
@@ -266,7 +285,7 @@ export class IqService {
           level: age.level,
           form,
           ageYears: age.age,
-          itemIds: items.map((i) => i.id),
+          itemIds: orderSessionItems(items),
           total: items.length,
           firstAttempt: completed.length === 0,
           startedAt: now,
@@ -382,7 +401,9 @@ export class IqService {
       };
       const age = await this.ageOf(tx, childId, now);
       const normGroup = age.age === null ? null : normGroupForAge(age.age);
-      if (session.firstAttempt && normGroup) await this.addToNorm(tx, session.itemIds, responses, normGroup);
+      if (session.firstAttempt && normGroup) {
+        await this.addToNorm(tx, session.itemIds, responses, normKey(session.form, normGroup));
+      }
       await tx.iqSession.update({
         where: { id: sessionId },
         data: {
@@ -440,9 +461,9 @@ export class IqService {
     });
   }
 
-  private async normOf(db: Db, group: string | null): Promise<NormStats> {
-    if (!group) return normStats(null);
-    return normStats(await db.iqNorm.findUnique({ where: { group } }));
+  private async normOf(db: Db, session: Pick<IqSession, 'form' | 'normGroup'>): Promise<NormStats> {
+    if (!session.normGroup) return normStats(null);
+    return normStats(await db.iqNorm.findUnique({ where: { group: normKey(session.form, session.normGroup) } }));
   }
 
   private async addToNorm(
@@ -473,11 +494,12 @@ export class IqService {
   private async history(sessions: IqSession[]): Promise<IqHistoryEntry[]> {
     if (sessions.length === 0) return [];
     const ids = [...new Set(sessions.flatMap((s) => s.itemIds))];
-    const groups = [...new Set(sessions.map((s) => s.normGroup).filter((g): g is string => g !== null))];
+    const keyOf = (s: IqSession) => (s.normGroup ? normKey(s.form, s.normGroup) : null);
+    const groups = [...new Set(sessions.map(keyOf).filter((g): g is string => g !== null))];
     const [items, norms] = await Promise.all([
       this.prisma.iqItem.findMany({
         where: { id: { in: ids } },
-        select: { id: true, b: true },
+        select: { id: true, b: true, kind: true },
       }),
       this.prisma.iqNorm.findMany({ where: { group: { in: groups } } }),
     ]);
@@ -485,13 +507,14 @@ export class IqService {
     return sessions.flatMap((s) => {
       const stored = parseStoredResult(s.result);
       if (!stored || !s.completedAt) return [];
-      const norm = (s.normGroup && normByGroup.get(s.normGroup)) || normStats(null);
+      const key = keyOf(s);
+      const norm = (key && normByGroup.get(key)) || normStats(null);
       return [
         {
           sessionId: s.id,
           completedAt: s.completedAt.toISOString(),
           level: s.level,
-          result: scoreSession(s, stored, orderedBs(s.itemIds, items), norm),
+          result: scoreSession(s, stored, orderedBs(s.itemIds, items), norm, orderedKinds(s.itemIds, items)),
         },
       ];
     });
