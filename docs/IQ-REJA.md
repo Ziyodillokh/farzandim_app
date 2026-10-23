@@ -96,13 +96,18 @@ POST /iq/sessions/:id/complete         → SessionView (idempotent)
 ```
 SessionView = {
   id, status, level, form, total, startedAt, completedAt|null,
-  items: [{ id, position, gridSvg, options: [{key, svg}], choice: "A".."F"|null }],
+  items: [{ id, position, kind: "FIGURAL"|"NUMERIC"|"VERBAL"|"LOGIC",
+             gridSvg: string|null,            // faqat FIGURAL
+             stem: {uz, ru, en}|null,         // faqat matnli; 1-qator — ko'rsatma, qolgani — savol
+             options: [{key, svg}] | [{key, text: {uz, ru, en}}],   // matnli: 4–6 variant
+             choice: "A".."F"|null }],
   result: ResultView | null            // faqat COMPLETED
 }
 ResultView = {
   correct, total, status: "PROVISIONAL" | "NORMED",
   percentile, band, standardScore: int|null, ci95: [lo, hi] | null,
-  normGroup, completedAt
+  normGroup, completedAt,
+  domains?: [{kind, right, total}]     // faqat aralash formada (§8), xom son
 }
 ```
 
@@ -117,7 +122,7 @@ Ota-ona to'liq natijani ko'radi, lekin savollar va bolaning javoblari yo'q.
 
 ## 6. Savollar banki
 
-- Generator: `backend/scripts/iq/generator.py` (Python 3, faqat stdlib) —
+- Rasmli generator: `backend/scripts/iq/generator.py` (Python 3, faqat stdlib) —
   rasmlar noldan chiziladi (original, litsenziyasiz). Har savol avtomatik
   tekshiriladi: 6 variant noyob, to'g'ri javob bitta.
 - `python3 scripts/iq/generator.py --json prisma/data/iq/items.json`
@@ -148,6 +153,30 @@ rozilik — `PARENTS_INFORMED` (boshqa psixologik testlar kabi).
   - direktor / admin (`development.view`) — faqat `bands`, 5 dan kam — yashirin.
 - **Panel:** "Tayinlash" oynasida "Parvoz IQ" (faqat `/maktab`), Rivojlanish →
   "Parvoz IQ" tabi (psixolog), sinf rahbari va direktorga sahifa pastida.
+
+## 8. Aralash formalar (2026-10-22)
+
+Faqat rasmli 20 savol bolani zeriktiradi va bitta qobiliyatni o'lchaydi. Yangi
+sessiyalar **aralash formada** (C/D, navbat bilan): **10 rasmli** (A/B dan,
+C ⊂ A, D ⊂ B) + **4 sonli qator** + **3 so'z munosabati** + **3 mantiq** = 20.
+Tartib: har tur ichida osondan qiyinga, turlar bir tekis
+(`F V N F F L F N V F F L N F F V F N L F`, `domain/order.ts`).
+
+- **Savollar:** `scripts/iq/text_items.py` → `prisma/data/iq/text_items.json`
+  (120: har daraja 10 son + 7 so'z + 7 mantiq, zaxira bilan) va
+  `mixed_forms.json` (C/D dagi rasmli savollar). So'z va mantiq savollari
+  (`text_content.py`) uch tilda alohida yozilgan (tarjima emas), madaniyatga
+  bog'liq bilim talab qilmaydi. `items.json` va A/B formalar O'ZGARMAGAN.
+- **Migratsiyalar:** `20261022090000_iq_mixed_items` (`kind`, `stem`,
+  `grid_svg` ixtiyoriy) va `20261022090100_iq_mixed_bank`
+  (`build-bank-migration.ts --mixed`: INSERT ON CONFLICT DO NOTHING + C/D
+  formani qo'shuvchi UPDATE, takror ishga tushsa xavfsiz).
+- **Baholash:** bitta θ (Rasch, hamma savol). Norma **alohida**: `mix:<guruh>`
+  (`normKey`), chunki savollar boshqa va matnli `b` hali taxminiy;
+  `SCORING_VERSION = 2`. Eski A/B sessiyalar o'z normasi (`<guruh>`) bilan
+  baholanadi, ochiq A/B sessiya davom ettiriladi.
+- **Tur bo'yicha natija** (`domains`) — faqat xom son, diagnostika emas;
+  ilovada "kuchli tomon" sifatida yumshoq ko'rsatiladi.
 
 ### Keyin
 - Natijani `development` REASONING sohasiga ulash.

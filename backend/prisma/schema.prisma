@@ -1771,20 +1771,30 @@ model KelajakAnswer {
 // Natijada faqat xom javoblar; standart ball / persentil o'qilganda.
 // ─────────────────────────────────────────────────────────────────────
 
-/// Matritsa savoli. `answer` — SIR, hech qachon klientga yuborilmaydi.
+/// Savol turi: rasmli matritsa yoki matnli (sonli qator, so'z munosabati, mantiq).
+enum IqItemKind {
+  FIGURAL
+  NUMERIC
+  VERBAL
+  LOGIC
+}
+
+/// IQ savoli. `answer` — SIR, hech qachon klientga yuborilmaydi.
 model IqItem {
-  id         String   @id @default(uuid())
-  externalId String   @unique @map("external_id")
+  id         String     @id @default(uuid())
+  externalId String     @unique @map("external_id")
   level      Int // 1..5
-  forms      String[] // "L1A", "L2A" — anchor savol ikki formada; [] — zaxira
-  gridSvg    String   @map("grid_svg")
-  options    Json // [{key: "A".."F", svg}]
-  answer     String   @db.Char(1)
+  kind       IqItemKind @default(FIGURAL)
+  forms      String[] // "L1A".."L1D" — A/B rasmli, C/D aralash; anchor bir necha formada; [] — zaxira
+  gridSvg    String?    @map("grid_svg") // faqat FIGURAL
+  stem       Json? // matnli savol: {uz, ru, en}
+  options    Json // FIGURAL: [{key: "A".."F", svg}]; matnli: [{key, text: {uz, ru, en}}]
+  answer     String     @db.Char(1)
   b          Float // Rasch qiyinligi (logit)
   rule       String
-  active     Boolean  @default(true)
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  active     Boolean    @default(true)
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
 
   answers IqAnswer[]
 

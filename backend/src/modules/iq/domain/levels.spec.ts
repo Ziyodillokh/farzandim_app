@@ -2,9 +2,11 @@ import {
   formFor,
   groupOffset,
   isExpired,
+  isMixedForm,
   levelForAge,
   nextAvailableAt,
   normGroupForAge,
+  normKey,
   resolveIqAge,
   RETAKE_DAYS,
 } from './levels';
@@ -60,8 +62,15 @@ describe('IQ darajalari (docs/IQ-REJA.md §1)', () => {
     expect(resolveIqAge({ birthDate: null, age: null }, '2026-10-21').status).toBe('AGE_REQUIRED');
   });
 
-  it('forma almashadi: A → B → A', () => {
-    expect([0, 1, 2].map((n) => formFor(3, n))).toEqual(['L3A', 'L3B', 'L3A']);
+  it('yangi sessiya — aralash forma, almashadi: C → D → C', () => {
+    expect([0, 1, 2].map((n) => formFor(3, n))).toEqual(['L3C', 'L3D', 'L3C']);
+  });
+
+  it('norma kaliti: aralash forma alohida, rasmli — eski guruh', () => {
+    expect([isMixedForm('L2C'), isMixedForm('L2D'), isMixedForm('L2A')]).toEqual([true, true, false]);
+    expect(normKey('L2C', '11')).toBe('mix:11');
+    expect(normKey('L5D', '17-20')).toBe('mix:17-20');
+    expect(normKey('L2B', '11')).toBe('11');
   });
 
   it('qayta topshirish 180 kundan keyin, sessiya 24 soatda eskiradi', () => {

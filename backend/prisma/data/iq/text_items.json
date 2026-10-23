@@ -1,0 +1,6762 @@
+[
+ {
+  "externalId": "iq-L1-N01",
+  "level": 1,
+  "kind": "NUMERIC",
+  "forms": [
+   "L1C"
+  ],
+  "rule": "arith+2",
+  "b": -1.66,
+  "answer": "D",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n12, 14, 16, 18, 20, ?",
+   "ru": "Продолжите ряд:\n12, 14, 16, 18, 20, ?",
+   "en": "Continue the sequence:\n12, 14, 16, 18, 20, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "18",
+     "ru": "18",
+     "en": "18"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "25",
+     "ru": "25",
+     "en": "25"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "19",
+     "ru": "19",
+     "en": "19"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "22",
+     "ru": "22",
+     "en": "22"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "20",
+     "ru": "20",
+     "en": "20"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "21",
+     "ru": "21",
+     "en": "21"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-N02",
+  "level": 1,
+  "kind": "NUMERIC",
+  "forms": [
+   "L1D"
+  ],
+  "rule": "arith+5",
+  "b": -1.38,
+  "answer": "C",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n8, 13, 18, 23, 28, ?",
+   "ru": "Продолжите ряд:\n8, 13, 18, 23, 28, ?",
+   "en": "Continue the sequence:\n8, 13, 18, 23, 28, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "35",
+     "ru": "35",
+     "en": "35"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "34",
+     "ru": "34",
+     "en": "34"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "33",
+     "ru": "33",
+     "en": "33"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "39",
+     "ru": "39",
+     "en": "39"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "36",
+     "ru": "36",
+     "en": "36"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "37",
+     "ru": "37",
+     "en": "37"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-N03",
+  "level": 1,
+  "kind": "NUMERIC",
+  "forms": [],
+  "rule": "arith+4",
+  "b": -1.32,
+  "answer": "D",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n5, 9, 13, 17, 21, ?",
+   "ru": "Продолжите ряд:\n5, 9, 13, 17, 21, ?",
+   "en": "Continue the sequence:\n5, 9, 13, 17, 21, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "21",
+     "ru": "21",
+     "en": "21"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "30",
+     "ru": "30",
+     "en": "30"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "24",
+     "ru": "24",
+     "en": "24"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "25",
+     "ru": "25",
+     "en": "25"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "26",
+     "ru": "26",
+     "en": "26"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "27",
+     "ru": "27",
+     "en": "27"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-N04",
+  "level": 1,
+  "kind": "NUMERIC",
+  "forms": [
+   "L1D"
+  ],
+  "rule": "arith-3",
+  "b": -1.22,
+  "answer": "F",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n25, 22, 19, 16, 13, ?",
+   "ru": "Продолжите ряд:\n25, 22, 19, 16, 13, ?",
+   "en": "Continue the sequence:\n25, 22, 19, 16, 13, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "6",
+     "ru": "6",
+     "en": "6"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "9",
+     "ru": "9",
+     "en": "9"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "13",
+     "ru": "13",
+     "en": "13"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "7",
+     "ru": "7",
+     "en": "7"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "8",
+     "ru": "8",
+     "en": "8"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "10",
+     "ru": "10",
+     "en": "10"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-N05",
+  "level": 1,
+  "kind": "NUMERIC",
+  "forms": [
+   "L1C"
+  ],
+  "rule": "arith+3 gap",
+  "b": -1.04,
+  "answer": "C",
+  "stem": {
+   "uz": "Yetishmayotgan sonni toping:\n12, 15, ?, 21, 24, 27",
+   "ru": "Найдите пропущенное число:\n12, 15, ?, 21, 24, 27",
+   "en": "Find the missing number:\n12, 15, ?, 21, 24, 27"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "17",
+     "ru": "17",
+     "en": "17"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "22",
+     "ru": "22",
+     "en": "22"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "18",
+     "ru": "18",
+     "en": "18"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "19",
+     "ru": "19",
+     "en": "19"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "20",
+     "ru": "20",
+     "en": "20"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "21",
+     "ru": "21",
+     "en": "21"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-N06",
+  "level": 1,
+  "kind": "NUMERIC",
+  "forms": [
+   "L1C"
+  ],
+  "rule": "steps+1+3",
+  "b": -0.91,
+  "answer": "E",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n3, 4, 7, 8, 11, 12, ?",
+   "ru": "Продолжите ряд:\n3, 4, 7, 8, 11, 12, ?",
+   "en": "Continue the sequence:\n3, 4, 7, 8, 11, 12, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "13",
+     "ru": "13",
+     "en": "13"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "19",
+     "ru": "19",
+     "en": "19"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "16",
+     "ru": "16",
+     "en": "16"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "18",
+     "ru": "18",
+     "en": "18"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "15",
+     "ru": "15",
+     "en": "15"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "17",
+     "ru": "17",
+     "en": "17"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-N07",
+  "level": 1,
+  "kind": "NUMERIC",
+  "forms": [
+   "L1D"
+  ],
+  "rule": "geom×2",
+  "b": -0.79,
+  "answer": "E",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n3, 6, 12, 24, 48, ?",
+   "ru": "Продолжите ряд:\n3, 6, 12, 24, 48, ?",
+   "en": "Continue the sequence:\n3, 6, 12, 24, 48, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "93",
+     "ru": "93",
+     "en": "93"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "144",
+     "ru": "144",
+     "en": "144"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "94",
+     "ru": "94",
+     "en": "94"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "72",
+     "ru": "72",
+     "en": "72"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "96",
+     "ru": "96",
+     "en": "96"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "95",
+     "ru": "95",
+     "en": "95"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-N08",
+  "level": 1,
+  "kind": "NUMERIC",
+  "forms": [],
+  "rule": "growing+1",
+  "b": -0.74,
+  "answer": "E",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n2, 3, 5, 8, 12, ?",
+   "ru": "Продолжите ряд:\n2, 3, 5, 8, 12, ?",
+   "en": "Continue the sequence:\n2, 3, 5, 8, 12, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "15",
+     "ru": "15",
+     "en": "15"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "18",
+     "ru": "18",
+     "en": "18"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "19",
+     "ru": "19",
+     "en": "19"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "16",
+     "ru": "16",
+     "en": "16"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "17",
+     "ru": "17",
+     "en": "17"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "14",
+     "ru": "14",
+     "en": "14"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-N09",
+  "level": 1,
+  "kind": "NUMERIC",
+  "forms": [
+   "L1D"
+  ],
+  "rule": "steps+3-1",
+  "b": -0.8,
+  "answer": "E",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n5, 8, 7, 10, 9, 12, ?",
+   "ru": "Продолжите ряд:\n5, 8, 7, 10, 9, 12, ?",
+   "en": "Continue the sequence:\n5, 8, 7, 10, 9, 12, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "15",
+     "ru": "15",
+     "en": "15"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "14",
+     "ru": "14",
+     "en": "14"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "13",
+     "ru": "13",
+     "en": "13"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "16",
+     "ru": "16",
+     "en": "16"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "11",
+     "ru": "11",
+     "en": "11"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "12",
+     "ru": "12",
+     "en": "12"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-N10",
+  "level": 1,
+  "kind": "NUMERIC",
+  "forms": [
+   "L1C"
+  ],
+  "rule": "geom×2 gap",
+  "b": -0.62,
+  "answer": "F",
+  "stem": {
+   "uz": "Yetishmayotgan sonni toping:\n1, 2, 4, ?, 16, 32",
+   "ru": "Найдите пропущенное число:\n1, 2, 4, ?, 16, 32",
+   "en": "Find the missing number:\n1, 2, 4, ?, 16, 32"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "12",
+     "ru": "12",
+     "en": "12"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "10",
+     "ru": "10",
+     "en": "10"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "11",
+     "ru": "11",
+     "en": "11"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "15",
+     "ru": "15",
+     "en": "15"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "9",
+     "ru": "9",
+     "en": "9"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "8",
+     "ru": "8",
+     "en": "8"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-V01",
+  "level": 1,
+  "kind": "VERBAL",
+  "forms": [
+   "L1C"
+  ],
+  "rule": "analogy",
+  "b": -1.6,
+  "answer": "B",
+  "stem": {
+   "uz": "Munosabatni toping:\nMushukcha — mushuk, kuchukcha — ?",
+   "ru": "Найдите связь:\nКотёнок — кошка, щенок — ?",
+   "en": "Find the relation:\nKitten — cat, puppy — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "quyon",
+     "ru": "кролик",
+     "en": "rabbit"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "it",
+     "ru": "собака",
+     "en": "dog"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "sigir",
+     "ru": "корова",
+     "en": "cow"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "ot",
+     "ru": "лошадь",
+     "en": "horse"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-V02",
+  "level": 1,
+  "kind": "VERBAL",
+  "forms": [
+   "L1D"
+  ],
+  "rule": "odd_one_out",
+  "b": -1.52,
+  "answer": "D",
+  "stem": {
+   "uz": "Qaysi biri ortiqcha?",
+   "ru": "Что лишнее?",
+   "en": "Which one does not belong?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "nok",
+     "ru": "груша",
+     "en": "pear"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "o‘rik",
+     "ru": "абрикос",
+     "en": "apricot"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "olma",
+     "ru": "яблоко",
+     "en": "apple"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "sabzi",
+     "ru": "морковь",
+     "en": "carrot"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-V03",
+  "level": 1,
+  "kind": "VERBAL",
+  "forms": [
+   "L1D"
+  ],
+  "rule": "odd_one_out",
+  "b": -1.38,
+  "answer": "C",
+  "stem": {
+   "uz": "Qaysi biri ortiqcha?",
+   "ru": "Что лишнее?",
+   "en": "Which one does not belong?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "tulki",
+     "ru": "лиса",
+     "en": "fox"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "bo‘ri",
+     "ru": "волк",
+     "en": "wolf"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "qarag‘ay",
+     "ru": "сосна",
+     "en": "pine"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "ayiq",
+     "ru": "медведь",
+     "en": "bear"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-V04",
+  "level": 1,
+  "kind": "VERBAL",
+  "forms": [],
+  "rule": "analogy",
+  "b": -1.48,
+  "answer": "D",
+  "stem": {
+   "uz": "Munosabatni toping:\nKatta — kichik, baland — ?",
+   "ru": "Найдите связь:\nБольшой — маленький, высокий — ?",
+   "en": "Find the relation:\nBig — small, tall — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "uzun",
+     "ru": "длинный",
+     "en": "long"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "keng",
+     "ru": "широкий",
+     "en": "wide"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "og‘ir",
+     "ru": "тяжёлый",
+     "en": "heavy"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "past",
+     "ru": "низкий",
+     "en": "short"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-V05",
+  "level": 1,
+  "kind": "VERBAL",
+  "forms": [
+   "L1C"
+  ],
+  "rule": "analogy",
+  "b": -1.15,
+  "answer": "A",
+  "stem": {
+   "uz": "Munosabatni toping:\nQalam — yozish, qaychi — ?",
+   "ru": "Найдите связь:\nКарандаш — писать, ножницы — ?",
+   "en": "Find the relation:\nPencil — write, scissors — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "kesish",
+     "ru": "резать",
+     "en": "cut"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "o‘qish",
+     "ru": "читать",
+     "en": "read"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "yopishtirish",
+     "ru": "клеить",
+     "en": "glue"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "chizish",
+     "ru": "рисовать",
+     "en": "draw"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-V06",
+  "level": 1,
+  "kind": "VERBAL",
+  "forms": [
+   "L1C"
+  ],
+  "rule": "analogy",
+  "b": -0.96,
+  "answer": "D",
+  "stem": {
+   "uz": "Munosabatni toping:\nBaliq — suv, qush — ?",
+   "ru": "Найдите связь:\nРыба — вода, птица — ?",
+   "en": "Find the relation:\nFish — water, bird — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "qor",
+     "ru": "снег",
+     "en": "snow"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "tosh",
+     "ru": "камень",
+     "en": "stone"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "qum",
+     "ru": "песок",
+     "en": "sand"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "osmon",
+     "ru": "небо",
+     "en": "sky"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-V07",
+  "level": 1,
+  "kind": "VERBAL",
+  "forms": [
+   "L1D"
+  ],
+  "rule": "analogy",
+  "b": -0.57,
+  "answer": "D",
+  "stem": {
+   "uz": "Munosabatni toping:\nBarmoq — qo‘l, barg — ?",
+   "ru": "Найдите связь:\nПалец — рука, лист — ?",
+   "en": "Find the relation:\nFinger — hand, leaf — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "gul",
+     "ru": "цветок",
+     "en": "flower"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "ildiz",
+     "ru": "корень",
+     "en": "root"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "meva",
+     "ru": "плод",
+     "en": "fruit"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "daraxt",
+     "ru": "дерево",
+     "en": "tree"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-G01",
+  "level": 1,
+  "kind": "LOGIC",
+  "forms": [
+   "L1C"
+  ],
+  "rule": "order",
+  "b": -1.34,
+  "answer": "B",
+  "stem": {
+   "uz": "Ali Validan baland. Vali Sardordan baland. Eng baland kim?",
+   "ru": "Али выше Вали. Вали выше Сардора. Кто самый высокий?",
+   "en": "Ali is taller than Vali. Vali is taller than Sardor. Who is the tallest?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "Vali",
+     "ru": "Вали",
+     "en": "Vali"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "Ali",
+     "ru": "Али",
+     "en": "Ali"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "Bilib bo‘lmaydi",
+     "ru": "Нельзя определить",
+     "en": "Cannot be determined"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "Sardor",
+     "ru": "Сардор",
+     "en": "Sardor"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-G02",
+  "level": 1,
+  "kind": "LOGIC",
+  "forms": [
+   "L1D"
+  ],
+  "rule": "count",
+  "b": -1.22,
+  "answer": "D",
+  "stem": {
+   "uz": "Daraxtda 5 ta qush o‘tirgan edi. 2 tasi uchib ketdi, keyin 1 tasi qaytib keldi. Daraxtda nechta qush bor?",
+   "ru": "На дереве сидели 5 птиц. 2 улетели, потом 1 вернулась. Сколько птиц на дереве?",
+   "en": "Five birds sat in a tree. Two flew away, then one came back. How many birds are in the tree?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "3",
+     "ru": "3",
+     "en": "3"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "6",
+     "ru": "6",
+     "en": "6"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "2",
+     "ru": "2",
+     "en": "2"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "4",
+     "ru": "4",
+     "en": "4"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-G03",
+  "level": 1,
+  "kind": "LOGIC",
+  "forms": [
+   "L1D"
+  ],
+  "rule": "order",
+  "b": -1.1,
+  "answer": "A",
+  "stem": {
+   "uz": "Zarina Laylodan katta. Laylo Malikadan katta. Eng kichik kim?",
+   "ru": "Зарина старше Лейлы. Лейла старше Малики. Кто самый младший?",
+   "en": "Zarina is older than Laylo. Laylo is older than Malika. Who is the youngest?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "Malika",
+     "ru": "Малика",
+     "en": "Malika"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "Zarina",
+     "ru": "Зарина",
+     "en": "Zarina"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "Laylo",
+     "ru": "Лейла",
+     "en": "Laylo"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "Bilib bo‘lmaydi",
+     "ru": "Нельзя определить",
+     "en": "Cannot be determined"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-G04",
+  "level": 1,
+  "kind": "LOGIC",
+  "forms": [],
+  "rule": "calendar",
+  "b": -1.05,
+  "answer": "C",
+  "stem": {
+   "uz": "Bugun seshanba. Indinga qaysi kun bo‘ladi?",
+   "ru": "Сегодня вторник. Какой день будет послезавтра?",
+   "en": "Today is Tuesday. What day is the day after tomorrow?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "juma",
+     "ru": "пятница",
+     "en": "Friday"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "chorshanba",
+     "ru": "среда",
+     "en": "Wednesday"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "payshanba",
+     "ru": "четверг",
+     "en": "Thursday"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "dushanba",
+     "ru": "понедельник",
+     "en": "Monday"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-G05",
+  "level": 1,
+  "kind": "LOGIC",
+  "forms": [
+   "L1C"
+  ],
+  "rule": "syllogism",
+  "b": -0.77,
+  "answer": "B",
+  "stem": {
+   "uz": "Hamma mushuklarning dumi bor. Momiq — mushuk. Qaysi gap to‘g‘ri?",
+   "ru": "У всех кошек есть хвост. Пушок — кошка. Какое утверждение верно?",
+   "en": "All cats have tails. Fluffy is a cat. Which statement is true?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "Momiq — it",
+     "ru": "Пушок — собака",
+     "en": "Fluffy is a dog"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "Momiqning dumi bor",
+     "ru": "У Пушка есть хвост",
+     "en": "Fluffy has a tail"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "Bilib bo‘lmaydi",
+     "ru": "Нельзя определить",
+     "en": "Cannot be determined"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "Dumi bor hamma hayvon — mushuk",
+     "ru": "Все животные с хвостом — кошки",
+     "en": "Every animal with a tail is a cat"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-G06",
+  "level": 1,
+  "kind": "LOGIC",
+  "forms": [
+   "L1C"
+  ],
+  "rule": "trick",
+  "b": -0.69,
+  "answer": "A",
+  "stem": {
+   "uz": "Savatda 3 ta olma bor edi. Siz undan 2 tasini oldingiz. Sizda nechta olma bor?",
+   "ru": "В корзине было 3 яблока. Вы взяли из неё 2. Сколько яблок у вас?",
+   "en": "There were 3 apples in a basket. You took 2 of them. How many apples do you have?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "2",
+     "ru": "2",
+     "en": "2"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "1",
+     "ru": "1",
+     "en": "1"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "5",
+     "ru": "5",
+     "en": "5"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "3",
+     "ru": "3",
+     "en": "3"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L1-G07",
+  "level": 1,
+  "kind": "LOGIC",
+  "forms": [
+   "L1D"
+  ],
+  "rule": "condition",
+  "b": -0.46,
+  "answer": "A",
+  "stem": {
+   "uz": "Agar yomg‘ir yog‘sa, hovli ho‘l bo‘ladi. Hovli quruq. Demak:",
+   "ru": "Если идёт дождь, двор становится мокрым. Двор сухой. Значит:",
+   "en": "If it rains, the yard gets wet. The yard is dry. So:"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "yomg‘ir yog‘magan",
+     "ru": "дождя не было",
+     "en": "it did not rain"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "yomg‘ir yog‘gan",
+     "ru": "дождь был",
+     "en": "it rained"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "Bilib bo‘lmaydi",
+     "ru": "Нельзя определить",
+     "en": "Cannot be determined"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "qor yog‘gan",
+     "ru": "шёл снег",
+     "en": "it snowed"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-N01",
+  "level": 2,
+  "kind": "NUMERIC",
+  "forms": [
+   "L2C"
+  ],
+  "rule": "arith+6",
+  "b": -1.36,
+  "answer": "C",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n16, 22, 28, 34, 40, ?",
+   "ru": "Продолжите ряд:\n16, 22, 28, 34, 40, ?",
+   "en": "Continue the sequence:\n16, 22, 28, 34, 40, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "45",
+     "ru": "45",
+     "en": "45"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "44",
+     "ru": "44",
+     "en": "44"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "46",
+     "ru": "46",
+     "en": "46"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "40",
+     "ru": "40",
+     "en": "40"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "53",
+     "ru": "53",
+     "en": "53"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "47",
+     "ru": "47",
+     "en": "47"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-N02",
+  "level": 2,
+  "kind": "NUMERIC",
+  "forms": [
+   "L2D"
+  ],
+  "rule": "arith-4",
+  "b": -1.06,
+  "answer": "E",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n34, 30, 26, 22, 18, ?",
+   "ru": "Продолжите ряд:\n34, 30, 26, 22, 18, ?",
+   "en": "Continue the sequence:\n34, 30, 26, 22, 18, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "10",
+     "ru": "10",
+     "en": "10"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "11",
+     "ru": "11",
+     "en": "11"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "13",
+     "ru": "13",
+     "en": "13"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "12",
+     "ru": "12",
+     "en": "12"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "14",
+     "ru": "14",
+     "en": "14"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "18",
+     "ru": "18",
+     "en": "18"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-N03",
+  "level": 2,
+  "kind": "NUMERIC",
+  "forms": [],
+  "rule": "geom×2",
+  "b": -0.87,
+  "answer": "D",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n2, 4, 8, 16, 32, ?",
+   "ru": "Продолжите ряд:\n2, 4, 8, 16, 32, ?",
+   "en": "Continue the sequence:\n2, 4, 8, 16, 32, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "66",
+     "ru": "66",
+     "en": "66"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "67",
+     "ru": "67",
+     "en": "67"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "48",
+     "ru": "48",
+     "en": "48"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "64",
+     "ru": "64",
+     "en": "64"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "96",
+     "ru": "96",
+     "en": "96"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "65",
+     "ru": "65",
+     "en": "65"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-N04",
+  "level": 2,
+  "kind": "NUMERIC",
+  "forms": [
+   "L2D"
+  ],
+  "rule": "steps+3+5",
+  "b": -0.88,
+  "answer": "E",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n10, 13, 18, 21, 26, 29, ?",
+   "ru": "Продолжите ряд:\n10, 13, 18, 21, 26, 29, ?",
+   "en": "Continue the sequence:\n10, 13, 18, 21, 26, 29, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "30",
+     "ru": "30",
+     "en": "30"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "29",
+     "ru": "29",
+     "en": "29"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "31",
+     "ru": "31",
+     "en": "31"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "33",
+     "ru": "33",
+     "en": "33"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "34",
+     "ru": "34",
+     "en": "34"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "32",
+     "ru": "32",
+     "en": "32"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-N05",
+  "level": 2,
+  "kind": "NUMERIC",
+  "forms": [
+   "L2C"
+  ],
+  "rule": "growing+1",
+  "b": -0.79,
+  "answer": "D",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n7, 9, 12, 16, 21, ?",
+   "ru": "Продолжите ряд:\n7, 9, 12, 16, 21, ?",
+   "en": "Continue the sequence:\n7, 9, 12, 16, 21, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "26",
+     "ru": "26",
+     "en": "26"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "28",
+     "ru": "28",
+     "en": "28"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "25",
+     "ru": "25",
+     "en": "25"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "27",
+     "ru": "27",
+     "en": "27"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "24",
+     "ru": "24",
+     "en": "24"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "23",
+     "ru": "23",
+     "en": "23"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-N06",
+  "level": 2,
+  "kind": "NUMERIC",
+  "forms": [
+   "L2C"
+  ],
+  "rule": "steps+4-2",
+  "b": -0.51,
+  "answer": "C",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n5, 9, 7, 11, 9, 13, ?",
+   "ru": "Продолжите ряд:\n5, 9, 7, 11, 9, 13, ?",
+   "en": "Continue the sequence:\n5, 9, 7, 11, 9, 13, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "13",
+     "ru": "13",
+     "en": "13"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "17",
+     "ru": "17",
+     "en": "17"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "11",
+     "ru": "11",
+     "en": "11"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "14",
+     "ru": "14",
+     "en": "14"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "9",
+     "ru": "9",
+     "en": "9"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "12",
+     "ru": "12",
+     "en": "12"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-N07",
+  "level": 2,
+  "kind": "NUMERIC",
+  "forms": [
+   "L2D"
+  ],
+  "rule": "geom×3",
+  "b": -0.49,
+  "answer": "A",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n1, 3, 9, 27, 81, ?",
+   "ru": "Продолжите ряд:\n1, 3, 9, 27, 81, ?",
+   "en": "Continue the sequence:\n1, 3, 9, 27, 81, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "243",
+     "ru": "243",
+     "en": "243"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "108",
+     "ru": "108",
+     "en": "108"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "324",
+     "ru": "324",
+     "en": "324"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "242",
+     "ru": "242",
+     "en": "242"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "244",
+     "ru": "244",
+     "en": "244"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "189",
+     "ru": "189",
+     "en": "189"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-N08",
+  "level": 2,
+  "kind": "NUMERIC",
+  "forms": [],
+  "rule": "interleave+2/-1",
+  "b": -0.2,
+  "answer": "D",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n2, 27, 4, 26, 6, 25, 8, ?",
+   "ru": "Продолжите ряд:\n2, 27, 4, 26, 6, 25, 8, ?",
+   "en": "Continue the sequence:\n2, 27, 4, 26, 6, 25, 8, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "7",
+     "ru": "7",
+     "en": "7"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "27",
+     "ru": "27",
+     "en": "27"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "25",
+     "ru": "25",
+     "en": "25"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "24",
+     "ru": "24",
+     "en": "24"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "10",
+     "ru": "10",
+     "en": "10"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "26",
+     "ru": "26",
+     "en": "26"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-N09",
+  "level": 2,
+  "kind": "NUMERIC",
+  "forms": [
+   "L2D"
+  ],
+  "rule": "triangular gap",
+  "b": -0.17,
+  "answer": "C",
+  "stem": {
+   "uz": "Yetishmayotgan sonni toping:\n1, 3, 6, ?, 15, 21",
+   "ru": "Найдите пропущенное число:\n1, 3, 6, ?, 15, 21",
+   "en": "Find the missing number:\n1, 3, 6, ?, 15, 21"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "8",
+     "ru": "8",
+     "en": "8"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "6",
+     "ru": "6",
+     "en": "6"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "10",
+     "ru": "10",
+     "en": "10"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "14",
+     "ru": "14",
+     "en": "14"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "7",
+     "ru": "7",
+     "en": "7"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "9",
+     "ru": "9",
+     "en": "9"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-N10",
+  "level": 2,
+  "kind": "NUMERIC",
+  "forms": [
+   "L2C"
+  ],
+  "rule": "fib",
+  "b": -0.01,
+  "answer": "B",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n2, 5, 7, 12, 19, 31, ?",
+   "ru": "Продолжите ряд:\n2, 5, 7, 12, 19, 31, ?",
+   "en": "Continue the sequence:\n2, 5, 7, 12, 19, 31, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "62",
+     "ru": "62",
+     "en": "62"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "50",
+     "ru": "50",
+     "en": "50"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "43",
+     "ru": "43",
+     "en": "43"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "61",
+     "ru": "61",
+     "en": "61"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "49",
+     "ru": "49",
+     "en": "49"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "48",
+     "ru": "48",
+     "en": "48"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-V01",
+  "level": 2,
+  "kind": "VERBAL",
+  "forms": [
+   "L2C"
+  ],
+  "rule": "odd_one_out",
+  "b": -1.35,
+  "answer": "B",
+  "stem": {
+   "uz": "Qaysi biri ortiqcha?",
+   "ru": "Что лишнее?",
+   "en": "Which one does not belong?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "dengiz",
+     "ru": "море",
+     "en": "sea"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "tog‘",
+     "ru": "гора",
+     "en": "mountain"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "ko‘l",
+     "ru": "озеро",
+     "en": "lake"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "daryo",
+     "ru": "река",
+     "en": "river"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-V02",
+  "level": 2,
+  "kind": "VERBAL",
+  "forms": [
+   "L2D"
+  ],
+  "rule": "synonym",
+  "b": -1.12,
+  "answer": "A",
+  "stem": {
+   "uz": "“Jasur” so‘ziga ma’nodosh so‘zni toping.",
+   "ru": "Найдите синоним к слову «смелый».",
+   "en": "Find a word that means the same as “brave”."
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "botir",
+     "ru": "храбрый",
+     "en": "courageous"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "kuchsiz",
+     "ru": "слабый",
+     "en": "weak"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "sekin",
+     "ru": "медленный",
+     "en": "slow"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "qo‘rqoq",
+     "ru": "трусливый",
+     "en": "cowardly"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-V03",
+  "level": 2,
+  "kind": "VERBAL",
+  "forms": [
+   "L2D"
+  ],
+  "rule": "analogy",
+  "b": -1.13,
+  "answer": "D",
+  "stem": {
+   "uz": "Munosabatni toping:\nShifokor — kasalxona, o‘qituvchi — ?",
+   "ru": "Найдите связь:\nВрач — больница, учитель — ?",
+   "en": "Find the relation:\nDoctor — hospital, teacher — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "dars",
+     "ru": "урок",
+     "en": "lesson"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "o‘quvchi",
+     "ru": "ученик",
+     "en": "pupil"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "kitob",
+     "ru": "книга",
+     "en": "book"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "maktab",
+     "ru": "школа",
+     "en": "school"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-V04",
+  "level": 2,
+  "kind": "VERBAL",
+  "forms": [],
+  "rule": "analogy",
+  "b": -0.91,
+  "answer": "C",
+  "stem": {
+   "uz": "Munosabatni toping:\nSoat — vaqt, termometr — ?",
+   "ru": "Найдите связь:\nЧасы — время, термометр — ?",
+   "en": "Find the relation:\nClock — time, thermometer — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "tezlik",
+     "ru": "скорость",
+     "en": "speed"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "uzunlik",
+     "ru": "длина",
+     "en": "length"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "harorat",
+     "ru": "температура",
+     "en": "temperature"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "og‘irlik",
+     "ru": "вес",
+     "en": "weight"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-V05",
+  "level": 2,
+  "kind": "VERBAL",
+  "forms": [
+   "L2C"
+  ],
+  "rule": "odd_one_out",
+  "b": -0.38,
+  "answer": "C",
+  "stem": {
+   "uz": "Qaysi biri ortiqcha?",
+   "ru": "Что лишнее?",
+   "en": "Which one does not belong?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "uchburchak",
+     "ru": "треугольник",
+     "en": "triangle"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "kvadrat",
+     "ru": "квадрат",
+     "en": "square"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "kub",
+     "ru": "куб",
+     "en": "cube"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "doira",
+     "ru": "круг",
+     "en": "circle"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-V06",
+  "level": 2,
+  "kind": "VERBAL",
+  "forms": [
+   "L2C"
+  ],
+  "rule": "analogy",
+  "b": -0.35,
+  "answer": "C",
+  "stem": {
+   "uz": "Munosabatni toping:\nKitob — sahifa, poyezd — ?",
+   "ru": "Найдите связь:\nКнига — страница, поезд — ?",
+   "en": "Find the relation:\nBook — page, train — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "mashinist",
+     "ru": "машинист",
+     "en": "driver"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "rels",
+     "ru": "рельсы",
+     "en": "rails"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "vagon",
+     "ru": "вагон",
+     "en": "carriage"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "bekat",
+     "ru": "станция",
+     "en": "station"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-V07",
+  "level": 2,
+  "kind": "VERBAL",
+  "forms": [
+   "L2D"
+  ],
+  "rule": "analogy",
+  "b": -0.38,
+  "answer": "C",
+  "stem": {
+   "uz": "Munosabatni toping:\nUn — non, paxta — ?",
+   "ru": "Найдите связь:\nМука — хлеб, хлопок — ?",
+   "en": "Find the relation:\nFlour — bread, cotton — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "bulut",
+     "ru": "облако",
+     "en": "cloud"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "dala",
+     "ru": "поле",
+     "en": "field"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "mato",
+     "ru": "ткань",
+     "en": "fabric"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "oq",
+     "ru": "белый",
+     "en": "white"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-G01",
+  "level": 2,
+  "kind": "LOGIC",
+  "forms": [
+   "L2C"
+  ],
+  "rule": "order",
+  "b": -0.65,
+  "answer": "C",
+  "stem": {
+   "uz": "Navbatda to‘rt do‘st turibdi. Aziz Bekdan oldinda, Bek Dilshoddan oldinda, Sardor eng oxirida. Birinchi kim?",
+   "ru": "В очереди стоят четыре друга. Азиз впереди Бека, Бек впереди Дилшода, Сардор последний. Кто первый?",
+   "en": "Four friends stand in a line. Aziz is ahead of Bek, Bek is ahead of Dilshod, and Sardor is last. Who is first?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "Bek",
+     "ru": "Бек",
+     "en": "Bek"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "Sardor",
+     "ru": "Сардор",
+     "en": "Sardor"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "Aziz",
+     "ru": "Азиз",
+     "en": "Aziz"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "Dilshod",
+     "ru": "Дилшод",
+     "en": "Dilshod"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-G02",
+  "level": 2,
+  "kind": "LOGIC",
+  "forms": [
+   "L2D"
+  ],
+  "rule": "proportion",
+  "b": -0.61,
+  "answer": "C",
+  "stem": {
+   "uz": "3 ta daftar 6 000 so‘m turadi. 5 ta daftar necha so‘m turadi?",
+   "ru": "3 тетради стоят 6 000 сумов. Сколько стоят 5 тетрадей?",
+   "en": "3 notebooks cost 6,000 soums. How much do 5 notebooks cost?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "8 000",
+     "ru": "8 000",
+     "en": "8,000"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "9 000",
+     "ru": "9 000",
+     "en": "9,000"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "10 000",
+     "ru": "10 000",
+     "en": "10,000"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "12 000",
+     "ru": "12 000",
+     "en": "12,000"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-G03",
+  "level": 2,
+  "kind": "LOGIC",
+  "forms": [
+   "L2D"
+  ],
+  "rule": "calendar",
+  "b": -0.52,
+  "answer": "A",
+  "stem": {
+   "uz": "Oyning 1-kuni dushanba. Shu oyning 8-kuni qaysi kun?",
+   "ru": "Первое число месяца — понедельник. Какой день недели 8-го числа?",
+   "en": "The 1st of the month is a Monday. What day is the 8th?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "dushanba",
+     "ru": "понедельник",
+     "en": "Monday"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "yakshanba",
+     "ru": "воскресенье",
+     "en": "Sunday"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "chorshanba",
+     "ru": "среда",
+     "en": "Wednesday"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "seshanba",
+     "ru": "вторник",
+     "en": "Tuesday"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-G04",
+  "level": 2,
+  "kind": "LOGIC",
+  "forms": [],
+  "rule": "condition",
+  "b": -0.34,
+  "answer": "B",
+  "stem": {
+   "uz": "Shakar solingan hamma choy shirin. Bu choy shirin emas. Demak:",
+   "ru": "Любой чай с сахаром сладкий. Этот чай не сладкий. Значит:",
+   "en": "Any tea with sugar is sweet. This tea is not sweet. So:"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "bu choyda shakar bor",
+     "ru": "в этом чае есть сахар",
+     "en": "this tea has sugar"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "bu choyda shakar yo‘q",
+     "ru": "в этом чае нет сахара",
+     "en": "this tea has no sugar"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "Bilib bo‘lmaydi",
+     "ru": "Нельзя определить",
+     "en": "Cannot be determined"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "bu choy issiq",
+     "ru": "этот чай горячий",
+     "en": "this tea is hot"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-G05",
+  "level": 2,
+  "kind": "LOGIC",
+  "forms": [
+   "L2C"
+  ],
+  "rule": "syllogism",
+  "b": -0.22,
+  "answer": "B",
+  "stem": {
+   "uz": "Ba’zi qushlar ucha olmaydi. Pingvin — qush. Qaysi xulosa to‘g‘ri?",
+   "ru": "Некоторые птицы не умеют летать. Пингвин — птица. Какой вывод верен?",
+   "en": "Some birds cannot fly. A penguin is a bird. Which conclusion is correct?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "Pingvin qush emas",
+     "ru": "Пингвин не птица",
+     "en": "A penguin is not a bird"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "Pingvin ucha olmasligi mumkin",
+     "ru": "Пингвин может не уметь летать",
+     "en": "A penguin may be unable to fly"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "Hamma qushlar ucha olmaydi",
+     "ru": "Все птицы не умеют летать",
+     "en": "No bird can fly"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "Pingvin albatta ucha oladi",
+     "ru": "Пингвин обязательно умеет летать",
+     "en": "A penguin can certainly fly"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-G06",
+  "level": 2,
+  "kind": "LOGIC",
+  "forms": [
+   "L2C"
+  ],
+  "rule": "clock",
+  "b": -0.22,
+  "answer": "B",
+  "stem": {
+   "uz": "Soat 3:00 da soat va daqiqa millari orasidagi burchak necha gradus?",
+   "ru": "Какой угол между часовой и минутной стрелками в 3:00?",
+   "en": "At 3:00, what is the angle between the hour and minute hands?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "45°",
+     "ru": "45°",
+     "en": "45°"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "90°",
+     "ru": "90°",
+     "en": "90°"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "180°",
+     "ru": "180°",
+     "en": "180°"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "60°",
+     "ru": "60°",
+     "en": "60°"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L2-G07",
+  "level": 2,
+  "kind": "LOGIC",
+  "forms": [
+   "L2D"
+  ],
+  "rule": "age",
+  "b": 0.14,
+  "answer": "A",
+  "stem": {
+   "uz": "Ota 40 yoshda, o‘g‘li 10 yoshda. Necha yildan keyin ota o‘g‘lidan 3 marta katta bo‘ladi?",
+   "ru": "Отцу 40 лет, сыну 10. Через сколько лет отец будет в 3 раза старше сына?",
+   "en": "A father is 40 and his son is 10. In how many years will the father be 3 times as old as the son?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "5",
+     "ru": "5",
+     "en": "5"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "7",
+     "ru": "7",
+     "en": "7"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "10",
+     "ru": "10",
+     "en": "10"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "3",
+     "ru": "3",
+     "en": "3"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-N01",
+  "level": 3,
+  "kind": "NUMERIC",
+  "forms": [
+   "L3C"
+  ],
+  "rule": "arith+7",
+  "b": -0.99,
+  "answer": "F",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n27, 34, 41, 48, 55, ?",
+   "ru": "Продолжите ряд:\n27, 34, 41, 48, 55, ?",
+   "en": "Continue the sequence:\n27, 34, 41, 48, 55, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "61",
+     "ru": "61",
+     "en": "61"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "64",
+     "ru": "64",
+     "en": "64"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "55",
+     "ru": "55",
+     "en": "55"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "63",
+     "ru": "63",
+     "en": "63"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "70",
+     "ru": "70",
+     "en": "70"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "62",
+     "ru": "62",
+     "en": "62"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-N02",
+  "level": 3,
+  "kind": "NUMERIC",
+  "forms": [
+   "L3D"
+  ],
+  "rule": "geom×3",
+  "b": -0.53,
+  "answer": "C",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n2, 6, 18, 54, 162, ?",
+   "ru": "Продолжите ряд:\n2, 6, 18, 54, 162, ?",
+   "en": "Continue the sequence:\n2, 6, 18, 54, 162, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "488",
+     "ru": "488",
+     "en": "488"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "487",
+     "ru": "487",
+     "en": "487"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "486",
+     "ru": "486",
+     "en": "486"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "490",
+     "ru": "490",
+     "en": "490"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "489",
+     "ru": "489",
+     "en": "489"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "648",
+     "ru": "648",
+     "en": "648"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-N03",
+  "level": 3,
+  "kind": "NUMERIC",
+  "forms": [],
+  "rule": "growing+2",
+  "b": -0.38,
+  "answer": "F",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n6, 8, 11, 15, 20, 26, ?",
+   "ru": "Продолжите ряд:\n6, 8, 11, 15, 20, 26, ?",
+   "en": "Continue the sequence:\n6, 8, 11, 15, 20, 26, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "32",
+     "ru": "32",
+     "en": "32"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "36",
+     "ru": "36",
+     "en": "36"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "34",
+     "ru": "34",
+     "en": "34"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "35",
+     "ru": "35",
+     "en": "35"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "31",
+     "ru": "31",
+     "en": "31"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "33",
+     "ru": "33",
+     "en": "33"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-N04",
+  "level": 3,
+  "kind": "NUMERIC",
+  "forms": [
+   "L3D"
+  ],
+  "rule": "fib",
+  "b": -0.0,
+  "answer": "D",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n1, 4, 5, 9, 14, 23, ?",
+   "ru": "Продолжите ряд:\n1, 4, 5, 9, 14, 23, ?",
+   "en": "Continue the sequence:\n1, 4, 5, 9, 14, 23, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "38",
+     "ru": "38",
+     "en": "38"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "46",
+     "ru": "46",
+     "en": "46"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "39",
+     "ru": "39",
+     "en": "39"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "37",
+     "ru": "37",
+     "en": "37"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "45",
+     "ru": "45",
+     "en": "45"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "40",
+     "ru": "40",
+     "en": "40"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-N05",
+  "level": 3,
+  "kind": "NUMERIC",
+  "forms": [
+   "L3C"
+  ],
+  "rule": "doubling-diff",
+  "b": 0.09,
+  "answer": "D",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n5, 6, 8, 12, 20, ?",
+   "ru": "Продолжите ряд:\n5, 6, 8, 12, 20, ?",
+   "en": "Continue the sequence:\n5, 6, 8, 12, 20, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "38",
+     "ru": "38",
+     "en": "38"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "37",
+     "ru": "37",
+     "en": "37"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "28",
+     "ru": "28",
+     "en": "28"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "36",
+     "ru": "36",
+     "en": "36"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "39",
+     "ru": "39",
+     "en": "39"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "32",
+     "ru": "32",
+     "en": "32"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-N06",
+  "level": 3,
+  "kind": "NUMERIC",
+  "forms": [
+   "L3C"
+  ],
+  "rule": "squares",
+  "b": -0.1,
+  "answer": "F",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n16, 25, 36, 49, 64, ?",
+   "ru": "Продолжите ряд:\n16, 25, 36, 49, 64, ?",
+   "en": "Continue the sequence:\n16, 25, 36, 49, 64, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "86",
+     "ru": "86",
+     "en": "86"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "84",
+     "ru": "84",
+     "en": "84"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "85",
+     "ru": "85",
+     "en": "85"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "82",
+     "ru": "82",
+     "en": "82"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "83",
+     "ru": "83",
+     "en": "83"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "81",
+     "ru": "81",
+     "en": "81"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-N07",
+  "level": 3,
+  "kind": "NUMERIC",
+  "forms": [
+   "L3D"
+  ],
+  "rule": "interleave+3/-2",
+  "b": 0.23,
+  "answer": "D",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n3, 26, 6, 24, 9, 22, 12, ?",
+   "ru": "Продолжите ряд:\n3, 26, 6, 24, 9, 22, 12, ?",
+   "en": "Continue the sequence:\n3, 26, 6, 24, 9, 22, 12, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "10",
+     "ru": "10",
+     "en": "10"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "23",
+     "ru": "23",
+     "en": "23"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "22",
+     "ru": "22",
+     "en": "22"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "20",
+     "ru": "20",
+     "en": "20"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "21",
+     "ru": "21",
+     "en": "21"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "24",
+     "ru": "24",
+     "en": "24"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-N08",
+  "level": 3,
+  "kind": "NUMERIC",
+  "forms": [],
+  "rule": "steps×2-1",
+  "b": 0.07,
+  "answer": "F",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n4, 8, 7, 14, 13, 26, ?",
+   "ru": "Продолжите ряд:\n4, 8, 7, 14, 13, 26, ?",
+   "en": "Continue the sequence:\n4, 8, 7, 14, 13, 26, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "27",
+     "ru": "27",
+     "en": "27"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "23",
+     "ru": "23",
+     "en": "23"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "26",
+     "ru": "26",
+     "en": "26"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "28",
+     "ru": "28",
+     "en": "28"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "52",
+     "ru": "52",
+     "en": "52"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "25",
+     "ru": "25",
+     "en": "25"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-N09",
+  "level": 3,
+  "kind": "NUMERIC",
+  "forms": [
+   "L3D"
+  ],
+  "rule": "mul×2+1",
+  "b": 0.33,
+  "answer": "D",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n1, 3, 7, 15, 31, ?",
+   "ru": "Продолжите ряд:\n1, 3, 7, 15, 31, ?",
+   "en": "Continue the sequence:\n1, 3, 7, 15, 31, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "67",
+     "ru": "67",
+     "en": "67"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "66",
+     "ru": "66",
+     "en": "66"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "68",
+     "ru": "68",
+     "en": "68"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "63",
+     "ru": "63",
+     "en": "63"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "64",
+     "ru": "64",
+     "en": "64"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "65",
+     "ru": "65",
+     "en": "65"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-N10",
+  "level": 3,
+  "kind": "NUMERIC",
+  "forms": [
+   "L3C"
+  ],
+  "rule": "second-order 2/3",
+  "b": 0.47,
+  "answer": "E",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n4, 6, 11, 19, 30, ?",
+   "ru": "Продолжите ряд:\n4, 6, 11, 19, 30, ?",
+   "en": "Continue the sequence:\n4, 6, 11, 19, 30, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "41",
+     "ru": "41",
+     "en": "41"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "45",
+     "ru": "45",
+     "en": "45"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "43",
+     "ru": "43",
+     "en": "43"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "47",
+     "ru": "47",
+     "en": "47"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "44",
+     "ru": "44",
+     "en": "44"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "42",
+     "ru": "42",
+     "en": "42"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-V01",
+  "level": 3,
+  "kind": "VERBAL",
+  "forms": [
+   "L3C"
+  ],
+  "rule": "analogy",
+  "b": -0.55,
+  "answer": "A",
+  "stem": {
+   "uz": "Munosabatni toping:\nMuallif — kitob, bastakor — ?",
+   "ru": "Найдите связь:\nПисатель — книга, композитор — ?",
+   "en": "Find the relation:\nAuthor — book, composer — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "musiqa",
+     "ru": "музыка",
+     "en": "music"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "xonanda",
+     "ru": "певец",
+     "en": "singer"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "pianino",
+     "ru": "пианино",
+     "en": "piano"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "sahna",
+     "ru": "сцена",
+     "en": "stage"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-V02",
+  "level": 3,
+  "kind": "VERBAL",
+  "forms": [
+   "L3D"
+  ],
+  "rule": "antonym",
+  "b": -0.49,
+  "answer": "B",
+  "stem": {
+   "uz": "“Saxiy” so‘ziga zid ma’noli so‘zni toping.",
+   "ru": "Найдите антоним к слову «щедрый».",
+   "en": "Find the opposite of “generous”."
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "mehribon",
+     "ru": "добрый",
+     "en": "kind"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "baxil",
+     "ru": "жадный",
+     "en": "stingy"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "kamtar",
+     "ru": "скромный",
+     "en": "modest"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "boy",
+     "ru": "богатый",
+     "en": "rich"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-V03",
+  "level": 3,
+  "kind": "VERBAL",
+  "forms": [
+   "L3D"
+  ],
+  "rule": "odd_one_out",
+  "b": -0.44,
+  "answer": "B",
+  "stem": {
+   "uz": "Qaysi biri ortiqcha?",
+   "ru": "Что лишнее?",
+   "en": "Which one does not belong?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "Merkuriy",
+     "ru": "Меркурий",
+     "en": "Mercury"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "Oy",
+     "ru": "Луна",
+     "en": "Moon"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "Mars",
+     "ru": "Марс",
+     "en": "Mars"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "Venera",
+     "ru": "Венера",
+     "en": "Venus"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-V04",
+  "level": 3,
+  "kind": "VERBAL",
+  "forms": [],
+  "rule": "analogy",
+  "b": -0.35,
+  "answer": "A",
+  "stem": {
+   "uz": "Munosabatni toping:\nUrug‘ — daraxt, tuxum — ?",
+   "ru": "Найдите связь:\nСемя — дерево, яйцо — ?",
+   "en": "Find the relation:\nSeed — tree, egg — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "qush",
+     "ru": "птица",
+     "en": "bird"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "ovqat",
+     "ru": "еда",
+     "en": "food"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "uya",
+     "ru": "гнездо",
+     "en": "nest"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "po‘choq",
+     "ru": "скорлупа",
+     "en": "shell"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-V05",
+  "level": 3,
+  "kind": "VERBAL",
+  "forms": [
+   "L3C"
+  ],
+  "rule": "analogy",
+  "b": -0.26,
+  "answer": "C",
+  "stem": {
+   "uz": "Munosabatni toping:\nQurg‘oqchilik — yomg‘ir, qorong‘ilik — ?",
+   "ru": "Найдите связь:\nЗасуха — дождь, темнота — ?",
+   "en": "Find the relation:\nDrought — rain, darkness — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "oy",
+     "ru": "луна",
+     "en": "moon"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "tun",
+     "ru": "ночь",
+     "en": "night"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "yorug‘lik",
+     "ru": "свет",
+     "en": "light"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "soya",
+     "ru": "тень",
+     "en": "shadow"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-V06",
+  "level": 3,
+  "kind": "VERBAL",
+  "forms": [
+   "L3C"
+  ],
+  "rule": "analogy",
+  "b": 0.03,
+  "answer": "B",
+  "stem": {
+   "uz": "Munosabatni toping:\nSekin — tez, ehtiyotkor — ?",
+   "ru": "Найдите связь:\nМедленный — быстрый, осторожный — ?",
+   "en": "Find the relation:\nSlow — fast, careful — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "kuchli",
+     "ru": "сильный",
+     "en": "strong"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "beparvo",
+     "ru": "небрежный",
+     "en": "careless"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "aqlli",
+     "ru": "умный",
+     "en": "clever"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "jim",
+     "ru": "тихий",
+     "en": "quiet"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-V07",
+  "level": 3,
+  "kind": "VERBAL",
+  "forms": [
+   "L3D"
+  ],
+  "rule": "odd_pair",
+  "b": 0.35,
+  "answer": "D",
+  "stem": {
+   "uz": "Qaysi juftlik qolganlariga o‘xshamaydi?",
+   "ru": "Какая пара не похожа на остальные?",
+   "en": "Which pair is different from the others?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "issiq — sovuq",
+     "ru": "горячий — холодный",
+     "en": "hot — cold"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "kun — tun",
+     "ru": "день — ночь",
+     "en": "day — night"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "baland — past",
+     "ru": "высокий — низкий",
+     "en": "high — low"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "katta — ulkan",
+     "ru": "большой — огромный",
+     "en": "big — huge"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-G01",
+  "level": 3,
+  "kind": "LOGIC",
+  "forms": [
+   "L3C"
+  ],
+  "rule": "calendar",
+  "b": -0.51,
+  "answer": "D",
+  "stem": {
+   "uz": "Agar ertaga juma bo‘lsa, kecha qaysi kun edi?",
+   "ru": "Если завтра пятница, какой день был вчера?",
+   "en": "If tomorrow is Friday, what day was yesterday?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "shanba",
+     "ru": "суббота",
+     "en": "Saturday"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "payshanba",
+     "ru": "четверг",
+     "en": "Thursday"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "seshanba",
+     "ru": "вторник",
+     "en": "Tuesday"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "chorshanba",
+     "ru": "среда",
+     "en": "Wednesday"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-G02",
+  "level": 3,
+  "kind": "LOGIC",
+  "forms": [
+   "L3D"
+  ],
+  "rule": "position",
+  "b": -0.38,
+  "answer": "C",
+  "stem": {
+   "uz": "Qatorda 7 ta o‘quvchi turibdi. Kamola chapdan 3-o‘rinda. U o‘ngdan nechanchi?",
+   "ru": "В ряду стоят 7 учеников. Камола третья слева. Какая она по счёту справа?",
+   "en": "Seven pupils stand in a row. Kamola is third from the left. What is her position from the right?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "6",
+     "ru": "6",
+     "en": "6"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "3",
+     "ru": "3",
+     "en": "3"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "5",
+     "ru": "5",
+     "en": "5"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "4",
+     "ru": "4",
+     "en": "4"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-G03",
+  "level": 3,
+  "kind": "LOGIC",
+  "forms": [
+   "L3D"
+  ],
+  "rule": "condition",
+  "b": -0.26,
+  "answer": "D",
+  "stem": {
+   "uz": "Shoshayotgan hamma odam yuguradi. Anvar yugurmayapti. Demak:",
+   "ru": "Каждый, кто спешит, бежит. Анвар не бежит. Значит:",
+   "en": "Everyone who is in a hurry runs. Anvar is not running. So:"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "Anvar charchagan",
+     "ru": "Анвар устал",
+     "en": "Anvar is tired"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "Bilib bo‘lmaydi",
+     "ru": "Нельзя определить",
+     "en": "Cannot be determined"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "Anvar shoshyapti",
+     "ru": "Анвар спешит",
+     "en": "Anvar is in a hurry"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "Anvar shoshmayapti",
+     "ru": "Анвар не спешит",
+     "en": "Anvar is not in a hurry"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-G04",
+  "level": 3,
+  "kind": "LOGIC",
+  "forms": [],
+  "rule": "syllogism",
+  "b": -0.3,
+  "answer": "A",
+  "stem": {
+   "uz": "Hamma A — B. Hamma B — C. Qaysi xulosa albatta to‘g‘ri?",
+   "ru": "Все A — это B. Все B — это C. Какой вывод обязательно верен?",
+   "en": "All A are B. All B are C. Which conclusion must be true?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "Hamma A — C",
+     "ru": "Все A — это C",
+     "en": "All A are C"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "Hamma C — A",
+     "ru": "Все C — это A",
+     "en": "All C are A"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "Hech bir A — C emas",
+     "ru": "Ни одно A не является C",
+     "en": "No A is C"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "Ba’zi C — A emas",
+     "ru": "Некоторые C — не A",
+     "en": "Some C are not A"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-G05",
+  "level": 3,
+  "kind": "LOGIC",
+  "forms": [
+   "L3C"
+  ],
+  "rule": "combinatorics",
+  "b": 0.11,
+  "answer": "D",
+  "stem": {
+   "uz": "Besh kishi har biri qolganlarning har biri bilan bir martadan qo‘l berib ko‘rishdi. Jami nechta qo‘l berish bo‘ldi?",
+   "ru": "Пять человек поздоровались за руку, каждый с каждым по одному разу. Сколько было рукопожатий?",
+   "en": "Five people each shook hands once with every other person. How many handshakes were there?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "20",
+     "ru": "20",
+     "en": "20"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "5",
+     "ru": "5",
+     "en": "5"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "25",
+     "ru": "25",
+     "en": "25"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "10",
+     "ru": "10",
+     "en": "10"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-G06",
+  "level": 3,
+  "kind": "LOGIC",
+  "forms": [
+   "L3C"
+  ],
+  "rule": "digits",
+  "b": 0.31,
+  "answer": "B",
+  "stem": {
+   "uz": "1 dan 50 gacha bo‘lgan sonlardan nechtasida “5” raqami bor?",
+   "ru": "Сколько чисел от 1 до 50 содержат цифру «5»?",
+   "en": "How many numbers from 1 to 50 contain the digit “5”?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "15",
+     "ru": "15",
+     "en": "15"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "6",
+     "ru": "6",
+     "en": "6"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "5",
+     "ru": "5",
+     "en": "5"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "10",
+     "ru": "10",
+     "en": "10"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L3-G07",
+  "level": 3,
+  "kind": "LOGIC",
+  "forms": [
+   "L3D"
+  ],
+  "rule": "labels",
+  "b": 0.59,
+  "answer": "A",
+  "stem": {
+   "uz": "Uchta qutida: faqat olma, faqat nok va aralash meva. Hamma yorliqlar noto‘g‘ri. “Aralash” yozilgan qutidan bitta meva olindi — olma. Bu qutida nima bor?",
+   "ru": "Три коробки: только яблоки, только груши и смесь. Все надписи неверны. Из коробки с надписью «смесь» достали одно яблоко. Что в этой коробке?",
+   "en": "Three boxes hold only apples, only pears, and a mix. Every label is wrong. One fruit taken from the box labelled “mix” is an apple. What is in that box?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "faqat olma",
+     "ru": "только яблоки",
+     "en": "only apples"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "Bilib bo‘lmaydi",
+     "ru": "Нельзя определить",
+     "en": "Cannot be determined"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "aralash meva",
+     "ru": "смесь",
+     "en": "a mix"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "faqat nok",
+     "ru": "только груши",
+     "en": "only pears"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-N01",
+  "level": 4,
+  "kind": "NUMERIC",
+  "forms": [
+   "L4C"
+  ],
+  "rule": "geom×3 gap",
+  "b": -0.05,
+  "answer": "C",
+  "stem": {
+   "uz": "Yetishmayotgan sonni toping:\n4, 12, ?, 108, 324, 972",
+   "ru": "Найдите пропущенное число:\n4, 12, ?, 108, 324, 972",
+   "en": "Find the missing number:\n4, 12, ?, 108, 324, 972"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "107",
+     "ru": "107",
+     "en": "107"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "61",
+     "ru": "61",
+     "en": "61"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "36",
+     "ru": "36",
+     "en": "36"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "38",
+     "ru": "38",
+     "en": "38"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "20",
+     "ru": "20",
+     "en": "20"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "37",
+     "ru": "37",
+     "en": "37"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-N02",
+  "level": 4,
+  "kind": "NUMERIC",
+  "forms": [
+   "L4D"
+  ],
+  "rule": "doubling-diff",
+  "b": 0.06,
+  "answer": "C",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n13, 14, 16, 20, 28, ?",
+   "ru": "Продолжите ряд:\n13, 14, 16, 20, 28, ?",
+   "en": "Continue the sequence:\n13, 14, 16, 20, 28, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "48",
+     "ru": "48",
+     "en": "48"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "46",
+     "ru": "46",
+     "en": "46"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "44",
+     "ru": "44",
+     "en": "44"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "45",
+     "ru": "45",
+     "en": "45"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "47",
+     "ru": "47",
+     "en": "47"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "49",
+     "ru": "49",
+     "en": "49"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-N03",
+  "level": 4,
+  "kind": "NUMERIC",
+  "forms": [],
+  "rule": "fib",
+  "b": 0.07,
+  "answer": "D",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n2, 4, 6, 10, 16, 26, 42, ?",
+   "ru": "Продолжите ряд:\n2, 4, 6, 10, 16, 26, 42, ?",
+   "en": "Continue the sequence:\n2, 4, 6, 10, 16, 26, 42, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "83",
+     "ru": "83",
+     "en": "83"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "84",
+     "ru": "84",
+     "en": "84"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "69",
+     "ru": "69",
+     "en": "69"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "68",
+     "ru": "68",
+     "en": "68"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "58",
+     "ru": "58",
+     "en": "58"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "67",
+     "ru": "67",
+     "en": "67"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-N04",
+  "level": 4,
+  "kind": "NUMERIC",
+  "forms": [
+   "L4D"
+  ],
+  "rule": "squares+1",
+  "b": 0.2,
+  "answer": "B",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n26, 37, 50, 65, 82, ?",
+   "ru": "Продолжите ряд:\n26, 37, 50, 65, 82, ?",
+   "en": "Continue the sequence:\n26, 37, 50, 65, 82, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "100",
+     "ru": "100",
+     "en": "100"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "101",
+     "ru": "101",
+     "en": "101"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "104",
+     "ru": "104",
+     "en": "104"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "102",
+     "ru": "102",
+     "en": "102"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "103",
+     "ru": "103",
+     "en": "103"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "99",
+     "ru": "99",
+     "en": "99"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-N05",
+  "level": 4,
+  "kind": "NUMERIC",
+  "forms": [
+   "L4C"
+  ],
+  "rule": "second-order 3/2",
+  "b": 0.39,
+  "answer": "C",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n9, 12, 17, 24, 33, ?",
+   "ru": "Продолжите ряд:\n9, 12, 17, 24, 33, ?",
+   "en": "Continue the sequence:\n9, 12, 17, 24, 33, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "48",
+     "ru": "48",
+     "en": "48"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "47",
+     "ru": "47",
+     "en": "47"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "44",
+     "ru": "44",
+     "en": "44"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "45",
+     "ru": "45",
+     "en": "45"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "42",
+     "ru": "42",
+     "en": "42"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "46",
+     "ru": "46",
+     "en": "46"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-N06",
+  "level": 4,
+  "kind": "NUMERIC",
+  "forms": [
+   "L4C"
+  ],
+  "rule": "product n(n+1)",
+  "b": 0.4,
+  "answer": "B",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n6, 12, 20, 30, 42, ?",
+   "ru": "Продолжите ряд:\n6, 12, 20, 30, 42, ?",
+   "en": "Continue the sequence:\n6, 12, 20, 30, 42, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "57",
+     "ru": "57",
+     "en": "57"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "56",
+     "ru": "56",
+     "en": "56"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "54",
+     "ru": "54",
+     "en": "54"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "49",
+     "ru": "49",
+     "en": "49"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "58",
+     "ru": "58",
+     "en": "58"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "59",
+     "ru": "59",
+     "en": "59"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-N07",
+  "level": 4,
+  "kind": "NUMERIC",
+  "forms": [
+   "L4D"
+  ],
+  "rule": "mul×3-1",
+  "b": 0.33,
+  "answer": "B",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n2, 5, 14, 41, 122, ?",
+   "ru": "Продолжите ряд:\n2, 5, 14, 41, 122, ?",
+   "en": "Continue the sequence:\n2, 5, 14, 41, 122, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "368",
+     "ru": "368",
+     "en": "368"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "365",
+     "ru": "365",
+     "en": "365"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "367",
+     "ru": "367",
+     "en": "367"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "370",
+     "ru": "370",
+     "en": "370"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "369",
+     "ru": "369",
+     "en": "369"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "366",
+     "ru": "366",
+     "en": "366"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-N08",
+  "level": 4,
+  "kind": "NUMERIC",
+  "forms": [],
+  "rule": "steps×2+3",
+  "b": 0.66,
+  "answer": "F",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n4, 8, 11, 22, 25, 50, ?",
+   "ru": "Продолжите ряд:\n4, 8, 11, 22, 25, 50, ?",
+   "en": "Continue the sequence:\n4, 8, 11, 22, 25, 50, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "52",
+     "ru": "52",
+     "en": "52"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "51",
+     "ru": "51",
+     "en": "51"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "50",
+     "ru": "50",
+     "en": "50"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "100",
+     "ru": "100",
+     "en": "100"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "54",
+     "ru": "54",
+     "en": "54"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "53",
+     "ru": "53",
+     "en": "53"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-N09",
+  "level": 4,
+  "kind": "NUMERIC",
+  "forms": [
+   "L4D"
+  ],
+  "rule": "cubes",
+  "b": 0.58,
+  "answer": "B",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n8, 27, 64, 125, 216, ?",
+   "ru": "Продолжите ряд:\n8, 27, 64, 125, 216, ?",
+   "en": "Continue the sequence:\n8, 27, 64, 125, 216, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "342",
+     "ru": "342",
+     "en": "342"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "343",
+     "ru": "343",
+     "en": "343"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "341",
+     "ru": "341",
+     "en": "341"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "307",
+     "ru": "307",
+     "en": "307"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "344",
+     "ru": "344",
+     "en": "344"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "340",
+     "ru": "340",
+     "en": "340"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-N10",
+  "level": 4,
+  "kind": "NUMERIC",
+  "forms": [
+   "L4C"
+  ],
+  "rule": "interleave×2/+5",
+  "b": 0.67,
+  "answer": "D",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n5, 22, 10, 27, 20, 32, 40, ?",
+   "ru": "Продолжите ряд:\n5, 22, 10, 27, 20, 32, 40, ?",
+   "en": "Continue the sequence:\n5, 22, 10, 27, 20, 32, 40, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "38",
+     "ru": "38",
+     "en": "38"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "40",
+     "ru": "40",
+     "en": "40"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "39",
+     "ru": "39",
+     "en": "39"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "37",
+     "ru": "37",
+     "en": "37"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "42",
+     "ru": "42",
+     "en": "42"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "45",
+     "ru": "45",
+     "en": "45"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-V01",
+  "level": 4,
+  "kind": "VERBAL",
+  "forms": [
+   "L4C"
+  ],
+  "rule": "analogy",
+  "b": -0.05,
+  "answer": "C",
+  "stem": {
+   "uz": "Munosabatni toping:\nKo‘z — ko‘rish, teri — ?",
+   "ru": "Найдите связь:\nГлаз — зрение, кожа — ?",
+   "en": "Find the relation:\nEye — sight, skin — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "eshitish",
+     "ru": "слух",
+     "en": "hearing"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "gapirish",
+     "ru": "речь",
+     "en": "speech"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "sezish",
+     "ru": "осязание",
+     "en": "touch"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "nafas olish",
+     "ru": "дыхание",
+     "en": "breathing"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-V02",
+  "level": 4,
+  "kind": "VERBAL",
+  "forms": [
+   "L4D"
+  ],
+  "rule": "analogy",
+  "b": -0.02,
+  "answer": "A",
+  "stem": {
+   "uz": "Munosabatni toping:\nKutubxona — kitoblar, arxiv — ?",
+   "ru": "Найдите связь:\nБиблиотека — книги, архив — ?",
+   "en": "Find the relation:\nLibrary — books, archive — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "hujjatlar",
+     "ru": "документы",
+     "en": "records"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "javonlar",
+     "ru": "полки",
+     "en": "shelves"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "o‘quvchilar",
+     "ru": "читатели",
+     "en": "readers"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "qog‘oz",
+     "ru": "бумага",
+     "en": "paper"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-V03",
+  "level": 4,
+  "kind": "VERBAL",
+  "forms": [
+   "L4D"
+  ],
+  "rule": "analogy",
+  "b": 0.21,
+  "answer": "C",
+  "stem": {
+   "uz": "Munosabatni toping:\nRetsept — taom, chizma — ?",
+   "ru": "Найдите связь:\nРецепт — блюдо, чертёж — ?",
+   "en": "Find the relation:\nRecipe — dish, blueprint — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "qog‘oz",
+     "ru": "бумага",
+     "en": "paper"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "me’mor",
+     "ru": "архитектор",
+     "en": "architect"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "bino",
+     "ru": "здание",
+     "en": "building"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "chizg‘ich",
+     "ru": "линейка",
+     "en": "ruler"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-V04",
+  "level": 4,
+  "kind": "VERBAL",
+  "forms": [],
+  "rule": "analogy",
+  "b": 0.32,
+  "answer": "C",
+  "stem": {
+   "uz": "Munosabatni toping:\nShoshqaloq — sabrli, isrofgar — ?",
+   "ru": "Найдите связь:\nТоропливый — терпеливый, расточительный — ?",
+   "en": "Find the relation:\nHasty — patient, wasteful — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "saxiy",
+     "ru": "щедрый",
+     "en": "generous"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "dangasa",
+     "ru": "ленивый",
+     "en": "lazy"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "tejamkor",
+     "ru": "бережливый",
+     "en": "thrifty"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "boy",
+     "ru": "богатый",
+     "en": "rich"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-V05",
+  "level": 4,
+  "kind": "VERBAL",
+  "forms": [
+   "L4C"
+  ],
+  "rule": "odd_one_out",
+  "b": 0.5,
+  "answer": "A",
+  "stem": {
+   "uz": "Qaysi biri ortiqcha?",
+   "ru": "Что лишнее?",
+   "en": "Which one does not belong?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "tasodif",
+     "ru": "случайность",
+     "en": "chance"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "xulosa",
+     "ru": "вывод",
+     "en": "conclusion"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "tahlil",
+     "ru": "анализ",
+     "en": "analysis"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "kuzatish",
+     "ru": "наблюдение",
+     "en": "observation"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-V06",
+  "level": 4,
+  "kind": "VERBAL",
+  "forms": [
+   "L4C"
+  ],
+  "rule": "meaning",
+  "b": 0.49,
+  "answer": "B",
+  "stem": {
+   "uz": "Boshqalarning fikrini qabul qilishni istamaydigan odamni qaysi so‘z eng aniq ifodalaydi?",
+   "ru": "Какое слово точнее всего описывает человека, который не желает принимать чужое мнение?",
+   "en": "Which word best describes a person who refuses to accept other people’s views?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "ehtiyotkor",
+     "ru": "осторожный",
+     "en": "cautious"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "murosasiz",
+     "ru": "нетерпимый",
+     "en": "intolerant"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "kamtar",
+     "ru": "скромный",
+     "en": "modest"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "xushmuomala",
+     "ru": "вежливый",
+     "en": "polite"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-V07",
+  "level": 4,
+  "kind": "VERBAL",
+  "forms": [
+   "L4D"
+  ],
+  "rule": "odd_pair",
+  "b": 0.73,
+  "answer": "D",
+  "stem": {
+   "uz": "Qaysi juftlikdagi munosabat boshqacha?",
+   "ru": "В какой паре связь другая?",
+   "en": "In which pair is the relation different?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "atirgul — gul",
+     "ru": "роза — цветок",
+     "en": "rose — flower"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "olma — meva",
+     "ru": "яблоко — фрукт",
+     "en": "apple — fruit"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "it — hayvon",
+     "ru": "собака — животное",
+     "en": "dog — animal"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "g‘ildirak — mashina",
+     "ru": "колесо — машина",
+     "en": "wheel — car"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-G01",
+  "level": 4,
+  "kind": "LOGIC",
+  "forms": [
+   "L4C"
+  ],
+  "rule": "order",
+  "b": -0.05,
+  "answer": "C",
+  "stem": {
+   "uz": "Qizil shar ko‘k shardan og‘ir. Yashil shar qizildan og‘ir. Eng yengili qaysi?",
+   "ru": "Красный шар тяжелее синего. Зелёный тяжелее красного. Какой самый лёгкий?",
+   "en": "The red ball is heavier than the blue one. The green ball is heavier than the red one. Which is the lightest?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "qizil",
+     "ru": "красный",
+     "en": "red"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "yashil",
+     "ru": "зелёный",
+     "en": "green"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "ko‘k",
+     "ru": "синий",
+     "en": "blue"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "Bilib bo‘lmaydi",
+     "ru": "Нельзя определить",
+     "en": "Cannot be determined"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-G02",
+  "level": 4,
+  "kind": "LOGIC",
+  "forms": [
+   "L4D"
+  ],
+  "rule": "syllogism",
+  "b": 0.12,
+  "answer": "A",
+  "stem": {
+   "uz": "Hech bir baliq sutemizuvchi emas. Delfin — sutemizuvchi. Demak:",
+   "ru": "Ни одна рыба не является млекопитающим. Дельфин — млекопитающее. Значит:",
+   "en": "No fish is a mammal. A dolphin is a mammal. So:"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "delfin baliq emas",
+     "ru": "дельфин не рыба",
+     "en": "a dolphin is not a fish"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "Bilib bo‘lmaydi",
+     "ru": "Нельзя определить",
+     "en": "Cannot be determined"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "ba’zi baliqlar sutemizuvchi",
+     "ru": "некоторые рыбы — млекопитающие",
+     "en": "some fish are mammals"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "delfin — baliq",
+     "ru": "дельфин — рыба",
+     "en": "a dolphin is a fish"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-G03",
+  "level": 4,
+  "kind": "LOGIC",
+  "forms": [
+   "L4D"
+  ],
+  "rule": "equation",
+  "b": 0.21,
+  "answer": "B",
+  "stem": {
+   "uz": "Ikki sonning yig‘indisi 20 ga, ayirmasi 4 ga teng. Kattasi nechaga teng?",
+   "ru": "Сумма двух чисел равна 20, разность — 4. Чему равно большее число?",
+   "en": "Two numbers add up to 20 and differ by 4. What is the larger number?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "16",
+     "ru": "16",
+     "en": "16"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "12",
+     "ru": "12",
+     "en": "12"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "8",
+     "ru": "8",
+     "en": "8"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "10",
+     "ru": "10",
+     "en": "10"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-G04",
+  "level": 4,
+  "kind": "LOGIC",
+  "forms": [],
+  "rule": "contrapositive",
+  "b": 0.2,
+  "answer": "C",
+  "stem": {
+   "uz": "“Hamma rassomlar ijodkor” — to‘g‘ri gap. Qaysi gap ham albatta to‘g‘ri?",
+   "ru": "«Все художники — творческие люди» — верно. Какое утверждение тоже обязательно верно?",
+   "en": "“All artists are creative” is true. Which statement must also be true?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "Ba’zi rassomlar ijodkor emas",
+     "ru": "Некоторые художники не творческие",
+     "en": "Some artists are not creative"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "Hamma ijodkorlar rassom",
+     "ru": "Все творческие люди — художники",
+     "en": "All creative people are artists"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "Ijodkor bo‘lmagan odam rassom emas",
+     "ru": "Нетворческий человек не художник",
+     "en": "A person who is not creative is not an artist"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "Faqat rassomlar ijodkor",
+     "ru": "Только художники — творческие",
+     "en": "Only artists are creative"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-G05",
+  "level": 4,
+  "kind": "LOGIC",
+  "forms": [
+   "L4C"
+  ],
+  "rule": "time",
+  "b": 0.35,
+  "answer": "A",
+  "stem": {
+   "uz": "Soat 12:00. Avval 90 daqiqa, keyin yana 2 soat 45 daqiqa o‘tdi. Soat necha bo‘ldi?",
+   "ru": "Сейчас 12:00. Прошло 90 минут, а потом ещё 2 часа 45 минут. Сколько теперь времени?",
+   "en": "It is 12:00. First 90 minutes pass, then another 2 hours 45 minutes. What time is it now?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "16:15",
+     "ru": "16:15",
+     "en": "16:15"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "15:45",
+     "ru": "15:45",
+     "en": "15:45"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "16:45",
+     "ru": "16:45",
+     "en": "16:45"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "15:15",
+     "ru": "15:15",
+     "en": "15:15"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-G06",
+  "level": 4,
+  "kind": "LOGIC",
+  "forms": [
+   "L4C"
+  ],
+  "rule": "rate",
+  "b": 0.44,
+  "answer": "C",
+  "stem": {
+   "uz": "3 ta usta 3 ta devorni 3 kunda bo‘yaydi. 6 ta usta 6 ta devorni necha kunda bo‘yaydi?",
+   "ru": "3 мастера красят 3 стены за 3 дня. За сколько дней 6 мастеров покрасят 6 стен?",
+   "en": "3 painters paint 3 walls in 3 days. How many days do 6 painters need for 6 walls?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "6",
+     "ru": "6",
+     "en": "6"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "2",
+     "ru": "2",
+     "en": "2"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "3",
+     "ru": "3",
+     "en": "3"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "12",
+     "ru": "12",
+     "en": "12"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L4-G07",
+  "level": 4,
+  "kind": "LOGIC",
+  "forms": [
+   "L4D"
+  ],
+  "rule": "circle",
+  "b": 0.46,
+  "answer": "C",
+  "stem": {
+   "uz": "6 o‘quvchi davra bo‘lib o‘tiribdi, har birida 1 ta kitob bor. Har biri kitobini o‘ngdagi qo‘shnisiga berdi. Endi har birida nechta kitob bor?",
+   "ru": "6 учеников сидят по кругу, у каждого 1 книга. Каждый передал свою книгу соседу справа. Сколько книг теперь у каждого?",
+   "en": "6 pupils sit in a circle, each with 1 book. Each passes their book to the neighbour on the right. How many books does each have now?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "2",
+     "ru": "2",
+     "en": "2"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "0",
+     "ru": "0",
+     "en": "0"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "1",
+     "ru": "1",
+     "en": "1"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "6",
+     "ru": "6",
+     "en": "6"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-N01",
+  "level": 5,
+  "kind": "NUMERIC",
+  "forms": [
+   "L5C"
+  ],
+  "rule": "squares desc",
+  "b": 0.09,
+  "answer": "B",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n81, 64, 49, 36, 25, ?",
+   "ru": "Продолжите ряд:\n81, 64, 49, 36, 25, ?",
+   "en": "Continue the sequence:\n81, 64, 49, 36, 25, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "20",
+     "ru": "20",
+     "en": "20"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "16",
+     "ru": "16",
+     "en": "16"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "18",
+     "ru": "18",
+     "en": "18"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "17",
+     "ru": "17",
+     "en": "17"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "14",
+     "ru": "14",
+     "en": "14"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "19",
+     "ru": "19",
+     "en": "19"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-N02",
+  "level": 5,
+  "kind": "NUMERIC",
+  "forms": [
+   "L5D"
+  ],
+  "rule": "doubling-diff gap",
+  "b": 0.63,
+  "answer": "D",
+  "stem": {
+   "uz": "Yetishmayotgan sonni toping:\n3, 5, 9, 17, ?, 65, 129",
+   "ru": "Найдите пропущенное число:\n3, 5, 9, 17, ?, 65, 129",
+   "en": "Find the missing number:\n3, 5, 9, 17, ?, 65, 129"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "25",
+     "ru": "25",
+     "en": "25"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "30",
+     "ru": "30",
+     "en": "30"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "64",
+     "ru": "64",
+     "en": "64"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "33",
+     "ru": "33",
+     "en": "33"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "32",
+     "ru": "32",
+     "en": "32"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "31",
+     "ru": "31",
+     "en": "31"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-N03",
+  "level": 5,
+  "kind": "NUMERIC",
+  "forms": [],
+  "rule": "product gap",
+  "b": 0.75,
+  "answer": "F",
+  "stem": {
+   "uz": "Yetishmayotgan sonni toping:\n2, 6, 12, ?, 30, 42, 56",
+   "ru": "Найдите пропущенное число:\n2, 6, 12, ?, 30, 42, 56",
+   "en": "Find the missing number:\n2, 6, 12, ?, 30, 42, 56"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "18",
+     "ru": "18",
+     "en": "18"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "29",
+     "ru": "29",
+     "en": "29"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "19",
+     "ru": "19",
+     "en": "19"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "17",
+     "ru": "17",
+     "en": "17"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "22",
+     "ru": "22",
+     "en": "22"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "20",
+     "ru": "20",
+     "en": "20"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-N04",
+  "level": 5,
+  "kind": "NUMERIC",
+  "forms": [
+   "L5D"
+  ],
+  "rule": "mul×2-3",
+  "b": 0.81,
+  "answer": "D",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n6, 9, 15, 27, 51, ?",
+   "ru": "Продолжите ряд:\n6, 9, 15, 27, 51, ?",
+   "en": "Continue the sequence:\n6, 9, 15, 27, 51, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "96",
+     "ru": "96",
+     "en": "96"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "102",
+     "ru": "102",
+     "en": "102"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "97",
+     "ru": "97",
+     "en": "97"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "99",
+     "ru": "99",
+     "en": "99"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "95",
+     "ru": "95",
+     "en": "95"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "98",
+     "ru": "98",
+     "en": "98"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-N05",
+  "level": 5,
+  "kind": "NUMERIC",
+  "forms": [
+   "L5C"
+  ],
+  "rule": "cubes+1",
+  "b": 0.73,
+  "answer": "C",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n9, 28, 65, 126, 217, ?",
+   "ru": "Продолжите ряд:\n9, 28, 65, 126, 217, ?",
+   "en": "Continue the sequence:\n9, 28, 65, 126, 217, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "346",
+     "ru": "346",
+     "en": "346"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "348",
+     "ru": "348",
+     "en": "348"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "344",
+     "ru": "344",
+     "en": "344"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "308",
+     "ru": "308",
+     "en": "308"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "345",
+     "ru": "345",
+     "en": "345"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "347",
+     "ru": "347",
+     "en": "347"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-N06",
+  "level": 5,
+  "kind": "NUMERIC",
+  "forms": [
+   "L5C"
+  ],
+  "rule": "steps×3-2",
+  "b": 0.85,
+  "answer": "D",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n2, 6, 4, 12, 10, 30, ?",
+   "ru": "Продолжите ряд:\n2, 6, 4, 12, 10, 30, ?",
+   "en": "Continue the sequence:\n2, 6, 4, 12, 10, 30, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "30",
+     "ru": "30",
+     "en": "30"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "29",
+     "ru": "29",
+     "en": "29"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "31",
+     "ru": "31",
+     "en": "31"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "28",
+     "ru": "28",
+     "en": "28"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "26",
+     "ru": "26",
+     "en": "26"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "90",
+     "ru": "90",
+     "en": "90"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-N07",
+  "level": 5,
+  "kind": "NUMERIC",
+  "forms": [
+   "L5D"
+  ],
+  "rule": "factorial-like",
+  "b": 1.05,
+  "answer": "E",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n1, 1, 2, 6, 24, 120, ?",
+   "ru": "Продолжите ряд:\n1, 1, 2, 6, 24, 120, ?",
+   "en": "Continue the sequence:\n1, 1, 2, 6, 24, 120, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "721",
+     "ru": "721",
+     "en": "721"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "723",
+     "ru": "723",
+     "en": "723"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "722",
+     "ru": "722",
+     "en": "722"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "600",
+     "ru": "600",
+     "en": "600"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "720",
+     "ru": "720",
+     "en": "720"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "144",
+     "ru": "144",
+     "en": "144"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-N08",
+  "level": 5,
+  "kind": "NUMERIC",
+  "forms": [],
+  "rule": "square-diffs",
+  "b": 0.9,
+  "answer": "E",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n4, 5, 9, 18, 34, 59, ?",
+   "ru": "Продолжите ряд:\n4, 5, 9, 18, 34, 59, ?",
+   "en": "Continue the sequence:\n4, 5, 9, 18, 34, 59, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "96",
+     "ru": "96",
+     "en": "96"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "99",
+     "ru": "99",
+     "en": "99"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "98",
+     "ru": "98",
+     "en": "98"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "100",
+     "ru": "100",
+     "en": "100"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "95",
+     "ru": "95",
+     "en": "95"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "97",
+     "ru": "97",
+     "en": "97"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-N09",
+  "level": 5,
+  "kind": "NUMERIC",
+  "forms": [
+   "L5D"
+  ],
+  "rule": "tribonacci",
+  "b": 1.1,
+  "answer": "E",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n2, 2, 5, 9, 16, 30, 55, ?",
+   "ru": "Продолжите ряд:\n2, 2, 5, 9, 16, 30, 55, ?",
+   "en": "Continue the sequence:\n2, 2, 5, 9, 16, 30, 55, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "100",
+     "ru": "100",
+     "en": "100"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "97",
+     "ru": "97",
+     "en": "97"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "80",
+     "ru": "80",
+     "en": "80"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "98",
+     "ru": "98",
+     "en": "98"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "101",
+     "ru": "101",
+     "en": "101"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "99",
+     "ru": "99",
+     "en": "99"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-N10",
+  "level": 5,
+  "kind": "NUMERIC",
+  "forms": [
+   "L5C"
+  ],
+  "rule": "interleave×3/-4",
+  "b": 1.07,
+  "answer": "E",
+  "stem": {
+   "uz": "Qatorni davom ettiring:\n3, 23, 9, 19, 27, 15, 81, ?",
+   "ru": "Продолжите ряд:\n3, 23, 9, 19, 27, 15, 81, ?",
+   "en": "Continue the sequence:\n3, 23, 9, 19, 27, 15, 81, ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "77",
+     "ru": "77",
+     "en": "77"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "7",
+     "ru": "7",
+     "en": "7"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "9",
+     "ru": "9",
+     "en": "9"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "10",
+     "ru": "10",
+     "en": "10"
+    }
+   },
+   {
+    "key": "E",
+    "text": {
+     "uz": "11",
+     "ru": "11",
+     "en": "11"
+    }
+   },
+   {
+    "key": "F",
+    "text": {
+     "uz": "8",
+     "ru": "8",
+     "en": "8"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-V01",
+  "level": 5,
+  "kind": "VERBAL",
+  "forms": [
+   "L5C"
+  ],
+  "rule": "antonym",
+  "b": -0.03,
+  "answer": "A",
+  "stem": {
+   "uz": "“Vaqtinchalik” so‘ziga zid ma’noli so‘zni toping.",
+   "ru": "Найдите антоним к слову «временный».",
+   "en": "Find the opposite of “temporary”."
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "doimiy",
+     "ru": "постоянный",
+     "en": "permanent"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "tezkor",
+     "ru": "срочный",
+     "en": "urgent"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "qisqa",
+     "ru": "короткий",
+     "en": "brief"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "yangi",
+     "ru": "новый",
+     "en": "new"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-V02",
+  "level": 5,
+  "kind": "VERBAL",
+  "forms": [
+   "L5D"
+  ],
+  "rule": "odd_one_out",
+  "b": 0.02,
+  "answer": "C",
+  "stem": {
+   "uz": "Qaysi biri ortiqcha?",
+   "ru": "Что лишнее?",
+   "en": "Which one does not belong?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "monarxiya",
+     "ru": "монархия",
+     "en": "monarchy"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "demokratiya",
+     "ru": "демократия",
+     "en": "democracy"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "iqlim",
+     "ru": "климат",
+     "en": "climate"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "respublika",
+     "ru": "республика",
+     "en": "republic"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-V03",
+  "level": 5,
+  "kind": "VERBAL",
+  "forms": [
+   "L5D"
+  ],
+  "rule": "analogy",
+  "b": 0.13,
+  "answer": "B",
+  "stem": {
+   "uz": "Munosabatni toping:\nKirish — xotima, muqaddima — ?",
+   "ru": "Найдите связь:\nВступление — заключение, пролог — ?",
+   "en": "Find the relation:\nIntroduction — conclusion, prologue — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "bob",
+     "ru": "глава",
+     "en": "chapter"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "epilog",
+     "ru": "эпилог",
+     "en": "epilogue"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "sarlavha",
+     "ru": "заголовок",
+     "en": "title"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "mavzu",
+     "ru": "тема",
+     "en": "theme"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-V04",
+  "level": 5,
+  "kind": "VERBAL",
+  "forms": [],
+  "rule": "analogy",
+  "b": 0.48,
+  "answer": "C",
+  "stem": {
+   "uz": "Munosabatni toping:\nEmpatiya — tushunish, skeptitsizm — ?",
+   "ru": "Найдите связь:\nЭмпатия — понимание, скептицизм — ?",
+   "en": "Find the relation:\nEmpathy — understanding, scepticism — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "qo‘rquv",
+     "ru": "страх",
+     "en": "fear"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "sabr",
+     "ru": "терпение",
+     "en": "patience"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "shubha",
+     "ru": "сомнение",
+     "en": "doubt"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "ishonch",
+     "ru": "доверие",
+     "en": "trust"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-V05",
+  "level": 5,
+  "kind": "VERBAL",
+  "forms": [
+   "L5C"
+  ],
+  "rule": "analogy",
+  "b": 0.81,
+  "answer": "B",
+  "stem": {
+   "uz": "Munosabatni toping:\nSabab — oqibat, jala — ?",
+   "ru": "Найдите связь:\nПричина — следствие, ливень — ?",
+   "en": "Find the relation:\nCause — effect, downpour — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "momaqaldiroq",
+     "ru": "гром",
+     "en": "thunder"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "toshqin",
+     "ru": "наводнение",
+     "en": "flood"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "bulut",
+     "ru": "облако",
+     "en": "cloud"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "mavsum",
+     "ru": "сезон",
+     "en": "season"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-V06",
+  "level": 5,
+  "kind": "VERBAL",
+  "forms": [
+   "L5C"
+  ],
+  "rule": "analogy",
+  "b": 0.91,
+  "answer": "C",
+  "stem": {
+   "uz": "Munosabatni toping:\nIsbot — teorema, dalil — ?",
+   "ru": "Найдите связь:\nДоказательство — теорема, довод — ?",
+   "en": "Find the relation:\nProof — theorem, evidence — ?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "kitob",
+     "ru": "книга",
+     "en": "book"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "misol",
+     "ru": "пример",
+     "en": "example"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "da’vo",
+     "ru": "утверждение",
+     "en": "claim"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "savol",
+     "ru": "вопрос",
+     "en": "question"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-V07",
+  "level": 5,
+  "kind": "VERBAL",
+  "forms": [
+   "L5D"
+  ],
+  "rule": "odd_pair",
+  "b": 0.96,
+  "answer": "C",
+  "stem": {
+   "uz": "Qaysi juftlikdagi munosabat qolganlaridan farq qiladi?",
+   "ru": "В какой паре связь отличается от остальных?",
+   "en": "In which pair is the relation different from the others?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "vaqt — soat",
+     "ru": "время — часы",
+     "en": "time — clock"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "bosim — barometr",
+     "ru": "давление — барометр",
+     "en": "pressure — barometer"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "yorug‘lik — quyosh",
+     "ru": "свет — солнце",
+     "en": "light — sun"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "harorat — termometr",
+     "ru": "температура — термометр",
+     "en": "temperature — thermometer"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-G01",
+  "level": 5,
+  "kind": "LOGIC",
+  "forms": [
+   "L5C"
+  ],
+  "rule": "contrapositive",
+  "b": 0.39,
+  "answer": "D",
+  "stem": {
+   "uz": "“Imtihondan o‘tgan har kim sertifikat oladi” — to‘g‘ri. Nodira sertifikat olmadi. Demak:",
+   "ru": "«Каждый, кто сдал экзамен, получает сертификат» — верно. Нодира не получила сертификат. Значит:",
+   "en": "“Everyone who passes the exam gets a certificate” is true. Nodira did not get a certificate. So:"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "Bilib bo‘lmaydi",
+     "ru": "Нельзя определить",
+     "en": "Cannot be determined"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "sertifikat faqat imtihon uchun beriladi",
+     "ru": "сертификат дают только за экзамен",
+     "en": "certificates are given only for the exam"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "Nodira imtihondan o‘tgan",
+     "ru": "Нодира сдала экзамен",
+     "en": "Nodira passed the exam"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "Nodira imtihondan o‘tmagan",
+     "ru": "Нодира не сдала экзамен",
+     "en": "Nodira did not pass the exam"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-G02",
+  "level": 5,
+  "kind": "LOGIC",
+  "forms": [
+   "L5D"
+  ],
+  "rule": "assignment",
+  "b": 0.54,
+  "answer": "B",
+  "stem": {
+   "uz": "Aziz, Bobur va Doniyor — shifokor, muhandis va o‘qituvchi. Aziz shifokor emas. Bobur shifokor ham, muhandis ham emas. Doniyor kim?",
+   "ru": "Азиз, Бобур и Дониёр — врач, инженер и учитель. Азиз не врач. Бобур не врач и не инженер. Кто Дониёр?",
+   "en": "Aziz, Bobur and Doniyor are a doctor, an engineer and a teacher. Aziz is not the doctor. Bobur is neither the doctor nor the engineer. Who is Doniyor?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "o‘qituvchi",
+     "ru": "учитель",
+     "en": "the teacher"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "shifokor",
+     "ru": "врач",
+     "en": "the doctor"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "muhandis",
+     "ru": "инженер",
+     "en": "the engineer"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "Bilib bo‘lmaydi",
+     "ru": "Нельзя определить",
+     "en": "Cannot be determined"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-G03",
+  "level": 5,
+  "kind": "LOGIC",
+  "forms": [
+   "L5D"
+  ],
+  "rule": "negation",
+  "b": 0.42,
+  "answer": "B",
+  "stem": {
+   "uz": "Qaysi gap “Hamma talabalar kitob o‘qiydi” degan gapni inkor qiladi?",
+   "ru": "Какое утверждение опровергает фразу «Все студенты читают книги»?",
+   "en": "Which statement contradicts “All students read books”?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "Talabalar faqat kitob o‘qiydi",
+     "ru": "Студенты читают только книги",
+     "en": "Students read only books"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "Kamida bitta talaba kitob o‘qimaydi",
+     "ru": "Хотя бы один студент не читает книг",
+     "en": "At least one student does not read books"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "Ba’zi talabalar kitob o‘qiydi",
+     "ru": "Некоторые студенты читают книги",
+     "en": "Some students read books"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "Hech bir talaba kitob o‘qimaydi",
+     "ru": "Ни один студент не читает книг",
+     "en": "No student reads books"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-G04",
+  "level": 5,
+  "kind": "LOGIC",
+  "forms": [],
+  "rule": "percent",
+  "b": 0.87,
+  "answer": "D",
+  "stem": {
+   "uz": "Narx avval 20% oshdi, keyin 20% kamaydi. Yakuniy narx boshlang‘ich narxga nisbatan qanday?",
+   "ru": "Цену сначала повысили на 20%, потом снизили на 20%. Какой стала итоговая цена по сравнению с начальной?",
+   "en": "A price rose by 20% and then fell by 20%. How does the final price compare with the original?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "2% arzonroq",
+     "ru": "на 2% ниже",
+     "en": "2% lower"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "4% qimmatroq",
+     "ru": "на 4% выше",
+     "en": "4% higher"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "o‘zgarmagan",
+     "ru": "не изменилась",
+     "en": "the same"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "4% arzonroq",
+     "ru": "на 4% ниже",
+     "en": "4% lower"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-G05",
+  "level": 5,
+  "kind": "LOGIC",
+  "forms": [
+   "L5C"
+  ],
+  "rule": "fallacy",
+  "b": 0.87,
+  "answer": "C",
+  "stem": {
+   "uz": "“Barcha sportchilar har kuni mashq qiladi” — to‘g‘ri gap. Doniyor har kuni mashq qiladi. Demak:",
+   "ru": "«Все спортсмены тренируются каждый день» — верно. Дониёр тренируется каждый день. Значит:",
+   "en": "“All athletes train every day” is true. Doniyor trains every day. So:"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "Doniyor sportchi emas",
+     "ru": "Дониёр не спортсмен",
+     "en": "Doniyor is not an athlete"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "faqat sportchilar har kuni mashq qiladi",
+     "ru": "каждый день тренируются только спортсмены",
+     "en": "only athletes train every day"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "bilib bo‘lmaydi: har kuni mashq qiladiganlar faqat sportchilar emas",
+     "ru": "нельзя определить: каждый день тренируются не только спортсмены",
+     "en": "cannot be determined: athletes are not the only people who train daily"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "Doniyor albatta sportchi",
+     "ru": "Дониёр обязательно спортсмен",
+     "en": "Doniyor is certainly an athlete"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-G06",
+  "level": 5,
+  "kind": "LOGIC",
+  "forms": [
+   "L5C"
+  ],
+  "rule": "paradox",
+  "b": 1.01,
+  "answer": "C",
+  "stem": {
+   "uz": "Orolda rostgo‘ylar faqat rost, yolg‘onchilar faqat yolg‘on gapiradi. Kimdir “Men yolg‘onchiman” dedi. Nima deyish mumkin?",
+   "ru": "На острове правдивые всегда говорят правду, а лжецы всегда лгут. Кто-то сказал: «Я лжец». Что можно утверждать?",
+   "en": "On an island, truth-tellers always tell the truth and liars always lie. Someone says, “I am a liar.” What can you conclude?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "u ham rostgo‘y, ham yolg‘onchi",
+     "ru": "он и правдивый, и лжец",
+     "en": "the speaker is both"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "u yolg‘onchi",
+     "ru": "он лжец",
+     "en": "the speaker is a liar"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "orol aholisidan hech kim bunday deya olmaydi",
+     "ru": "ни один житель острова не мог так сказать",
+     "en": "no islander could have said this"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "u rostgo‘y",
+     "ru": "он правдивый",
+     "en": "the speaker is a truth-teller"
+    }
+   }
+  ]
+ },
+ {
+  "externalId": "iq-L5-G07",
+  "level": 5,
+  "kind": "LOGIC",
+  "forms": [
+   "L5D"
+  ],
+  "rule": "sets",
+  "b": 1.07,
+  "answer": "C",
+  "stem": {
+   "uz": "Sinfdagi 30 o‘quvchidan 18 tasi ingliz, 15 tasi rus tilini o‘rganadi, 5 tasi hech birini o‘rganmaydi. Nechtasi ikkala tilni o‘rganadi?",
+   "ru": "Из 30 учеников 18 изучают английский, 15 — русский, а 5 не изучают ни один из них. Сколько учеников изучают оба языка?",
+   "en": "In a class of 30, 18 study English, 15 study Russian, and 5 study neither. How many study both?"
+  },
+  "options": [
+   {
+    "key": "A",
+    "text": {
+     "uz": "10",
+     "ru": "10",
+     "en": "10"
+    }
+   },
+   {
+    "key": "B",
+    "text": {
+     "uz": "13",
+     "ru": "13",
+     "en": "13"
+    }
+   },
+   {
+    "key": "C",
+    "text": {
+     "uz": "8",
+     "ru": "8",
+     "en": "8"
+    }
+   },
+   {
+    "key": "D",
+    "text": {
+     "uz": "3",
+     "ru": "3",
+     "en": "3"
+    }
+   }
+  ]
+ }
+]

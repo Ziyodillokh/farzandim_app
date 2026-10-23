@@ -19,6 +19,8 @@ import { useI18n } from '@/i18n';
 const BANDS = ['VERY_HIGH', 'HIGH', 'ABOVE_AVERAGE', 'AVERAGE', 'BELOW_AVERAGE', 'LOW', 'VERY_LOW'] as const;
 type Band = (typeof BANDS)[number];
 
+type IqDomain = 'FIGURAL' | 'NUMERIC' | 'VERBAL' | 'LOGIC';
+
 interface IqResult {
   correct: number;
   total: number;
@@ -28,6 +30,8 @@ interface IqResult {
   standardScore: number | null;
   ci95: [number, number] | null;
   completedAt: string;
+  /** Aralash formada tur bo'yicha xom natija (rasm / son / so'z / mantiq). */
+  domains?: Array<{ kind: IqDomain; right: number; total: number }>;
 }
 
 interface IqClassResults {
@@ -126,7 +130,16 @@ export function IqResults() {
                         <td className="py-2 pr-3 font-medium">{r.name}</td>
                         {r.result ? (
                           <>
-                            <td className="py-2 pr-3">{t(`development.iqSchool.band.${bandKey(r.result.band)}`)}</td>
+                            <td className="py-2 pr-3">
+                              {t(`development.iqSchool.band.${bandKey(r.result.band)}`)}
+                              {r.result.domains && (
+                                <span className="block text-xs text-muted-foreground tabular-nums">
+                                  {r.result.domains
+                                    .map((d) => `${t(`development.iqSchool.domain.${d.kind}`)} ${d.right}/${d.total}`)
+                                    .join(' · ')}
+                                </span>
+                              )}
+                            </td>
                             <td className="py-2 pr-3 tabular-nums">{r.result.percentile ?? '—'}</td>
                             <td className="py-2 pr-3 tabular-nums">
                               {r.result.status === 'NORMED' && r.result.standardScore !== null

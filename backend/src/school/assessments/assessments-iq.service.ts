@@ -21,8 +21,8 @@ import { parseOrThrow } from '../common/school-zod';
 export const PARVOZ_IQ_TEST_ID = 'parvoz-iq';
 export const PARVOZ_IQ_TITLE = { uz: 'Parvoz IQ — mantiqiy fikrlash', ru: 'Parvoz IQ — логическое мышление' } as const;
 export const PARVOZ_IQ_DESCRIPTION = {
-  uz: 'Rasmli topshiriqlar: naqshni topib, yetishmayotgan qismni tanlang. 20 ta savol.',
-  ru: 'Задания с картинками: найдите закономерность и выберите недостающую часть. 20 вопросов.',
+  uz: 'Aralash topshiriqlar: rasmli naqshlar, sonlar qatori, so‘z munosabatlari va mantiq. 20 ta savol.',
+  ru: 'Смешанные задания: узоры на картинках, числовые ряды, связи слов и логика. 20 вопросов.',
 } as const;
 export const IQ_FORM_SIZE = 20;
 const DAY_MS = 86_400_000;

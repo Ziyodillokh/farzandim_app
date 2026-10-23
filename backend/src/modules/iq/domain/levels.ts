@@ -62,10 +62,24 @@ export function resolveIqAge(
   return { status: level ? 'OK' : 'AGE_OUT_OF_RANGE', age, level };
 }
 
-/** Forma: yakunlangan sessiyalar soni juft — A, toq — B. */
+/** Rasmli formalar (A/B, 2026-10-21) — eski sessiyalar uchun saqlanadi. */
+export const CLASSIC_FORMS = ['A', 'B'] as const;
+/** Aralash formalar (C/D): 10 rasmli + 4 sonli + 3 so'z + 3 mantiq. */
+export const MIXED_FORMS = ['C', 'D'] as const;
+export const IQ_FORMS = [...CLASSIC_FORMS, ...MIXED_FORMS] as const;
+
+/** Yangi sessiya formasi: yakunlangan sessiyalar soni juft — C, toq — D. */
 export function formFor(level: IqLevel, completedCount: number): string {
-  return `L${level}${completedCount % 2 === 0 ? 'A' : 'B'}`;
+  return `L${level}${MIXED_FORMS[completedCount % 2]}`;
 }
+
+export const isMixedForm = (form: string): boolean => MIXED_FORMS.some((f) => form.endsWith(f));
+
+/**
+ * Normalar jadvali kaliti: aralash formalar normasi alohida yig'iladi (savollar
+ * boshqa, dizayn qiyinligi kalibrovkagacha taxminiy) — "mix:12"; rasmli — "12".
+ */
+export const normKey = (form: string, group: string): string => (isMixedForm(form) ? `mix:${group}` : group);
 
 export function nextAvailableAt(lastCompletedAt: Date | null): Date | null {
   return lastCompletedAt ? new Date(lastCompletedAt.getTime() + RETAKE_DAYS * DAY_MS) : null;

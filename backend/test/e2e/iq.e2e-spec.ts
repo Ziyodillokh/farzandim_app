@@ -1,6 +1,7 @@
-// Parvoz IQ test — haqiqiy Postgres'da: yosh/daraja, javob kaliti sirligi,
-// yakunlash (idempotent), norma, qayta topshirish, muddati o'tgan sessiya va
-// ota-ona xulosasi (docs/IQ-REJA.md).
+// Parvoz IQ test — haqiqiy Postgres'da: yosh/daraja, aralash forma (rasm + son +
+// so'z + mantiq), javob kaliti sirligi, yakunlash (idempotent), norma, qayta
+// topshirish, eski rasmli sessiyalar, muddati o'tgan sessiya va ota-ona
+// xulosasi (docs/IQ-REJA.md).
 
 import { PrismaClient } from '@prisma/client';
 import { buildIqBankRows } from '../../scripts/iq/build-bank-migration';
@@ -63,7 +64,7 @@ describe('IQ API', () => {
     expect((await start()).json()).toMatchObject({ code: 'AGE_OUT_OF_RANGE' });
   });
 
-  it("sessiya: yoshga mos forma, 20 savol osondan qiyinga, javob kaliti YO'Q, qayta chaqiruv — o'sha sessiya", async () => {
+  it("sessiya: yoshga mos aralash forma, turlar aralash va osondan qiyinga, javob kaliti YO'Q, qayta chaqiruv — o'sha sessiya", async () => {
     await setChildAge(t.prisma, child.childId, { via: 'birthDate', years: 13 });
     const res = await start();
     expect(res.statusCode).toBe(200);
@@ -71,19 +72,32 @@ describe('IQ API', () => {
     expect(session).toMatchObject({
       status: 'STARTED',
       level: 3,
-      form: 'L3A',
+      form: 'L3C',
       total: 20,
       result: null,
     });
     expect(session.items).toHaveLength(20);
-    expect(res.body).not.toMatch(/"answer"|"correct"|"b"/);
-    expect(session.items[0].options.map((o: { key: string }) => o.key)).toEqual(['A', 'B', 'C', 'D', 'E', 'F']);
-    const rows = await t.prisma.iqItem.findMany({
-      where: { id: { in: session.items.map((i: { id: string }) => i.id) } },
-    });
+    expect(res.body).not.toMatch(/"answer"|"correct"|"b"|"rule"/);
+    type Item = { id: string; kind: string; gridSvg: string | null; stem: Record<string, string> | null; options: Array<Record<string, unknown>> };
+    const items = session.items as Item[];
+    expect(items.map((i) => i.kind[0]).join('')).toBe('FVNFFLFNVFFLNFFVFNLF');
+    const figural = items.find((i) => i.kind === 'FIGURAL')!;
+    expect(figural.gridSvg).toMatch(/^<svg /);
+    expect(figural.stem).toBeNull();
+    expect(figural.options.map((o) => o.key)).toEqual(['A', 'B', 'C', 'D', 'E', 'F']);
+    expect(figural.options.every((o) => typeof o.svg === 'string' && !('text' in o))).toBe(true);
+    for (const text of items.filter((i) => i.kind !== 'FIGURAL')) {
+      expect(text.gridSvg).toBeNull();
+      expect(Object.keys(text.stem!).sort()).toEqual(['en', 'ru', 'uz']);
+      expect(text.options.length).toBeGreaterThanOrEqual(4);
+      expect(text.options.every((o) => typeof (o.text as Record<string, string>).uz === 'string' && !('svg' in o))).toBe(true);
+    }
+    const rows = await t.prisma.iqItem.findMany({ where: { id: { in: items.map((i) => i.id) } } });
     const bById = new Map(rows.map((r) => [r.id, r.b]));
-    const bs = session.items.map((i: { id: string }) => bById.get(i.id) as number);
-    expect([...bs].sort((a, b) => a - b)).toEqual(bs);
+    for (const kind of ['FIGURAL', 'NUMERIC', 'VERBAL', 'LOGIC']) {
+      const bs = items.filter((i) => i.kind === kind).map((i) => bById.get(i.id) as number);
+      expect([...bs].sort((a, b) => a - b)).toEqual(bs);
+    }
     expect((await start()).json().id).toBe(session.id);
   });
 
@@ -93,6 +107,8 @@ describe('IQ API', () => {
     expect((await put(session.id, item.id, { choice: 'G' })).statusCode).toBe(400);
     const other = await t.prisma.iqItem.findFirst({ where: { level: 5 } });
     expect((await put(session.id, other!.id, { choice: 'A' })).json()).toMatchObject({ code: 'ITEM_NOT_IN_SESSION' });
+    const four = (session.items as Array<{ id: string; options: unknown[] }>).find((i) => i.options.length === 4)!;
+    expect((await put(session.id, four.id, { choice: 'F' })).json()).toMatchObject({ code: 'INVALID_CHOICE' });
     const ok = await put(session.id, item.id, { choice: 'A' });
     expect(ok.json()).toEqual({
       answeredCount: 1,
@@ -110,7 +126,7 @@ describe('IQ API', () => {
     expect(res.json().remaining).toHaveLength(19);
   });
 
-  it("yakunlash: PROVISIONAL natija, normaga bir marta qo'shiladi, idempotent", async () => {
+  it("yakunlash: PROVISIONAL natija, tur bo'yicha natija, aralash normaga bir marta qo'shiladi, idempotent", async () => {
     const session = (await start()).json();
     await answerAll(session, 18);
     const done = (await complete(session.id)).json();
@@ -124,14 +140,19 @@ describe('IQ API', () => {
       normGroup: '9',
     });
     expect(done.result.percentile).toBeGreaterThan(50);
+    const domains = done.result.domains as Array<{ kind: string; right: number; total: number }>;
+    expect(domains.map((d) => [d.kind, d.total])).toEqual([['FIGURAL', 10], ['NUMERIC', 4], ['VERBAL', 3], ['LOGIC', 3]]);
+    expect(domains.reduce((a, d) => a + d.right, 0)).toBe(18);
     expect(done.items.find((i: { choice: string | null }) => i.choice === null)).toBeUndefined();
     expect((await complete(session.id)).json().result).toEqual(done.result);
-    expect(await t.prisma.iqNorm.findUnique({ where: { group: '9' } })).toMatchObject({ n: 1 });
+    expect(await t.prisma.iqNorm.findUnique({ where: { group: 'mix:9' } })).toMatchObject({ n: 1 });
+    expect(await t.prisma.iqNorm.findUnique({ where: { group: '9' } })).toBeNull();
+    expect(await t.prisma.iqSession.findUnique({ where: { id: session.id } })).toMatchObject({ scoringVersion: 2 });
   });
 
   it('norma yetarli (n ≥ 300) — NORMED: IQ raqami va 95% oraliq', async () => {
     await t.prisma.iqNorm.create({
-      data: { group: '9', n: 400, mean: -1.0, m2: 0.64 * 399 },
+      data: { group: 'mix:9', n: 400, mean: -1.0, m2: 0.64 * 399 },
     });
     const session = (await start()).json();
     await answerAll(session, 10);
@@ -142,7 +163,7 @@ describe('IQ API', () => {
     expect(result.ci95[1]).toBeGreaterThan(result.standardScore);
   });
 
-  it('qayta topshirish: 180 kun ichida 409, keyin B forma (normaga kirmaydi)', async () => {
+  it('qayta topshirish: 180 kun ichida 409, keyin D forma (normaga kirmaydi)', async () => {
     const first = (await start()).json();
     await answerAll(first, 12);
     await complete(first.id);
@@ -159,10 +180,41 @@ describe('IQ API', () => {
       data: { completedAt: new Date(Date.now() - 181 * DAY_MS) },
     });
     const second = (await start()).json();
-    expect(second).toMatchObject({ form: 'L1B', status: 'STARTED' });
+    expect(second).toMatchObject({ form: 'L1D', status: 'STARTED' });
+    const firstIds = new Set(first.items.map((i: { id: string }) => i.id));
+    expect(second.items.some((i: { id: string }) => firstIds.has(i.id))).toBe(false);
     await answerAll(second, 20);
     await complete(second.id);
-    expect(await t.prisma.iqNorm.findUnique({ where: { group: '9' } })).toMatchObject({ n: 1 });
+    expect(await t.prisma.iqNorm.findUnique({ where: { group: 'mix:9' } })).toMatchObject({ n: 1 });
+  });
+
+  it("eski rasmli (A) sessiya: o'z normasi bilan baholanadi, tur bo'yicha natijasiz; keyingisi D forma", async () => {
+    const classic = await t.prisma.iqItem.findMany({ where: { forms: { has: 'L1A' } }, orderBy: [{ b: 'asc' }, { externalId: 'asc' }] });
+    const responses = classic.map((_, i) => (i < 12 ? 1 : 0));
+    await t.prisma.iqNorm.create({ data: { group: '9', n: 400, mean: -0.5, m2: 399 } });
+    const old = await t.prisma.iqSession.create({
+      data: {
+        childId: child.childId,
+        level: 1,
+        form: 'L1A',
+        ageYears: 9,
+        status: 'COMPLETED',
+        itemIds: classic.map((i) => i.id),
+        total: 20,
+        firstAttempt: true,
+        normGroup: '9',
+        result: { correct: 12, total: 20, responses },
+        scoringVersion: 1,
+        startedAt: new Date(Date.now() - 200 * DAY_MS),
+        completedAt: new Date(Date.now() - 200 * DAY_MS),
+      },
+    });
+    const overview = (await call(child.token, 'GET', '/iq/overview')).json();
+    expect(overview).toMatchObject({ canStart: true, last: { correct: 12, total: 20, status: 'NORMED' } });
+    expect(overview.last).not.toHaveProperty('domains');
+    const view = (await call(child.token, 'GET', `/iq/sessions/${old.id}`)).json();
+    expect(view.items.every((i: { kind: string; gridSvg: string }) => i.kind === 'FIGURAL' && i.gridSvg.startsWith('<svg'))).toBe(true);
+    expect((await start()).json()).toMatchObject({ form: 'L1D' });
   });
 
   it('24 soatdan eski ochiq sessiya yopiladi — javob 409 SESSION_CLOSED, yangisi ochiladi', async () => {
