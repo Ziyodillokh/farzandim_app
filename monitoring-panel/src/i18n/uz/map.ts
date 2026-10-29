@@ -1,0 +1,17 @@
+export const map = {
+  title: 'Hududlar xaritasi',
+  metric: 'Ko\'rsatkich',
+  legendBetter: 'yaxshiroq',
+  legendWorse: 'yomonroq',
+  legendLow: 'past',
+  legendHigh: 'yuqori',
+  quantileNote: 'ranglar — reyting bo\'yicha 5 guruh',
+  noData: 'ma\'lumot yo\'q',
+  clickHint: 'Hududni bosing — batafsil profil',
+  districtsTitle: 'Tumanlar xaritasi',
+  districtsNoShape: 'Chegarasi xaritada yo\'q (2020-yildan keyin tuzilgan): {names}',
+  ranking: 'Reyting',
+  top: 'Eng yaxshi',
+  bottom: 'E\'tibor talab',
+  attribution: 'Chegaralar: Natural Earth (ochiq), tumanlar: OCHA ROCCA 2020 (CC BY 3.0 IGO) · geoBoundaries',
+};
