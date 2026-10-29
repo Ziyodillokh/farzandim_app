@@ -21,8 +21,8 @@ import type { Permission } from './permissions';
 /**
  * Marshrutlar manifesti — YAGONA manba: menyu, sahifa himoyasi (RouteGuard),
  * global qidiruv va e2e. `path` — basePath'siz, oxirida `/` siz.
- * DIQQAT: e2e va shots skriptlari `{ path: '…', perm: '…'` ni regex bilan o'qiydi —
- * har yozuv bitta qatorda, `path` birinchi, `perm` ikkinchi.
+ * DIQQAT: e2e va shots skriptlari yozuvlarni regex bilan o'qiydi — har yozuv
+ * bitta qatorda, `path` birinchi, `perm` ikkinchi (izohlarda shu shaklni yozmang).
  */
 export type NavGroup = 'overview' | 'domains' | 'tools';
 

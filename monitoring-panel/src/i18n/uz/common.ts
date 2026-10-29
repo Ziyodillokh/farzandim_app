@@ -42,6 +42,7 @@ export const common = {
   students: 'o\'quvchi',
   schools: 'maktab',
   districts: 'tuman',
+  districtsTitle: 'Tumanlar',
   regions: 'hudud',
   boys: 'O\'g\'il bolalar',
   girls: 'Qiz bolalar',

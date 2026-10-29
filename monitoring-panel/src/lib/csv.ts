@@ -1,18 +1,25 @@
 /**
  * CSV eksport — Excel (O'zbekiston/Rossiya lokali) to'g'ri ochishi uchun:
  * UTF-8 BOM, `;` ajratuvchi, CRLF. Formula-injection himoyasi: `= + - @`
- * bilan boshlanadigan qiymat oldiga `'` qo'yiladi.
+ * bilan boshlanadigan qiymat oldiga `'` qo'yiladi — oddiy son (`-0,3`) bundan
+ * mustasno, aks holda Excel uni matn deb o'qiydi.
  */
 export type CsvColumn<T> = { header: string; value: (row: T) => string | number | null | undefined };
 
 const FORMULA_START = /^[=+\-@\t\r]/;
+const PLAIN_NUMBER = /^-?\d+([.,]\d+)?$/;
 
 export function escapeCsvCell(raw: string | number | null | undefined): string {
   if (raw === null || raw === undefined) return '';
   let value = String(raw);
-  if (FORMULA_START.test(value)) value = `'${value}`;
+  if (FORMULA_START.test(value) && !PLAIN_NUMBER.test(value)) value = `'${value}`;
   if (/[";\r\n]/.test(value)) value = `"${value.replace(/"/g, '""')}"`;
   return value;
+}
+
+/** Excel (uz/ru lokali) uchun son: o'nlik vergul, minglik ajratuvchisiz; yo'q qiymat — bo'sh katak. */
+export function csvDecimal(v: number | null | undefined, decimals = 1): string | null {
+  return v === null || v === undefined || !Number.isFinite(v) ? null : v.toFixed(decimals).replace('.', ',');
 }
 
 export function toCsv<T>(rows: readonly T[], columns: readonly CsvColumn<T>[]): string {

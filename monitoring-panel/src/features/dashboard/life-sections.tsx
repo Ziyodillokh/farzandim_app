@@ -68,7 +68,7 @@ function ProblemsHeat({ scope }: { scope: Scope }) {
             values: Object.fromEntries(PROBLEM_METRICS.map((k) => [k, r.values[k]?.value ?? null])),
           }))}
           format={(v) => (v === null ? '—' : fmt.num(v, 1))}
-          firstHeader={national ? t('nav.regions') : t('common.districts')}
+          firstHeader={national ? t('nav.regions') : t('common.districtsTitle')}
           onRowClick={clickable ? (id) => router.push(`/regions/view?id=${id}`) : undefined}
           minWidth={600}
         />

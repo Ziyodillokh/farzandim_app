@@ -1,4 +1,47 @@
 export const attendance = {
   title: 'Davomat',
   subtitle: 'Kelish, kechikish va surunkali kelmaslik',
+  nav: {
+    label: 'Sahifa bo\'limlari',
+    overview: 'Ko\'rsatkichlar',
+    statuses: 'Holatlar',
+    map: 'Xarita',
+    breakdowns: 'Kesimlar',
+    areas: 'Jadval',
+  },
+  overview: {
+    earlyExits: 'Erta ketish',
+    earlyExitsDesc: 'Darsdan erta ketish holatlari — belgilangan o\'quvchi-kunlarga nisbatan ulush.',
+    missedDays: 'Kelmagan kunlar: {value}',
+  },
+  statuses: {
+    title: 'Davomat holatlari',
+    subtitle: 'Belgilangan o\'quvchi-kunlar qanday taqsimlanadi',
+    came: 'Keldi',
+    missed: 'Kelmadi',
+    mainDeviation: 'Asosiy chetlanish — {status}: {value}',
+    excusedShare: 'Kelmagan kunlarning {value} qismi — sababli',
+  },
+  breakdowns: {
+    title: 'Kesimlar',
+    subtitle: 'Oylar, hafta kunlari, sinflar va maktab turlari bo\'yicha davomat',
+    byMonth: 'Oylar bo\'yicha',
+    byWeekday: 'Hafta kunlari bo\'yicha',
+    byGrade: 'Sinflar bo\'yicha',
+    bySchoolType: 'Maktab turi bo\'yicha',
+    columnsNote: 'Shtrix chiziq — umumiy davomat; amber ustunlar — davomati eng past guruh.',
+    weekday: {
+      d1: 'Dushanba',
+      d2: 'Seshanba',
+      d3: 'Chorshanba',
+      d4: 'Payshanba',
+      d5: 'Juma',
+      d6: 'Shanba',
+    },
+  },
+  areas: {
+    title: 'Hududlar jadvali',
+    titleDistrict: 'Tumanlar jadvali',
+    csvFile: 'davomat',
+  },
 };

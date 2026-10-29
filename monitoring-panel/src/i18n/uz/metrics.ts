@@ -86,7 +86,7 @@ export const metrics = {
     description: 'Oyiga 1000 o\'quvchiga to\'g\'ri keladigan "Bola ovozi" murojaatlari. Ko\'p murojaat ko\'pincha ishonch yuqoriligini bildiradi.',
   },
   safetyGap: {
-    label: 'Xavfsizlik bilimi',
+    label: 'Xavfsizlik bo\'shlig\'i',
     title: 'Xavfsizlik qoidalari bo\'yicha bo\'shliq',
     description: 'Parvoz Kelajak: xavfsizlik bilimlari savollarida o\'sish zonasida bo\'lgan bolalar ulushi.',
   },

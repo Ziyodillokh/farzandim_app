@@ -18,7 +18,7 @@ const STYLE: Record<InsightSeverity, { icon: typeof AlertTriangle; ring: string;
 };
 
 /** Parametrlarni matnga: hudud id → nom, fan kaliti → nom, raqamlar → mahalliy format. */
-function useInsightText() {
+export function useInsightText() {
   const { t } = useI18n();
   const areaName = useAreaName();
   const fmt = useMetricFormat();

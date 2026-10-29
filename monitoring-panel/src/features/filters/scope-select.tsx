@@ -29,7 +29,7 @@ export function ScopeSelect({ className }: { className?: string }) {
   const value = isRegionId(region) ? region : 'ALL';
   return (
     <Select value={value} onValueChange={setRegion}>
-      <SelectTrigger aria-label={t('nav.regions')} className={cn('h-9 w-[230px] gap-2 rounded-xl', className)}>
+      <SelectTrigger aria-label={t('nav.regions')} className={cn('h-9 w-[262px] gap-2 rounded-xl', className)}>
         {value === 'ALL' ? <Landmark className="h-4 w-4 text-primary" /> : <MapPin className="h-4 w-4 text-primary" />}
         <SelectValue />
       </SelectTrigger>

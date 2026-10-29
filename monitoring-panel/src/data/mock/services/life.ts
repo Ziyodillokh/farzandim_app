@@ -15,7 +15,7 @@ import {
   topicLevel,
   WELLBEING_TOPICS,
 } from '@/data/reference/domains';
-import { customSeries, customValue, metricSeries, metricStat, round, scopeArea } from './core';
+import { customSeries, customStat, customValue, metricSeries, metricStat, round, scopeArea } from './core';
 
 const NATIONAL: Area = { kind: 'NATIONAL' };
 const withFilter = (f: Filters, patch: Partial<Filters>): Filters => ({ ...f, ...patch });
@@ -49,7 +49,7 @@ export function getWellbeing(scope: Scope, f: Filters): Wellbeing {
     topics,
     bullying: metricStat('bullying', area, f),
     support: metricStat('support', area, f),
-    watch: { ...metricStat('support', area, f), value: round(customValue('watch', area, f, F.watchSignal, surveyBase)) },
+    watch: customStat('watch', area, f, F.watchSignal, surveyBase),
     anxiety: metricStat('anxiety', area, f),
     sleep: metricStat('sleep', area, f),
     careRequests: metricStat('careRequests', area, f),
@@ -103,7 +103,7 @@ export function getAttendance(scope: Scope, f: Filters): Attendance {
     late,
     chronic: metricStat('chronic', area, f),
     statuses,
-    earlyExits: round(customValue('ee', area, f, F.earlyExits), 2),
+    earlyExits: customStat('ee', area, f, F.earlyExits, undefined, 2),
     byMonth: metricSeries('attendance', area, f),
     byWeekday: ([1, 2, 3, 4, 5, 6] as const).map((day) => ({
       day,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import { useSession } from '@/auth/use-session';
 import { api } from '@/data/api';
@@ -18,61 +18,61 @@ const scopeKey = (scope: Scope) => (scope.kind === 'NATIONAL' ? 'UZ' : scope.reg
 
 export function useOverview(scope: Scope) {
   const [f] = useFilters();
-  return useQuery({ queryKey: ['overview', scopeKey(scope), f], queryFn: () => api.overview(scope, f) });
+  return useQuery({ queryKey: ['overview', scopeKey(scope), f], queryFn: () => api.overview(scope, f), placeholderData: keepPreviousData });
 }
 
 export function useAreaMetric(metric: MetricKey, scope: Scope) {
   const [f] = useFilters();
-  return useQuery({ queryKey: ['area-metric', metric, scopeKey(scope), f], queryFn: () => api.areaMetric(metric, scope, f) });
+  return useQuery({ queryKey: ['area-metric', metric, scopeKey(scope), f], queryFn: () => api.areaMetric(metric, scope, f), placeholderData: keepPreviousData });
 }
 
 export function useRegionsTable() {
   const [f] = useFilters();
-  return useQuery({ queryKey: ['regions-table', f], queryFn: () => api.regionsTable(f) });
+  return useQuery({ queryKey: ['regions-table', f], queryFn: () => api.regionsTable(f), placeholderData: keepPreviousData });
 }
 
 /** Bo'linmalar × ko'rsatkichlar (hududlar yoki tumanlar jadvali). */
 export function useAreaMatrix(metrics: readonly MetricKey[], scope: Scope) {
   const [f] = useFilters();
-  return useQuery({ queryKey: ['area-matrix', metrics.join(','), scopeKey(scope), f], queryFn: () => api.areaMatrix(metrics, scope, f) });
+  return useQuery({ queryKey: ['area-matrix', metrics.join(','), scopeKey(scope), f], queryFn: () => api.areaMatrix(metrics, scope, f), placeholderData: keepPreviousData });
 }
 
 export function useMastery(scope: Scope) {
   const [f] = useFilters();
-  return useQuery({ queryKey: ['mastery', scopeKey(scope), f], queryFn: () => api.mastery(scope, f) });
+  return useQuery({ queryKey: ['mastery', scopeKey(scope), f], queryFn: () => api.mastery(scope, f), placeholderData: keepPreviousData });
 }
 
 export function useIq(scope: Scope) {
   const [f] = useFilters();
-  return useQuery({ queryKey: ['iq', scopeKey(scope), f], queryFn: () => api.iq(scope, f) });
+  return useQuery({ queryKey: ['iq', scopeKey(scope), f], queryFn: () => api.iq(scope, f), placeholderData: keepPreviousData });
 }
 
 export function useInterests(scope: Scope) {
   const [f] = useFilters();
-  return useQuery({ queryKey: ['interests', scopeKey(scope), f], queryFn: () => api.interests(scope, f) });
+  return useQuery({ queryKey: ['interests', scopeKey(scope), f], queryFn: () => api.interests(scope, f), placeholderData: keepPreviousData });
 }
 
 export function useWellbeing(scope: Scope) {
   const [f] = useFilters();
-  return useQuery({ queryKey: ['wellbeing', scopeKey(scope), f], queryFn: () => api.wellbeing(scope, f) });
+  return useQuery({ queryKey: ['wellbeing', scopeKey(scope), f], queryFn: () => api.wellbeing(scope, f), placeholderData: keepPreviousData });
 }
 
 export function useAttendance(scope: Scope) {
   const [f] = useFilters();
-  return useQuery({ queryKey: ['attendance', scopeKey(scope), f], queryFn: () => api.attendance(scope, f) });
+  return useQuery({ queryKey: ['attendance', scopeKey(scope), f], queryFn: () => api.attendance(scope, f), placeholderData: keepPreviousData });
 }
 
 export function useDigital(scope: Scope) {
   const [f] = useFilters();
-  return useQuery({ queryKey: ['digital', scopeKey(scope), f], queryFn: () => api.digital(scope, f) });
+  return useQuery({ queryKey: ['digital', scopeKey(scope), f], queryFn: () => api.digital(scope, f), placeholderData: keepPreviousData });
 }
 
 export function useSchools(scope: Scope) {
   const [f] = useFilters();
-  return useQuery({ queryKey: ['schools', scopeKey(scope), f], queryFn: () => api.schools(scope, f) });
+  return useQuery({ queryKey: ['schools', scopeKey(scope), f], queryFn: () => api.schools(scope, f), placeholderData: keepPreviousData });
 }
 
 export function useInsights(scope: Scope) {
   const [f] = useFilters();
-  return useQuery({ queryKey: ['insights', scopeKey(scope), f], queryFn: () => api.insights(scope, f) });
+  return useQuery({ queryKey: ['insights', scopeKey(scope), f], queryFn: () => api.insights(scope, f), placeholderData: keepPreviousData });
 }

@@ -11,6 +11,8 @@ const config: Config = {
       screens: { '2xl': '1440px' },
     },
     extend: {
+      // Standart shkalada 12 yo'q — `bg-white/12` kabi klasslar jim yo'qolmasin.
+      opacity: { 12: '0.12' },
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',

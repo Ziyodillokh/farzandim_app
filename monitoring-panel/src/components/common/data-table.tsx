@@ -79,7 +79,7 @@ export function DataTable<T>({
                   <button
                     type="button"
                     onClick={() => toggleSort(col.sortKey!)}
-                    className="-mx-1 inline-flex items-center gap-1 rounded px-1 hover:text-foreground"
+                    className="-mx-1 inline-flex items-center gap-1 rounded px-1 uppercase hover:text-foreground"
                   >
                     {col.header}
                     {sort?.sortBy === col.sortKey ? (

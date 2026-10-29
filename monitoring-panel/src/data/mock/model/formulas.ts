@@ -27,6 +27,7 @@ import {
   SUBJECT_KEYS,
   type WellbeingTopic,
 } from '@/data/reference/domains';
+import { AY_MONTHS } from './calendar';
 import type { Latent } from './latent';
 import { signedNoise } from './latent';
 import type { Gender } from './population';
@@ -110,6 +111,14 @@ export function mastery(c: Ctx, subject: Subject): number | null {
 }
 
 /** 80% va undan yuqori natijali testlar ulushi (%), o'zlashtirishdan logistik bog'liq. */
+/**
+ * Hududga xos yillik siljish: har o'quv yili `amp × shovqin` ga o'zgaradi — yil-yil
+ * farqi hududdan hududga turlicha bo'lsin (hamma joyda bir xil "±0" emas).
+ */
+function yearDrift(tag: string, c: Ctx, amp: number): number {
+  return Math.floor(c.t / AY_MONTHS.length) * amp * signedNoise('drift', tag, c.key);
+}
+
 export function successRate(m: number): number {
   return 100 / (1 + Math.exp(-(m - 77) / 6.5));
 }
@@ -231,14 +240,15 @@ export function careerReadiness(c: Ctx): number | null {
 /** IQ testida qatnashish (9–20 yosh ≈ 3-sinfdan) (0..1). */
 export function iqParticipation(c: Ctx): number | null {
   if (c.grade < 3) return null;
-  return clamp(0.3 + 0.32 * (c.L.digital - 0.6) + 0.012 * c.t + signedNoise('iqp', c.key) * 0.05 + (c.grade >= 9 ? 0.04 : 0), 0.12, 0.8);
+  const growth = 0.0105 + 0.0055 * signedNoise('iqg', c.key);
+  return clamp(0.3 + 0.32 * (c.L.digital - 0.6) + growth * c.t + signedNoise('iqp', c.key) * 0.05 + (c.grade >= 9 ? 0.04 : 0), 0.12, 0.8);
 }
 
 /** Qatlam standart ballari o'rtachasi (yosh normasi bo'yicha — sinfga bog'liq emas). */
 export function iqMean(c: Ctx): number | null {
   if (c.grade < 3) return null;
   const typeFx = c.type === 'SPECIAL' ? 6 : c.type === 'PRIVATE' ? 2.5 : 0;
-  return 100 + 3.4 * (c.L.resource - 0.58) + 1.2 * (c.L.urban - 0.5) + signedNoise('iq', c.key) * 0.9 + typeFx;
+  return 100 + 3.4 * (c.L.resource - 0.58) + 1.2 * (c.L.urban - 0.5) + signedNoise('iq', c.key) * 0.9 + typeFx + yearDrift('iq', c, 0.35);
 }
 
 export const IQ_SD = 14.6;
@@ -307,7 +317,7 @@ export function wellbeingTopic(c: Ctx, topic: WellbeingTopic): number {
     default:
       v = 64 + 10 * climate + (f ? 2 : -2) - (g >= 8 ? 2 : 0);
   }
-  return clamp(v + (WB_SEASON[c.month] ?? 0) + signedNoise('wb', c.key, topic) * 2.2 + 0.03 * c.t, 35, 92);
+  return clamp(v + (WB_SEASON[c.month] ?? 0) + signedNoise('wb', c.key, topic) * 2.2 + 0.03 * c.t + yearDrift(`wb:${topic}`, c, 1.4), 35, 92);
 }
 
 /** Bulling signali: tazyiq savollariga "ko'pincha/ha" deb javob berganlar (%). */
@@ -319,7 +329,7 @@ export function bullying(c: Ctx): number {
 
 /** Kelajak qo'llab-quvvatlash signali: "support" (≥2 xavotirli javob) (%). */
 export function supportSignal(c: Ctx): number {
-  return clamp(3.2 - 6 * (c.L.climate - 0.65) + (c.grade >= 8 ? 1 : 0) + (isF(c) ? 0.4 : 0) + signedNoise('sup', c.key) * 0.6, 0.8, 9);
+  return clamp(3.2 - 6 * (c.L.climate - 0.65) + (c.grade >= 8 ? 1 : 0) + (isF(c) ? 0.4 : 0) + signedNoise('sup', c.key) * 0.6 + yearDrift('sup', c, 0.35), 0.8, 9);
 }
 
 /** Kelajak "watch" (1 xavotirli javob) (%). */
@@ -330,13 +340,13 @@ export function watchSignal(c: Ctx): number {
 /** Xavotir skriningi: WATCH + SUPPORT (%). */
 export function anxiety(c: Ctx): number {
   const g = c.grade;
-  return clamp(13 - 14 * (c.L.climate - 0.65) + (g >= 9 ? 4 : inRange(g, 7, 8) ? 2 : 0) + (isF(c) ? 2 : 0) + signedNoise('anx', c.key) * 1.4, 4, 28);
+  return clamp(13 - 14 * (c.L.climate - 0.65) + (g >= 9 ? 4 : inRange(g, 7, 8) ? 2 : 0) + (isF(c) ? 2 : 0) + signedNoise('anx', c.key) * 1.4 + yearDrift('anx', c, 0.9), 4, 28);
 }
 
 /** Yetarli uxlamaganlar (so'rovnomadagi uyqu savoli) (%). */
 export function sleepShort(c: Ctx): number {
   const g = c.grade;
-  return clamp(22 + 14 * (c.L.digital - 0.6) + (g >= 9 ? 10 : g >= 6 ? 4 : 0) + signedNoise('slp', c.key) * 2 + (c.month === 1 || c.month === 12 ? 2 : 0), 8, 48);
+  return clamp(22 + 14 * (c.L.digital - 0.6) + (g >= 9 ? 10 : g >= 6 ? 4 : 0) + signedNoise('slp', c.key) * 2 + (c.month === 1 || c.month === 12 ? 2 : 0) + yearDrift('slp', c, 1.1), 8, 48);
 }
 
 /** Psixologga murojaatlar — 1000 o'quvchiga oyiga. */
@@ -404,7 +414,7 @@ export function attendance(c: Ctx): number {
 
 /** Kechikish (%). */
 export function late(c: Ctx): number {
-  return clamp(6.5 - 4 * (c.L.resource - 0.55) + 2 * (c.L.urban - 0.5) + (c.grade >= 9 ? 1.2 : 0) + (c.month === 1 || c.month === 2 ? 1 : 0) + signedNoise('late', c.key) * 0.8, 1.5, 13);
+  return clamp(6.5 - 4 * (c.L.resource - 0.55) + 2 * (c.L.urban - 0.5) + (c.grade >= 9 ? 1.2 : 0) + (c.month === 1 || c.month === 2 ? 1 : 0) + signedNoise('late', c.key) * 0.8 + yearDrift('late', c, 0.45), 1.5, 13);
 }
 
 /** Surunkali kelmaslik: kunlarning ≥10% ida kelmagan o'quvchilar (%). */
@@ -414,7 +424,7 @@ export function chronicAbsence(c: Ctx): number {
 
 /** Erta ketishlar — 100 o'quvchi-kunga. */
 export function earlyExits(c: Ctx): number {
-  return clamp(0.9 + signedNoise('ee', c.key) * 0.3 + (c.grade <= 4 ? 0.2 : 0), 0.3, 1.8);
+  return clamp(0.9 + signedNoise('ee', c.key) * 0.3 + (c.grade <= 4 ? 0.2 : 0) + yearDrift('ee', c, 0.06), 0.3, 1.8);
 }
 
 export const WEEKDAY_FX = [-0.4, 0.2, 0.3, 0.2, -0.2, -1.2] as const;

@@ -1,10 +1,21 @@
 'use client';
 
-import { PageHeader } from '@/components/common/page-header';
-import { useI18n } from '@/i18n';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-/** Vaqtinchalik karkas — sahifa tayyorlanmoqda. */
-export default function ReportsPrintPage() {
-  const { t } = useI18n();
-  return <PageHeader title={t('reports.title')} subtitle={t('reports.subtitle')} />;
+import { Skeleton } from '@/components/ui/skeleton';
+import { PrintReport } from '@/features/reports/print-report';
+
+function PrintInner() {
+  const params = useSearchParams();
+  return <PrintReport id={params.get('id')} />;
+}
+
+/** Chop etiladigan hisobot (brauzerda "PDF sifatida saqlash"). */
+export default function ReportPrintPage() {
+  return (
+    <Suspense fallback={<Skeleton className="mx-auto h-[900px] w-full max-w-[960px] rounded-2xl" />}>
+      <PrintInner />
+    </Suspense>
+  );
 }

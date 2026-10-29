@@ -27,7 +27,15 @@ export function hashString(value: string): number {
 
 /** Bir nechta qiymatdan barqaror [0,1) son: `unitHash('stu-1', '2026-10-12')`. */
 export function unitHash(...parts: Array<string | number>): number {
-  return hashString(parts.join('|')) / 4294967296;
+  // murmur3 fmix32: FNV-1a ning yuqori bitlari oxirgi belgilardagi farqqa sust
+  // javob beradi (o'xshash kalitlar — tor oraliq), aralashtirish tekis taqsimot beradi.
+  let h = hashString(parts.join('|'));
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
 }
 
 export class Random {

@@ -1,10 +1,21 @@
 'use client';
 
-import { PageHeader } from '@/components/common/page-header';
-import { useI18n } from '@/i18n';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-/** Vaqtinchalik karkas — sahifa tayyorlanmoqda. */
+import { Skeleton } from '@/components/ui/skeleton';
+import { RegionProfile } from '@/features/region/region-profile';
+
+function RegionViewInner() {
+  const params = useSearchParams();
+  return <RegionProfile id={params.get('id')} />;
+}
+
+/** Hudud profili: `/regions/view?id=UZ-SA` (statik eksport — dinamik yo'l o'rniga query). */
 export default function RegionViewPage() {
-  const { t } = useI18n();
-  return <PageHeader title={t('region.title')} subtitle={t('region.subtitle')} />;
+  return (
+    <Suspense fallback={<Skeleton className="h-[320px] w-full rounded-3xl" />}>
+      <RegionViewInner />
+    </Suspense>
+  );
 }

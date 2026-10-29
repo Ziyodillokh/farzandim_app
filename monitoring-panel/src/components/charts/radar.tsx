@@ -25,8 +25,10 @@ export function Radar({
   const angle = (i: number) => (Math.PI * 2 * i) / axes.length - Math.PI / 2;
   const point = (i: number, v: number) => [cx + Math.cos(angle(i)) * R * (v / max), cy + Math.sin(angle(i)) * R * (v / max)] as const;
   const rings = [0.25, 0.5, 0.75, 1];
-  // Uzun yorliqlar ("Tadqiqotchi", "Tashabbuskor") kesilmasin — yon tomonlarga joy.
-  const padX = 40;
+  // Uzun yorliqlar ("Tadqiqotchi", "Tashabbuskor") kesilmasin: yon joy eng uzun yorliq
+  // eniga qarab (12.5px shriftda ~7px/belgi) — yorliq markazdan R·1.13 masofada boshlanadi.
+  const longest = Math.max(0, ...axes.map((a) => a.label.length));
+  const padX = Math.max(16, Math.ceil(R * 1.13 + longest * 7 + 6 - size / 2));
   return (
     <div className={cn('flex flex-col items-center gap-3', className)}>
       <svg viewBox={`${-padX} 0 ${size + padX * 2} ${size}`} className="h-auto w-full max-w-[400px]" role="img">

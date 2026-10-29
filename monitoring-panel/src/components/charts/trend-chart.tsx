@@ -20,9 +20,14 @@ export function TrendChart({
   reference,
   referenceLabel,
   domain,
+  axisFormat,
+  axisWidth = 52,
 }: {
   series: TrendSeries[];
   format: (v: number) => string;
+  /** O'q yozuvlari uchun qisqa format (standart — `format`), masalan "220" o'rniga "220 daq". */
+  axisFormat?: (v: number) => string;
+  axisWidth?: number;
   height?: number;
   reference?: number | null;
   referenceLabel?: string;
@@ -50,13 +55,13 @@ export function TrendChart({
           </defs>
           <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 4" vertical={false} />
           <XAxis dataKey="key" tickFormatter={(k: string) => monthLabel(k)} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={8} />
-          <YAxis domain={domain ?? ['auto', 'auto']} tickFormatter={(v: number) => format(v)} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={52} />
+          <YAxis domain={domain ?? ['auto', 'auto']} tickFormatter={(v: number) => (axisFormat ?? format)(v)} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={axisWidth} />
           <Tooltip
             cursor={{ stroke: 'hsl(var(--primary))', strokeOpacity: 0.3 }}
             content={<ChartTooltip formatLabel={(k) => monthLabel(k, true)} formatValue={(v) => format(v)} />}
           />
           {reference !== undefined && reference !== null && (
-            <ReferenceLine y={reference} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" label={referenceLabel ? { value: referenceLabel, position: 'insideTopRight', fontSize: 10, fill: 'hsl(var(--muted-foreground))' } : undefined} />
+            <ReferenceLine y={reference} ifOverflow="extendDomain" stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" label={referenceLabel ? { value: referenceLabel, position: 'insideTopRight', fontSize: 10, fill: 'hsl(var(--muted-foreground))' } : undefined} />
           )}
           {series.map((s, i) => (
             <Area

@@ -45,6 +45,7 @@ export const common: DeepString<typeof uz> = {
   students: 'учащихся',
   schools: 'школ',
   districts: 'районов',
+  districtsTitle: 'Районы',
   regions: 'регионов',
   boys: 'Мальчики',
   girls: 'Девочки',

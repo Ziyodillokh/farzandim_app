@@ -12,16 +12,13 @@ import { join, relative, resolve } from 'node:path';
 const ROOT = resolve(process.cwd(), 'out');
 const MAX_BYTES = 8 * 1024 * 1024;
 const BAD = /[[\]{}% ]/;
-const REQUIRED = [
-  'index.html',
-  'login/index.html',
-  'dashboard/index.html',
-  'regions/index.html',
-  'regions/view/index.html',
-  'present/index.html',
-  'reports/print/index.html',
-  '404.html',
-];
+// Manifestdagi barcha sahifalar + login, bosh sahifa va 404.
+const ROUTE_PATHS = [...readFileSync(join(ROOT, '..', 'src/auth/route-manifest.ts'), 'utf8').matchAll(/\{\s*path:\s*'([^']+)',\s*perm:/g)].map((m) => m[1]);
+const REQUIRED = ['index.html', 'login/index.html', '404.html', ...ROUTE_PATHS.map((p) => `${p.slice(1)}/index.html`)];
+if (ROUTE_PATHS.length < 15) {
+  console.error(`❌ check-export: manifestdan marshrutlar o'qilmadi (${ROUTE_PATHS.length})`);
+  process.exit(1);
+}
 
 const files = [];
 (function walk(dir) {

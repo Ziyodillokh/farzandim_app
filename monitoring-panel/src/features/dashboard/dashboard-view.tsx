@@ -10,7 +10,7 @@ import { useInsights, useOverview } from '@/features/filters/use-monitoring';
 import { InsightList } from '@/features/insights/insight-list';
 import { MapPanel } from '@/features/map/map-panel';
 import { useI18n } from '@/i18n';
-import { DashboardHero } from './hero';
+import { DashboardHero, type HeroProfile } from './hero';
 import { KpiGrid } from './kpi-grid';
 import { InterestsSection, IqSection, MasterySection } from './learning-sections';
 import { AttendanceSection, DigitalSection, WellbeingSection } from './life-sections';
@@ -21,13 +21,13 @@ import { SectionNav } from './section-nav';
  * sahifada — hero, KPI, xarita, fanlar, IQ, qiziqishlar, farovonlik, davomat,
  * raqamli odatlar va xulosalar. Hudud profili ham shu ko'rinishdan foydalanadi.
  */
-export function DashboardView({ scope }: { scope: Scope }) {
+export function DashboardView({ scope, profile }: { scope: Scope; profile?: HeroProfile }) {
   const { t } = useI18n();
   const overview = useOverview(scope);
   const insights = useInsights(scope);
   return (
     <>
-      <DashboardHero scope={scope} overview={overview.data} />
+      <DashboardHero scope={scope} overview={overview.data} profile={profile} />
       <SectionNav districts={scope.kind === 'REGION'} />
       <div className="space-y-5">
         <div id="sec-kpis" className="scroll-mt-28">

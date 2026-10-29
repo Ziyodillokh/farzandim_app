@@ -352,3 +352,17 @@
   font-size: 9.5px;
   stroke-width: 3px;
 }
+
+/* Taqdimot: joriy slayd taraqqiyot chizig'i (davomiyligi inline beriladi). */
+@keyframes present-progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+.present-progress {
+  animation-name: present-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .present-progress { animation: none; width: 100%; }
+}

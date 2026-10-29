@@ -40,6 +40,17 @@ function components(area: Area): Component[] {
   return [{ key: d.id, regionId: d.regionId, L: d.latent, pupils: regionPupils(d.regionId) * d.weight }];
 }
 
+/**
+ * Qamrov darajasi: hudud va respublika — hudud egri chizig'i; tuman — o'z latent
+ * og'ishi bilan (hudud ichida vaznli o'rtachasi hudud darajasiga teng bo'ladi).
+ */
+function componentCoverage(comp: Component, t: number): number {
+  const regional = coverageRate(comp.regionId, t);
+  if (comp.key === comp.regionId) return regional;
+  const target = REGION_LATENT[comp.regionId].coverage;
+  return target > 0 ? Math.min(0.98, regional * (comp.L.coverage / target)) : regional;
+}
+
 const CACHE = new Map<string, Agg>();
 const CACHE_LIMIT = 20000;
 
@@ -67,7 +78,7 @@ export function aggregate(
   for (const comp of components(area)) {
     const strata = regionStrata(comp.regionId).filter((s) => matchesFilter(s, filters));
     for (const m of months) {
-      const cov = coverageRate(comp.regionId, m.t);
+      const cov = componentCoverage(comp, m.t);
       for (const s of strata) {
         const c: Ctx = { key: comp.key, L: comp.L, grade: s.grade, gender: s.gender, type: s.type, t: m.t, month: m.month };
         const v = fn(c);

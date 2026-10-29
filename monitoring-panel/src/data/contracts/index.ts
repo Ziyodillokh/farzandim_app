@@ -164,7 +164,8 @@ export type Attendance = {
   late: Stat;
   chronic: Stat;
   statuses: { onTime: number; late: number; leftEarly: number; excused: number; absent: number } | null;
-  earlyExits: number | null;
+  /** Erta ketishlar — 100 o'quvchi-kunga. */
+  earlyExits: Stat;
   byMonth: SeriesPoint[];
   byWeekday: Array<{ day: 1 | 2 | 3 | 4 | 5 | 6; value: number | null }>;
   byGrade: Array<{ grade: Grade; value: number | null }>;

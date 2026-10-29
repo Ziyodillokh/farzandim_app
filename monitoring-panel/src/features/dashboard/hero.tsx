@@ -1,7 +1,8 @@
 'use client';
 
-import { MonitorPlay, Printer, Radio } from 'lucide-react';
+import { ArrowLeft, MonitorPlay, Printer, Radio } from 'lucide-react';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 import { useCan } from '@/auth/use-session';
 import { DemoBadge } from '@/components/common/demo-badge';
@@ -41,8 +42,11 @@ function Silhouette({ focusId }: { focusId: string | null }) {
   );
 }
 
+/** Hudud profili rejimi: orqaga havola, hudud almashtirgich va qo'shimcha qator (reyting). */
+export type HeroProfile = { backHref: string; backLabel: string; switcher?: ReactNode; extra?: ReactNode };
+
 /** Bosh sahifa yuqori qismi: sarlavha (h1), davr, qamrov sonlari va amallar. */
-export function DashboardHero({ scope, overview }: { scope: Scope; overview: Overview | undefined }) {
+export function DashboardHero({ scope, overview, profile }: { scope: Scope; overview: Overview | undefined; profile?: HeroProfile }) {
   const { t, locale } = useI18n();
   const fmt = useMetricFormat();
   const can = useCan();
@@ -67,32 +71,47 @@ export function DashboardHero({ scope, overview }: { scope: Scope; overview: Ove
       <Silhouette focusId={scope.kind === 'REGION' ? scope.regionId : null} />
       <div className="relative flex flex-wrap items-start justify-between gap-6">
         <div className="min-w-0 max-w-2xl">
+          {profile && (
+            <Link
+              href={profile.backHref}
+              className="mb-4 inline-flex h-8 items-center gap-1.5 rounded-full bg-white/10 px-3 text-xs font-semibold text-white/85 ring-1 ring-inset ring-white/20 transition-colors hover:bg-white/20 no-print"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              {profile.backLabel}
+            </Link>
+          )}
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-2.5 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.14em] ring-1 ring-inset ring-white/20">
               <Radio className="h-3.5 w-3.5 animate-pulse text-emerald-300" />
-              {scope.kind === 'NATIONAL' ? t('dashboard.hero.eyebrow') : t('dashboard.hero.eyebrowRegion')}
+              {profile ? t('region.eyebrow') : scope.kind === 'NATIONAL' ? t('dashboard.hero.eyebrow') : t('dashboard.hero.eyebrowRegion')}
             </span>
             <DemoBadge tone="onDark" />
           </div>
           <h1 className="mt-4 font-display text-[1.9rem] font-semibold leading-tight tracking-[-0.02em] md:text-[2.35rem]">
-            {regionTitle ? t('dashboard.titleRegion', { region: regionTitle }) : t('dashboard.title')}
+            {profile && regionTitle ? regionTitle : regionTitle ? t('dashboard.titleRegion', { region: regionTitle }) : t('dashboard.title')}
           </h1>
           <div className="mt-2 text-[0.95rem] text-white/75">{periodText ? t('dashboard.subtitle', { period: periodText }) : <Skeleton className="h-5 w-72 bg-white/20" />}</div>
           <p className="mt-1 text-xs text-white/55">{t('filters.periodHint')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2 no-print">
+          {profile?.switcher}
           {can('present.view') && (
             <Button asChild className="bg-white text-brand-900 shadow-lg hover:bg-white/90">
-              <Link href="/present">
+              <Link href={scope.kind === 'REGION' ? `/present?id=${scope.regionId}` : '/present'}>
                 <MonitorPlay />
                 {t('nav.present')}
               </Link>
             </Button>
           )}
-          <Button variant="ghost" className="bg-white/10 text-white ring-1 ring-inset ring-white/20 hover:bg-white/20 hover:text-white" onClick={() => window.print()}>
-            <Printer />
-            {t('common.print')}
-          </Button>
+          {can('reports.view') && (
+            <Button asChild variant="ghost" className="bg-white/10 text-white ring-1 ring-inset ring-white/20 hover:bg-white/20 hover:text-white">
+              {/* Chop etish — maxsus hujjat ko'rinishi (oq qog'oz, jadval va xulosalar). */}
+              <Link href={`/reports/print?id=${scope.kind === 'REGION' ? scope.regionId : 'UZ'}`}>
+                <Printer />
+                {t('common.print')}
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
       <dl className="relative mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -106,6 +125,7 @@ export function DashboardHero({ scope, overview }: { scope: Scope; overview: Ove
             ))
           : [0, 1, 2].map((i) => <Skeleton key={i} className="h-[88px] rounded-2xl bg-white/10" />)}
       </dl>
+      {profile?.extra && <div className="relative mt-4">{profile.extra}</div>}
     </section>
   );
 }

@@ -2,8 +2,8 @@
 /**
  * Vizual QA: demo hisob bilan kirib, sahifalarni suratga oladi (yorug'/qorong'i, bir necha kenglik).
  *
- *   node scripts/shots.mjs [--base http://127.0.0.1:4400] [--users direktor,sinf7a]
- *     [--themes light,dark] [--widths 1440,390] [--routes /dashboard,/students|all]
+ *   node scripts/shots.mjs [--base http://127.0.0.1:4500] [--users respublika,samarqand]
+ *     [--themes light,dark] [--widths 1440,390] [--routes /dashboard,/regions|all]
  *     [--out test-results/shots] [--full] [--locale uz|ru]
  *
  * Natija: <out>/<theme>/<width>/<user>__<route>.png va <out>/index.html (contact sheet).
@@ -16,7 +16,8 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const PASSWORDS = { direktor: 'Direktor2026', admin: 'Admin2026', sinf7a: 'Sinf2026', psixolog: 'Psixolog2026', navbatchi: 'Navbatchi2026' };
+const PASSWORDS = { respublika: 'Respublika2026', samarqand: 'Samarqand2026', toshkent: 'Toshkent2026' };
+const OWN_REGION = { samarqand: 'UZ-SA', toshkent: 'UZ-TK' };
 const FORBIDDEN = /Ruxsat yo'q|Нет доступа/;
 const HEIGHT = { 1440: 900, 1024: 768, 390: 844 };
 
@@ -26,8 +27,8 @@ function arg(name, fallback) {
 }
 const flag = (name) => process.argv.includes(`--${name}`);
 
-const base = arg('base', 'http://127.0.0.1:4400').replace(/\/$/, '');
-const users = arg('users', 'direktor').split(',');
+const base = arg('base', 'http://127.0.0.1:4500').replace(/\/$/, '');
+const users = arg('users', 'respublika').split(',');
 const themes = arg('themes', 'light,dark').split(',');
 const widths = arg('widths', '1440,390').split(',').map(Number);
 const out = resolve(ROOT, arg('out', 'test-results/shots'));
@@ -45,23 +46,13 @@ const routes = routeArg === 'all' ? manifestRoutes() : routeArg.split(',');
 
 const url = (path) => {
   const [p, q] = path.split('?');
-  return `${base}/school${p === '/' ? '/' : `${p}/`}${q ? `?${q}` : ''}`;
+  return `${base}/monitoring${p === '/' ? '/' : `${p}/`}${q ? `?${q}` : ''}`;
 };
 
-async function detailQuery(page, path) {
-  const ids = await page.evaluate(() => {
-    const raw = localStorage.getItem('parvoz-school:db:v1');
-    const t = raw ? JSON.parse(raw).tables : null;
-    return { student: t?.students.find((s) => s.classId === 'cls-7a')?.id ?? 'stu-1', care: t?.careRequests[0]?.id ?? 'care-1' };
-  });
-  const map = {
-    '/students/view': `id=${ids.student}`,
-    '/classes/view': 'id=cls-7a',
-    '/attendance/class': 'id=cls-7a',
-    '/care/requests/view': `id=${ids.care}`,
-    '/reports/print': 'month=2026-09',
-    '/assessments/view': 'id=tpl-logic',
-  };
+/** Tafsilot sahifalari uchun so'rov: hudud profili va chop etiladigan hisobot. */
+function detailQuery(user, path) {
+  const own = OWN_REGION[user];
+  const map = { '/regions/view': `id=${own ?? 'UZ-SA'}`, '/reports/print': `id=${own ?? 'UZ'}` };
   return map[path];
 }
 
@@ -75,8 +66,8 @@ for (const theme of themes) {
       await context.addInitScript(
         ([t, l]) => {
           try {
-            localStorage.setItem('theme', t);
-            localStorage.setItem('parvoz-school:locale', JSON.stringify(l));
+            localStorage.setItem('parvoz-monitoring:theme', t);
+            localStorage.setItem('parvoz-monitoring:locale', JSON.stringify(l));
           } catch {
             /* ignore */
           }
@@ -100,7 +91,7 @@ for (const theme of themes) {
       await page.waitForURL(/\/dashboard\/?$/, { timeout: 120_000 });
 
       for (const route of routes) {
-        const query = await detailQuery(page, route);
+        const query = detailQuery(user, route);
         await page.goto(url(query ? `${route}?${query}` : route), { timeout: 120_000 });
         await page.locator('main h1').first().waitFor({ timeout: 60_000 }).catch(() => undefined);
         await page.waitForTimeout(1200);

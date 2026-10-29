@@ -1,10 +1,8 @@
 'use client';
 
-import { PageHeader } from '@/components/common/page-header';
-import { useI18n } from '@/i18n';
+import { RegionsView } from '@/features/regions/regions-view';
 
-/** Vaqtinchalik karkas — sahifa tayyorlanmoqda. */
+/** Hududlar: xarita, barcha hududlar jadvali va solishtirish (faqat respublika roli). */
 export default function RegionsPage() {
-  const { t } = useI18n();
-  return <PageHeader title={t('regions.title')} subtitle={t('regions.subtitle')} />;
+  return <RegionsView />;
 }

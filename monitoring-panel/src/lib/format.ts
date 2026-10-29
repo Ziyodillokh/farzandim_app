@@ -19,7 +19,7 @@ export function deltaTone(metric: MetricKey, delta: number | null | undefined, t
 
 /** Ko'rsatkichlarni joriy tilda formatlash. */
 export function useMetricFormat() {
-  const { formatNumber, t } = useI18n();
+  const { formatNumber, t, locale } = useI18n();
 
   const num = useCallback(
     (value: number, decimals = 1) => formatNumber(value, { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).replace('-', MINUS),
@@ -67,8 +67,17 @@ export function useMetricFormat() {
   const count = useCallback((v: number | null | undefined) => (v === null || v === undefined ? '—' : formatNumber(Math.round(v))), [formatNumber]);
   /** 4 353 200 → "4,35 mln" (qisqa). */
   const compact = useCallback(
-    (v: number | null | undefined) => (v === null || v === undefined ? '—' : formatNumber(v, { notation: 'compact', maximumFractionDigits: 2 })),
-    [formatNumber],
+    (v: number | null | undefined) => {
+      if (v === null || v === undefined) return '—';
+      if (locale === 'ru') return formatNumber(v, { notation: 'compact', maximumFractionDigits: 2 });
+      // Raqam formati ru-RU (bo'shliq va vergul), qisqartma esa o'zbekcha lotincha.
+      const abs = Math.abs(v);
+      if (abs >= 1e9) return `${formatNumber(v / 1e9, { maximumFractionDigits: 2 })} mlrd`;
+      if (abs >= 1e6) return `${formatNumber(v / 1e6, { maximumFractionDigits: 2 })} mln`;
+      if (abs >= 1e4) return `${formatNumber(v / 1e3, { maximumFractionDigits: 1 })} ming`;
+      return formatNumber(v);
+    },
+    [formatNumber, locale],
   );
 
   return useMemo(() => ({ num, value, delta, pct, count, compact }), [num, value, delta, pct, count, compact]);

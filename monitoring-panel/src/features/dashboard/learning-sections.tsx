@@ -68,7 +68,7 @@ export function MasterySection({ scope }: { scope: Scope }) {
             columns={[{ key: 'overall', label: t('metrics.mastery.label') }, ...columns]}
             rows={rows}
             format={(v) => (v === null ? '—' : fmt.num(v, 0))}
-            firstHeader={scope.kind === 'NATIONAL' ? t('nav.regions') : t('common.districts')}
+            firstHeader={scope.kind === 'NATIONAL' ? t('nav.regions') : t('common.districtsTitle')}
             onRowClick={scope.kind === 'NATIONAL' && can('regions.view') ? (id) => router.push(`/regions/view?id=${id}`) : undefined}
           />
           <p className="mt-2 text-[0.7rem] text-muted-foreground">{t('dashboard.heatHint')}</p>

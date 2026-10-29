@@ -1,10 +1,8 @@
 'use client';
 
-import { PageHeader } from '@/components/common/page-header';
-import { useI18n } from '@/i18n';
+import { SchoolsView } from '@/features/schools/schools-view';
 
-/** Vaqtinchalik karkas — sahifa tayyorlanmoqda. */
+/** Maktablar: turlar, o'sish va qo'llab-quvvatlash reytinglari, tumanlar kesimi (doiraga qarab). */
 export default function SchoolsPage() {
-  const { t } = useI18n();
-  return <PageHeader title={t('schools.title')} subtitle={t('schools.subtitle')} />;
+  return <SchoolsView />;
 }
