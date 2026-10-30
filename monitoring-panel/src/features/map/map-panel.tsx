@@ -24,7 +24,7 @@ const DistrictMap = dynamic(() => import('@/components/map/district-map').then((
 });
 
 /** Xaritada tanlash mumkin bo'lgan ko'rsatkichlar (standart to'plam). */
-export const MAP_METRICS: readonly MetricKey[] = ['mastery', 'iqMean', 'wellbeing', 'bullying', 'attendance', 'screenTime', 'coverage'];
+export const MAP_METRICS: readonly MetricKey[] = ['mastery', 'iqParticipation', 'wellbeing', 'bullying', 'attendance', 'screenTime', 'coverage'];
 
 /**
  * Xarita + reyting paneli: respublika doirasida 14 hudud (bosish — hudud profili),
@@ -108,7 +108,6 @@ export function MapPanel({
             center={center}
             selectedId={selected}
             onSelect={scope.kind === 'NATIONAL' ? (id) => openRegion(id as RegionId) : setSelected}
-            limit={scope.kind === 'NATIONAL' ? undefined : 16}
           />
         )}
       </div>

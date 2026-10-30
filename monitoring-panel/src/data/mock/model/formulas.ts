@@ -509,8 +509,10 @@ export function hourlyProfile(c: Ctx): number[] {
     if (h >= 17 && h < 19) return 0.07;
     return 0.1;
   });
-  const total = raw.reduce((a, b) => a + b, 0);
-  return raw.map((v) => v / total);
+  // Tungi soatlar (22–06) yig'indisi aynan `nightUse` — KPI va soatlik grafik bir xil.
+  const isNight = (h: number) => h >= 22 || h < 6;
+  const dayTotal = raw.reduce((sum, v, h) => (isNight(h) ? sum : sum + v), 0) || 1;
+  return raw.map((v, h) => (isNight(h) ? night / 8 : (v / dayTotal) * (1 - night)));
 }
 
 export { APP_CATEGORIES, CARE_TOPICS, INTERESTS, MOODS, RIASEC, SUBJECT_KEYS };

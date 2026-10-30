@@ -366,3 +366,11 @@
 @media (prefers-reduced-motion: reduce) {
   .present-progress { animation: none; width: 100%; }
 }
+
+/* Telefonda xarita qiymatlari o'qib bo'lmaydigan darajada kichik — reyting ro'yxati ko'rsatadi. */
+@media (max-width: 639px) {
+  .uzmap-value,
+  .uzmap-value-sm {
+    display: none;
+  }
+}

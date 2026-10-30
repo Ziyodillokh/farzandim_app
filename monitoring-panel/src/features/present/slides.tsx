@@ -302,7 +302,7 @@ export function IqInterestsSlide({ scope }: { scope: Scope }) {
               <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-300/80">{t('present.slides.careerFields')}</p>
               <div className="space-y-3">
                 {interests.careerFields.slice(0, 4).map((f) => (
-                  <Bar key={f.key} label={t(`enums.careerField.${f.key}`)} value={fmt.pct(f.share)} share={f.share * 3} color="hsl(186 90% 50%)" />
+                  <Bar key={f.key} label={t(`enums.careerField.${f.key}`)} value={fmt.pct(f.share)} share={f.share} color="hsl(186 90% 50%)" />
                 ))}
               </div>
             </div>
@@ -346,9 +346,6 @@ export function ProblemsSlide({ scope }: { scope: Scope }) {
               );
             })}
           </div>
-          <p className="mt-4 text-xs text-white/45">
-            <b>{t('common.screening.title')}.</b> {t('common.screening.text')}
-          </p>
         </div>
       )}
     </SlideFrame>

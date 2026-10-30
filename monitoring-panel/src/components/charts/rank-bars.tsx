@@ -39,9 +39,8 @@ export function RankBars({
   const rows = limit ? sorted.slice(0, limit) : sorted;
   const values = sorted.map((a) => a.value as number);
   const max = Math.max(...values, center ?? 0);
-  const min = Math.min(...values, center ?? max);
-  // Ustun boshlanishi 0 dan emas — farqlar ko'rinsin (minimumdan biroz pastdan).
-  const floor = Math.max(0, min - (max - min) * 0.6);
+  // Ustunlar noldan boshlanadi (farq rang va reyting bilan ko'rinadi, uzunlik bo'rttirilmaydi).
+  const floor = 0;
   const width = (v: number) => `${Math.max(4, ((v - floor) / (max - floor || 1)) * 100)}%`;
   const scale = buildScale(values, def.better, center);
   const centerPos = center === null ? null : ((center - floor) / (max - floor || 1)) * 100;

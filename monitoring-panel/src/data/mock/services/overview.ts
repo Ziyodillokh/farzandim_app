@@ -15,7 +15,7 @@ export const OVERVIEW_KPIS: readonly MetricKey[] = [
   'coverage',
   'active',
   'mastery',
-  'iqMean',
+  'iqParticipation',
   'wellbeing',
   'attendance',
   'screenTime',

@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Maximize2, Minimize2, Pause, Play, X } from 
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 
+import { DemoBadge } from '@/components/common/demo-badge';
 import { ParvozWordmark } from '@/components/layout/parvoz-wordmark';
 import type { MetricKey, Scope } from '@/data/contracts';
 import { useI18n } from '@/i18n';
@@ -91,7 +92,10 @@ export function PresentStage({ scope, exitHref }: { scope: Scope; exitHref: stri
     <div className="dark fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#040a17] text-white">
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_60%_at_80%_0%,rgba(37,99,235,0.28),transparent),radial-gradient(50%_50%_at_0%_100%,rgba(6,182,212,0.16),transparent)]" />
       <header className="relative flex items-center justify-between gap-3 px-5 pt-4 md:px-10">
-        <ParvozWordmark size="sm" sub="MONITORING" tone="onDark" />
+        <div className="flex items-center gap-3">
+          <ParvozWordmark size="sm" sub="MONITORING" tone="onDark" />
+          <DemoBadge tone="onDark" compact />
+        </div>
         <div className="flex items-center gap-1.5">
           <span className="mr-2 hidden text-xs text-white/40 lg:inline">{t('present.controls.hint')}</span>
           <ControlButton label={t('present.controls.prev')} onClick={() => go(-1)}>
@@ -126,6 +130,9 @@ export function PresentStage({ scope, exitHref }: { scope: Scope; exitHref: stri
           {slides[index]}
         </div>
       </main>
+      <p className="relative px-5 pb-2 text-[0.7rem] text-white/45 md:px-10">
+        <b>{t('common.screening.title')}.</b> {t('common.screening.text')}
+      </p>
       <footer className="relative flex items-center gap-1.5 px-5 pb-4 md:px-10" aria-label={t('present.title')}>
         {slides.map((_, i) => (
           <button

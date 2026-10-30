@@ -53,7 +53,7 @@ function ProblemsHeat({ scope }: { scope: Scope }) {
   const national = scope.kind === 'NATIONAL';
   const clickable = national && can('regions.view');
   return (
-    <div>
+    <div className="min-w-0">
       <p className="mb-2 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
         {national ? t('dashboard.problemsByRegion') : t('dashboard.problemsByDistrict')}
       </p>
@@ -96,9 +96,9 @@ export function WellbeingSection({ scope }: { scope: Scope }) {
             <SignalStat metric="sleep" stat={data.sleep} label={t('metrics.sleep.label')} />
             <SignalStat metric="careRequests" stat={data.careRequests} label={t('dashboard.carePer1000')} />
           </div>
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.75fr)_minmax(0,1fr)]">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.75fr)_minmax(0,1fr)]">
             <ProblemsHeat scope={scope} />
-            <div className="space-y-6">
+            <div className="min-w-0 space-y-6">
               <div>
                 <p className="mb-2 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{t('dashboard.wellbeingTopics')}</p>
                 <ul className="space-y-2">

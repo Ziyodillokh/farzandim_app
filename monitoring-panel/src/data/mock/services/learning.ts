@@ -234,7 +234,7 @@ export function getInterests(scope: Scope, f: Filters): Interests {
       topSubject: subs[0] && subs[0].v >= 0 ? subs[0].s : null,
       topSubjectShare: subs[0] && subs[0].v >= 0 ? round(subs[0].v) : null,
       topCode,
-      topField: fields[0]?.key ?? null,
+      topField: ts && (fields[0]?.share ?? 0) > 0 ? (fields[0]?.key ?? null) : null,
     };
   });
   return {

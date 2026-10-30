@@ -142,7 +142,7 @@ function Report({ scope }: { scope: Scope }) {
             <p className="mb-3 text-[0.74rem] text-slate-600">{t('reports.print.iqMeta', { value: fmt.value('iqParticipation', iq.data!.participation.value), count: fmt.count(iq.data!.participants) })}</p>
             <div className="space-y-2">
               {iq.data!.bands.map((b) => (
-                <DocBar key={b.key} label={t(`enums.iqBand.${b.key}`)} value={fmt.pct(b.share)} share={b.share * 2} color={IQ_BAND_COLORS[b.key]} />
+                <DocBar key={b.key} label={t(`enums.iqBand.${b.key}`)} value={fmt.pct(b.share)} share={b.share} color={IQ_BAND_COLORS[b.key]} />
               ))}
             </div>
             <p className="mt-3 text-[0.68rem] leading-relaxed text-slate-500">{t('common.screening.notIq')}</p>
@@ -157,7 +157,7 @@ function Report({ scope }: { scope: Scope }) {
             <div className="mt-4"><DocLabel>{t('reports.print.careerFields')}</DocLabel></div>
             <div className="space-y-2">
               {interests.data!.careerFields.slice(0, 4).map((f) => (
-                <DocBar key={f.key} label={t(`enums.careerField.${f.key}`)} value={fmt.pct(f.share)} share={f.share * 3} color="#0891b2" />
+                <DocBar key={f.key} label={t(`enums.careerField.${f.key}`)} value={fmt.pct(f.share)} share={f.share} color="#0891b2" />
               ))}
             </div>
           </DocSection>
@@ -173,7 +173,7 @@ function Report({ scope }: { scope: Scope }) {
               <DocLabel>{t('reports.print.careTopics')}</DocLabel>
               <div className="space-y-2">
                 {wb.careTopics.slice(0, 5).map((c) => (
-                  <DocBar key={c.key} label={t(`enums.careTopic.${c.key}`)} value={fmt.pct(c.share)} share={c.share * 2.5} color="#0ea5e9" />
+                  <DocBar key={c.key} label={t(`enums.careTopic.${c.key}`)} value={fmt.pct(c.share)} share={c.share} color="#0ea5e9" />
                 ))}
               </div>
             </div>
