@@ -1,0 +1,41 @@
+import type { DeepString } from '../types';
+import type { present as uz } from '../uz/present';
+
+export const present: DeepString<typeof uz> = {
+  title: 'Режим презентации',
+  subtitle: 'Слайды на весь экран со сменой по таймеру',
+  controls: {
+    prev: 'Предыдущий слайд',
+    next: 'Следующий слайд',
+    play: 'Продолжить',
+    pause: 'Пауза',
+    fullscreen: 'Во весь экран',
+    exitFullscreen: 'Выйти из полноэкранного режима',
+    exit: 'Выйти из презентации',
+    counter: '{n} / {total}',
+    hint: '← → слайды · Пробел — пауза · F — весь экран',
+    goTo: 'Перейти к слайду {n}',
+  },
+  slides: {
+    heading: 'Обучение и благополучие детей',
+    kpis: 'Ключевые показатели',
+    map: '{metric} — по регионам',
+    mapDistricts: '{metric} — по районам',
+    scopeValueNational: 'По республике',
+    scopeValueRegion: 'По региону',
+    best: 'Лучшие результаты',
+    attention: 'Требуют внимания',
+    subjects: 'Усвоение по предметам',
+    strongest: 'Сильнейший предмет',
+    weakest: 'Слабейший предмет',
+    iqInterests: 'Мышление и интересы',
+    iqBands: 'Уровни Parvoz IQ',
+    iqMeta: 'Охват IQ {value} · детей: {count}',
+    topSubjects: 'Самые выбираемые предметы',
+    careerFields: 'Профессиональные сферы',
+    problems: 'Сигналы проблем среди детей',
+    mostAffected: 'Выше всего: {area} — {value}',
+    insights: 'Автоматические выводы',
+    asOf: 'Состояние на {date}',
+  },
+};

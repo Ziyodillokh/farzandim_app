@@ -123,3 +123,5 @@ frontend-web/
 
 # Parvoz School paneli — deploy paytida school-panel/out dan nusxalanadi (CI)
 website/public/school/
+# Parvoz Monitoring paneli — deploy paytida monitoring-panel/out dan nusxalanadi (CI)
+website/public/monitoring/

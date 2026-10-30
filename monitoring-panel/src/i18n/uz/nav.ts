@@ -1,0 +1,21 @@
+export const nav = {
+  groups: {
+    overview: 'Umumiy',
+    domains: 'Yo\'nalishlar',
+    tools: 'Vositalar',
+  },
+  dashboard: 'Umumiy ko\'rinish',
+  regions: 'Hududlar',
+  region: 'Hudud profili',
+  schools: 'Maktablar',
+  mastery: 'O\'zlashtirish',
+  iq: 'IQ va tafakkur',
+  interests: 'Qiziqishlar',
+  wellbeing: 'Farovonlik va muammolar',
+  attendance: 'Davomat',
+  digital: 'Raqamli odatlar',
+  reports: 'Hisobotlar',
+  methodology: 'Metodologiya',
+  present: 'Taqdimot rejimi',
+  settings: 'Sozlamalar',
+};

@@ -1,0 +1,38 @@
+import type { DeepString } from '../types';
+import type { settings as uz } from '../uz/settings';
+
+export const settings: DeepString<typeof uz> = {
+  title: 'Настройки',
+  subtitle: 'Язык, тема и учётная запись',
+  appearance: 'Внешний вид',
+  appearanceSub: 'Язык и тема сохраняются в этом браузере',
+  language: 'Язык интерфейса',
+  theme: 'Тема',
+  themeDark: 'Тёмная',
+  themeLight: 'Светлая',
+  view: 'Охват и фильтры',
+  viewSub: 'Применяются ко всем страницам одинаково',
+  scope: 'Охват просмотра',
+  filters: 'Текущие фильтры',
+  resetFilters: 'Сбросить фильтры',
+  resetScope: 'Вернуться к республике',
+  defaults: 'По умолчанию',
+  account: 'Учётная запись',
+  accountSub: 'Текущая сессия',
+  login: 'Логин',
+  role: 'Полномочия',
+  roles: {
+    NATIONAL: 'Республика — все регионы',
+    REGIONAL: 'Регион — только свой регион',
+  },
+  signedIn: 'Время входа',
+  logout: 'Выйти из системы',
+  security: 'Безопасность',
+  securityText: 'В демо-версии вход проверяется в браузере. В рабочей версии вход идёт через сервер (токен и двухфакторное подтверждение), каждый просмотр и экспорт записываются в журнал.',
+  data: 'Данные',
+  dataSource: 'Источник',
+  dataDemo: 'Демо — созданы для демонстрации',
+  dataOfficial: 'Официальные цифры',
+  dataOfficialValue: 'Агентство статистики, 2025/2026',
+  methodologyLink: 'Методология и источники',
+};

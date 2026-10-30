@@ -20,6 +20,11 @@ name: Deploy Website → farzandimedu.uz
 # tekshiruvi, Playwright), deploy job `out/` ni website/public/school/ ga
 # qo'yadi — keyin odatdagi Stage/Publish (har fayl xeshi + avto-rollback).
 #
+# Parvoz Monitoring (monitoring-panel/, Next.js statik eksport, basePath
+# /monitoring): viloyatlar kesimidagi yopiq tahlil paneli (demo ma'lumotlar).
+# monitoring-panel job build va testlarni bajaradi, deploy job `out/` ni
+# website/public/monitoring/ ga qo'yadi.
+#
 # Secretlar (deploy-test.yml bilan BIR XIL):
 #   SSH_HOST, SSH_USER, SSH_PASSWORD (SSH + sudo paroli)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -30,6 +35,7 @@ on:
     paths:
       - 'website/**'
       - 'school-panel/**'
+      - 'monitoring-panel/**'
       - '.github/workflows/deploy-landing.yml'
   workflow_dispatch:
 
@@ -107,8 +113,48 @@ jobs:
           retention-days: 3
           if-no-files-found: error
 
+  monitoring-panel:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: monitoring-panel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: monitoring-panel/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+      - run: npm run check:export
+      - name: basePath tekshiruvi
+        run: grep -q '/monitoring/_next/' out/index.html || { echo "::error::basePath /monitoring emas"; exit 1; }
+      - name: Playwright (rollar × barcha sahifalar, xarita, taqdimot, eksport)
+        run: |
+          npx playwright install --with-deps chromium
+          npm run e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: monitoring-panel-playwright
+          path: monitoring-panel/test-results
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: monitoring-panel-out
+          path: monitoring-panel/out
+          retention-days: 3
+          if-no-files-found: error
+
   deploy:
-    needs: [test, school-panel]
+    needs: [test, school-panel, monitoring-panel]
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     env:
@@ -138,6 +184,11 @@ jobs:
         with:
           name: school-panel-maktab-out
           path: website/public/maktab
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: monitoring-panel-out
+          path: website/public/monitoring
 
       - name: Stage (sayt + xesh manifest + deploy skriptlari)
         run: bash website/deploy/make-stage.sh "$RUNNER_TEMP/stage"
@@ -175,6 +226,8 @@ jobs:
           check /school/login/             200 "Parvoz School"
           check /maktab/                   200 "Parvoz School"
           check /maktab/login/             200 "/maktab/_next/"
+          check /monitoring/               200 "Parvoz Monitoring"
+          check /monitoring/login/         200 "/monitoring/_next/"
           # Backend maktab moduli jonlimi (deploy-test.yml): 401 — jonli, 404 — backend hali eski.
           sr="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -X POST "https://${DOMAIN}/api/school/auth/refresh" || true)"
           [ "$sr" = "401" ] && echo "✓ /api/school/auth/refresh → 401" || echo "::warning::/api/school/auth/refresh → $sr"
