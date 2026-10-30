@@ -7,6 +7,7 @@ import { Meter } from '@/features/mastery/kit/bars';
 import { CountUpValue, KpiRow, KpiRowSkeleton, KpiTile } from '@/features/mastery/kit/kpi-tile';
 import { useI18n } from '@/i18n';
 import { useMetricFormat } from '@/lib/format';
+import { leader } from './leader';
 
 /** Kasbga tayyorgarlik: indeks, o'zgarish, hudud doirasida — respublika qiymati. */
 function ReadinessTile({ stat, national }: { stat: Interests['careerReadiness']; national: number | null }) {
@@ -25,15 +26,18 @@ function ReadinessTile({ stat, national }: { stat: Interests['careerReadiness'];
   );
 }
 
-/** Qiziqishlar KPI qatori: yetakchi fan, qiziqish, kasbiy tip, soha va kasbga tayyorgarlik. */
+/**
+ * Qiziqishlar KPI qatori: yetakchi fan, qiziqish, kasbiy tip, soha va kasbga
+ * tayyorgarlik. Hamma ulush 0 bo'lsa — yetakchi yo'q ("—"), ustun chizilmaydi.
+ */
 export function InterestsKpis({ scope, data, nationalReadiness }: { scope: Scope; data: Interests | undefined; nationalReadiness: number | null }) {
   const { t } = useI18n();
   const fmt = useMetricFormat();
   if (!data) return <KpiRowSkeleton />;
-  const subject = data.subjects[0];
-  const interest = data.general[0];
-  const code = data.riasecTop[0];
-  const field = data.careerFields[0];
+  const subject = leader(data.subjects);
+  const interest = leader(data.general);
+  const code = leader(data.riasecTop);
+  const field = leader(data.careerFields);
   return (
     <KpiRow>
       <KpiTile
@@ -42,7 +46,7 @@ export function InterestsKpis({ scope, data, nationalReadiness }: { scope: Scope
         textValue
         value={subject ? t(`enums.subject.${subject.key}`) : '—'}
         note={subject ? t('interests.kpi.chosenBy', { value: fmt.pct(subject.share) }) : undefined}
-        footer={<Meter value={subject?.share ?? null} />}
+        footer={subject ? <Meter value={subject.share} /> : undefined}
       />
       <KpiTile
         label={t('interests.kpi.topInterest')}
@@ -50,7 +54,7 @@ export function InterestsKpis({ scope, data, nationalReadiness }: { scope: Scope
         textValue
         value={interest ? t(`enums.interest.${interest.key}`) : '—'}
         note={interest ? t('interests.kpi.chosenBy', { value: fmt.pct(interest.share) }) : undefined}
-        footer={<Meter value={interest?.share ?? null} />}
+        footer={interest ? <Meter value={interest.share} /> : undefined}
       />
       <KpiTile
         label={t('interests.kpi.topCode')}
@@ -66,7 +70,7 @@ export function InterestsKpis({ scope, data, nationalReadiness }: { scope: Scope
         textValue
         value={field ? t(`enums.careerField.${field.key}`) : '—'}
         note={field ? t('interests.kpi.fieldShare', { value: fmt.pct(field.share) }) : undefined}
-        footer={<Meter value={field?.share ?? null} barClassName="bg-gradient-to-r from-cyan-500 to-sky-400" />}
+        footer={field ? <Meter value={field.share} barClassName="bg-gradient-to-r from-cyan-500 to-sky-400" /> : undefined}
       />
       <ReadinessTile stat={data.careerReadiness} national={scope.kind === 'REGION' ? nationalReadiness : null} />
     </KpiRow>

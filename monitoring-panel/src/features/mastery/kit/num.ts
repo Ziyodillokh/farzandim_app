@@ -1,5 +1,6 @@
-/** Sof yordamchilar (hook'siz): farq va CSV formatlash. */
+/** Sof yordamchilar (hook'siz): farq, foiz o'qi shkalasi va CSV formatlash. */
 import { csvNumber as libCsvNumber } from '@/lib/csv';
+import { type NiceScale, niceScale } from '@/lib/scale';
 
 /** CSV uchun son (standart — 1 kasr xonasi): umumiy `lib/csv` ustida. */
 export function csvNumber(v: number | null | undefined, decimals = 1): string {
@@ -12,25 +13,16 @@ export function gap(a: number | null | undefined, b: number | null | undefined):
   return Math.round((a - b) * 10) / 10;
 }
 
-const NICE_STEPS = [1, 2, 5, 10, 20, 25, 50] as const;
-
 /**
- * Chiziqli grafik uchun "chiroyli" shkala: qiymatlar (va mos yozuv chizig'i)
- * sig'adigan, bo'linmalari butun qadam (1, 2, 5…) bo'lgan oraliq.
- * `intervals` berilsa — aynan shuncha bo'linma (recharts standart 5 ta belgi uchun 4).
+ * Foiz o'qi sozlamasi: yuqori chegara 100%, qadamlar butun (o'qda "67,5%" yo'q),
+ * oraliq kamida 4 p.p. — kichik o'zgarish bo'rttirib ko'rsatilmaydi.
  */
-export function niceScale(values: ReadonlyArray<number | null | undefined>, opts: { pad?: number; maxIntervals?: number; intervals?: number } = {}) {
-  const { pad = 0.5, maxIntervals = 5, intervals } = opts;
-  const finite = values.filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
-  if (finite.length === 0) return { domain: [0, 100] as [number, number], ticks: [0, 25, 50, 75, 100] };
-  const min = Math.min(...finite) - pad;
-  const max = Math.max(...finite) + pad;
-  for (const step of NICE_STEPS) {
-    const lo = Math.max(0, Math.floor(min / step) * step);
-    const n = Math.round((Math.ceil(max / step) * step - lo) / step);
-    if (n > (intervals ?? maxIntervals)) continue;
-    const count = intervals ?? Math.max(1, n);
-    return { domain: [lo, lo + count * step] as [number, number], ticks: Array.from({ length: count + 1 }, (_, i) => lo + i * step) };
-  }
-  return { domain: [0, 100] as [number, number], ticks: [0, 25, 50, 75, 100] };
+export const PCT_AXIS = { ceil: 100, minSpan: 2, integer: true } as const;
+
+/** Foiz ko'rsatkichlari o'qi (umumiy `lib/scale` ustida); qiymat yo'q bo'lsa — null. */
+export function pctScale(values: ReadonlyArray<number | null | undefined>): NiceScale | null {
+  return niceScale(
+    values.map((v) => v ?? null),
+    PCT_AXIS,
+  );
 }

@@ -150,7 +150,7 @@ function Report({ scope }: { scope: Scope }) {
           <DocSection n={5} title={t('reports.print.s5')}>
             <DocLabel>{t('reports.print.topSubjects')}</DocLabel>
             <div className="space-y-2">
-              {interests.data!.subjects.slice(0, 5).map((s) => (
+              {interests.data!.subjects.flatMap((s) => (s.share === null ? [] : [{ key: s.key, share: s.share }])).slice(0, 5).map((s) => (
                 <DocBar key={s.key} label={t(`enums.subject.${s.key}`)} value={fmt.pct(s.share)} share={s.share} />
               ))}
             </div>

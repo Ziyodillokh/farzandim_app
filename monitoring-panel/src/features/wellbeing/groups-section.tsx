@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { Wellbeing } from '@/data/contracts';
 import { useI18n } from '@/i18n';
 import { useMetricFormat } from '@/lib/format';
-import { distinctExtremeGrades, gradeRangeKeys, niceScale } from './kit/analysis';
+import { distinctExtremeGrades, gradeRangeKeys, metricScale, type NiceScale } from './kit/analysis';
 import { BarList } from './kit/bar-list';
 import { BlockTitle, ChartBlock } from './kit/chart-block';
 import { MiniColumns } from './kit/mini-columns';
@@ -23,8 +23,17 @@ const GROUP_METRICS: ReadonlyArray<{ key: GroupMetric; attention: 'min' | 'max' 
   { key: 'anxiety', attention: 'max' },
 ];
 
-/** Farovonlik indeksi (0–100) o'qi kamida 10 ball oraliqda — kichik farq bo'rttirilmaydi. */
-const WELLBEING_MIN_SPAN = 10;
+/** Farovonlik indeksining to'liq shkalasi (0–100). */
+const INDEX_MAX = 100;
+const INDEX_SCALE: NiceScale = { domain: [0, INDEX_MAX], ticks: [0, 25, 50, 75, INDEX_MAX] };
+
+/**
+ * Ustunlar o'qi doim 0 dan — uzunlik qiymatga mutanosib, kichik farq bo'rttirilmaydi:
+ * indeks — to'liq 0–100 shkalada, signallar — 0 dan (yonma-yon diagrammalar bir xil qoidada).
+ */
+function gradeScale(key: GroupMetric, values: ReadonlyArray<number | null>): NiceScale | null {
+  return key === 'wellbeing' ? INDEX_SCALE : metricScale(key, values, { zero: true });
+}
 
 /** Sinflar (kichik ko'paytmalar) va jins kesimi: farovonlik, bulling, xavotir. */
 export function GroupsSection({ id, data }: { id: string; data: Wellbeing | undefined }) {
@@ -63,7 +72,7 @@ export function GroupsSection({ id, data }: { id: string; data: Wellbeing | unde
                       name={t(`metrics.${key}.label`)}
                       data={data.byGrade.map((g) => ({ key: String(g.grade), label: String(g.grade), value: g[key], tooltipLabel: t('common.grade', { grade: g.grade }) }))}
                       format={(v) => fmt.value(key, v)}
-                      scale={key === 'wellbeing' ? niceScale(points.map((p) => p.value), { minSpan: WELLBEING_MIN_SPAN, integer: true }) : niceScale(points.map((p) => p.value), { zero: true })}
+                      scale={gradeScale(key, [...points.map((p) => p.value), statValue(key)])}
                       reference={statValue(key)}
                       highlight={highlight}
                     />
@@ -92,7 +101,7 @@ export function GroupsSection({ id, data }: { id: string; data: Wellbeing | unde
                         { key: 'F', label: t('common.girls'), value: f, color: GENDER_COLORS.F },
                       ]}
                       format={(v) => fmt.value(key, v)}
-                      domain={key === 'wellbeing' ? [0, 100] : undefined}
+                      max={key === 'wellbeing' ? INDEX_MAX : undefined}
                     />
                   </ChartBlock>
                 );

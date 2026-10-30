@@ -36,6 +36,25 @@ export function ChartBlock({
   );
 }
 
+/** Recharts Y o'qi belgisi o'q chetidan shuncha ichkarida: tickSize (6) + tickMargin (2). */
+const AXIS_TICK_INSET = 8;
+
+/**
+ * Y o'qi birligi ("daq") — o'q belgilari ustida, ular bilan o'ngdan tekislangan.
+ * Ota element `relative` bo'lishi, diagramma esa tepasida kamida 20px joy qoldirishi
+ * kerak (yuqori belgi shu chiziqda; birlik undan biroz yuqorida — `-top-1`).
+ */
+export function AxisUnit({ unit, axisWidth, marginLeft }: { unit: string; axisWidth: number; marginLeft: number }) {
+  return (
+    <span
+      className="pointer-events-none absolute -top-1 left-0 whitespace-nowrap text-right text-[11px] leading-none text-muted-foreground"
+      style={{ width: axisWidth + marginLeft - AXIS_TICK_INSET }}
+    >
+      {unit}
+    </span>
+  );
+}
+
 export type LegendItem = { key: string; label: string; color: string; shape?: 'dot' | 'line' | 'dash'; value?: string };
 
 /** Legenda: belgi (nuqta yoki chiziq) + matn; matn rangi — doim neytral. */

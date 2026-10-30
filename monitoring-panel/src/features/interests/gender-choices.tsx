@@ -27,10 +27,16 @@ function pairs(data: Interests): Pair[] {
     .filter((p) => p.boys > 0 || p.girls > 0);
 }
 
-function HalfBar({ value, max, color, side }: { value: number; max: number; color: string; side: 'left' | 'right' }) {
+/** Yarim ustun: guruh nomi ekran o'quvchisi uchun (ko'rishda — rang va tomon, legenda bilan). */
+function HalfBar({ value, max, color, side, group }: { value: number; max: number; color: string; side: 'left' | 'right'; group: string }) {
   const fmt = useMetricFormat();
   const bar = <span className="h-2.5 rounded-full transition-[width] duration-700" style={{ width: `${(value / max) * 100}%`, background: color }} />;
-  const label = <span className="w-11 shrink-0 text-[0.72rem] font-semibold tabular-nums">{fmt.pct(value)}</span>;
+  const label = (
+    <span className="w-11 shrink-0 text-[0.72rem] font-semibold tabular-nums">
+      <span className="sr-only">{group}: </span>
+      {fmt.pct(value)}
+    </span>
+  );
   return (
     <span className={side === 'left' ? 'flex min-w-0 items-center justify-end gap-1.5 text-right' : 'flex min-w-0 items-center gap-1.5'}>
       {side === 'left' ? label : null}
@@ -54,6 +60,8 @@ export function GenderChoicesSection({ data, className }: { data: Interests | un
     <Section id="interests-gender" icon={<UsersRound />} title={t('interests.sections.gender')} subtitle={t('interests.sections.genderSub')} className={className}>
       {!data ? (
         <Skeleton className="h-[360px] w-full rounded-xl" />
+      ) : rows.length === 0 ? (
+        <Note>{t('common.noData')}</Note>
       ) : (
         <div className="space-y-4">
           <SwatchLegend
@@ -66,9 +74,9 @@ export function GenderChoicesSection({ data, className }: { data: Interests | un
           <ul className="space-y-1.5">
             {rows.map((r) => (
               <li key={r.key} className="grid grid-cols-[minmax(0,1fr)_6.5rem_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_8rem_minmax(0,1fr)]">
-                <HalfBar value={r.boys} max={max} color={GENDER_COLORS.M} side="left" />
+                <HalfBar value={r.boys} max={max} color={GENDER_COLORS.M} side="left" group={t('common.boys')} />
                 <span className="truncate text-center text-[0.76rem] font-medium">{t(`enums.subject.${r.key}`)}</span>
-                <HalfBar value={r.girls} max={max} color={GENDER_COLORS.F} side="right" />
+                <HalfBar value={r.girls} max={max} color={GENDER_COLORS.F} side="right" group={t('common.girls')} />
               </li>
             ))}
           </ul>

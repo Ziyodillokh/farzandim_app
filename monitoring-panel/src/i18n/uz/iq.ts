@@ -2,7 +2,7 @@ export const iq = {
   title: 'IQ va tafakkur',
   subtitle: "Parvoz IQ: daraja taqsimoti, yo'nalishlar va qamrov",
   kpi: {
-    participationNote: '9 yoshdan katta o\'quvchilar orasida',
+    participationNote: '9 yoshdan (3-sinfdan) boshlab o\'quvchilar orasida',
     meanNote: 'yosh normasi: 100 ± 15',
     modalBand: 'Asosiy daraja',
     modalBandNote: 'norma shakllanmoqda — natija darajalarda',
@@ -62,9 +62,9 @@ export const iq = {
     csvName: 'iq-darajalar',
   },
   groups: {
-    fromGrade3: 'IQ testi 3-sinfdan (9 yoshdan) o\'tkaziladi — «1–4-sinflar» guruhida faqat 3–4-sinflar.',
+    fromGrade3: 'IQ testi 9 yoshdan (3-sinfdan) boshlab o\'tkaziladi — «1–4-sinflar» guruhida faqat 3–4-sinflar.',
     notNormed: 'Norma shakllanmoqda: o\'rtacha ball hali ko\'rsatilmaydi.',
-    genderNote: 'Ball farqi 3 dan kam bo\'lsa, amaliy ahamiyatga ega emas.',
+    genderNote: 'Ball farqi {points} dan kam bo\'lsa, amaliy ahamiyatga ega emas.',
     pointsUnit: 'ball',
   },
 };

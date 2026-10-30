@@ -8,11 +8,14 @@ import { K_MIN } from '@/data/mock/model/engine';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 
-/** Bo'lim ichidagi kichik sarlavha (dashboard uslubida). */
+/**
+ * Bo'lim ichidagi kichik sarlavha (dashboard uslubida). Sarlavhalar tartibi:
+ * sahifa — h1, bo'lim (`Section`) — h2, bo'lim ichidagi blok — h3.
+ */
 export function SubHeading({ children, aside, className }: { children: ReactNode; aside?: ReactNode; className?: string }) {
   return (
     <div className={cn('mb-2.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1', className)}>
-      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{children}</p>
+      <h3 className="text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{children}</h3>
       {aside && <div className="text-[0.72rem] text-muted-foreground">{aside}</div>}
     </div>
   );

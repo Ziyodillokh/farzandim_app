@@ -10,7 +10,7 @@ import { MapLegend, UzMap } from '@/components/map/uz-map';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { MetricKey, Scope } from '@/data/contracts';
 import { METRICS } from '@/data/mock/model/metrics';
-import type { RegionId } from '@/data/reference/regions';
+import { type RegionId, regionName } from '@/data/reference/regions';
 import { useAreaMetric } from '@/features/filters/use-monitoring';
 import { useI18n } from '@/i18n';
 import { useMetricFormat } from '@/lib/format';
@@ -45,7 +45,7 @@ export function MapPanel({
   showTabs?: boolean;
   className?: string;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const fmt = useMetricFormat();
   const router = useRouter();
   const can = useCan();
@@ -91,7 +91,7 @@ export function MapPanel({
           />
         )}
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-          <MapLegend better={def.better} centerLabel={`${scope.kind === 'NATIONAL' ? t('common.nationalAvg') : t('common.value')}: ${format(center)}`} />
+          <MapLegend better={def.better} centerLabel={`${scope.kind === 'NATIONAL' ? t('common.nationalAvg') : regionName(scope.regionId, locale)}: ${format(center)}`} />
           {scope.kind === 'NATIONAL' && can('regions.view') && <span className="text-[0.7rem] text-muted-foreground">{t('map.clickHint')}</span>}
         </div>
       </div>

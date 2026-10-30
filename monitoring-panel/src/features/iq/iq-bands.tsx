@@ -10,7 +10,7 @@ import { IQ_BAND_COLORS } from '@/lib/color-scale';
 import { Inset, Note } from '@/features/mastery/kit/layout';
 import { useI18n } from '@/i18n';
 import { useMetricFormat } from '@/lib/format';
-import { bandShare, IQ_BANDS_ASC, IQ_NORM_SHARE, maxNormDeviation, NORM_CLOSE_PP } from './iq-norm';
+import { bandShare, hasBandData, IQ_BANDS_ASC, IQ_NORM_SHARE, normVerdict } from './iq-norm';
 
 /** Ustun balandligi — bo'yi 82% gacha (yorliq uchun joy qoladi). */
 const BAR_SPACE = 82;
@@ -108,23 +108,25 @@ function BandTable({ bands }: { bands: Iq['bands'] }) {
 function NormVerdict({ bands }: { bands: Iq['bands'] }) {
   const { t } = useI18n();
   const fmt = useMetricFormat();
-  const dev = maxNormDeviation(bands);
-  if (!dev) return null;
-  const value = fmt.delta('iqHigh', dev.diff);
+  const verdict = normVerdict(bands);
+  if (!verdict) return null;
+  const value = fmt.delta('iqHigh', verdict.diff);
   return (
     <Inset className="py-2.5 text-[0.8rem]">
-      {Math.abs(dev.diff) < NORM_CLOSE_PP ? t('iq.bands.close', { value }) : t('iq.bands.far', { band: t(`enums.iqBand.${dev.band}`), value })}
+      {verdict.kind === 'close' ? t('iq.bands.close', { value }) : t('iq.bands.far', { band: t(`enums.iqBand.${verdict.band}`), value })}
     </Inset>
   );
 }
 
-/** Daraja taqsimoti: gistogramma (norma bilan) + jadval ko'rinishi. */
+/** Daraja taqsimoti: gistogramma (norma bilan) + jadval ko'rinishi. Taqsimot yo'q — "0%" emas, "ma'lumot yo'q". */
 export function IqBandsSection({ data }: { data: Iq | undefined }) {
   const { t } = useI18n();
   return (
     <Section id="iq-bands" icon={<ChartColumnBig />} title={t('iq.sections.bands')} subtitle={t('iq.sections.bandsSub')}>
       {!data ? (
         <Skeleton className="h-[340px] w-full rounded-xl" />
+      ) : !hasBandData(data.bands) ? (
+        <Note>{t('common.noData')}</Note>
       ) : (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
           <BandHistogram bands={data.bands} />

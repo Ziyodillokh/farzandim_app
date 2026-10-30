@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { distinctExtremeGrades, extremeAllBy, extremeBy, extremeGrades, gradeRangeKeys, meanOf, niceScale, niceStep, oneIn } from './analysis';
+import { distinctExtremeGrades, extremeAllBy, extremeBy, extremeGrades, gradeRangeKeys, meanOf, metricScale, niceScale, niceStep, oneIn } from './analysis';
 
 describe('meanOf', () => {
   it('ignores null and non-finite values', () => {
@@ -173,5 +173,40 @@ describe('oneIn', () => {
     expect(oneIn(0.5)).toBeNull();
     expect(oneIn(null)).toBeNull();
     expect(oneIn(140)).toBeNull();
+  });
+
+  it('is null when the share is so large that N would be 1 ("one in 1 child")', () => {
+    expect(oneIn(67)).toBeNull();
+    expect(oneIn(80)).toBeNull();
+    expect(oneIn(100)).toBeNull();
+  });
+
+  it('keeps "one in 2" for shares around a half', () => {
+    expect(oneIn(50)).toBe(2);
+    expect(oneIn(66)).toBe(2);
+  });
+});
+
+describe('metricScale', () => {
+  it('never lets a percent axis run past 100%', () => {
+    for (const values of [[98.7, 99.4], [96.2, 97.4, 95.7], [94, 99]]) {
+      const scale = metricScale('attendance', values, { minSpan: 4 })!;
+      expect(scale.domain[1]).toBeLessThanOrEqual(100);
+      expect(scale.domain[0]).toBeLessThanOrEqual(Math.min(...values));
+      expect(scale.domain[1]).toBeGreaterThanOrEqual(Math.max(...values));
+    }
+  });
+
+  it('starts bar axes at zero', () => {
+    expect(metricScale('bullying', [7.2, 13.4], { zero: true })!.domain[0]).toBe(0);
+  });
+
+  it('uses whole-number ticks for minutes and index metrics', () => {
+    expect(metricScale('screenTime', [96, 242], { zero: true })!.ticks.every(Number.isInteger)).toBe(true);
+    expect(metricScale('wellbeing', [67, 71], { minSpan: 6 })!.ticks.every(Number.isInteger)).toBe(true);
+  });
+
+  it('does not cap non-percent metrics at 100', () => {
+    expect(metricScale('screenTime', [140, 193], { minSpan: 30 })!.domain[1]).toBeGreaterThan(100);
   });
 });

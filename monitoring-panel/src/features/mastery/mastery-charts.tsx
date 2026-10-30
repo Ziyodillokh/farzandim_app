@@ -10,7 +10,7 @@ import { useI18n } from '@/i18n';
 import { useMetricFormat } from '@/lib/format';
 import { GradeLine } from './grade-line';
 import { Note } from './kit/layout';
-import { gap, niceScale } from './kit/num';
+import { gap, pctScale } from './kit/num';
 import { useScopeLabels } from './kit/scope';
 
 const CHART_HEIGHT = 240;
@@ -27,6 +27,8 @@ export function GradeSection({ data }: { data: Mastery | undefined }) {
     <Section id="mastery-grades" icon={<GraduationCap />} title={t('mastery.sections.grades')} subtitle={t('mastery.sections.gradesSub')}>
       {!data ? (
         <Skeleton className="h-[280px] w-full rounded-xl" />
+      ) : points.length === 0 ? (
+        <Note>{t('common.noData')}</Note>
       ) : (
         <>
           <GradeLine
@@ -56,18 +58,22 @@ export function TrendSection({ scope, data }: { scope: Scope; data: Mastery | un
   const fmt = useMetricFormat();
   const { national, scopeName } = useScopeLabels(scope);
   const reference = national || !data ? null : data.national.overall;
+  const hasTrend = data ? data.trend.some((p) => p.value !== null) : false;
   return (
     <Section id="mastery-trend" icon={<TrendingUp />} title={t('mastery.sections.trend')} subtitle={t('mastery.sections.trendSub')}>
       {!data ? (
         <Skeleton className="h-[280px] w-full rounded-xl" />
+      ) : !hasTrend ? (
+        <Note>{t('common.noData')}</Note>
       ) : (
         <TrendChart
           series={[{ key: 'scope', label: scopeName, points: data.trend }]}
           format={(v) => fmt.value('mastery', v)}
+          axisFormat={(v) => fmt.pct(v, 0)}
           height={CHART_HEIGHT + 24}
           reference={reference}
           referenceLabel={t('common.nationalAvg')}
-          domain={niceScale([...data.trend.map((p) => p.value), reference], { intervals: 4 }).domain}
+          domain={pctScale([...data.trend.map((p) => p.value), reference])?.domain}
         />
       )}
     </Section>

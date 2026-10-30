@@ -1,7 +1,6 @@
 'use client';
 
 import { TableProperties } from 'lucide-react';
-import type { KeyboardEvent } from 'react';
 
 import { ExportMenu } from '@/components/common/export-menu';
 import { Section } from '@/components/common/section';
@@ -23,29 +22,39 @@ const TD = 'border-t border-border/40 px-3 py-2';
 
 function CodeBadge({ code }: { code: string }) {
   return (
-    <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[0.68rem] font-bold text-primary ring-1 ring-inset ring-primary/20">{code}</span>
+    <span aria-hidden className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[0.68rem] font-bold text-primary ring-1 ring-inset ring-primary/20">
+      {code}
+    </span>
   );
 }
 
+/**
+ * Jadval qatori. Bosiladigan bo'lsa (hudud profili) — sichqoncha uchun butun qator,
+ * klaviatura va ekran o'quvchisi uchun qator sarlavhasidagi tugma (umumiy
+ * `HeatTable` bilan bir xil).
+ */
 function AreaTableRow({ row, onOpen }: { row: AreaRow; onOpen?: (id: string) => void }) {
   const { t } = useI18n();
   const fmt = useMetricFormat();
   const areaName = useAreaName();
-  const onKey = (e: KeyboardEvent) => {
-    if (onOpen && (e.key === 'Enter' || e.key === ' ')) {
-      e.preventDefault();
-      onOpen(row.id);
-    }
-  };
+  const name = areaName(row.id, { short: true, fallback: row.name });
   return (
-    <tr
-      onClick={onOpen ? () => onOpen(row.id) : undefined}
-      onKeyDown={onOpen ? onKey : undefined}
-      tabIndex={onOpen ? 0 : undefined}
-      className={cn('group', onOpen && 'cursor-pointer focus-visible:outline-none [&>*]:focus-visible:bg-primary/[0.06]')}
-    >
+    <tr onClick={onOpen ? () => onOpen(row.id) : undefined} className={cn('group', onOpen && 'cursor-pointer')}>
       <th scope="row" className={cn(TD, 'sticky left-0 z-10 whitespace-nowrap bg-card/95 text-left font-medium backdrop-blur group-hover:text-primary')}>
-        {areaName(row.id, { short: true, fallback: row.name })}
+        {onOpen ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpen(row.id);
+            }}
+            className="rounded text-left font-medium outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {name}
+          </button>
+        ) : (
+          name
+        )}
       </th>
       <td className={TD}>
         {row.topSubject ? (
@@ -111,10 +120,18 @@ export function InterestsAreasSection({ scope, data }: { scope: Scope; data: Int
             <table className="w-full min-w-[620px] border-separate border-spacing-0 text-[0.8rem]">
               <thead>
                 <tr>
-                  <th className={cn(TH, 'sticky left-0 z-10 bg-card/95 backdrop-blur')}>{areasHeader}</th>
-                  <th className={TH}>{t('interests.areas.colTopSubject')}</th>
-                  <th className={TH}>{t('interests.areas.colTopCode')}</th>
-                  <th className={TH}>{t('interests.areas.colTopField')}</th>
+                  <th scope="col" className={cn(TH, 'sticky left-0 z-10 bg-card/95 backdrop-blur')}>
+                    {areasHeader}
+                  </th>
+                  <th scope="col" className={TH}>
+                    {t('interests.areas.colTopSubject')}
+                  </th>
+                  <th scope="col" className={TH}>
+                    {t('interests.areas.colTopCode')}
+                  </th>
+                  <th scope="col" className={TH}>
+                    {t('interests.areas.colTopField')}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -124,9 +141,7 @@ export function InterestsAreasSection({ scope, data }: { scope: Scope; data: Int
               </tbody>
             </table>
           </div>
-          <Note className="mt-2">
-            {t('common.screening.regionsNote')} {drill ? t('interests.areas.hintClick') : ''}
-          </Note>
+          {drill && <Note className="mt-2">{t('interests.areas.hintClick')}</Note>}
         </>
       )}
     </Section>

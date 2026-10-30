@@ -6,8 +6,16 @@
 import type { AreaMatrix, AreaRow, MetricKey } from '@/data/contracts';
 import { meanOf } from './kit/analysis';
 
-/** Hudud signali "sezilarli yuqori" sanaladigan nisbiy chegara (o'rtachadan ≥5%). */
+/**
+ * Hudud signali "sezilarli yuqori" sanaladi, agar ikkala shart bajarilsa:
+ * nisbiy — o'rtachadan kamida 5% ga yuqori, mutlaq — kamida 0,5 p.p. ga yuqori
+ * (kichik asosda, masalan 3,7% → 3,9%, +0,2 p.p. — tasodifiy tebranish, sezilarli emas).
+ * Signallar (PROBLEM_METRICS) — bolalar ulushi, %; mutlaq chegara p.p. da.
+ */
 export const NOTABLE_EXCESS = 0.05;
+export const NOTABLE_MIN_DIFF = 0.5;
+/** Suzuvchi nuqta xatosi: 4,1 − 3,6 = 0,4999… ham chegaradan o'tsin. */
+const DIFF_EPSILON = 1e-9;
 /** Ro'yxatda ko'rsatiladigan hududlar soni. */
 export const HOTSPOT_LIMIT = 5;
 /** Har hudud uchun ko'rsatiladigan signallar soni. */
@@ -31,7 +39,7 @@ export type HotspotSignal = { metric: MetricKey; value: number; mean: number; di
 export type Hotspot = {
   id: string;
   name: string;
-  /** O'rtachadan oshgan nisbiy qismlar yig'indisi — saralash uchun. */
+  /** O'rtachadan jami oshish: o'rtachadan yuqori signallarning nisbiy oshishlari yig'indisi — saralash uchun. */
   burden: number;
   /** O'rtachadan sezilarli yuqori signallar soni. */
   aboveCount: number;
@@ -73,7 +81,15 @@ export function rankProblems(matrix: AreaMatrix, metrics: readonly MetricKey[]):
     .sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity));
 }
 
-/** Bitta bo'linmaning o'rtachadan oshgan signallari va umumiy "yuk". */
+/** O'rtachadan "sezilarli yuqori": nisbiy (≥5%) va mutlaq (≥0,5 p.p.) chegaralar birga. */
+export function isNotableExcess(diff: number, rel: number): boolean {
+  return rel >= NOTABLE_EXCESS && diff >= NOTABLE_MIN_DIFF - DIFF_EPSILON;
+}
+
+/**
+ * Bitta bo'linmaning o'rtachadan sezilarli yuqori signallari va o'rtachadan jami
+ * oshish (`burden` — o'rtachadan yuqori barcha signallarning nisbiy oshishlari yig'indisi).
+ */
 export function areaExcess(row: AreaRow, metrics: readonly MetricKey[], means: Partial<Record<MetricKey, number>>): Omit<Hotspot, 'id' | 'name'> {
   let burden = 0;
   const signals: HotspotSignal[] = [];
@@ -81,10 +97,11 @@ export function areaExcess(row: AreaRow, metrics: readonly MetricKey[], means: P
     const value = valueOf(row, metric);
     const mean = means[metric];
     if (value === null || mean === undefined || mean <= 0) continue;
-    const rel = (value - mean) / mean;
+    const diff = value - mean;
+    const rel = diff / mean;
     if (rel <= 0) continue;
     burden += rel;
-    if (rel >= NOTABLE_EXCESS) signals.push({ metric, value, mean, diff: value - mean, rel });
+    if (isNotableExcess(diff, rel)) signals.push({ metric, value, mean, diff, rel });
   }
   signals.sort((a, b) => b.rel - a.rel);
   return { burden, aboveCount: signals.length, signals };
@@ -92,7 +109,7 @@ export function areaExcess(row: AreaRow, metrics: readonly MetricKey[], means: P
 
 /**
  * Signallar o'rtachadan eng ko'p oshgan bo'linmalar: kamida bitta signali
- * sezilarli yuqori bo'lganlar, "yuk" bo'yicha kamayish tartibida.
+ * sezilarli yuqori bo'lganlar, o'rtachadan jami oshish bo'yicha kamayish tartibida.
  */
 export function findHotspots(matrix: AreaMatrix, metrics: readonly MetricKey[], limit = HOTSPOT_LIMIT): Hotspot[] {
   const means = columnMeans(matrix.rows, metrics);
@@ -107,8 +124,8 @@ export function findHotspots(matrix: AreaMatrix, metrics: readonly MetricKey[], 
 export type ProblemSort = 'official' | 'burden' | MetricKey;
 
 /**
- * Issiqlik jadvali qatorlari tartibi: rasmiy (servis tartibi), signallar
- * yig'indisi yoki tanlangan signal bo'yicha (yuqoridan — e'tibor talab).
+ * Issiqlik jadvali qatorlari tartibi: rasmiy (servis tartibi), o'rtachadan jami
+ * oshish (`burden`, nisbiy) yoki tanlangan signal bo'yicha (yuqoridan — e'tibor talab).
  */
 export function sortAreaRows(rows: readonly AreaRow[], metrics: readonly MetricKey[], sort: ProblemSort): AreaRow[] {
   if (sort === 'official') return [...rows];

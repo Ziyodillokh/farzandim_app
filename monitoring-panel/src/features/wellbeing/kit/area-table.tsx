@@ -132,8 +132,9 @@ export function AreaTable({ scope, metrics, data, loading }: { scope: Scope; met
         const col = stats[m];
         const better = METRICS[m].better;
         const style = col && better !== 'neutral' ? heatStyle(v, col.mean, col.spread, better) : undefined;
+        // `whitespace-nowrap` — "148 мин" ikki qatorga bo'linmasin (tor ustunda jadval aylantiriladi).
         return (
-          <div className="inline-flex items-center gap-2">
+          <div className="inline-flex items-center gap-2 whitespace-nowrap">
             <span className="inline-block min-w-[4.6rem] rounded-md px-2 py-1 text-center font-semibold tabular-nums" style={style}>
               {fmt.value(m, v)}
             </span>

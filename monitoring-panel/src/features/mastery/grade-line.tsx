@@ -4,7 +4,7 @@ import { useId } from 'react';
 import { Area, AreaChart, CartesianGrid, LabelList, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import { ChartTooltip } from '@/components/charts/chart-tooltip';
-import { niceScale } from './kit/num';
+import { pctScale } from './kit/num';
 
 export type GradePoint = { key: string; label: string; value: number | null };
 
@@ -37,7 +37,8 @@ function selectiveLabel(show: Set<number>, format: (v: number) => string) {
 
 /**
  * Sinflar bo'yicha chiziqli grafik (tartibli toifalar): nuqtalar, tanlangan
- * yorliqlar va o'rtacha chizig'i. Dashboard trend grafigi uslubida.
+ * yorliqlar va o'rtacha chizig'i. Dashboard trend grafigi uslubida. Qiymatlar —
+ * foiz (o'q 100% dan oshmaydi).
  */
 export function GradeLine({
   points,
@@ -58,7 +59,7 @@ export function GradeLine({
 }) {
   const id = useId().replace(/:/g, '');
   const show = labelIndexes(points);
-  const scale = niceScale([...points.map((p) => p.value), reference], { pad: 1 });
+  const scale = pctScale([...points.map((p) => p.value), reference]);
   return (
     <div style={{ height }} className="w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -71,7 +72,7 @@ export function GradeLine({
           </defs>
           <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 4" vertical={false} />
           <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} interval={0} padding={{ left: 10, right: 10 }} />
-          <YAxis domain={scale.domain} ticks={scale.ticks} tickFormatter={tickFormat} tick={AXIS_TICK} axisLine={false} tickLine={false} width={48} interval={0} />
+          <YAxis domain={scale?.domain ?? ['auto', 'auto']} ticks={scale?.ticks} tickFormatter={tickFormat} tick={AXIS_TICK} axisLine={false} tickLine={false} width={48} interval={0} />
           <Tooltip cursor={{ stroke: 'hsl(var(--primary))', strokeOpacity: 0.3 }} content={<ChartTooltip formatLabel={formatLabel} formatValue={(v) => format(v)} />} />
           {reference !== null && <ReferenceLine y={reference} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeOpacity={0.7} />}
           <Area

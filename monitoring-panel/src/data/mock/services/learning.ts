@@ -4,7 +4,7 @@
  */
 import type { Filters, Interests, Iq, Mastery, Scope, ShareItem } from '@/data/contracts';
 import * as F from '@/data/mock/model/formulas';
-import type { Area } from '@/data/mock/model/engine';
+import { aggregate, type Area } from '@/data/mock/model/engine';
 import { findDistrict, REGION_LATENT } from '@/data/mock/model/latent';
 import { overallMastery, riasecMean, subjectInterestShare, subjectMastery } from '@/data/mock/model/metrics';
 import {
@@ -195,6 +195,17 @@ function agroOf(area: Area): number {
   return findDistrict(area.id)?.latent.agro ?? 0.55;
 }
 
+/**
+ * Ulush: hech kim o'qimasa (fan bu sinflarda yo'q) — 0; guruh K-anonimlik chegarasidan
+ * kichik bo'lsa — null ("—"), aks holda yaxlitlangan qiymat.
+ */
+function shareOf(agg: { value: number | null; n: number }): number | null {
+  return agg.n === 0 ? 0 : round(agg.value);
+}
+
+/** Kamayish tartibida, yashirilganlar oxirida. */
+const byShareDesc = (a: { share: number | null }, b: { share: number | null }) => (b.share ?? -1) - (a.share ?? -1);
+
 export function getInterests(scope: Scope, f: Filters): Interests {
   const area = scopeArea(scope);
   const w = window(f);
@@ -204,13 +215,13 @@ export function getInterests(scope: Scope, f: Filters): Interests {
   const top = topShares(scores);
   const subjects = SUBJECT_KEYS.map((subject) => ({
     key: subject,
-    share: round(subjectInterestShare(subject, area, sf, w.months).value) ?? 0,
+    share: shareOf(subjectInterestShare(subject, area, sf, w.months)),
     mastery: round(subjectMastery(subject, area, sf, w.months).value),
-  })).sort((a, b) => b.share - a.share);
+  })).sort(byShareDesc);
   const general = INTERESTS.map((interest) => ({
     key: interest,
-    share: round(customValue(`gi:${interest}`, area, f, (c) => F.generalInterest(c, interest) * 100, F.activeRate)) ?? 0,
-  })).sort((a, b) => b.share - a.share);
+    share: shareOf(aggregate(`gi:${interest}`, area, sf, w.months, (c) => F.generalInterest(c, interest) * 100, F.activeRate)),
+  })).sort(byShareDesc);
   const byArea = childAreas(scope).map(({ area: a, id, name }) => {
     const subs = SUBJECT_KEYS.map((s) => ({ s, v: subjectInterestShare(s, a, sf, w.months).value ?? -1 })).sort((x, y) => y.v - x.v);
     const sc = riasecScores(a, f);
@@ -238,8 +249,8 @@ export function getInterests(scope: Scope, f: Filters): Interests {
       gender,
       subjects: SUBJECT_KEYS.map((s) => ({
         key: s,
-        share: round(subjectInterestShare(s, area, strata(withFilter(f, { gender })), w.months).value) ?? 0,
-      })).sort((a, b) => b.share - a.share),
+        share: shareOf(subjectInterestShare(s, area, strata(withFilter(f, { gender })), w.months)),
+      })).sort(byShareDesc),
     })),
   };
 }

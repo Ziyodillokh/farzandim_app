@@ -4,7 +4,6 @@ export const attendance = {
   nav: {
     label: 'Sahifa bo\'limlari',
     overview: 'Ko\'rsatkichlar',
-    statuses: 'Holatlar',
     map: 'Xarita',
     breakdowns: 'Kesimlar',
     areas: 'Jadval',
@@ -16,7 +15,6 @@ export const attendance = {
   },
   statuses: {
     title: 'Davomat holatlari',
-    subtitle: 'Belgilangan o\'quvchi-kunlar qanday taqsimlanadi',
     came: 'Keldi',
     missed: 'Kelmadi',
     mainDeviation: 'Asosiy chetlanish — {status}: {value}',
@@ -29,7 +27,9 @@ export const attendance = {
     byWeekday: 'Hafta kunlari bo\'yicha',
     byGrade: 'Sinflar bo\'yicha',
     bySchoolType: 'Maktab turi bo\'yicha',
-    columnsNote: 'Shtrix chiziq — umumiy davomat; amber ustunlar — davomati eng past guruh.',
+    columnsNote: 'Shtrix chiziq — umumiy davomat; amber ustunlar — davomati eng past guruh. Maktab turlarida vertikal belgi — umumiy davomat, raqam — undan farq.',
+    axisNote: 'O\'q noldan boshlanmaydi',
+    overall: 'Umumiy davomat: {value}',
     weekday: {
       d1: 'Dushanba',
       d2: 'Seshanba',

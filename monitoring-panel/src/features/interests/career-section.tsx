@@ -11,16 +11,19 @@ import { Note, SubHeading } from '@/features/mastery/kit/layout';
 import { useI18n } from '@/i18n';
 import { useAreaName } from '@/lib/area-name';
 import { useMetricFormat } from '@/lib/format';
+import { hasShares } from './leader';
 
 const pct = (v: number) => `${Math.min(100, Math.max(0, v))}%`;
 
-/** Kasb sohalariga moyillik (8 soha). */
+/** Kasb sohalariga moyillik (8 soha); hamma ulush 0 bo'lsa — "ma'lumot yo'q". */
 export function CareerFieldsSection({ data }: { data: Interests | undefined }) {
   const { t } = useI18n();
   return (
     <Section id="interests-careers" icon={<BriefcaseBusiness />} title={t('interests.sections.careers')} subtitle={t('interests.sections.careersSub')}>
       {!data ? (
         <Skeleton className="h-[320px] w-full rounded-xl" />
+      ) : !hasShares(data.careerFields) ? (
+        <Note>{t('common.noData')}</Note>
       ) : (
         <ShareBars rows={data.careerFields.map((f) => ({ key: f.key, label: t(`enums.careerField.${f.key}`), share: f.share }))} barClassName="bg-gradient-to-r from-cyan-500 to-sky-400" />
       )}

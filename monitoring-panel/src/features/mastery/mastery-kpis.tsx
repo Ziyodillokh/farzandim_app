@@ -59,10 +59,12 @@ function SpreadTile({ heat }: { heat: Mastery['heat'] }) {
   const top = valid[0];
   const bottom = valid.length > 1 ? valid[valid.length - 1] : undefined;
   const spread = top && bottom ? gap(top.overall, bottom.overall) : null;
+  // Ma'nosi ko'rishda — strelka va izoh ("eng yuqori va eng past hudud"), ekran o'quvchisi uchun — matn.
   const line = (row: (typeof valid)[number], up: boolean) => (
-    <li className="flex items-center justify-between gap-2" title={up ? t('mastery.kpi.highest') : t('mastery.kpi.lowest')}>
+    <li className="flex items-center justify-between gap-2">
       <span className="flex min-w-0 items-center gap-1">
-        {up ? <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-emerald-500" /> : <ArrowDownRight className="h-3.5 w-3.5 shrink-0 text-amber-500" />}
+        {up ? <ArrowUpRight aria-hidden className="h-3.5 w-3.5 shrink-0 text-emerald-500" /> : <ArrowDownRight aria-hidden className="h-3.5 w-3.5 shrink-0 text-amber-500" />}
+        <span className="sr-only">{up ? t('mastery.kpi.highest') : t('mastery.kpi.lowest')}: </span>
         <span className="truncate">{areaName(row.id, { short: true, fallback: row.name })}</span>
       </span>
       <span className="shrink-0 font-semibold tabular-nums">{fmt.value('mastery', row.overall)}</span>

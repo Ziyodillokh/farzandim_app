@@ -10,23 +10,8 @@ import { useMetricFormat } from '@/lib/format';
 import { DIFFICULTY_COLORS, DIFFICULTY_LEVELS, hasDifficulty } from './difficulty';
 import { CompareBars, StackBar } from './kit/bars';
 import { GENDER_COLORS } from './kit/colors';
-import { Inset, Note, SubHeading } from './kit/layout';
-import { gap } from './kit/num';
-
-/** Ikki guruh farqi matni: "Farq: 2,0 p.p. — qiz bolalar natijasi yuqoriroq". */
-export function GenderGapNote({ boys, girls, unit, threshold = 0.5 }: { boys: number | null; girls: number | null; unit: string; threshold?: number }) {
-  const { t } = useI18n();
-  const fmt = useMetricFormat();
-  const diff = gap(girls, boys);
-  if (diff === null) return null;
-  const verdict = Math.abs(diff) < threshold ? t('mastery.groups.noGap') : diff > 0 ? t('mastery.groups.girlsHigher') : t('mastery.groups.boysHigher');
-  return (
-    <Inset className="py-2.5 text-[0.8rem]">
-      <b className="tabular-nums">{t('mastery.groups.gap', { value: `${fmt.num(Math.abs(diff), 1)}${unit ? ` ${unit}` : ''}` })}</b>
-      <span className="text-muted-foreground"> — {verdict}</span>
-    </Inset>
-  );
-}
+import { GenderGapNote } from './kit/gender-gap';
+import { Note, SubHeading } from './kit/layout';
 
 function GenderBlock({ data }: { data: Mastery }) {
   const { t } = useI18n();

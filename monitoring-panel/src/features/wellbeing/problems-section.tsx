@@ -21,14 +21,14 @@ import { findHotspots, type ProblemSort, rankProblems, sortAreaRows } from './pr
 import { PROBLEM_METRICS, problemLabelKey } from './problem-keys';
 import { HotspotsPanel, WidespreadPanel } from './problem-summary';
 
-/** Issiqlik jadvali tartibini tanlash: rasmiy, signallar yig'indisi yoki bitta signal. */
+/** Issiqlik jadvali tartibini tanlash: rasmiy, o'rtachadan jami oshish yoki bitta signal. */
 function SortSelect({ value, onChange }: { value: ProblemSort; onChange: (v: ProblemSort) => void }) {
   const { t } = useI18n();
   return (
     <div className="flex items-center gap-2 text-[0.75rem] text-muted-foreground">
       <span aria-hidden>{t('wellbeing.problems.sort')}</span>
       <Select value={value} onValueChange={(v) => onChange(v as ProblemSort)}>
-        <SelectTrigger aria-label={t('wellbeing.problems.sort')} className="h-8 w-[200px] rounded-lg text-[0.78rem]">
+        <SelectTrigger aria-label={t('wellbeing.problems.sort')} className="h-8 w-[224px] rounded-lg text-[0.78rem]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

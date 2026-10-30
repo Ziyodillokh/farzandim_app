@@ -11,7 +11,7 @@ import { useCompactParts } from '@/features/mastery/kit/use-compact';
 import { useI18n } from '@/i18n';
 import { deltaTone } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { bandShare, IQ_BANDS_ASC, modalBand } from './iq-norm';
+import { bandShare, hasBandData, IQ_BANDS_ASC, modalBand } from './iq-norm';
 
 /** Darajalar taqsimoti — ingichka yig'ma chiziq (KPI kartasi pastida). */
 function BandStrip({ bands }: { bands: Iq['bands'] }) {
@@ -34,9 +34,10 @@ function NormBadge({ normed }: { normed: boolean }) {
   );
 }
 
-/** O'rtacha ball faqat norma tasdiqlanganda; aks holda — eng katta ulushli daraja. */
+/** O'rtacha ball faqat norma tasdiqlanganda; aks holda — eng katta ulushli daraja. Taqsimot yo'q — chiziq ham yo'q. */
 function MeanTile({ data }: { data: Iq }) {
   const { t } = useI18n();
+  const strip = hasBandData(data.bands) ? <BandStrip bands={data.bands} /> : undefined;
   if (data.normed) {
     return (
       <KpiTile
@@ -46,7 +47,7 @@ function MeanTile({ data }: { data: Iq }) {
         metric="iqMean"
         delta={data.mean.delta}
         note={t('iq.kpi.meanNote')}
-        footer={<BandStrip bands={data.bands} />}
+        footer={strip}
       />
     );
   }
@@ -58,7 +59,7 @@ function MeanTile({ data }: { data: Iq }) {
       value={modal ? t(`enums.iqBand.${modal.key}`) : '—'}
       textValue
       note={t('iq.kpi.modalBandNote')}
-      footer={<BandStrip bands={data.bands} />}
+      footer={strip}
     />
   );
 }

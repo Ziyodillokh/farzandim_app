@@ -4,6 +4,7 @@ import { Map as MapIcon } from 'lucide-react';
 
 import { ScreeningDisclaimer } from '@/components/common/screening-disclaimer';
 import { Section } from '@/components/common/section';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { MetricKey, Scope } from '@/data/contracts';
 import { useIq } from '@/features/filters/use-monitoring';
 import { MapPanel } from '@/features/map/map-panel';
@@ -19,12 +20,20 @@ const MAP_METRICS: readonly MetricKey[] = ['iqMean', 'iqParticipation', 'iqHigh'
 /** Norma tasdiqlanmagan bo'lsa o'rtacha ball xaritada ham ko'rsatilmaydi. */
 const MAP_METRICS_BANDS: readonly MetricKey[] = ['iqParticipation', 'iqHigh', 'iqGrowthZone'];
 
-function IqMapSection({ scope, normed }: { scope: Scope; normed: boolean }) {
+/**
+ * Xarita IQ ma'lumoti kelgandan keyin chiziladi: norma holati ma'lum bo'lmaguncha
+ * o'rtacha ball tabi taxmin bilan ko'rsatilmaydi (standart — tasdiqlanmagan).
+ */
+function IqMapSection({ scope, normed }: { scope: Scope; normed: boolean | undefined }) {
   const { t } = useI18n();
   const { national, mapTitle } = useScopeLabels(scope);
   return (
     <Section id="iq-map" icon={<MapIcon />} title={mapTitle} subtitle={national ? t('iq.map.sub') : t('iq.map.subDistricts')}>
-      <MapPanel key={normed ? 'n' : 'b'} scope={scope} metrics={normed ? MAP_METRICS : MAP_METRICS_BANDS} initial="iqParticipation" />
+      {normed === undefined ? (
+        <Skeleton className="h-[480px] w-full rounded-2xl" />
+      ) : (
+        <MapPanel key={normed ? 'n' : 'b'} scope={scope} metrics={normed ? MAP_METRICS : MAP_METRICS_BANDS} initial="iqParticipation" />
+      )}
     </Section>
   );
 }
@@ -46,7 +55,7 @@ export function IqView({ scope }: { scope: Scope }) {
         <IqDomainsSection scope={scope} data={data} />
         <IqTrendSection scope={scope} data={data} />
       </div>
-      <IqMapSection scope={scope} normed={data?.normed ?? true} />
+      <IqMapSection scope={scope} normed={data?.normed} />
       <IqAreasSection scope={scope} data={data} />
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <IqGradeBandsSection data={data} />

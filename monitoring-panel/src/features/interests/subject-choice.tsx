@@ -20,11 +20,17 @@ const SIGNAL_TONE: Record<Exclude<SubjectSignal, null>, string> = {
   engage: 'bg-sky-500/10 text-sky-700 ring-sky-500/30 dark:text-sky-300',
 };
 
+/** Ustun nomi ekran o'quvchisi uchun: keng ekrandagi sarlavha qatori faqat ko'rinish uchun. */
+function SrLabel({ children }: { children: string }) {
+  return <span className="sr-only">{children}: </span>;
+}
+
 function SignalTag({ signal }: { signal: Exclude<SubjectSignal, null> }) {
   const { t } = useI18n();
   return (
     <span className={cn('inline-flex h-6 shrink-0 items-center gap-1 rounded-full px-2 text-[0.68rem] font-semibold ring-1 ring-inset', SIGNAL_TONE[signal])}>
-      {signal === 'priority' ? <CircleAlert className="h-3.5 w-3.5" /> : <Sparkle className="h-3.5 w-3.5" />}
+      {signal === 'priority' ? <CircleAlert aria-hidden className="h-3.5 w-3.5" /> : <Sparkle aria-hidden className="h-3.5 w-3.5" />}
+      <SrLabel>{t('interests.subjects.colSignal')}</SrLabel>
       {signal === 'priority' ? t('interests.subjects.priority') : t('interests.subjects.engage')}
     </span>
   );
@@ -32,7 +38,7 @@ function SignalTag({ signal }: { signal: Exclude<SubjectSignal, null> }) {
 
 function Bar({ value, className, barClassName }: { value: number | null; className?: string; barClassName?: string }) {
   return (
-    <span className={cn('relative block h-2 min-w-0 rounded-full bg-muted/70', className)}>
+    <span aria-hidden className={cn('relative block h-2 min-w-0 rounded-full bg-muted/70', className)}>
       {value !== null && <span className={cn('absolute inset-y-0 left-0 rounded-full bg-brand-gradient transition-[width] duration-700', barClassName)} style={{ width: pct(value) }} />}
     </span>
   );
@@ -43,15 +49,24 @@ function WideRow({ row }: { row: ChoiceRow }) {
   const fmt = useMetricFormat();
   return (
     <div className={cn('hidden items-center gap-x-4 rounded-xl px-2 py-2 xl:grid', WIDE)}>
-      <span className="text-center text-[0.72rem] font-semibold tabular-nums text-muted-foreground">{row.rank}</span>
+      <span className="text-center text-[0.72rem] font-semibold tabular-nums text-muted-foreground">
+        <SrLabel>{t('interests.subjects.colRank')}</SrLabel>
+        {row.rank ?? '—'}
+      </span>
       <span className="truncate text-[0.85rem] font-medium">{t(`enums.subject.${row.key}`)}</span>
       <span className="flex min-w-0 items-center gap-3">
         <Bar value={row.share} className="flex-1" />
-        <span className="w-12 shrink-0 text-right text-[0.85rem] font-semibold tabular-nums">{fmt.pct(row.share)}</span>
+        <span className="w-12 shrink-0 text-right text-[0.85rem] font-semibold tabular-nums">
+          <SrLabel>{t('interests.subjects.colShare')}</SrLabel>
+          {fmt.pct(row.share)}
+        </span>
       </span>
       <span className="flex min-w-0 items-center gap-3">
         <Bar value={row.mastery} className="flex-1" barClassName={MASTERY_BAR} />
-        <span className="w-12 shrink-0 text-right text-[0.85rem] tabular-nums text-muted-foreground">{fmt.value('mastery', row.mastery)}</span>
+        <span className="w-12 shrink-0 text-right text-[0.85rem] tabular-nums text-muted-foreground">
+          <SrLabel>{t('interests.subjects.colMastery')}</SrLabel>
+          {fmt.value('mastery', row.mastery)}
+        </span>
       </span>
       <span className="flex justify-end">{row.signal && <SignalTag signal={row.signal} />}</span>
     </div>
@@ -63,12 +78,18 @@ function CompactRow({ row }: { row: ChoiceRow }) {
   const fmt = useMetricFormat();
   return (
     <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1.5 rounded-xl px-2 py-2 xl:hidden">
-      <span className="text-center text-[0.72rem] font-semibold tabular-nums text-muted-foreground">{row.rank}</span>
+      <span className="text-center text-[0.72rem] font-semibold tabular-nums text-muted-foreground">
+        <SrLabel>{t('interests.subjects.colRank')}</SrLabel>
+        {row.rank ?? '—'}
+      </span>
       <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
         <span className="truncate text-[0.85rem] font-medium">{t(`enums.subject.${row.key}`)}</span>
         {row.signal && <SignalTag signal={row.signal} />}
       </span>
-      <span className="text-[0.85rem] font-semibold tabular-nums">{fmt.pct(row.share)}</span>
+      <span className="text-[0.85rem] font-semibold tabular-nums">
+        <SrLabel>{t('interests.subjects.colShare')}</SrLabel>
+        {fmt.pct(row.share)}
+      </span>
       <Bar value={row.share} className="col-span-2 col-start-2" />
       <span className="col-span-2 col-start-2 flex items-center gap-2 text-[0.7rem] text-muted-foreground">
         <Bar value={row.mastery} className="w-16 shrink-0" barClassName={MASTERY_BAR} />
@@ -82,12 +103,29 @@ function WideHeader() {
   const { t } = useI18n();
   const cell = 'text-[0.66rem] font-semibold uppercase tracking-[0.08em] text-muted-foreground';
   return (
-    <div className={cn('hidden gap-x-4 px-2 pb-1.5 xl:grid', WIDE)}>
+    <div aria-hidden className={cn('hidden gap-x-4 px-2 pb-1.5 xl:grid', WIDE)}>
       <span className={cn(cell, 'text-center')}>{t('interests.subjects.colRank')}</span>
       <span className={cell}>{t('interests.subjects.colSubject')}</span>
       <span className={cell}>{t('interests.subjects.colShare')}</span>
       <span className={cell}>{t('interests.subjects.colMastery')}</span>
       <span className={cn(cell, 'text-right')}>{t('interests.subjects.colSignal')}</span>
+    </div>
+  );
+}
+
+function ChoiceList({ rows }: { rows: ChoiceRow[] }) {
+  const { t } = useI18n();
+  return (
+    <div>
+      <WideHeader />
+      <ul className="space-y-0.5" aria-label={t('interests.sections.subjects')}>
+        {rows.map((row) => (
+          <li key={row.key}>
+            <WideRow row={row} />
+            <CompactRow row={row} />
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -112,17 +150,7 @@ export function SubjectChoiceSection({ data }: { data: Interests | undefined }) 
         <Skeleton className="h-[480px] w-full rounded-xl" />
       ) : (
         <div className="space-y-4">
-          <div>
-            <WideHeader />
-            <ul className="space-y-0.5">
-              {rows.map((row) => (
-                <li key={row.key}>
-                  <WideRow row={row} />
-                  <CompactRow row={row} />
-                </li>
-              ))}
-            </ul>
-          </div>
+          {rows.length > 0 ? <ChoiceList rows={rows} /> : <Note>{t('common.noData')}</Note>}
           <div className="space-y-1">
             {hasPriority && <Note>{t('interests.subjects.priorityHint')}</Note>}
             {hasEngage && <Note>{t('interests.subjects.engageHint')}</Note>}

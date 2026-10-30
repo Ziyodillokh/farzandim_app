@@ -5,7 +5,7 @@ import { Users } from 'lucide-react';
 import { Section } from '@/components/common/section';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Digital } from '@/data/contracts';
-import { distinctExtremeGrades, gradeRangeKeys, niceScale } from '@/features/wellbeing/kit/analysis';
+import { distinctExtremeGrades, gradeRangeKeys, metricScale } from '@/features/wellbeing/kit/analysis';
 import { BarList } from '@/features/wellbeing/kit/bar-list';
 import { BlockTitle, ChartBlock } from '@/features/wellbeing/kit/chart-block';
 import { MiniColumns } from '@/features/wellbeing/kit/mini-columns';
@@ -36,14 +36,17 @@ export function DigitalGroupsSection({ id, data }: { id: string; data: Digital |
     const ext = distinctExtremeGrades(points, 'max');
     const highlight = gradeRangeKeys(ext);
     const scope = key === 'screenTime' ? data.screenTime.value : data.night.value;
+    // Daqiqa o'qi birliksiz qisqa belgilar ("200") — birlik ("daq") o'q ustida.
+    const minutes = key === 'screenTime';
     return (
       <ChartBlock key={key} title={t(`metrics.${key}.label`)} caption={ext && t('wellbeing.kit.highest', { label: gradeLabel(ext), value: fmt.value(key, ext.value) })}>
         <MiniColumns
           name={t(`metrics.${key}.label`)}
           data={data.byGrade.map((g) => ({ key: String(g.grade), label: String(g.grade), value: g[key], tooltipLabel: t('common.grade', { grade: g.grade }) }))}
           format={(v) => fmt.value(key, v)}
-          axisFormat={key === 'screenTime' ? (v) => fmt.num(v, 0) : undefined}
-          scale={niceScale(points.map((p) => p.value), { zero: true, integer: key === 'screenTime' })}
+          axisFormat={minutes ? (v) => fmt.num(v, 0) : undefined}
+          unit={minutes ? t('common.units.min') : undefined}
+          scale={metricScale(key, [...points.map((p) => p.value), scope], { zero: true })}
           reference={scope}
           highlight={highlight}
         />

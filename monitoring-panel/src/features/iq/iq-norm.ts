@@ -20,19 +20,39 @@ export const IQ_BANDS_ASC: readonly IqDisplayBand[] = [...IQ_DISPLAY_BANDS].reve
 /** Normadan farq shu chegaradan kichik bo'lsa — "normaga yaqin". */
 export const NORM_CLOSE_PP = 2;
 
+/** O'g'il va qiz bolalar o'rtacha bali farqi shundan kichik bo'lsa — amaliy ahamiyatga ega emas. */
+export const GENDER_GAP_POINTS = 3;
+
 export function bandShare(bands: Iq['bands'], band: IqDisplayBand): number {
   return bands.find((b) => b.key === band)?.share ?? 0;
 }
 
-/** Eng katta ulushli daraja (norma shakllanmaganda o'rtacha ball o'rniga). */
+/** Taqsimot bormi: hech bo'lmasa bitta daraja ulushi musbat (aks holda — "ma'lumot yo'q", 0% emas). */
+export function hasBandData(bands: Iq['bands']): boolean {
+  return bands.some((b) => b.share > 0);
+}
+
+/** Bo'linma (hudud/tuman) taqsimoti bormi: `null` yoki hamma ulush 0 — yo'q. */
+export function hasAreaBands(bands: Iq['byArea'][number]['bands']): bands is Record<IqDisplayBand, number> {
+  return bands !== null && IQ_DISPLAY_BANDS.some((b) => bands[b] > 0);
+}
+
+/** Eng katta ulushli daraja (norma shakllanmaganda o'rtacha ball o'rniga); taqsimot yo'q — null. */
 export function modalBand(bands: Iq['bands']): Iq['bands'][number] | null {
   return bands.reduce<Iq['bands'][number] | null>((best, b) => (b.share > (best?.share ?? 0) ? b : best), null);
 }
 
-/** Normadan eng katta og'ish (p.p.) — qaysi darajada. */
+/** Normadan eng katta og'ish (p.p.) — qaysi darajada; taqsimot yo'q — null. */
 export function maxNormDeviation(bands: Iq['bands']): { band: IqDisplayBand; diff: number } | null {
-  if (bands.every((b) => b.share === 0)) return null;
+  if (!hasBandData(bands)) return null;
   return IQ_DISPLAY_BANDS.map((band) => ({ band, diff: Math.round((bandShare(bands, band) - IQ_NORM_SHARE[band]) * 10) / 10 })).reduce((a, b) =>
     Math.abs(b.diff) > Math.abs(a.diff) ? b : a,
   );
+}
+
+/** Norma bilan taqqoslash xulosasi: eng katta og'ish `NORM_CLOSE_PP` dan kichik — "yaqin", aks holda — "uzoq". */
+export function normVerdict(bands: Iq['bands']): { kind: 'close' | 'far'; band: IqDisplayBand; diff: number } | null {
+  const dev = maxNormDeviation(bands);
+  if (!dev) return null;
+  return { ...dev, kind: Math.abs(dev.diff) < NORM_CLOSE_PP ? 'close' : 'far' };
 }

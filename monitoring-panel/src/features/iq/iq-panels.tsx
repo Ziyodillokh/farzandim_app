@@ -8,11 +8,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { Iq, Scope } from '@/data/contracts';
 import { CompareBars, Meter } from '@/features/mastery/kit/bars';
 import { GENDER_COLORS } from '@/features/mastery/kit/colors';
+import { GenderGapNote } from '@/features/mastery/kit/gender-gap';
 import { Inset, Note } from '@/features/mastery/kit/layout';
-import { niceScale } from '@/features/mastery/kit/num';
-import { GenderGapNote } from '@/features/mastery/mastery-groups';
+import { pctScale } from '@/features/mastery/kit/num';
+import { useScopeLabels } from '@/features/mastery/kit/scope';
 import { useI18n } from '@/i18n';
 import { useMetricFormat } from '@/lib/format';
+import { GENDER_GAP_POINTS } from './iq-norm';
 
 /** IQ yo'nalishlari: to'g'ri javoblar ulushi, hudud doirasida — respublika belgisi bilan. */
 export function IqDomainsSection({ scope, data }: { scope: Scope; data: Iq | undefined }) {
@@ -45,21 +47,25 @@ export function IqDomainsSection({ scope, data }: { scope: Scope; data: Iq | und
   );
 }
 
-/** Qamrov dinamikasi (oxirgi 12 o'quv oyi). */
+/** Qamrov dinamikasi (oxirgi 12 o'quv oyi): seriya nomi — doira nomi (respublika yoki hudud). */
 export function IqTrendSection({ scope, data }: { scope: Scope; data: Iq | undefined }) {
   const { t } = useI18n();
   const fmt = useMetricFormat();
-  const label = scope.kind === 'NATIONAL' ? t('common.national') : t('metrics.iqParticipation.label');
+  const { scopeName } = useScopeLabels(scope);
+  const scale = data ? pctScale(data.trend.map((p) => p.value)) : null;
   return (
     <Section id="iq-trend" icon={<TrendingUp />} title={t('iq.sections.trend')} subtitle={t('iq.sections.trendSub')}>
       {!data ? (
         <Skeleton className="h-[260px] w-full rounded-xl" />
+      ) : !scale ? (
+        <Note>{t('common.noData')}</Note>
       ) : (
         <TrendChart
-          series={[{ key: 'participation', label, points: data.trend }]}
-          format={(v) => fmt.pct(v, Number.isInteger(v) ? 0 : 1)}
+          series={[{ key: 'participation', label: scopeName, points: data.trend }]}
+          format={(v) => fmt.value('iqParticipation', v)}
+          axisFormat={(v) => fmt.pct(v, 0)}
           height={250}
-          domain={niceScale(data.trend.map((p) => p.value), { intervals: 4 }).domain}
+          domain={scale.domain}
         />
       )}
     </Section>
@@ -120,8 +126,14 @@ export function IqGenderSection({ data }: { data: Iq | undefined }) {
               </Inset>
             ))}
           </div>
-          {data.normed ? <GenderGapNote boys={mean('M')} girls={mean('F')} unit={t('iq.groups.pointsUnit')} threshold={3} /> : <Note>{t('iq.groups.notNormed')}</Note>}
-          <Note>{t('iq.groups.genderNote')}</Note>
+          {data.normed ? (
+            <>
+              <GenderGapNote boys={mean('M')} girls={mean('F')} unit={t('iq.groups.pointsUnit')} threshold={GENDER_GAP_POINTS} />
+              <Note>{t('iq.groups.genderNote', { points: fmt.num(GENDER_GAP_POINTS, 0) })}</Note>
+            </>
+          ) : (
+            <Note>{t('iq.groups.notNormed')}</Note>
+          )}
         </div>
       )}
     </Section>

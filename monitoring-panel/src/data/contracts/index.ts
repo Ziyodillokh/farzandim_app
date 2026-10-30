@@ -53,6 +53,8 @@ export type Kpi = Stat & { key: MetricKey; series: SeriesPoint[]; national?: num
 export type AreaStat = Stat & { id: string; name: string; rank: number | null };
 
 export type ShareItem<K extends string> = { key: K; share: number; delta?: number | null };
+/** Ulush yashirilgan bo'lishi mumkin: guruh K-anonimlik chegarasidan kichik — `null` (o'qitilmagan fan — 0). */
+export type MaybeShareItem<K extends string> = { key: K; share: number | null };
 
 export type PeriodInfo = {
   period: Period;
@@ -126,14 +128,14 @@ export type Iq = {
 };
 
 export type Interests = {
-  subjects: Array<ShareItem<Subject> & { mastery: number | null }>;
-  general: Array<ShareItem<Interest>>;
+  subjects: Array<MaybeShareItem<Subject> & { mastery: number | null }>;
+  general: Array<MaybeShareItem<Interest>>;
   riasec: Array<{ code: Riasec; score: number | null; national: number | null }>;
   riasecTop: Array<ShareItem<Riasec>>;
   careerFields: Array<ShareItem<CareerField>>;
   careerReadiness: Stat;
   byArea: Array<{ id: string; name: string; topSubject: Subject | null; topSubjectShare: number | null; topCode: Riasec | null; topField: CareerField | null }>;
-  byGender: Array<{ gender: 'M' | 'F'; subjects: Array<ShareItem<Subject>> }>;
+  byGender: Array<{ gender: 'M' | 'F'; subjects: Array<MaybeShareItem<Subject>> }>;
 };
 
 export type Wellbeing = {

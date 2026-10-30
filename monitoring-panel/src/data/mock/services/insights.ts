@@ -45,10 +45,9 @@ export function getInsights(scope: Scope, f: Filters): Insight[] {
   }
   const interests = getInterests(scope, f);
   const gap = interests.subjects
-    .filter((s) => s.mastery !== null)
-    .map((s) => ({ ...s, score: s.share - (s.mastery as number) }))
+    .flatMap((s) => (s.mastery !== null && s.share !== null ? [{ key: s.key, share: s.share, mastery: s.mastery, score: s.share - s.mastery }] : []))
     .sort((a, b) => b.score - a.score)[0];
-  if (gap && gap.mastery !== null && gap.share > 35 && gap.mastery < (m.overall.value ?? 100)) {
+  if (gap && gap.share > 35 && gap.mastery < (m.overall.value ?? 100)) {
     push({ severity: 'watch', kind: 'interestGap', params: { subject: gap.key, share: gap.share, mastery: gap.mastery }, metric: null, areaId: null, href: '/interests' });
   }
 

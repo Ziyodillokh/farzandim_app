@@ -8,16 +8,19 @@ export type BarRow = { key: string; label: string; value: number | null; color?:
 
 /** Minimal ko'rinadigan ustun uzunligi (%) — kichik qiymat ham ko'rinsin. */
 const MIN_BAR = 3;
+/** Avtomatik shkalada eng uzun ustundan keyingi havo (8%). */
+const AUTO_HEADROOM = 1.08;
 
 /**
- * Gorizontal taqqoslash ustunlari (o'g'il/qiz bolalar, maktab turlari).
- * `domain` — shkala chegaralari: yaqin ulushlar uchun pastki chegara 0 dan
- * yuqori bo'lishi mumkin; `reference` — ingichka belgi (masalan, o'rtacha).
+ * Gorizontal taqqoslash ustunlari (o'g'il/qiz bolalar, maktab turlari). Ustunlar
+ * doim 0 dan boshlanadi — uzunlik qiymatga mutanosib (yaqin qiymatlar orasidagi
+ * kichik farq bo'rttirilmaydi). `max` — shkalaning yuqori chegarasi (foiz, indeks
+ * uchun 100), bo'lmasa — eng katta qiymatdan; `reference` — ingichka belgi (umumiy qiymat).
  */
 export function BarList({
   rows,
   format,
-  domain,
+  max,
   reference,
   referenceLabel,
   labelWidth = '7.5rem',
@@ -25,15 +28,15 @@ export function BarList({
 }: {
   rows: readonly BarRow[];
   format: (v: number | null) => string;
-  domain?: [number, number];
+  max?: number;
   reference?: number | null;
   referenceLabel?: string;
   labelWidth?: string;
   className?: string;
 }) {
   const values = rows.map((r) => r.value).filter((v): v is number => v !== null);
-  const [lo, hi] = domain ?? [0, Math.max(1, ...values, reference ?? 0) * 1.08];
-  const pos = (v: number) => Math.min(100, Math.max(0, ((v - lo) / (hi - lo || 1)) * 100));
+  const top = max ?? Math.max(1, ...values, reference ?? 0) * AUTO_HEADROOM;
+  const pos = (v: number) => Math.min(100, Math.max(0, (v / (top || 1)) * 100));
   return (
     <ul className={cn('space-y-2', className)}>
       {rows.map((r) => (
@@ -49,7 +52,10 @@ export function BarList({
               />
             )}
             {reference !== undefined && reference !== null && (
-              <span title={referenceLabel} aria-hidden className="absolute -top-1 h-[18px] w-0.5 rounded-full bg-foreground/55" style={{ left: `${pos(reference)}%` }} />
+              // Ingichka belgi, sichqoncha uchun kengroq maydon (title — belgining nomi).
+              <span title={referenceLabel} aria-hidden className="absolute -top-1 flex h-[18px] w-3 -translate-x-1/2 justify-center" style={{ left: `${pos(reference)}%` }}>
+                <span className="h-full w-0.5 rounded-full bg-foreground/55" />
+              </span>
             )}
           </span>
           <span className="flex items-baseline justify-end gap-1.5 whitespace-nowrap">

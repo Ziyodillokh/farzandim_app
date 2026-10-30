@@ -24,7 +24,9 @@ const CALLOUT_TONE: Record<CalloutTone, string> = {
 function Callout({ tone, icon, label, title, detail }: { tone: CalloutTone; icon: ReactNode; label: string; title: string; detail: string }) {
   return (
     <div className="flex items-start gap-3 rounded-xl bg-primary/[0.05] p-3 ring-1 ring-inset ring-border/50 dark:bg-white/[0.03]">
-      <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset [&_svg]:size-4', CALLOUT_TONE[tone])}>{icon}</span>
+      <span aria-hidden className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset [&_svg]:size-4', CALLOUT_TONE[tone])}>
+        {icon}
+      </span>
       <div className="min-w-0">
         <p className="text-[0.66rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
         <p className="mt-0.5 truncate text-[0.92rem] font-semibold">{title}</p>
@@ -81,10 +83,16 @@ export function SubjectRankingSection({ scope, data }: { scope: Scope; data: Mas
         <Skeleton className="h-[560px] w-full rounded-xl" />
       ) : (
         <div className="space-y-5">
-          <Callouts rows={rows} region={region} />
-          <SubjectRows rows={rows} region={region} />
+          {rows.length > 0 ? (
+            <>
+              <Callouts rows={rows} region={region} />
+              <SubjectRows rows={rows} region={region} />
+            </>
+          ) : (
+            <Note>{t('common.noData')}</Note>
+          )}
           <Note>
-            {t('mastery.subjects.interestNote')} {region ? t('mastery.subjects.markerNote') : ''}{' '}
+            {t('mastery.subjects.successNote')} {t('mastery.subjects.interestNote')} {region ? t('mastery.subjects.markerNote') : ''}{' '}
             {untaught.length > 0 ? t('mastery.kit.notTaught', { list: untaught.map((s) => t(`enums.subject.${s}`)).join(', ') }) : ''}
           </Note>
         </div>

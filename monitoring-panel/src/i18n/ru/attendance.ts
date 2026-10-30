@@ -3,11 +3,10 @@ import type { attendance as uz } from '../uz/attendance';
 
 export const attendance: DeepString<typeof uz> = {
   title: 'Посещаемость',
-  subtitle: 'Приходы, опоздания и хронические пропуски',
+  subtitle: 'Явка, опоздания и хронические пропуски',
   nav: {
     label: 'Разделы страницы',
     overview: 'Показатели',
-    statuses: 'Статусы',
     map: 'Карта',
     breakdowns: 'Срезы',
     areas: 'Таблица',
@@ -19,7 +18,6 @@ export const attendance: DeepString<typeof uz> = {
   },
   statuses: {
     title: 'Статусы посещаемости',
-    subtitle: 'Как распределяются отмеченные ученико-дни',
     came: 'Присутствовали',
     missed: 'Отсутствовали',
     mainDeviation: 'Основное отклонение — {status}: {value}',
@@ -32,7 +30,9 @@ export const attendance: DeepString<typeof uz> = {
     byWeekday: 'По дням недели',
     byGrade: 'По классам',
     bySchoolType: 'По типу школы',
-    columnsNote: 'Пунктир — общая посещаемость; янтарные столбцы — группа с самой низкой посещаемостью.',
+    columnsNote: 'Пунктир — общая посещаемость; янтарные столбцы — группа с самой низкой посещаемостью. В типах школ вертикальная метка — общая посещаемость, число — разница с ней.',
+    axisNote: 'Ось начинается не с нуля',
+    overall: 'Общая посещаемость: {value}',
     weekday: {
       d1: 'Понедельник',
       d2: 'Вторник',

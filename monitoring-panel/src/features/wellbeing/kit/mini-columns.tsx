@@ -4,6 +4,7 @@ import { Bar, BarChart, CartesianGrid, Cell, LabelList, ReferenceLine, Responsiv
 
 import { ChartTooltip } from '@/components/charts/chart-tooltip';
 import type { NiceScale } from './analysis';
+import { AxisUnit } from './chart-block';
 
 export type MiniColumn = { key: string; label: string; value: number | null; tooltipLabel?: string };
 
@@ -11,6 +12,9 @@ const BASE_COLOR = 'hsl(var(--chart-1))';
 /** Ajratilgan ustun (e'tibor talab qiladigan chekka qiymat) — amber, qizil emas. */
 export const ACCENT_COLOR = 'hsl(36 92% 56%)';
 const TICK = { fontSize: 11, fill: 'hsl(var(--muted-foreground))' } as const;
+const AXIS_WIDTH = 44;
+const MARGIN_LEFT = -6;
+const LABEL_HALO = { paintOrder: 'stroke', stroke: 'hsl(var(--card))', strokeWidth: 3, strokeLinejoin: 'round' } as const;
 
 /** O'q belgisi: butun qiymatda ",0" tashlab yuboriladi ("20,0%" → "20%"). */
 export const trimZeroDecimals = (text: string) => text.replace(/[,.]0+(?=\D*$)/, '');
@@ -46,6 +50,7 @@ export function MiniColumns({
   format,
   axisFormat,
   scale,
+  unit,
   reference,
   highlight,
   labels = 'highlight',
@@ -56,8 +61,13 @@ export function MiniColumns({
   name: string;
   format: (v: number) => string;
   axisFormat?: (v: number) => string;
-  /** O'q shkalasi (`niceScale`) — bo'lmasa 0 dan avtomatik. */
+  /**
+   * O'q shkalasi (`metricScale`) — bo'lmasa 0 dan avtomatik. Ustun uzunligi
+   * qiymatni bildiradi: odatda `zero: true`; o'q kesilsa — buni ko'rinadigan izoh bilan ayting.
+   */
   scale?: NiceScale | null;
+  /** O'q belgilari birliksiz bo'lsa (daqiqa) — birlik o'q ustida. */
+  unit?: string;
   reference?: number | null;
   highlight?: ReadonlySet<string>;
   labels?: 'highlight' | 'all' | 'none';
@@ -78,16 +88,18 @@ export function MiniColumns({
     const left = Number(x);
     const w = Number(width);
     const tx = edge === 'end' ? left + w : edge === 'start' ? left : left + w / 2;
+    // Fon rangidagi "halo" — yorliq shtrix chiziq yoki to'r ustiga tushsa ham o'qiladi.
     return (
-      <text x={tx} y={Number(y) - 6} textAnchor={edge} className="fill-foreground text-[10.5px] font-semibold">
+      <text x={tx} y={Number(y) - 6} textAnchor={edge} className="fill-foreground text-[10.5px] font-semibold" style={LABEL_HALO}>
         {format(Number(value))}
       </text>
     );
   };
   return (
-    <div style={{ height }} className="w-full">
+    <div style={{ height }} className="relative w-full">
+      {unit && <AxisUnit unit={unit} axisWidth={AXIS_WIDTH} marginLeft={MARGIN_LEFT} />}
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={[...data]} margin={{ top: 20, right: 4, bottom: 0, left: -6 }}>
+        <BarChart data={[...data]} margin={{ top: 20, right: 4, bottom: 0, left: MARGIN_LEFT }}>
           <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 4" vertical={false} />
           <XAxis dataKey="label" tick={TICK} axisLine={false} tickLine={false} interval={0} />
           <YAxis
@@ -98,7 +110,7 @@ export function MiniColumns({
             tick={TICK}
             axisLine={false}
             tickLine={false}
-            width={44}
+            width={AXIS_WIDTH}
           />
           <Tooltip cursor={{ fill: 'hsl(var(--primary) / 0.06)' }} content={<ChartTooltip formatLabel={(l) => tooltipLabels.get(l) ?? l} formatValue={(v) => format(v)} />} />
           {reference !== undefined && reference !== null && <ReferenceLine y={reference} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" />}

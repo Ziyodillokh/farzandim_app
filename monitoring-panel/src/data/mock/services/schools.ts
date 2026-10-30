@@ -35,11 +35,23 @@ function typeStat(scope: Scope, f: Filters, type: SchoolType): SchoolTypeStat {
   };
 }
 
+/**
+ * Maktab o'sishidagi tafovut: ko'pchilik tuman o'rtachasi atrofida, ozchiligi
+ * (yangi metodika, kuchli jamoa) sezilarli yuqori — reyting "dumi" tabiiy bo'lsin.
+ */
+function schoolGrowthNoise(id: string): number {
+  const base = signedNoise('gr', id) * 1.8 + signedNoise('gr2', id) * 1.2;
+  const standout = signedNoise('gr3', id) > 0.86 ? (signedNoise('gr4', id) + 1) * 2.6 : 0;
+  return base + standout;
+}
+
 /** Tuman maktablari (deterministik, anonim). */
 function schoolsOf(regionId: RegionId, f: Filters): SchoolRow[] {
   const { schools, privateSchools } = regionSchools(regionId);
   const pupilsPerSchool = regionPupils(regionId) / Math.max(1, schools);
   const out: SchoolRow[] = [];
+  // Kod hudud ichida yagona: SOATO + tartib raqami (tumanlar bo'ylab davom etadi).
+  let seq = 0;
   for (const d of districtsOf(regionId)) {
     const area = { kind: 'DISTRICT', id: d.id } as const;
     const mastery = metricStat('mastery', area, f);
@@ -47,6 +59,7 @@ function schoolsOf(regionId: RegionId, f: Filters): SchoolRow[] {
     const wellbeing = metricStat('wellbeing', area, f, 0).value;
     const count = Math.max(1, Math.round(schools * d.weight));
     for (let i = 0; i < count; i++) {
+      seq += 1;
       const id = `${d.id}-${i + 1}`;
       const isPrivate = signedNoise('priv', id) > 1 - (2 * privateSchools) / Math.max(1, schools);
       const type: SchoolType = isPrivate ? 'PRIVATE' : signedNoise('spec', id) > 0.985 ? 'SPECIAL' : 'STATE';
@@ -55,14 +68,14 @@ function schoolsOf(regionId: RegionId, f: Filters): SchoolRow[] {
       const m = mastery.value === null ? null : round(Math.min(97, Math.max(25, mastery.value + typeFx + noise)));
       out.push({
         id,
-        code: `${regionRef(regionId).soato}-${String(i + 1).padStart(3, '0')}`,
+        code: `${regionRef(regionId).soato}-${String(seq).padStart(4, '0')}`,
         districtId: d.id,
         districtName: d.name,
         regionId,
         type,
         pupils: Math.round(pupilsPerSchool * (0.55 + (signedNoise('sz', id) + 1) * 0.45) * (type === 'PRIVATE' ? 0.4 : 1)),
         mastery: m,
-        growth: mastery.delta === null ? null : round(mastery.delta + signedNoise('gr', id) * 2.4),
+        growth: mastery.delta === null ? null : round(mastery.delta + schoolGrowthNoise(id)),
         attendance: attendance === null ? null : round(Math.min(99.5, attendance + signedNoise('sa', id) * 1.4)),
         wellbeing: wellbeing === null ? null : round(Math.min(95, Math.max(40, wellbeing + signedNoise('sw', id) * 5)), 0),
       });

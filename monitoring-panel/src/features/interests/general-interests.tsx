@@ -8,8 +8,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { Interests } from '@/data/contracts';
 import type { Interest } from '@/data/reference/domains';
 import { Meter } from '@/features/mastery/kit/bars';
+import { Note } from '@/features/mastery/kit/layout';
 import { useI18n } from '@/i18n';
 import { useMetricFormat } from '@/lib/format';
+import { hasShares } from './leader';
 
 const INTEREST_ICON: Record<Interest, ReactNode> = {
   games: <Gamepad2 />,
@@ -26,7 +28,7 @@ const INTEREST_ICON: Record<Interest, ReactNode> = {
   food: <ChefHat />,
 };
 
-/** Umumiy qiziqishlar: 12 ta kartochka (belgi, nom, ulush), ulush bo'yicha kamayish tartibida. */
+/** Umumiy qiziqishlar: 12 ta kartochka (belgi, nom, ulush), ulush bo'yicha kamayish tartibida; ulushlar yo'q — "ma'lumot yo'q". */
 export function GeneralInterestsSection({ data, className }: { data: Interests | undefined; className?: string }) {
   const { t } = useI18n();
   const fmt = useMetricFormat();
@@ -34,6 +36,8 @@ export function GeneralInterestsSection({ data, className }: { data: Interests |
     <Section id="interests-general" icon={<Heart />} title={t('interests.sections.general')} subtitle={t('interests.sections.generalSub')} className={className}>
       {!data ? (
         <Skeleton className="h-[360px] w-full rounded-xl" />
+      ) : !hasShares(data.general) ? (
+        <Note>{t('common.noData')}</Note>
       ) : (
         <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
           {data.general.map((g) => (

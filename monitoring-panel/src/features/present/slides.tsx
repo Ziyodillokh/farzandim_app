@@ -293,7 +293,7 @@ export function IqInterestsSlide({ scope }: { scope: Scope }) {
             <div>
               <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-300/80">{t('present.slides.topSubjects')}</p>
               <div className="space-y-3">
-                {interests.subjects.slice(0, 5).map((s) => (
+                {interests.subjects.flatMap((s) => (s.share === null ? [] : [{ key: s.key, share: s.share }])).slice(0, 5).map((s) => (
                   <Bar key={s.key} label={t(`enums.subject.${s.key}`)} value={fmt.pct(s.share)} share={s.share} color="hsl(214 90% 60%)" />
                 ))}
               </div>

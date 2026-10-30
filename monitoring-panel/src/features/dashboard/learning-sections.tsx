@@ -126,7 +126,7 @@ export function InterestsSection({ scope }: { scope: Scope }) {
           <div>
             <p className="mb-2 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{t('dashboard.topSubjects')}</p>
             <ShareBars
-              rows={data.subjects.slice(0, 6).map((s) => ({
+              rows={data.subjects.flatMap((s) => (s.share === null ? [] : [{ ...s, share: s.share }])).slice(0, 6).map((s) => ({
                 key: s.key,
                 label: t(`enums.subject.${s.key}`),
                 share: s.share,

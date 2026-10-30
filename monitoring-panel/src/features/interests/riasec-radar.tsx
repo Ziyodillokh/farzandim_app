@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { openPath, type RadarPoint } from './radar-path';
 
 export type RadarAxis = { key: string; label: string };
 export type RadarSeries = { key: string; label: string; values: Record<string, number | null>; color: string; dashed?: boolean };
@@ -11,11 +12,25 @@ const CHAR_WIDTH = 7.4;
 const SIDE_REACH = 1.13 * Math.cos(Math.PI / 6);
 const MIN_PAD = 40;
 const RINGS = [0.25, 0.5, 0.75, 1];
+const VERTEX_RADIUS = 3;
+
+function SeriesShape({ series, vertices }: { series: RadarSeries; vertices: ReadonlyArray<RadarPoint | null> }) {
+  const stroke = { stroke: series.color, strokeWidth: 2, strokeDasharray: series.dashed ? '5 4' : undefined, strokeLinejoin: 'round' as const };
+  if (vertices.every((v) => v !== null)) {
+    return <polygon points={vertices.map((v) => (v as RadarPoint).join(',')).join(' ')} fill={series.dashed ? 'none' : series.color} fillOpacity={series.dashed ? 0 : 0.18} {...stroke} />;
+  }
+  return (
+    <g>
+      <path d={openPath(vertices)} fill="none" {...stroke} />
+      {vertices.map((v, i) => v && <circle key={i} cx={v[0]} cy={v[1]} r={VERTEX_RADIUS} fill={series.color} />)}
+    </g>
+  );
+}
 
 /**
  * Radar diagramma (umumiy `Radar` bilan bir xil ko'rinish). Farqi: yon tomon
  * bo'shlig'i eng uzun yorliqqa qarab hisoblanadi — "Tashabbuskor",
- * "Исследовательский" kabi nomlar kesilmaydi.
+ * "Исследовательский" kabi nomlar kesilmaydi; qiymatsiz o'q 0 deb chizilmaydi.
  */
 export function RiasecRadar({ axes, series, max = 100, size = 300, className }: { axes: RadarAxis[]; series: RadarSeries[]; max?: number; size?: number; className?: string }) {
   const cx = size / 2;
@@ -24,7 +39,12 @@ export function RiasecRadar({ axes, series, max = 100, size = 300, className }: 
   const longest = Math.max(0, ...axes.map((a) => a.label.length)) * CHAR_WIDTH;
   const padX = Math.max(MIN_PAD, longest - (cx - SIDE_REACH * R) + 8);
   const angle = (i: number) => (Math.PI * 2 * i) / axes.length - Math.PI / 2;
-  const point = (i: number, v: number) => [cx + Math.cos(angle(i)) * R * (v / max), cy + Math.sin(angle(i)) * R * (v / max)] as const;
+  const point = (i: number, v: number): RadarPoint => [cx + Math.cos(angle(i)) * R * (v / max), cy + Math.sin(angle(i)) * R * (v / max)];
+  const verticesOf = (s: RadarSeries) =>
+    axes.map((a, i) => {
+      const v = s.values[a.key];
+      return v === null || v === undefined || !Number.isFinite(v) ? null : point(i, v);
+    });
   return (
     <div className={cn('flex flex-col items-center gap-3', className)}>
       <svg viewBox={`${-padX} 0 ${size + padX * 2} ${size}`} className="h-auto w-full max-w-[460px]" role="img" aria-label={series.map((s) => s.label).join(' · ')}>
@@ -44,16 +64,7 @@ export function RiasecRadar({ axes, series, max = 100, size = 300, className }: 
           );
         })}
         {series.map((s) => (
-          <polygon
-            key={s.key}
-            points={axes.map((a, i) => point(i, s.values[a.key] ?? 0).join(',')).join(' ')}
-            fill={s.dashed ? 'none' : s.color}
-            fillOpacity={s.dashed ? 0 : 0.18}
-            stroke={s.color}
-            strokeWidth="2"
-            strokeDasharray={s.dashed ? '5 4' : undefined}
-            strokeLinejoin="round"
-          />
+          <SeriesShape key={s.key} series={s} vertices={verticesOf(s)} />
         ))}
       </svg>
       {series.length > 1 && (

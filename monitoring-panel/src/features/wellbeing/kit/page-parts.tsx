@@ -13,12 +13,21 @@ import { useI18n } from '@/i18n';
 /** Respublika doirasi — hudud foydalanuvchisi uchun taqqoslash so'rovlari (kesh umumiy). */
 export const NATIONAL_SCOPE: Scope = { kind: 'NATIONAL' };
 
-/** Xarita bo'limi: respublikada — 14 hudud, hudud doirasida — tumanlar. */
+/**
+ * Xarita bo'limi: respublikada — 14 hudud, hudud doirasida — tumanlar.
+ * `scroll-mt-32` — sahifa navigatsiyasi (yopishqoq panel) bo'lim tepasini yopmasin.
+ */
 export function MapSection({ id, scope, metrics, initial }: { id: string; scope: Scope; metrics: readonly MetricKey[]; initial: MetricKey }) {
   const { t } = useI18n();
   const national = scope.kind === 'NATIONAL';
   return (
-    <Section id={id} icon={<MapIcon />} title={national ? t('map.title') : t('map.districtsTitle')} subtitle={t('dashboard.mapSub')}>
+    <Section
+      id={id}
+      className="scroll-mt-32"
+      icon={<MapIcon />}
+      title={national ? t('map.title') : t('map.districtsTitle')}
+      subtitle={national ? t('dashboard.mapSub') : t('wellbeing.kit.mapSubDistrict')}
+    >
       <MapPanel scope={scope} metrics={metrics} initial={initial} />
     </Section>
   );

@@ -3,6 +3,9 @@
  * sof yordamchilar: ustun o'rtachalari, eng chekka sinflar, ustunli diagramma
  * shkalasi va "har N boladan 1 tasi" ifodasi. UI'siz — testlanadi.
  */
+import type { MetricKey } from '@/data/contracts';
+import { METRICS } from '@/data/mock/model/metrics';
+import { niceScale, type NiceScale } from '@/lib/scale';
 
 export type GradePoint = { grade: number; value: number | null };
 export type GradeExtreme = { from: number; to: number; value: number };
@@ -81,8 +84,26 @@ export function extremeAllBy<T>(items: readonly T[], value: (item: T) => number 
 
 export { niceScale, niceStep, type NiceScale } from '@/lib/scale';
 
-/** "Har N boladan 1 tasi": ulush (%) → N. Juda kichik ulushda ma'nosiz — null. */
+/** Foiz o'qining yuqori chegarasi: ulush 100% dan oshmaydi. */
+export const PERCENT_MAX = 100;
+
+/**
+ * Ko'rsatkich o'qi (`niceScale` ustiga): foizda o'q 100% dan oshmaydi, butun
+ * sonli ko'rsatkichlarda (indeks, daqiqa) belgilar butun. Ustunli diagrammada
+ * `zero: true` — ustun uzunligi qiymatga mutanosib; `minSpan` — chiziqli trend uchun
+ * (ustunlarda o'q kesilsa, bu diagramma ustida ko'rinadigan izoh bilan aytiladi).
+ */
+export function metricScale(metric: MetricKey, values: ReadonlyArray<number | null>, opts: { minSpan?: number; zero?: boolean } = {}): NiceScale | null {
+  const def = METRICS[metric];
+  return niceScale(values, { ...opts, ceil: def.unit === '%' ? PERCENT_MAX : undefined, integer: def.decimals === 0 });
+}
+
+/** "Har N boladan 1 tasi" mazmunli bo'ladigan eng kichik N ("har 1 boladan 1 tasi" — ma'nosiz). */
+const MIN_ONE_IN = 2;
+
+/** "Har N boladan 1 tasi": ulush (%) → N. Juda kichik yoki juda katta ulushda (N < 2) — null. */
 export function oneIn(sharePercent: number | null, minShare = 2): number | null {
   if (sharePercent === null || !Number.isFinite(sharePercent) || sharePercent < minShare || sharePercent > 100) return null;
-  return Math.max(1, Math.round(100 / sharePercent));
+  const n = Math.round(100 / sharePercent);
+  return n >= MIN_ONE_IN ? n : null;
 }

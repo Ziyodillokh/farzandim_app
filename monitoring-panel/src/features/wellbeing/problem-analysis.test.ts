@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { AreaMatrix, AreaRow, MetricKey, Stat } from '@/data/contracts';
-import { areaExcess, columnMeans, findHotspots, rankProblems, sortAreaRows } from './problem-analysis';
+import { areaExcess, columnMeans, findHotspots, isNotableExcess, NOTABLE_EXCESS, NOTABLE_MIN_DIFF, rankProblems, sortAreaRows } from './problem-analysis';
 
 const METRICS: readonly MetricKey[] = ['bullying', 'sleep', 'anxiety'];
 
@@ -62,6 +62,26 @@ describe('areaExcess', () => {
   it('ignores values at or below the average', () => {
     const means = columnMeans(rows, METRICS);
     expect(areaExcess(rows[0]!, METRICS, means)).toEqual({ burden: 0, aboveCount: 0, signals: [] });
+  });
+
+  it('does not flag a small absolute gap on a low base (+0.2 p.p. on 3.7%), but still counts it in the burden', () => {
+    const lowBase = areaExcess(row('D', { support: 3.9 }), ['support'], { support: 3.7 });
+    expect(lowBase.signals).toEqual([]);
+    expect(lowBase.aboveCount).toBe(0);
+    expect(lowBase.burden).toBeCloseTo(0.2 / 3.7, 6);
+  });
+
+  it('flags a low-base signal once the gap reaches 0.5 p.p. (4.1 − 3.6 = 0.4999… in floating point)', () => {
+    const atFloor = areaExcess(row('E', { support: 4.1 }), ['support'], { support: 3.6 });
+    expect(atFloor.signals.map((s) => s.metric)).toEqual(['support']);
+  });
+});
+
+describe('isNotableExcess', () => {
+  it('needs both the relative (5%) and the absolute (0.5 p.p.) threshold', () => {
+    expect(isNotableExcess(0.2, 0.054)).toBe(false);
+    expect(isNotableExcess(0.6, 0.02)).toBe(false);
+    expect(isNotableExcess(NOTABLE_MIN_DIFF, NOTABLE_EXCESS)).toBe(true);
   });
 });
 

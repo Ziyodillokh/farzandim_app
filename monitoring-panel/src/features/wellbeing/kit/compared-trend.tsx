@@ -4,7 +4,7 @@ import type { MetricKey, Scope, SeriesPoint } from '@/data/contracts';
 import { METRICS } from '@/data/mock/model/metrics';
 import { useI18n } from '@/i18n';
 import { useMetricFormat } from '@/lib/format';
-import { niceScale } from './analysis';
+import { metricScale } from './analysis';
 import { ChartLegend } from './chart-block';
 import { trimZeroDecimals } from './mini-columns';
 import { type TrendLine, TrendArea } from './trend-area';
@@ -15,8 +15,8 @@ const NATIONAL_COLOR = 'hsl(220 20% 65%)';
 
 /**
  * Oylik trend: hudud doirasida respublika qatori (shtrix) bilan taqqoslanadi.
- * Ikki qator bo'lsa — legenda (rang yagona belgi emas). O'qda birliksiz
- * qisqa belgilar (daqiqa — sarlavhada), tooltipda — to'liq qiymat.
+ * Ikki qator bo'lsa — legenda (rang yagona belgi emas). O'qda qisqa belgilar
+ * (daqiqa birligi — o'q ustida), foiz o'qi 100% dan oshmaydi; tooltipda — to'liq qiymat.
  */
 export function ComparedTrend({
   scope,
@@ -43,8 +43,9 @@ export function ComparedTrend({
     { key: 'scope', label: scopeLabel, points, color: SCOPE_COLOR },
     ...(national ? [{ key: 'national', label: t('common.national'), points: national, color: NATIONAL_COLOR, dashed: true }] : []),
   ];
-  const scale = niceScale([...points, ...(national ?? [])].map((p) => p.value), { minSpan, integer: def.decimals === 0 });
-  const axisFormat = (v: number) => (def.unit === 'min' ? fmt.num(v, 0) : trimZeroDecimals(fmt.value(metric, v)));
+  const scale = metricScale(metric, [...points, ...(national ?? [])].map((p) => p.value), { minSpan });
+  const minutes = def.unit === 'min';
+  const axisFormat = (v: number) => (minutes ? fmt.num(v, 0) : trimZeroDecimals(fmt.value(metric, v)));
   return (
     <div className="min-w-0">
       {national && (
@@ -56,7 +57,14 @@ export function ComparedTrend({
           ]}
         />
       )}
-      <TrendArea lines={lines} format={(v) => fmt.value(metric, v)} axisFormat={axisFormat} scale={scale} height={height} />
+      <TrendArea
+        lines={lines}
+        format={(v) => fmt.value(metric, v)}
+        axisFormat={axisFormat}
+        scale={scale}
+        unit={minutes ? t('common.units.min') : undefined}
+        height={height}
+      />
     </div>
   );
 }

@@ -54,6 +54,50 @@ const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 /** [-1, 1) barqaror shovqin. */
 export const signedNoise = (...parts: Array<string | number>) => unitHash(...parts) * 2 - 1;
 
+/**
+ * Shaharlar va 2020 yildan keyin tuzilgan tumanlarning taxminiy kattaligi (o'rtacha
+ * tuman = 1; aholi soni bo'yicha yaxlitlangan, 2024). Qolgan tumanlar 0.75–1.25
+ * oralig'ida — viloyat markazi katta, kichik shaharlar kichik ko'rinsin.
+ */
+const DISTRICT_SIZE: Readonly<Record<string, number>> = {
+  'Nukus shahri': 1.6,
+  "Bo'zatov tumani": 0.25,
+  'Taxiatosh tumani': 0.5,
+  'Andijon shahri': 2,
+  'Xonobod shahri': 0.3,
+  'Buxoro shahri': 1.6,
+  'Kogon shahri': 0.4,
+  'Jizzax shahri': 1.2,
+  'Qarshi shahri': 1.3,
+  'Shahrisabz shahri': 0.8,
+  "Ko'kdala tumani": 0.8,
+  'Navoiy shahri': 1.4,
+  'Zarafshon shahri': 0.7,
+  "G'ozg'on shahri": 0.15,
+  'Namangan shahri': 2.6,
+  'Samarqand shahri': 2.3,
+  "Kattaqo'rg'on shahri": 0.45,
+  'Termiz shahri': 1,
+  'Bandixon tumani': 0.6,
+  'Guliston shahri': 1,
+  'Shirin shahri': 0.25,
+  'Yangiyer shahri': 0.45,
+  'Angren shahri': 0.9,
+  'Bekobod shahri': 0.55,
+  'Chirchiq shahri': 0.8,
+  'Nurafshon shahri': 0.3,
+  'Ohangaron shahri': 0.25,
+  'Olmaliq shahri': 0.65,
+  "Yangiyo'l shahri": 0.35,
+  "Farg'ona shahri": 1.3,
+  "Marg'ilon shahri": 1,
+  "Qo'qon shahri": 1.1,
+  'Quvasoy shahri': 0.45,
+  'Urganch shahri': 1,
+  'Xiva shahri': 0.6,
+  "Tuproqqal'a tumani": 0.4,
+};
+
 function buildDistricts(regionId: RegionId): DistrictRef[] {
   const shapes = UZ_DISTRICT_INDEX[regionId] ?? [];
   const missing = DISTRICTS_WITHOUT_GEOMETRY[regionId] ?? [];
@@ -62,10 +106,7 @@ function buildDistricts(regionId: RegionId): DistrictRef[] {
     ...missing.map((name, i) => ({ id: `${regionId}-new-${i + 1}`, name, hasShape: false })),
   ];
   const base = REGION_LATENT[regionId];
-  const weights = raw.map((d) => {
-    const city = /shahri/i.test(d.name) ? 1.3 : 1;
-    return (0.55 + unitHash('w', d.id) * 0.9) * city;
-  });
+  const weights = raw.map((d) => DISTRICT_SIZE[d.name] ?? 0.75 + unitHash('w', d.id) * 0.5);
   const total = weights.reduce((a, b) => a + b, 0) || 1;
   // Og'ishlar: avval tasodifiy, keyin hudud bo'yicha vaznli o'rtachasi nolga keltiriladi.
   const keys = ['urban', 'resource', 'digital', 'climate', 'coverage', 'agro'] as const;
