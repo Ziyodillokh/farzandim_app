@@ -4,6 +4,9 @@
  * bilan boshlanadigan qiymat oldiga `'` qo'yiladi — oddiy son (`-0,3`) bundan
  * mustasno, aks holda Excel uni matn deb o'qiydi.
  */
+import type { MetricKey } from '@/data/contracts';
+import { METRICS } from '@/data/mock/model/metrics';
+
 export type CsvColumn<T> = { header: string; value: (row: T) => string | number | null | undefined };
 
 const FORMULA_START = /^[=+\-@\t\r]/;
@@ -17,9 +20,34 @@ export function escapeCsvCell(raw: string | number | null | undefined): string {
   return value;
 }
 
-/** Excel (uz/ru lokali) uchun son: o'nlik vergul, minglik ajratuvchisiz; yo'q qiymat — bo'sh katak. */
+/**
+ * Excel (uz/ru lokali) uchun son: o'nlik vergul, minglik ajratuvchisiz, oddiy "-"
+ * (formula himoyasi sof sonni o'tkazadi — Excel uni son deb o'qiydi); yo'q qiymat — bo'sh katak.
+ * `decimals` berilsa — aynan shuncha kasr xonasi.
+ */
+export function csvNumber(v: number | null | undefined, decimals?: number): string {
+  if (v === null || v === undefined || !Number.isFinite(v)) return '';
+  return (decimals === undefined ? String(v) : v.toFixed(decimals)).replace('.', ',');
+}
+
+/** `csvNumber` ning `null` qaytaradigan ko'rinishi (CsvColumn qiymati uchun). */
 export function csvDecimal(v: number | null | undefined, decimals = 1): string | null {
-  return v === null || v === undefined || !Number.isFinite(v) ? null : v.toFixed(decimals).replace('.', ',');
+  const text = csvNumber(v, decimals);
+  return text === '' ? null : text;
+}
+
+/** Fayl nomi uchun mahalliy sana: 2026-10-30. */
+export function csvDateStamp(now: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+/** Ustun sarlavhasi birlik bilan: "Bulling signali, %", "Ekran vaqti, daq". */
+export function csvMetricHeader(metric: MetricKey, label: string, minuteUnit: string): string {
+  const unit = METRICS[metric].unit;
+  if (unit === '%') return `${label}, %`;
+  if (unit === 'min') return `${label}, ${minuteUnit}`;
+  return label;
 }
 
 export function toCsv<T>(rows: readonly T[], columns: readonly CsvColumn<T>[]): string {

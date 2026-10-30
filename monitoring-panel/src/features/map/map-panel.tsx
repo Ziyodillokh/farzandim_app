@@ -1,11 +1,11 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { useCan } from '@/auth/use-session';
 import { RankBars } from '@/components/charts/rank-bars';
-import { DistrictMap } from '@/components/map/district-map';
 import { MapLegend, UzMap } from '@/components/map/uz-map';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { MetricKey, Scope } from '@/data/contracts';
@@ -16,6 +16,12 @@ import { useI18n } from '@/i18n';
 import { useMetricFormat } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { MetricTabs } from './metric-tabs';
+
+/** Tumanlar geometriyasi (~80 KB) faqat hudud doirasida kerak — alohida bo'lak sifatida yuklanadi. */
+const DistrictMap = dynamic(() => import('@/components/map/district-map').then((m) => m.DistrictMap), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[360px] w-full rounded-2xl" />,
+});
 
 /** Xaritada tanlash mumkin bo'lgan ko'rsatkichlar (standart to'plam). */
 export const MAP_METRICS: readonly MetricKey[] = ['mastery', 'iqMean', 'wellbeing', 'bullying', 'attendance', 'screenTime', 'coverage'];

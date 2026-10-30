@@ -1,8 +1,9 @@
 /** Sof yordamchilar (hook'siz): farq va CSV formatlash. */
+import { csvNumber as libCsvNumber } from '@/lib/csv';
 
-/** CSV uchun son: Excel (uz/ru lokali) o'nlik vergulni kutadi. */
+/** CSV uchun son (standart — 1 kasr xonasi): umumiy `lib/csv` ustida. */
 export function csvNumber(v: number | null | undefined, decimals = 1): string {
-  return v === null || v === undefined ? '' : v.toFixed(decimals).replace('.', ',');
+  return libCsvNumber(v, decimals);
 }
 
 /** Ikki qiymat farqi (bir kasr xonasi bilan), biri yo'q bo'lsa — null. */

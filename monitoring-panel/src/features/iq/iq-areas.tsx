@@ -6,7 +6,7 @@ import { ExportMenu } from '@/components/common/export-menu';
 import { Section } from '@/components/common/section';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Iq, Scope } from '@/data/contracts';
-import { IQ_BAND_COLORS } from '@/features/dashboard/learning-sections';
+import { IQ_BAND_COLORS } from '@/lib/color-scale';
 import { StackBar, SwatchLegend } from '@/features/mastery/kit/bars';
 import { Note } from '@/features/mastery/kit/layout';
 import { csvNumber } from '@/features/mastery/kit/num';

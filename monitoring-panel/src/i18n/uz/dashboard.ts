@@ -33,6 +33,7 @@ export const dashboard = {
   iqSub: 'Parvoz IQ: yosh normasi bo\'yicha daraja taqsimoti va yo\'nalishlar',
   participants: 'Qatnashganlar',
   iqCenter: 'o\'rtacha ball',
+  iqModal: 'Eng ko\'p uchraydigan daraja',
   iqDomains: 'Yo\'nalishlar bo\'yicha to\'g\'ri javoblar',
   interestsSub: 'Bolalar tanlagan fanlar va kasbiy qiziqishlar (RIASEC)',
   topSubjects: 'Eng ko\'p tanlangan fanlar',

@@ -4,7 +4,7 @@ import { Brain, Hourglass, ShieldCheck, Sparkles, Sprout, UserCheck, Users } fro
 
 import { Sparkline } from '@/components/charts/sparkline';
 import type { Iq } from '@/data/contracts';
-import { IQ_BAND_COLORS } from '@/features/dashboard/learning-sections';
+import { IQ_BAND_COLORS } from '@/lib/color-scale';
 import { Meter, StackBar } from '@/features/mastery/kit/bars';
 import { CountUpValue, KpiRow, KpiRowSkeleton, KpiTile, SPARK_TONE, UnitValue } from '@/features/mastery/kit/kpi-tile';
 import { useCompactParts } from '@/features/mastery/kit/use-compact';

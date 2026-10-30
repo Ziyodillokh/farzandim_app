@@ -12,20 +12,13 @@ import { ScreeningDisclaimer } from '@/components/common/screening-disclaimer';
 import { Section } from '@/components/common/section';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Scope } from '@/data/contracts';
-import { IQ_DISPLAY_BANDS, type IqDisplayBand, RIASEC, SUBJECT_KEYS } from '@/data/reference/domains';
+import { IQ_DISPLAY_BANDS, RIASEC, SUBJECT_KEYS } from '@/data/reference/domains';
 import { useInterests, useIq, useMastery } from '@/features/filters/use-monitoring';
 import { useI18n } from '@/i18n';
 import { useAreaName } from '@/lib/area-name';
+import { IQ_BAND_COLORS } from '@/lib/color-scale';
 import { useMetricFormat } from '@/lib/format';
 
-export const IQ_BAND_COLORS: Record<IqDisplayBand, string> = {
-  VERY_HIGH: 'hsl(186 90% 46%)',
-  HIGH: 'hsl(197 88% 54%)',
-  ABOVE_AVERAGE: 'hsl(210 85% 62%)',
-  AVERAGE: 'hsl(222 42% 60%)',
-  BELOW_AVERAGE: 'hsl(42 86% 64%)',
-  GROWTH_ZONE: 'hsl(32 92% 56%)',
-};
 
 export function MasterySection({ scope }: { scope: Scope }) {
   const { t } = useI18n();
@@ -82,6 +75,9 @@ export function IqSection({ scope }: { scope: Scope }) {
   const { t } = useI18n();
   const fmt = useMetricFormat();
   const { data } = useIq(scope);
+  // Norma tasdiqlanmagan bo'lsa (kam ishtirokchi) ball ko'rsatilmaydi — eng ko'p uchraydigan daraja.
+  const modal = data ? [...data.bands].sort((a, b) => b.share - a.share)[0] : undefined;
+  const showMean = Boolean(data?.normed);
   return (
     <Section id="sec-iq" icon={<Brain />} title={t('dashboard.sections.iq')} subtitle={t('dashboard.iqSub')} href="/iq" hrefLabel={t('dashboard.openSection')}>
       {!data ? (
@@ -89,14 +85,18 @@ export function IqSection({ scope }: { scope: Scope }) {
       ) : (
         <div className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-3">
-            <MiniStat label={t('metrics.iqMean.label')} value={fmt.value('iqMean', data.mean.value)} />
+            {showMean ? (
+              <MiniStat label={t('metrics.iqMean.label')} value={fmt.value('iqMean', data.mean.value)} />
+            ) : (
+              <MiniStat label={t('dashboard.iqModal')} value={modal ? t(`enums.iqBand.${modal.key}`) : '—'} />
+            )}
             <MiniStat label={t('metrics.iqParticipation.label')} value={fmt.value('iqParticipation', data.participation.value)} />
             <MiniStat label={t('dashboard.participants')} value={fmt.compact(data.participants)} />
           </div>
           <Donut
             slices={IQ_DISPLAY_BANDS.map((b) => ({ key: b, label: t(`enums.iqBand.${b}`), value: data.bands.find((x) => x.key === b)?.share ?? 0, color: IQ_BAND_COLORS[b] }))}
-            centerValue={fmt.value('iqMean', data.mean.value)}
-            centerLabel={t('dashboard.iqCenter')}
+            centerValue={showMean ? fmt.value('iqMean', data.mean.value) : fmt.pct(modal?.share ?? null, 0)}
+            centerLabel={showMean ? t('dashboard.iqCenter') : modal ? t(`enums.iqBand.${modal.key}`) : ''}
           />
           <div>
             <p className="mb-2 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{t('dashboard.iqDomains')}</p>
@@ -168,3 +168,5 @@ function MiniStat({ label, value }: { label: string; value: string }) {
 }
 
 export { MiniStat };
+/** Eski import yo'llari uchun (yangi kod — `@/lib/color-scale`). */
+export { IQ_BAND_COLORS };

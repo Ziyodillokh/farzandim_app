@@ -68,7 +68,20 @@ export function HeatTable({
                   selectedId === r.id && 'text-primary',
                 )}
               >
-                {r.label}
+                {onRowClick ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRowClick(r.id);
+                    }}
+                    className="rounded text-left font-medium outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {r.label}
+                  </button>
+                ) : (
+                  r.label
+                )}
                 {r.extra}
               </th>
               {columns.map((c) => {

@@ -1,12 +1,12 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
 
 import { DeltaChip } from '@/components/charts/delta-chip';
 import { Sparkline } from '@/components/charts/sparkline';
 import { DemoBadge } from '@/components/common/demo-badge';
 import { ParvozWordmark } from '@/components/layout/parvoz-wordmark';
-import { DistrictMap } from '@/components/map/district-map';
 import { UzMap } from '@/components/map/uz-map';
 import { UZ_MAP_VIEWBOX, UZ_REGION_SHAPES } from '@/data/geo/uz-regions';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,13 +15,19 @@ import { METRICS } from '@/data/mock/model/metrics';
 import { PROBLEM_METRICS } from '@/data/mock/services/overview';
 import { regionName } from '@/data/reference/regions';
 import { usePeriodText } from '@/features/dashboard/hero';
-import { IQ_BAND_COLORS } from '@/features/dashboard/learning-sections';
+import { IQ_BAND_COLORS } from '@/lib/color-scale';
 import { useAreaMatrix, useAreaMetric, useInsights, useInterests, useIq, useMastery, useOverview } from '@/features/filters/use-monitoring';
 import { InsightList } from '@/features/insights/insight-list';
 import { useI18n } from '@/i18n';
 import { useAreaName } from '@/lib/area-name';
 import { useMetricFormat } from '@/lib/format';
 import { cn } from '@/lib/utils';
+
+/** Tumanlar geometriyasi (~80 KB) faqat hudud doirasida kerak — alohida bo'lak sifatida yuklanadi. */
+const DistrictMap = dynamic(() => import('@/components/map/district-map').then((m) => m.DistrictMap), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[420px] w-full rounded-2xl" />,
+});
 
 type ProblemKey = 'bullying' | 'anxiety' | 'support' | 'sleep' | 'safetyGap' | 'chronic' | 'night';
 

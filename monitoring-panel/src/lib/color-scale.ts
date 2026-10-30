@@ -1,3 +1,4 @@
+import type { IqDisplayBand } from '@/data/reference/domains';
 /**
  * Xarita va heatmap ranglari. Faqat ko'k / havorang / moviy va ehtiyot uchun
  * amber (binafsha va qizil yo'q — "yomon" emas, "e'tibor"):
@@ -97,3 +98,13 @@ export function heatStyle(value: number | null, mean: number, spread: number, be
   if (t >= 0) return { background: `hsl(192 90% 48% / ${0.08 + k * 0.42})` };
   return { background: `hsl(36 92% 56% / ${0.08 + k * 0.42})` };
 }
+
+/** IQ darajalari ranglari (yuqori — moviy/feruza, past — amber; qizil va binafsha yo'q). */
+export const IQ_BAND_COLORS: Record<IqDisplayBand, string> = {
+  VERY_HIGH: 'hsl(186 90% 46%)',
+  HIGH: 'hsl(197 88% 54%)',
+  ABOVE_AVERAGE: 'hsl(210 85% 62%)',
+  AVERAGE: 'hsl(222 42% 60%)',
+  BELOW_AVERAGE: 'hsl(42 86% 64%)',
+  GROWTH_ZONE: 'hsl(32 92% 56%)',
+};

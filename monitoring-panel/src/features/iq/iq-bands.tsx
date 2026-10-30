@@ -6,7 +6,7 @@ import { Section } from '@/components/common/section';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Iq } from '@/data/contracts';
 import type { IqDisplayBand } from '@/data/reference/domains';
-import { IQ_BAND_COLORS } from '@/features/dashboard/learning-sections';
+import { IQ_BAND_COLORS } from '@/lib/color-scale';
 import { Inset, Note } from '@/features/mastery/kit/layout';
 import { useI18n } from '@/i18n';
 import { useMetricFormat } from '@/lib/format';

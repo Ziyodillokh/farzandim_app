@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 import { Forbidden } from '@/auth/guards';
 import { useCan, useSession } from '@/auth/use-session';
-import { IQ_BAND_COLORS } from '@/features/dashboard/learning-sections';
+import { IQ_BAND_COLORS } from '@/lib/color-scale';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Scope } from '@/data/contracts';

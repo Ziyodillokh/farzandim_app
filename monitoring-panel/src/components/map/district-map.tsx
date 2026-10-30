@@ -2,7 +2,8 @@
 
 import { useMemo, useRef, useState } from 'react';
 
-import { DISTRICTS_WITHOUT_GEOMETRY, UZ_DISTRICT_SHAPES } from '@/data/geo/uz-districts';
+import { DISTRICTS_WITHOUT_GEOMETRY } from '@/data/geo/uz-district-index';
+import { UZ_DISTRICT_SHAPES } from '@/data/geo/uz-districts';
 import type { RegionId } from '@/data/reference/regions';
 import { useI18n } from '@/i18n';
 import { buildScale, scaleColor } from '@/lib/color-scale';

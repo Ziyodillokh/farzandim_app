@@ -8,8 +8,8 @@ describe('csvNumber', () => {
     expect(csvNumber(460922)).toBe('460922');
   });
 
-  it('uses the typographic minus so the formula guard does not prefix an apostrophe', () => {
-    expect(csvNumber(-0.3)).toBe('−0,3');
+  it('keeps negatives as plain numbers (ASCII minus, no apostrophe from the formula guard)', () => {
+    expect(csvNumber(-0.3)).toBe('-0,3');
   });
 
   it('leaves missing values empty', () => {

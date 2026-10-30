@@ -9,7 +9,7 @@
  * Tumanlar uchun hudud qiymati atrofida kichik, nolga markazlangan og'ishlar.
  * Farqlar ataylab o'rtacha: bu namoyish, hech bir hudud haqida xulosa emas.
  */
-import { DISTRICTS_WITHOUT_GEOMETRY, UZ_DISTRICT_SHAPES } from '@/data/geo/uz-districts';
+import { DISTRICTS_WITHOUT_GEOMETRY, UZ_DISTRICT_INDEX } from '@/data/geo/uz-district-index';
 import { REGION_IDS, type RegionId } from '@/data/reference/regions';
 import { unitHash } from '@/lib/rng';
 
@@ -55,7 +55,7 @@ const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 export const signedNoise = (...parts: Array<string | number>) => unitHash(...parts) * 2 - 1;
 
 function buildDistricts(regionId: RegionId): DistrictRef[] {
-  const shapes = UZ_DISTRICT_SHAPES[regionId]?.districts ?? [];
+  const shapes = UZ_DISTRICT_INDEX[regionId] ?? [];
   const missing = DISTRICTS_WITHOUT_GEOMETRY[regionId] ?? [];
   const raw = [
     ...shapes.map((d) => ({ id: d.id, name: d.name, hasShape: true })),
