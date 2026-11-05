@@ -115,6 +115,7 @@ export const staff: DeepString<typeof uz> = {
     reports: 'Отчёты',
     assessments: 'Психологические тесты',
     development: 'Развитие',
+    timetable: 'Расписание уроков',
   },
   perm: {
     dashboard: { view: 'Просмотр главной страницы' },
@@ -151,5 +152,6 @@ export const staff: DeepString<typeof uz> = {
     reports: { view: 'Отчёты и экспорт' },
     assessments: { manage: 'Психологические тесты: создание, назначение, результаты' },
     development: { view: 'Дашборд развития (обобщённо)', individual: 'Профиль развития ученика (по имени)' },
+    timetable: { manage: 'Редактирование расписания уроков класса' },
   },
 };

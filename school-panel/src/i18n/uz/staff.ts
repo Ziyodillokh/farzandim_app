@@ -112,6 +112,7 @@ export const staff = {
     reports: 'Hisobotlar',
     assessments: 'Psixologik testlar',
     development: 'Rivojlanish',
+    timetable: 'Dars jadvali',
   },
   perm: {
     dashboard: { view: 'Bosh sahifani ko\'rish' },
@@ -148,5 +149,6 @@ export const staff = {
     reports: { view: 'Hisobotlar va eksport' },
     assessments: { manage: 'Psixologik testlar: yaratish, tayinlash, natijalar' },
     development: { view: 'Rivojlanish dashboardi (umumlashgan)', individual: 'O\'quvchining rivojlanish profili (ism bilan)' },
+    timetable: { manage: 'Sinf dars jadvalini tahrirlash' },
   },
 };
