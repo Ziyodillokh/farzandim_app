@@ -9,7 +9,7 @@
  * admin kalitni o'zgartirguncha saqlanib turadi.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
@@ -29,9 +29,11 @@ import {
   emptyTopicForm,
   formFromTopic,
   hasTopicFormErrors,
+  isKeyRejected,
   toTopicCreatePayload,
   toTopicPatchPayload,
   validateTopicForm,
+  type RejectedKey,
   type TopicFormErrors,
 } from './topic-form';
 import { TopicFormFields } from './topic-form-fields';
@@ -43,19 +45,34 @@ export type TopicFormTarget =
 export function TopicFormDialog({
   target,
   onOpenChange,
+  onCloseAutoFocus,
 }: {
   /** `null` — oyna yopiq. */
   target: TopicFormTarget | null;
   onOpenChange: (open: boolean) => void;
+  /** Oyna yopilganda fokusni ochgan tugmaga qaytarish uchun. */
+  onCloseAutoFocus?: (event: Event) => void;
 }) {
+  // Saqlash ketayotganda oyna yopilmaydi (Esc, tashqariga bosish, "×") —
+  // aks holda natija (xato yoki muvaffaqiyat) ko'rinmay qoladi.
+  const [isSaving, setIsSaving] = useState(false);
+  const handleOpenChange = (open: boolean) => {
+    if (!open && isSaving) return;
+    onOpenChange(open);
+  };
+
   return (
-    <Dialog open={target !== null} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 p-0">
+    <Dialog open={target !== null} onOpenChange={handleOpenChange}>
+      <DialogContent
+        className="flex max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 p-0"
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
         {/* key — boshqa mavzu ochilsa forma noldan to'ldiriladi */}
         {target && (
           <FormBody
             key={target.mode === 'edit' ? target.topic.id : 'create'}
             target={target}
+            onSavingChange={setIsSaving}
             onClose={() => onOpenChange(false)}
           />
         )}
@@ -64,21 +81,29 @@ export function TopicFormDialog({
   );
 }
 
-function FormBody({ target, onClose }: { target: TopicFormTarget; onClose: () => void }) {
+function FormBody({
+  target,
+  onClose,
+  onSavingChange,
+}: {
+  target: TopicFormTarget;
+  onClose: () => void;
+  onSavingChange: (isSaving: boolean) => void;
+}) {
   const qc = useQueryClient();
   const isEdit = target.mode === 'edit';
   const [form, setForm] = useState(() =>
     target.mode === 'edit' ? formFromTopic(target.topic) : emptyTopicForm(target.subject),
   );
   const [submitted, setSubmitted] = useState(false);
-  // Backend band deb qaytargan kalit — admin uni o'zgartirguncha xato ko'rinib turadi.
-  const [rejectedKey, setRejectedKey] = useState<string | null>(null);
+  // Backend band deb qaytargan fan + kalit — admin ikkalasidan birini o'zgartirguncha xato ko'rinib turadi.
+  const [rejectedKey, setRejectedKey] = useState<RejectedKey | null>(null);
 
   const errors = validateTopicForm(form, target.mode);
-  const isKeyRejected = rejectedKey !== null && form.key.trim() === rejectedKey;
+  const keyIsRejected = isKeyRejected(rejectedKey, form);
   const shownErrors: TopicFormErrors = {
     ...(submitted ? errors : {}),
-    ...(isKeyRejected ? { key: KEY_CONFLICT_MESSAGE } : {}),
+    ...(keyIsRejected ? { key: KEY_CONFLICT_MESSAGE } : {}),
   };
 
   const save = useMutation({
@@ -95,7 +120,7 @@ function FormBody({ target, onClose }: { target: TopicFormTarget; onClose: () =>
     },
     onError: (err) => {
       if (isKeyConflict(err)) {
-        setRejectedKey(form.key.trim());
+        setRejectedKey({ subject: form.subject, key: form.key.trim() });
         toast.error(KEY_CONFLICT_MESSAGE);
         return;
       }
@@ -103,13 +128,19 @@ function FormBody({ target, onClose }: { target: TopicFormTarget; onClose: () =>
     },
   });
 
+  // Ota-ona oynasi saqlash tugamaguncha yopilishni to'xtatadi.
+  useEffect(() => {
+    onSavingChange(save.isPending);
+    return () => onSavingChange(false);
+  }, [save.isPending, onSavingChange]);
+
   const handleSave = () => {
     setSubmitted(true);
     if (hasTopicFormErrors(errors)) {
       toast.error('Formadagi xatolarni tuzating');
       return;
     }
-    if (isKeyRejected) return;
+    if (keyIsRejected) return;
     if (target.mode === 'edit' && Object.keys(toTopicPatchPayload(form, target.topic)).length === 0) {
       toast.info("O'zgarish yo'q");
       onClose();
@@ -138,11 +169,14 @@ function FormBody({ target, onClose }: { target: TopicFormTarget; onClose: () =>
         }}
       >
         <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
-          <TopicFormFields form={form} setForm={setForm} errors={shownErrors} mode={target.mode} />
+          {/* Saqlash ketayotganda maydonlar qulflanadi: yuborilgan qiymat o'zgarib ketmasin. */}
+          <fieldset disabled={save.isPending} className="min-w-0">
+            <TopicFormFields form={form} setForm={setForm} errors={shownErrors} mode={target.mode} />
+          </fieldset>
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border px-4 py-3 sm:px-6">
-          <Button type="button" variant="ghost" onClick={onClose}>
+          <Button type="button" variant="ghost" disabled={save.isPending} onClick={onClose}>
             Bekor qilish
           </Button>
           <Button type="submit" disabled={save.isPending}>

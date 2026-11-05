@@ -98,7 +98,7 @@ export function TopicFormFields({
             spellCheck={false} className={cn('font-mono', INVALID_STYLE)}
             aria-describedby={errors.key ? errorId('lt-key') : 'lt-key-help'}
             aria-invalid={errors.key ? true : undefined}
-            onChange={(e) => setForm((prev) => withKey(prev, e.target.value))} />
+            onChange={(e) => setForm((prev) => withKey(prev, e.target.value, mode))} />
           <p id="lt-key-help" className="text-2xs text-muted-foreground">
             {form.keyTouched
               ? isEdit

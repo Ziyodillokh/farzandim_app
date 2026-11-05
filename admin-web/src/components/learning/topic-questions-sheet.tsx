@@ -61,16 +61,22 @@ export function TopicQuestionsSheet({
   topic,
   topicsById,
   onOpenChange,
+  onCloseAutoFocus,
 }: {
   /** `null` — panel yopiq. */
   topic: LearningTopic | null;
   /** Savol qaysi mavzuda ekanini nom bilan ko'rsatish uchun. */
   topicsById: ReadonlyMap<string, LearningTopic>;
   onOpenChange: (open: boolean) => void;
+  /** Panel yopilganda fokusni ochgan tugmaga qaytarish uchun. */
+  onCloseAutoFocus?: (event: Event) => void;
 }) {
   return (
     <Sheet open={topic !== null} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full gap-0 p-0 sm:max-w-2xl">
+      <SheetContent
+        className="w-full gap-0 p-0 sm:max-w-2xl"
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
         {topic && <SheetBody key={topic.id} topic={topic} topicsById={topicsById} />}
       </SheetContent>
     </Sheet>
@@ -93,11 +99,13 @@ function SheetBody({
 
   const list = useInfiniteQuery({
     queryKey: learningKeys.topicQuestions(topic.id, scope, q),
-    queryFn: ({ pageParam }) =>
+    // `signal` — rejim/qidiruv almashganda eski so'rovlar (va "Mavzusiz" skaneri) to'xtaydi.
+    queryFn: ({ pageParam, signal }) =>
       fetchQuestionsPage(
         learningQuestionsApi.list,
         { subject: topic.subject, topicId: topic.id, scope, q },
         pageParam,
+        signal,
       ),
     initialPageParam: 1,
     getNextPageParam: (last) => last.nextPage ?? undefined,
@@ -122,6 +130,9 @@ function SheetBody({
   const allVisibleSelected =
     selectableVisible.length > 0 && selectableVisible.every((qn) => selection.has(qn.id));
   const moved = countMoved(selection, topic.id);
+  // Yuklangan qatorlar bor, lekin keyingi sahifa/yangilash xato berdi.
+  const hasStaleError = list.isError && questions.length > 0;
+  const retry = () => void (list.isFetchNextPageError ? list.fetchNextPage() : list.refetch());
 
   return (
     <>
@@ -149,6 +160,23 @@ function SheetBody({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+        {hasStaleError && (
+          // sticky: xato ro'yxatning pastida ("Yana yuklash") yuz bergan bo'lsa ham ko'rinib tursin
+          <div className="sticky -top-4 z-10 -mx-6 -mt-4 mb-1 bg-card px-6 pb-3 pt-4">
+            <div
+              role="alert"
+              className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive"
+            >
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              <span className="min-w-0 flex-1">
+                Ro&apos;yxatni yangilab bo&apos;lmadi: {topicErrorMessage(list.error)}
+              </span>
+              <Button variant="outline" size="sm" onClick={retry}>
+                Qayta urinish
+              </Button>
+            </div>
+          </div>
+        )}
         <QuestionList
           topic={topic}
           topicsById={topicsById}
@@ -156,6 +184,7 @@ function SheetBody({
           selection={selection}
           isLoading={list.isLoading}
           error={list.isError ? list.error : null}
+          hasMore={list.hasNextPage}
           onRetry={() => void list.refetch()}
           allVisibleSelected={allVisibleSelected}
           canSelectAny={selectableVisible.length > 0}
@@ -247,6 +276,7 @@ function QuestionList({
   selection,
   isLoading,
   error,
+  hasMore,
   onRetry,
   allVisibleSelected,
   canSelectAny,
@@ -259,6 +289,8 @@ function QuestionList({
   selection: Selection;
   isLoading: boolean;
   error: unknown;
+  /** Yuklanmagan sahifalar bor ("Mavzusiz" skaneri to'liq tugamagan). */
+  hasMore: boolean;
   onRetry: () => void;
   allVisibleSelected: boolean;
   canSelectAny: boolean;
@@ -282,6 +314,15 @@ function QuestionList({
         description={topicErrorMessage(error)}
         action={<Button variant="outline" onClick={onRetry}>Qayta urinish</Button>}
       />
+    );
+  }
+  // "Mavzusiz" skaneri bir yuklashda cheklangan sahifa o'qiydi: hech narsa
+  // topilmagan bo'lsa-da ro'yxat tugamagan — "yo'q" demaymiz.
+  if (questions.length === 0 && hasMore) {
+    return (
+      <p role="status" className="py-10 text-center text-sm text-muted-foreground">
+        Hozircha topilmadi, qidiruvni davom ettiring
+      </p>
     );
   }
   if (questions.length === 0) {

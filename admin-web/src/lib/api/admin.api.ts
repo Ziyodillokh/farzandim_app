@@ -455,9 +455,10 @@ export const learningTopicsApi = {
 };
 
 export const learningQuestionsApi = {
-  list: (params: LearningQuestionListParams = {}) =>
+  /** `signal` — TanStack Query bekor qilganda so'rov ham bekor bo'ladi. */
+  list: (params: LearningQuestionListParams = {}, signal?: AbortSignal) =>
     api
-      .get<RawPaginated<LearningQuestion>>('/admin/learning/questions', { params })
+      .get<RawPaginated<LearningQuestion>>('/admin/learning/questions', { params, signal })
       .then(normalizePagination),
 };
 

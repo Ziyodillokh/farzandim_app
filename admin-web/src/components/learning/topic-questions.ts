@@ -26,6 +26,7 @@ export const MAX_SCAN_PAGES = 10;
 
 export type FetchQuestions = (
   params: LearningQuestionListParams,
+  signal?: AbortSignal,
 ) => Promise<Paginated<LearningQuestion>>;
 
 export interface QuestionsQuery {
@@ -64,8 +65,9 @@ async function fetchPlainPage(
   fetchPage: FetchQuestions,
   query: QuestionsQuery,
   page: number,
+  signal?: AbortSignal,
 ): Promise<QuestionsPage> {
-  const result = await fetchPage(toQuestionParams(query, page, QUESTION_PAGE_SIZE));
+  const result = await fetchPage(toQuestionParams(query, page, QUESTION_PAGE_SIZE), signal);
   return {
     items: result.items,
     nextPage: page < result.totalPages ? page + 1 : null,
@@ -76,19 +78,23 @@ async function fetchPlainPage(
 /**
  * "Mavzusiz": sahifa-sahifa o'qib, `topicId === null` larni yig'adi — kamida
  * `QUESTION_PAGE_SIZE` ta bo'lguncha, ro'yxat tugaguncha yoki
- * `MAX_SCAN_PAGES` sahifaga yetguncha.
+ * `MAX_SCAN_PAGES` sahifaga yetguncha. `signal` bekor qilinsa skaner
+ * to'xtaydi (qidiruv/rejim almashganda eski so'rovlar davom etmasin) va
+ * bekor qilish xatosi tashlanadi.
  */
 async function fetchUnlinkedPage(
   fetchPage: FetchQuestions,
   query: QuestionsQuery,
   startPage: number,
+  signal?: AbortSignal,
 ): Promise<QuestionsPage> {
   let page = startPage;
   let scanned = 0;
   let items: LearningQuestion[] = [];
   let nextPage: number | null = page;
   while (nextPage !== null && scanned < MAX_SCAN_PAGES && items.length < QUESTION_PAGE_SIZE) {
-    const result = await fetchPage(toQuestionParams(query, page, QUESTION_SCAN_LIMIT));
+    signal?.throwIfAborted();
+    const result = await fetchPage(toQuestionParams(query, page, QUESTION_SCAN_LIMIT), signal);
     items = [...items, ...result.items.filter((q) => q.topicId === null)];
     scanned += 1;
     nextPage = page < result.totalPages ? page + 1 : null;
@@ -101,10 +107,11 @@ export function fetchQuestionsPage(
   fetchPage: FetchQuestions,
   query: QuestionsQuery,
   page: number,
+  signal?: AbortSignal,
 ): Promise<QuestionsPage> {
   return query.scope === 'unlinked'
-    ? fetchUnlinkedPage(fetchPage, query, page)
-    : fetchPlainPage(fetchPage, query, page);
+    ? fetchUnlinkedPage(fetchPage, query, page, signal)
+    : fetchPlainPage(fetchPage, query, page, signal);
 }
 
 /** Yuklangan sahifalarni bitta ro'yxatga birlashtiradi (takror id'siz). */

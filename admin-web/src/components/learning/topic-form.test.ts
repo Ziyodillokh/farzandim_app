@@ -13,6 +13,7 @@ import {
   emptyTopicForm,
   formFromTopic,
   hasTopicFormErrors,
+  isKeyRejected,
   normalizeKeyInput,
   parseGrade,
   slugify,
@@ -101,21 +102,36 @@ describe('kalitni avtomatik taklif qilish', () => {
   });
 
   it('qoʻlda yozilgan kalit sarlavha oʻzgarganda saqlanadi', () => {
-    const typed = withKey(withTitleUz(emptyTopicForm('math'), 'Kasrlar'), 'my-key');
+    const typed = withKey(withTitleUz(emptyTopicForm('math'), 'Kasrlar'), 'my-key', 'create');
     assert.equal(typed.keyTouched, true);
     assert.equal(withTitleUz(typed, 'Boshqa nom').key, 'my-key');
   });
 
   it('kalit maydoni tozalansa avtomatik taklif qayta yoqiladi', () => {
-    const typed = withKey(withTitleUz(emptyTopicForm('math'), 'Kasrlar'), 'my-key');
-    const cleared = withKey(typed, '');
+    const typed = withKey(withTitleUz(emptyTopicForm('math'), 'Kasrlar'), 'my-key', 'create');
+    const cleared = withKey(typed, '', 'create');
     assert.equal(cleared.keyTouched, false);
     assert.equal(cleared.key, 'kasrlar');
   });
 
+  it('TAHRIRLASHDA kalit tozalansa bo‘sh qoladi va avtomatik taklif yoqilmaydi', () => {
+    const cleared = withKey(formFromTopic(topic()), '', 'edit');
+    assert.equal(cleared.key, '');
+    assert.equal(cleared.keyTouched, true);
+    // Sarlavha o'zgarsa ham kalit jimgina almashtirilmaydi.
+    assert.equal(withTitleUz(cleared, 'Butunlay boshqa nom').key, '');
+    assert.equal(validateTopicForm(cleared, 'edit').key, 'Kalit majburiy.');
+  });
+
+  it('tahrirlashda kalitga yangi qiymat yozilsa u qabul qilinadi', () => {
+    const edited = withKey(formFromTopic(topic()), 'Yangi Kalit', 'edit');
+    assert.equal(edited.key, 'yangi-kalit');
+    assert.equal(edited.keyTouched, true);
+  });
+
   it('yozilgan kalit kichik harfga oʻtadi, boʻshliq chiziqqa aylanadi', () => {
     assert.equal(normalizeKeyInput('Oddiy Kasrlar'), 'oddiy-kasrlar');
-    assert.equal(withKey(emptyTopicForm('math'), 'ABC def').key, 'abc-def');
+    assert.equal(withKey(emptyTopicForm('math'), 'ABC def', 'create').key, 'abc-def');
   });
 
   it('tahrirlashda mavjud kalit sarlavhadan oʻzgarib ketmaydi', () => {
@@ -274,5 +290,22 @@ describe('toTopicPatchPayload', () => {
   it('server qiymatidagi boʻsh tillar (ru: "") farq sanalmaydi', () => {
     const original = topic({ title: { uz: 'Kasrlar', ru: '' }, goal: { uz: 'Maqsad', en: '' } });
     assert.deepEqual(toTopicPatchPayload(formFromTopic(original), original), {});
+  });
+});
+
+describe('isKeyRejected (409 xatosi faqat shu fan + kalit uchun)', () => {
+  const rejected = { subject: 'math', key: 'foizlar' } as const;
+
+  it('o‘sha fan va o‘sha kalit — rad etilgan', () => {
+    assert.equal(isKeyRejected(rejected, validForm({ key: ' foizlar ' })), true);
+  });
+
+  it('boshqa fandagi shu kalit rad etilmagan hisoblanadi', () => {
+    assert.equal(isKeyRejected(rejected, validForm({ subject: 'native', key: 'foizlar' })), false);
+  });
+
+  it('kalit o‘zgargan yoki rad etilgani yo‘q bo‘lsa — false', () => {
+    assert.equal(isKeyRejected(rejected, validForm({ key: 'foizlar-2' })), false);
+    assert.equal(isKeyRejected(null, validForm()), false);
   });
 });

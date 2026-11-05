@@ -6,7 +6,7 @@
  * O'chirish yo'q: yashirish yumshoq o'chirish o'rnini bosadi.
  */
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,6 +41,9 @@ export default function LearningTopicsPage() {
   const [questionsTopicId, setQuestionsTopicId] = useState<string | null>(null);
   // Ekran o'quvchi uchun: ko'chirish natijasi.
   const [announcement, setAnnouncement] = useState('');
+  // Oyna/panel yopilganda fokus shu tugmaga qaytadi (klaviatura foydalanuvchisi joyini yo'qotmasin).
+  const openerRef = useRef<HTMLElement | null>(null);
+  const createButtonRef = useRef<HTMLButtonElement>(null);
 
   const topics = useQuery({
     queryKey: learningKeys.topics,
@@ -70,7 +73,32 @@ export default function LearningTopicsPage() {
   const handleToggleStatus = (topic: LearningTopic) =>
     toggleStatus.mutate({ topic, status: topic.status === 'ACTIVE' ? 'HIDDEN' : 'ACTIVE' });
 
-  const openCreate = () => setFormTarget({ mode: 'create', subject });
+  const rememberOpener = () => {
+    const active = document.activeElement;
+    openerRef.current = active instanceof HTMLElement && active !== document.body ? active : null;
+  };
+
+  /** Radix fokusni tetikchiga qaytaradi, bizda tetikchi yo'q — ochgan tugmaga qaytaramiz. */
+  const restoreFocus = (event: Event) => {
+    event.preventDefault();
+    const opener = openerRef.current;
+    // Ochgan tugma yo'qolgan bo'lishi mumkin (masalan, bo'sh holatdagi "Yangi mavzu").
+    (opener?.isConnected ? opener : createButtonRef.current)?.focus();
+    openerRef.current = null;
+  };
+
+  const openCreate = () => {
+    rememberOpener();
+    setFormTarget({ mode: 'create', subject });
+  };
+  const openEdit = (topic: LearningTopic) => {
+    rememberOpener();
+    setFormTarget({ mode: 'edit', topic });
+  };
+  const openQuestions = (topic: LearningTopic) => {
+    rememberOpener();
+    setQuestionsTopicId(topic.id);
+  };
 
   return (
     <div className="container mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 sm:py-8">
@@ -79,7 +107,7 @@ export default function LearningTopicsPage() {
         title="Mavzular"
         count={topics.data ? subjectTopics.length : undefined}
         actions={
-          <Button onClick={openCreate}>
+          <Button ref={createButtonRef} onClick={openCreate}>
             <Plus className="h-4 w-4" /> Yangi mavzu
           </Button>
         }
@@ -102,11 +130,11 @@ export default function LearningTopicsPage() {
             isFetching={topics.isFetching}
             error={topics.isError ? topics.error : null}
             isReordering={reorder.isPending}
-            togglingId={toggleStatus.isPending ? (toggleStatus.variables?.topic.id ?? null) : null}
+            isToggling={toggleStatus.isPending}
             onRetry={() => void topics.refetch()}
             onCreate={openCreate}
-            onEdit={(topic) => setFormTarget({ mode: 'edit', topic })}
-            onOpenQuestions={(topic) => setQuestionsTopicId(topic.id)}
+            onEdit={openEdit}
+            onOpenQuestions={openQuestions}
             onMove={handleMove}
             onToggleStatus={handleToggleStatus}
           />
@@ -114,15 +142,20 @@ export default function LearningTopicsPage() {
       </Tabs>
 
       <p role="status" aria-live="polite" className="sr-only">
-        {announcement}
+        {reorder.isPending ? `${announcement} Saqlanmoqda…` : announcement}
       </p>
 
-      <TopicFormDialog target={formTarget} onOpenChange={(open) => !open && setFormTarget(null)} />
+      <TopicFormDialog
+        target={formTarget}
+        onOpenChange={(open) => !open && setFormTarget(null)}
+        onCloseAutoFocus={restoreFocus}
+      />
 
       <TopicQuestionsSheet
         topic={questionsTopic}
         topicsById={topicsById}
         onOpenChange={(open) => !open && setQuestionsTopicId(null)}
+        onCloseAutoFocus={restoreFocus}
       />
     </div>
   );

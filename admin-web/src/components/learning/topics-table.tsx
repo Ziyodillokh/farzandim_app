@@ -41,8 +41,8 @@ export interface TopicsTableProps {
   error: unknown;
   /** Tartib saqlanayotgan vaqtda yangi ko'chirishlar qabul qilinmaydi. */
   isReordering: boolean;
-  /** Holati almashtirilayotgan mavzu. */
-  togglingId: string | null;
+  /** Biror mavzuning holati almashtirilmoqda — boshqa almashtirishlar qabul qilinmaydi. */
+  isToggling: boolean;
   onRetry: () => void;
   onCreate: () => void;
   onEdit: (topic: LearningTopic) => void;
@@ -171,7 +171,8 @@ function TopicRow({
   index,
   isFirst,
   isLast,
-  togglingId,
+  isReordering,
+  isToggling,
   onEdit,
   onOpenQuestions,
   onMove,
@@ -191,6 +192,7 @@ function TopicRow({
             topic={topic}
             direction={-1}
             disabled={isFirst}
+            isBusy={isReordering}
             label={`"${title}" mavzusini yuqoriga ko'chirish`}
             onMove={onMove}
           />
@@ -198,6 +200,7 @@ function TopicRow({
             topic={topic}
             direction={1}
             disabled={isLast}
+            isBusy={isReordering}
             label={`"${title}" mavzusini pastga ko'chirish`}
             onMove={onMove}
           />
@@ -231,7 +234,12 @@ function TopicRow({
       </td>
       <td className="whitespace-nowrap px-4 py-3">
         <div className="flex items-center justify-end gap-1">
-          <Button variant="outline" size="sm" onClick={() => onOpenQuestions(topic)}>
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label={`Savollar: "${title}" mavzusi`}
+            onClick={() => onOpenQuestions(topic)}
+          >
             <ListChecks /> Savollar
           </Button>
           <Button
@@ -243,11 +251,15 @@ function TopicRow({
           >
             <Pencil />
           </Button>
+          {/* aria-disabled (disabled emas): almashtirish ketayotganda fokus yo'qolmaydi. */}
           <Button
             variant="ghost"
             size="sm"
-            disabled={togglingId === topic.id}
-            onClick={() => onToggleStatus(topic)}
+            aria-disabled={isToggling || undefined}
+            className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-transparent"
+            onClick={() => {
+              if (!isToggling) onToggleStatus(topic);
+            }}
             aria-label={
               isHidden ? `"${title}" mavzusini ko'rsatish` : `"${title}" mavzusini yashirish`
             }
@@ -262,20 +274,24 @@ function TopicRow({
 }
 
 /**
- * Ko'chirish tugmasi. Chekkada `disabled` emas, `aria-disabled`: tugma
- * fokusda qoladi (ketma-ket bosganda fokus yo'qolmaydi), bosish esa hech
- * narsa qilmaydi.
+ * Ko'chirish tugmasi. Chekkada va saqlash ketayotganda `disabled` emas,
+ * `aria-disabled`: tugma fokusda qoladi (ketma-ket bosganda fokus
+ * yo'qolmaydi), bosish esa hech narsa qilmaydi.
  */
 function MoveButton({
   topic,
   direction,
   disabled,
+  isBusy,
   label,
   onMove,
 }: {
   topic: LearningTopic;
   direction: MoveDirection;
+  /** Chekkada: bu yo'nalishda ko'chirib bo'lmaydi. */
   disabled: boolean;
+  /** Tartib saqlanayotgan (yoki yangilanayotgan) payt. */
+  isBusy: boolean;
   label: string;
   onMove: (topic: LearningTopic, direction: MoveDirection) => void;
 }) {
@@ -286,11 +302,11 @@ function MoveButton({
       variant="ghost"
       size="icon-sm"
       aria-label={label}
-      aria-disabled={disabled || undefined}
+      aria-disabled={disabled || isBusy || undefined}
       title={direction === -1 ? 'Yuqoriga' : 'Pastga'}
       className="aria-disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:hover:bg-transparent"
       onClick={() => {
-        if (!disabled) onMove(topic, direction);
+        if (!disabled && !isBusy) onMove(topic, direction);
       }}
     >
       {direction === -1 ? <ArrowUp /> : <ArrowDown />}

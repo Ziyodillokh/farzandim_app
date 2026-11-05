@@ -121,12 +121,28 @@ export function withTitleUz(form: TopicForm, uz: string): TopicForm {
   return form.keyTouched ? { ...form, title } : { ...form, title, key: slugify(uz) };
 }
 
-/** Kalit qo'lda o'zgartirilganda avtomatik taklif to'xtaydi; bo'sh qoldirilsa qayta yoqiladi. */
-export function withKey(form: TopicForm, value: string): TopicForm {
+/**
+ * Kalit qo'lda o'zgartirilganda avtomatik taklif to'xtaydi. Yaratishda maydon
+ * tozalansa taklif qayta yoqiladi; TAHRIRLASHDA esa kalit bo'sh qoladi
+ * ("Kalit majburiy" xatosi chiqadi) — mavjud kalitni jimgina almashtirmaymiz.
+ */
+export function withKey(form: TopicForm, value: string, mode: TopicFormMode): TopicForm {
   const key = normalizeKeyInput(value);
-  if (key === '') return { ...form, key: slugify(form.title.uz), keyTouched: false };
+  if (key === '' && mode === 'create') {
+    return { ...form, key: slugify(form.title.uz), keyTouched: false };
+  }
   return { ...form, key, keyTouched: true };
 }
+
+/** Backend "kalit band" (409) deb rad etgan kalit — shu FAN ichida. */
+export interface RejectedKey {
+  subject: LearningSubject | '';
+  key: string;
+}
+
+/** Forma hali ham aynan shu fan va kalitni yuboryaptimi (xato ko'rinib turishi kerak). */
+export const isKeyRejected = (rejected: RejectedKey | null, form: TopicForm): boolean =>
+  rejected !== null && rejected.subject === form.subject && rejected.key === form.key.trim();
 
 /* ─── Validatsiya ─── */
 

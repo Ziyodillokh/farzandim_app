@@ -163,6 +163,44 @@ describe('fetchQuestionsPage — "Mavzusiz" skaneri', () => {
   });
 });
 
+describe('fetchQuestionsPage — AbortSignal', () => {
+  it('signal ni har bir so‘rovga uzatadi (oddiy va skaner rejimlari)', async () => {
+    const signals: Array<AbortSignal | undefined> = [];
+    const fetchPage: FetchQuestions = async (_params, signal) => {
+      signals.push(signal);
+      return { items: [], page: 1, totalPages: 1, total: 0 };
+    };
+    const { signal } = new AbortController();
+    await fetchQuestionsPage(fetchPage, query({ scope: 'all' }), 1, signal);
+    await fetchQuestionsPage(fetchPage, query({ scope: 'unlinked' }), 1, signal);
+    assert.deepEqual(signals, [signal, signal]);
+  });
+
+  it('skaner bekor qilinganda keyingi sahifalarni so‘ramaydi va xato tashlaydi', async () => {
+    const controller = new AbortController();
+    const pages = Array.from({ length: 5 }, (_, i) => range(i * 100, 3, 'other'));
+    const { fetchPage: inner, calls } = fakeFetch(pages);
+    const fetchPage: FetchQuestions = async (params, signal) => {
+      const result = await inner(params, signal);
+      if (calls.length === 2) controller.abort(); // 2-sahifadan keyin bekor qilinadi
+      return result;
+    };
+    await assert.rejects(
+      fetchQuestionsPage(fetchPage, query({ scope: 'unlinked' }), 1, controller.signal),
+      (err: unknown) => err instanceof DOMException && err.name === 'AbortError',
+    );
+    assert.equal(calls.length, 2);
+  });
+
+  it('boshidanoq bekor qilingan signal bilan umuman so‘rov yubormaydi', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const { fetchPage, calls } = fakeFetch([range(1, 3)]);
+    await assert.rejects(fetchQuestionsPage(fetchPage, query({ scope: 'unlinked' }), 1, controller.signal));
+    assert.equal(calls.length, 0);
+  });
+});
+
 describe('flattenPages', () => {
   it('sahifalarni birlashtiradi va takroriy id’larni olib tashlaydi', () => {
     const pages = [
