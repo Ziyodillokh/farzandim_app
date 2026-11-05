@@ -21,6 +21,7 @@ import {
   StartAttemptDto,
   SubmitAnswerDto,
 } from './dto/learning.dto';
+import { LearningTopicsService } from './learning-topics.service';
 import { LearningService } from './learning.service';
 
 /** Bola ilovasi: kunlik testlar (Growth). */
@@ -30,7 +31,10 @@ import { LearningService } from './learning.service';
 @Roles('CHILD')
 @Controller('learning')
 export class LearningController {
-  constructor(private readonly learning: LearningService) {}
+  constructor(
+    private readonly learning: LearningService,
+    private readonly topics: LearningTopicsService,
+  ) {}
 
   @Get('profile')
   @ApiOperation({ summary: 'O\'quv profili (sinf + fanlar); tanlanmagan bo\'lsa null' })
@@ -46,12 +50,29 @@ export class LearningController {
     return { profile: await this.learning.saveProfile(childId, dto) };
   }
 
+  @Get('subjects/:subject/topics')
+  @ApiOperation({ summary: 'Fan mavzulari: o\'zlashtirish darajasi, joriy mavzu (bilim xaritasi)' })
+  async subjectTopics(@CurrentUser() user: JwtPayload, @Param('subject') subject: string) {
+    const childId = await this.learning.childIdForUser(user.userId);
+    return this.topics.listForSubject(childId, subject);
+  }
+
+  @Get('topics/:topicId')
+  @ApiOperation({ summary: 'Mavzu: maqsad, oldingi natija, davom ettiriladigan urinish' })
+  async topic(@CurrentUser() user: JwtPayload, @Param('topicId', ParseUUIDPipe) topicId: string) {
+    const childId = await this.learning.childIdForUser(user.userId);
+    return this.topics.detail(childId, topicId);
+  }
+
   @Post('attempts')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Fan testini boshlash yoki bugungi yarim qolganini davom ettirish' })
+  @ApiOperation({
+    summary:
+      'Fan testini boshlash (ixtiyoriy mavzu bo\'yicha) yoki bugungi yarim qolganini davom ettirish',
+  })
   async start(@CurrentUser() user: JwtPayload, @Body() dto: StartAttemptDto) {
     const childId = await this.learning.childIdForUser(user.userId);
-    return this.learning.startAttempt(childId, dto.subject);
+    return this.learning.startAttempt(childId, dto.subject, dto.topicId ?? null);
   }
 
   @Get('attempts/:id')

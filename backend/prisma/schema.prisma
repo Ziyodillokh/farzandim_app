@@ -1578,6 +1578,12 @@ enum LearningAttemptStatus {
   ABANDONED
 }
 
+/// Mavzu holati: HIDDEN — bola ilovasida ko'rinmaydi (qattiq o'chirish yo'q).
+enum LearningTopicStatus {
+  ACTIVE
+  HIDDEN
+}
+
 /// Bolaning o'quv profili — sinf va kunlik testlar uchun fanlar.
 model LearningProfile {
   childId   String            @id @map("child_id")
@@ -1591,6 +1597,30 @@ model LearningProfile {
   @@map("learning_profiles")
 }
 
+/// Fan mavzusi (o'quv dasturi katalogi). `key` — fan ichida noyob slug;
+/// `title` / `goal` — `{uz, ru?, en?}` (uz majburiy). Savollar `topicId` orqali bog'lanadi.
+model LearningTopic {
+  id        String              @id @default(uuid())
+  subject   LearningSubject
+  key       String
+  title     Json
+  goal      Json?
+  minGrade  Int                 @map("min_grade")
+  maxGrade  Int                 @map("max_grade")
+  position  Int
+  status    LearningTopicStatus @default(ACTIVE)
+  createdBy String?             @map("created_by")
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
+
+  questions LearningQuestion[]
+  attempts  LearningAttempt[]
+
+  @@unique([subject, key])
+  @@index([subject, status, position])
+  @@map("learning_topics")
+}
+
 /// Savollar banki. Matnlar `{uz, ru, en}` JSON; `externalId` — import
 /// (masalan "math-01") uchun barqaror kalit.
 model LearningQuestion {
@@ -1600,7 +1630,10 @@ model LearningQuestion {
   difficulty  Int
   minGrade    Int                    @map("min_grade")
   maxGrade    Int                    @map("max_grade")
+  /// Eski erkin matnli mavzu (`{uz, ru, en}`) — eski ilovalar o'qiydi, o'chirilmaydi.
   topic       Json
+  /// Katalogdagi mavzu (`learning_topics`); null — mavzuga bog'lanmagan savol.
+  topicId     String?                @map("topic_id")
   prompt      Json
   options     Json
   answerIndex Int                    @map("answer_index")
@@ -1610,9 +1643,11 @@ model LearningQuestion {
   createdAt   DateTime               @default(now()) @map("created_at")
   updatedAt   DateTime               @updatedAt @map("updated_at")
 
-  answers LearningAnswer[]
+  answers  LearningAnswer[]
+  topicRef LearningTopic?   @relation(fields: [topicId], references: [id], onDelete: SetNull)
 
   @@index([subject, status])
+  @@index([topicId, status])
   @@map("learning_questions")
 }
 
@@ -1626,7 +1661,10 @@ model LearningAttempt {
   isDaily       Boolean               @map("is_daily")
   status        LearningAttemptStatus @default(IN_PROGRESS)
   questionIds   String[]              @map("question_ids")
+  /// Eski erkin matnli sarlavha (`{uz, ru, en}`) — natijalar ro'yxati uchun.
   topic         Json?
+  /// Mavzu bo'yicha urinish (`learning_topics`); null — oddiy aralash kunlik urinish.
+  topicId       String?               @map("topic_id")
   correct       Int                   @default(0)
   total         Int
   xpEarned      Int                   @default(0) @map("xp_earned")
@@ -1638,10 +1676,12 @@ model LearningAttempt {
   /// oldingi faollik maktabga ko'rinmaydi.
   schoolClassId String?               @map("school_class_id")
 
-  child   Child            @relation(fields: [childId], references: [id], onDelete: Cascade)
-  answers LearningAnswer[]
+  child    Child            @relation(fields: [childId], references: [id], onDelete: Cascade)
+  answers  LearningAnswer[]
+  topicRef LearningTopic?   @relation(fields: [topicId], references: [id], onDelete: SetNull)
 
   @@index([childId, day])
+  @@index([childId, topicId])
   @@index([childId, status, completedAt(sort: Desc)])
   @@index([day, status])
   @@index([schoolClassId, day])

@@ -10,6 +10,10 @@ import {
 import { LocalizedText } from './domain/localized';
 import { percentOf } from './domain/rewards';
 import { ApiSubject, toApiSubject } from './domain/subjects';
+import { TopicRefRow, TopicRefView, toTopicRef } from './learning-topic.mapper';
+
+/** Urinish + (mavzu bo'yicha bo'lsa) mavzu havolasi. */
+export type AttemptWithTopic = LearningAttempt & { topicRef?: TopicRefRow | null };
 
 export interface ProfileView {
   grade: number;
@@ -41,6 +45,8 @@ export interface AttemptView {
   day: string;
   startedAt: Date;
   total: number;
+  /** Mavzu bo'yicha urinish; null — oddiy aralash kunlik urinish. */
+  topic: TopicRefView | null;
   questions: QuestionView[];
   answers: AnswerView[];
 }
@@ -48,7 +54,13 @@ export interface AttemptView {
 export interface ResultView {
   id: string;
   subject: ApiSubject;
-  topic: LocalizedText | null;
+  /**
+   * Eski maydon (`{uz, ru, en}`) — eski ilovalar uchun o'zgarmagan. Mavzu
+   * bo'yicha urinishda qo'shimcha `id`, `key`, `title` ham bor (kengaytma).
+   */
+  topic: (LocalizedText & Partial<TopicRefView>) | null;
+  /** Mavzu bo'yicha urinish; null — oddiy aralash urinish. */
+  topicRef: TopicRefView | null;
   correct: number;
   total: number;
   percent: number;
@@ -93,12 +105,15 @@ export function toAnswerView(a: LearningAnswer, q: LearningQuestion): AnswerView
   };
 }
 
-export function toResultView(a: LearningAttempt): ResultView {
+export function toResultView(a: AttemptWithTopic): ResultView {
   const completedAt = a.completedAt ?? a.startedAt;
+  const ref = a.topicRef ? toTopicRef(a.topicRef) : null;
+  const legacyTopic = (a.topic as unknown as LocalizedText | null) ?? null;
   return {
     id: a.id,
     subject: toApiSubject(a.subject),
-    topic: (a.topic as unknown as LocalizedText | null) ?? null,
+    topic: ref ? { ...(legacyTopic ?? ref.title), ...ref } : legacyTopic,
+    topicRef: ref,
     correct: a.correct,
     total: a.total,
     percent: percentOf(a.correct, a.total),

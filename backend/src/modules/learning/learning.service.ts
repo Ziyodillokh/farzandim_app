@@ -18,29 +18,25 @@ import {
 import {
   LearningAttemptStatus,
   LearningQuestion,
-  LearningQuestionStatus,
   LearningSubject,
+  LearningTopic,
   Prisma,
 } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { addDays, isoWeekday, tashkentDay } from '../../common/time/tashkent';
 import { GamificationService } from '../gamification/gamification.service';
 import { LocalizedText } from './domain/localized';
-import { attemptSeed, pickQuestions } from './domain/question-picker';
-import { donFor, percentOf, xpFor } from './domain/rewards';
-import {
-  DAILY_QUESTION_COUNT,
-  fromApiSubject,
-  isTaughtIn,
-  profileError,
-  subjectIndex,
-  toApiSubject,
-} from './domain/subjects';
+import { donFor, xpFor } from './domain/rewards';
+import { fromApiSubject, isTaughtIn, profileError, toApiSubject } from './domain/subjects';
+import { fillTopicText, TopicText } from './domain/topic-input';
 import {
   ListResultsQueryDto,
   SaveLearningProfileDto,
   SubmitAnswerDto,
 } from './dto/learning.dto';
+import { requireProfile } from './learning-profile.guard';
+import { LearningPickService } from './learning-pick.service';
+import { TOPIC_REF_SELECT, toTopicRef } from './learning-topic.mapper';
 import {
   AnswerView,
   AttemptView,
@@ -53,16 +49,6 @@ import {
   toResultView,
 } from './learning.mapper';
 
-/** Adaptiv qiyinlik uchun so'nggi natijalar soni. */
-const RECENT_RESULTS = 5;
-/** Shu kunlar ichida berilgan savollar iloji boricha takrorlanmaydi. */
-const RECENTLY_SEEN_DAYS = 3;
-/**
- * Sinfga mos savollar shuncha yoki ko'p bo'lsa — FAQAT ular beriladi (2-sinf
- * bolasiga 5-sinf savoli tushmasin; test qisqaroq bo'lishi mumkin). Kam
- * bo'lsa — eng yaqin sinf savollari bilan to'ldiriladi.
- */
-const MIN_IN_GRADE_QUESTIONS = 5;
 const DEFAULT_RESULTS_LIMIT = 30;
 
 @Injectable()
@@ -70,6 +56,7 @@ export class LearningService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly gamification: GamificationService,
+    private readonly picker: LearningPickService,
   ) {}
 
   /** Test uchun almashtiriladi. */
@@ -128,27 +115,28 @@ export class LearningService {
   /**
    * Fan bo'yicha testni boshlash yoki bugungi yakunlanmagan urinishni
    * davom ettirish (javob berilgan savollar va ularning natijasi bilan).
+   * `topicId` berilsa — shu mavzu savollaridan; davom ettirish ham shu mavzu
+   * bo'yicha (oddiy va mavzu urinishlari bir-biriga aralashmaydi).
    */
-  async startAttempt(childId: string, apiSubject: string): Promise<AttemptView> {
+  async startAttempt(
+    childId: string,
+    apiSubject: string,
+    topicId: string | null = null,
+  ): Promise<AttemptView> {
     const subject = fromApiSubject(apiSubject);
     if (!subject) throw new BadRequestException('Unknown subject');
     const today = tashkentDay(this.now());
 
     const attemptId = await this.prisma.$transaction(async (tx) => {
       await lockChild(tx, childId);
-      const profile = await tx.learningProfile.findUnique({ where: { childId } });
-      if (!profile) {
-        throw new ConflictException({
-          message: 'Learning profile required',
-          code: 'PROFILE_REQUIRED',
-        });
-      }
+      const profile = await requireProfile(tx, childId);
       if (!isTaughtIn(subject, profile.grade)) {
         throw new BadRequestException({
           message: 'Subject is not taught in this grade',
           code: 'SUBJECT_NOT_IN_GRADE',
         });
       }
+      const topic = topicId ? await this.picker.requireStartableTopic(tx, subject, topicId) : null;
 
       // O'tgan kunlarda yarim qolgan urinishlar yopiladi.
       await tx.learningAttempt.updateMany({
@@ -161,7 +149,13 @@ export class LearningService {
         data: { status: LearningAttemptStatus.ABANDONED },
       });
       const open = await tx.learningAttempt.findFirst({
-        where: { childId, subject, day: today, status: LearningAttemptStatus.IN_PROGRESS },
+        where: {
+          childId,
+          subject,
+          day: today,
+          status: LearningAttemptStatus.IN_PROGRESS,
+          topicId: topic?.id ?? null,
+        },
         select: { id: true },
       });
       if (open) return open.id;
@@ -170,12 +164,13 @@ export class LearningService {
         where: { childId, subject, day: today },
         select: { isDaily: true },
       });
-      const picked = await this.pickForChild(tx, {
+      const picked = await this.picker.pickForChild(tx, {
         childId,
         subject,
         grade: profile.grade,
         today,
         ordinal: todays.length,
+        topic,
       });
       const attempt = await tx.learningAttempt.create({
         data: {
@@ -186,7 +181,8 @@ export class LearningService {
           // (masalan eski natijadagi tavsiya) — amaliyot.
           isDaily: profile.subjects.includes(subject) && !todays.some((a) => a.isDaily),
           questionIds: picked.map((q) => q.id),
-          topic: mainTopic(picked) as unknown as Prisma.InputJsonValue,
+          topicId: topic?.id ?? null,
+          topic: (topic ? topicTitle(topic) : mainTopic(picked)) as unknown as Prisma.InputJsonValue,
           total: picked.length,
         },
         select: { id: true },
@@ -258,7 +254,7 @@ export class LearningService {
       await lockChild(tx, childId);
       const current = await tx.learningAttempt.findUnique({
         where: { id: attemptId },
-        include: { answers: { select: { isCorrect: true } } },
+        include: { answers: { select: { isCorrect: true } }, topicRef: { select: TOPIC_REF_SELECT } },
       });
       if (!current || current.childId !== childId) {
         throw new NotFoundException('Attempt not found');
@@ -292,6 +288,7 @@ export class LearningService {
           // Yakunlangan hafta maktab hisobotida o'zgarmaydi: o'tgan haftada boshlangan urinish — snapshot'siz.
           schoolClassId: weekStartOf(current.day) === weekStartOf(tashkentDay(now)) ? await schoolClassOf(tx, childId) : null,
         },
+        include: { topicRef: { select: TOPIC_REF_SELECT } },
       });
       const award = await this.gamification.awardInTx(tx, childId, {
         type: 'DAILY_LEARNING',
@@ -324,6 +321,7 @@ export class LearningService {
       day: attempt.day,
       startedAt: attempt.startedAt,
       total: attempt.total,
+      topic: attempt.topicRef ? toTopicRef(attempt.topicRef) : null,
       questions: questions.map(toQuestionView),
       answers: answers.map((a) => toAnswerView(a, byId.get(a.questionId)!)),
     };
@@ -346,6 +344,7 @@ export class LearningService {
       },
       orderBy: { completedAt: 'desc' },
       take: limit + 1,
+      include: { topicRef: { select: TOPIC_REF_SELECT } },
     });
     const items = rows.slice(0, limit).map(toResultView);
     const nextBefore =
@@ -389,6 +388,7 @@ export class LearningService {
   private async ownAttempt(childId: string, attemptId: string) {
     const attempt = await this.prisma.learningAttempt.findUnique({
       where: { id: attemptId },
+      include: { topicRef: { select: TOPIC_REF_SELECT } },
     });
     if (!attempt || attempt.childId !== childId) {
       throw new NotFoundException('Attempt not found');
@@ -402,57 +402,6 @@ export class LearningService {
     });
     const byId = new Map(rows.map((q) => [q.id, q]));
     return ids.map((id) => byId.get(id)).filter((q): q is LearningQuestion => !!q);
-  }
-
-  private async pickForChild(
-    tx: Prisma.TransactionClient,
-    params: {
-      childId: string;
-      subject: LearningSubject;
-      grade: number;
-      today: string;
-      ordinal: number;
-    },
-  ): Promise<LearningQuestion[]> {
-    const { childId, subject, grade, today, ordinal } = params;
-    const pool = await tx.learningQuestion.findMany({
-      where: { subject, status: LearningQuestionStatus.ACTIVE },
-      select: { id: true, difficulty: true, minGrade: true, maxGrade: true },
-    });
-    if (pool.length === 0) {
-      throw new NotFoundException({
-        message: 'No questions for this subject yet',
-        code: 'NO_QUESTIONS',
-      });
-    }
-    const recent = await tx.learningAttempt.findMany({
-      where: { childId, subject, status: LearningAttemptStatus.COMPLETED },
-      orderBy: { completedAt: 'desc' },
-      take: RECENT_RESULTS,
-      select: { correct: true, total: true },
-    });
-    const total = recent.reduce((s, r) => s + r.total, 0);
-    const seen = await tx.learningAnswer.findMany({
-      where: {
-        attempt: { childId, subject, day: { gte: addDays(today, -RECENTLY_SEEN_DAYS) } },
-      },
-      select: { questionId: true },
-    });
-    const inGrade = pool.filter((q) => grade >= q.minGrade && grade <= q.maxGrade);
-    const picked = pickQuestions({
-      pool: inGrade.length >= MIN_IN_GRADE_QUESTIONS ? inGrade : pool,
-      grade,
-      count: DAILY_QUESTION_COUNT,
-      recentPercent:
-        total === 0 ? null : percentOf(recent.reduce((s, r) => s + r.correct, 0), total),
-      recentlySeen: new Set(seen.map((s) => s.questionId)),
-      seed: attemptSeed(today, subjectIndex(subject), ordinal),
-    });
-    const full = await tx.learningQuestion.findMany({
-      where: { id: { in: picked.map((q) => q.id) } },
-    });
-    const byId = new Map(full.map((q) => [q.id, q]));
-    return picked.map((q) => byId.get(q.id)!);
   }
 }
 
@@ -476,6 +425,11 @@ async function schoolClassOf(tx: Prisma.TransactionClient, childId: string): Pro
 /** Bola bo'yicha tranzaksion qulf (boshlash / yakunlash navbat bilan). */
 async function lockChild(tx: Prisma.TransactionClient, childId: string): Promise<void> {
   await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(hashtextextended(${`learning:${childId}`}, 0))`;
+}
+
+/** Mavzu urinishining eski `topic` ustuni: sarlavha (uch tilda to'ldirilgan). */
+function topicTitle(topic: LearningTopic): LocalizedText {
+  return fillTopicText(topic.title as unknown as TopicText);
 }
 
 /** Eng ko'p uchragan mavzu — natija sarlavhasi uchun. */

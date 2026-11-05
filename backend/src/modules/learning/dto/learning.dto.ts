@@ -43,6 +43,14 @@ export class StartAttemptDto {
   @ApiProperty({ enum: API_SUBJECTS, example: 'math' })
   @IsIn(API_SUBJECTS)
   subject!: ApiSubject;
+
+  @ApiPropertyOptional({
+    description:
+      'Mavzu bo\'yicha test (mavzu faol, shu fanniki va savollari yetarli bo\'lishi shart — aks holda 422 TOPIC_NOT_AVAILABLE). Berilmasa — aralash kunlik test.',
+  })
+  @IsOptional()
+  @IsUUID()
+  topicId?: string;
 }
 
 export class SubmitAnswerDto {
