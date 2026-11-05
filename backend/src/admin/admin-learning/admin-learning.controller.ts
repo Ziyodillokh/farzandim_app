@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -16,7 +18,15 @@ import { FastifyRequest } from 'fastify';
 import { CurrentStaff, Permissions } from '../../common/decorators';
 import { AdminJwtAuthGuard, PermissionsGuard } from '../../common/guards';
 import { AdminJwtPayload } from '../../common/interfaces/jwt-payload.interface';
+import { AdminLearningTopicsService } from './admin-learning-topics.service';
 import { AdminLearningService } from './admin-learning.service';
+import {
+  CreateLearningTopicDto,
+  LinkTopicQuestionsDto,
+  ListLearningTopicsQueryDto,
+  ReorderLearningTopicsDto,
+  UpdateLearningTopicDto,
+} from './dto/admin-learning-topic.dto';
 import {
   ImportLearningQuestionsDto,
   LearningQuestionInputDto,
@@ -30,7 +40,10 @@ import {
 @UseGuards(AdminJwtAuthGuard, PermissionsGuard)
 @Permissions('manage_learning')
 export class AdminLearningController {
-  constructor(private readonly service: AdminLearningService) {}
+  constructor(
+    private readonly service: AdminLearningService,
+    private readonly topics: AdminLearningTopicsService,
+  ) {}
 
   @Get('questions')
   @ApiOperation({ summary: 'Savollar (filtr, qidiruv, aniqlik statistikasi bilan)' })
@@ -88,5 +101,58 @@ export class AdminLearningController {
   @ApiOperation({ summary: 'Bank holati, urinishlar va savol aniqligi' })
   stats() {
     return this.service.stats();
+  }
+
+  // ── Mavzular katalogi ──────────────────────────────────────────────
+
+  @Get('topics')
+  @ApiOperation({ summary: 'Mavzular (fan, holat filtri; faol savollar soni bilan)' })
+  listTopics(@Query() query: ListLearningTopicsQueryDto) {
+    return this.topics.list(query);
+  }
+
+  @Post('topics')
+  @ApiOperation({ summary: 'Mavzu qo\'shish' })
+  createTopic(
+    @Body() dto: CreateLearningTopicDto,
+    @CurrentStaff() staff: AdminJwtPayload,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.topics.create(dto, staff.sub, req);
+  }
+
+  // `reorder` — `:id` yo'llaridan oldin (statik yo'l ustun).
+  @Post('topics/reorder')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Fan mavzularini qayta tartiblash (ids = fanning barcha mavzulari)' })
+  reorderTopics(
+    @Body() dto: ReorderLearningTopicsDto,
+    @CurrentStaff() staff: AdminJwtPayload,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.topics.reorder(dto, staff.sub, req);
+  }
+
+  @Patch('topics/:id')
+  @ApiOperation({ summary: 'Mavzuni tahrirlash (o\'chirish yo\'q: status HIDDEN)' })
+  updateTopic(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateLearningTopicDto,
+    @CurrentStaff() staff: AdminJwtPayload,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.topics.update(id, dto, staff.sub, req);
+  }
+
+  @Post('topics/:id/questions')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Savollarni mavzuga bog\'lash (bir fan)' })
+  linkTopicQuestions(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: LinkTopicQuestionsDto,
+    @CurrentStaff() staff: AdminJwtPayload,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.topics.linkQuestions(id, dto, staff.sub, req);
   }
 }

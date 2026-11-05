@@ -9,6 +9,7 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   MaxLength,
   Min,
@@ -66,6 +67,11 @@ export class LearningQuestionInputDto {
   @IsOptional()
   @IsIn(STATUSES)
   status?: LearningQuestionStatus;
+
+  @ApiPropertyOptional({ description: 'Mavzular katalogidagi mavzu (savol bilan bir fan)' })
+  @IsOptional()
+  @IsUUID()
+  topicId?: string;
 }
 
 export class UpdateLearningQuestionDto {
@@ -78,6 +84,8 @@ export class UpdateLearningQuestionDto {
   @IsOptional() @IsInt() answerIndex?: number;
   @IsOptional() @IsObject() explanation?: Record<string, string>;
   @IsOptional() @IsIn(STATUSES) status?: LearningQuestionStatus;
+  /** `null` — mavzudan ajratadi. */
+  @IsOptional() @IsUUID() topicId?: string | null;
 }
 
 export class ImportLearningQuestionsDto {
@@ -95,6 +103,11 @@ export class ImportLearningQuestionsDto {
   @IsOptional()
   @IsIn(['skip', 'update'])
   existing?: 'skip' | 'update';
+
+  @ApiPropertyOptional({ description: 'Import qilingan (yangi va yangilangan) savollar shu mavzuga bog\'lanadi' })
+  @IsOptional()
+  @IsUUID()
+  topicId?: string;
 }
 
 export class ListLearningQuestionsQueryDto {
@@ -105,4 +118,5 @@ export class ListLearningQuestionsQueryDto {
   @IsOptional() @Type(() => Number) @IsInt() @Min(MIN_GRADE) @Max(MAX_GRADE) grade?: number;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(3) difficulty?: number;
   @IsOptional() @IsString() @MaxLength(100) q?: string;
+  @IsOptional() @IsUUID() topicId?: string;
 }

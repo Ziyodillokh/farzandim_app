@@ -25,6 +25,7 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { addDays, tashkentDay } from '../../common/time/tashkent';
 import { BankQuestion, parseBankQuestion } from '../../modules/learning/domain/question-bank';
 import { fromApiSubject, toApiSubject } from '../../modules/learning/domain/subjects';
+import { AdminLearningTopicsService } from './admin-learning-topics.service';
 import {
   ImportLearningQuestionsDto,
   LearningQuestionInputDto,
@@ -48,6 +49,7 @@ export class AdminLearningService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AdminAuditService,
+    private readonly topics: AdminLearningTopicsService,
   ) {}
 
   async list(query: ListLearningQuestionsQueryDto) {
@@ -56,6 +58,7 @@ export class AdminLearningService {
     const where: Prisma.LearningQuestionWhereInput = {
       ...(query.subject && { subject: fromApiSubject(query.subject)! }),
       ...(query.status && { status: query.status }),
+      ...(query.topicId && { topicId: query.topicId }),
       ...(query.difficulty && { difficulty: query.difficulty }),
       ...(query.grade && {
         minGrade: { lte: query.grade },
@@ -92,11 +95,14 @@ export class AdminLearningService {
   }
 
   async create(dto: LearningQuestionInputDto, staffId: string, req: Req) {
-    const parsed = this.parse(dto, fromApiSubject(dto.subject)!);
+    const subject = fromApiSubject(dto.subject)!;
+    const parsed = this.parse(dto, subject);
+    if (dto.topicId) await this.topics.assertLinkable(dto.topicId, subject);
     const created = await this.prisma.learningQuestion.create({
       data: {
         ...this.data(parsed),
         status: dto.status ?? LearningQuestionStatus.ACTIVE,
+        topicId: dto.topicId ?? null,
         createdBy: staffId,
       },
     });
@@ -118,10 +124,16 @@ export class AdminLearningService {
     );
     const parsed = this.parse({ ...this.inputOf(existing), ...patch }, existing.subject);
     await this.assertAnswerUnchanged(existing, parsed);
+    if (dto.topicId) await this.topics.assertLinkable(dto.topicId, existing.subject);
 
     const updated = await this.prisma.learningQuestion.update({
       where: { id },
-      data: { ...this.data(parsed), ...(dto.status && { status: dto.status }) },
+      data: {
+        ...this.data(parsed),
+        ...(dto.status && { status: dto.status }),
+        // `topicId: null` — mavzudan ajratish; berilmasa o'zgarmaydi.
+        ...(dto.topicId !== undefined && { topicId: dto.topicId }),
+      },
     });
     void this.audit.log(req, {
       action: 'learning.question.update',
@@ -165,6 +177,8 @@ export class AdminLearningService {
   /** Bank formatidagi savollarni import — har yozuv alohida tekshiriladi. */
   async import(dto: ImportLearningQuestionsDto, staffId: string, req: Req) {
     const subject = fromApiSubject(dto.subject)!;
+    if (dto.topicId) await this.topics.assertLinkable(dto.topicId, subject);
+    const topicLink = dto.topicId ? { topicId: dto.topicId } : {};
     const report = {
       created: 0,
       updated: 0,
@@ -187,7 +201,7 @@ export class AdminLearningService {
       });
       if (!existing) {
         await this.prisma.learningQuestion.create({
-          data: { ...this.data(q), createdBy: staffId },
+          data: { ...this.data(q), ...topicLink, createdBy: staffId },
         });
         report.created++;
       } else if (dto.existing === 'update') {
@@ -195,7 +209,7 @@ export class AdminLearningService {
           await this.assertAnswerUnchanged(existing, q);
           await this.prisma.learningQuestion.update({
             where: { id: existing.id },
-            data: this.data(q),
+            data: { ...this.data(q), ...topicLink },
           });
           report.updated++;
         } catch (e) {
