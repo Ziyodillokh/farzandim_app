@@ -97,7 +97,7 @@ export function toAudience(value: Prisma.JsonValue): Audience {
   const v = (value && typeof value === 'object' && !Array.isArray(value) ? value : {}) as Record<string, unknown>;
   const ids = (x: unknown) => (Array.isArray(x) ? x.filter((i): i is string => typeof i === 'string') : []);
   const kind = AUDIENCE_KINDS.find((k) => k === v.kind) ?? 'GUARDIANS';
-  return { kind, classIds: ids(v.classIds), guardianIds: ids(v.guardianIds) };
+  return { kind, classIds: ids(v.classIds), guardianIds: ids(v.guardianIds), includeStudents: kind !== 'GUARDIANS' && v.includeStudents === true };
 }
 
 /** Auditoriya → o'quvchilar va vasiylar to'plami. */

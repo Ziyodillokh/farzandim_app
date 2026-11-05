@@ -129,7 +129,7 @@ export class AnnouncementsService {
       const audience: Audience | null = canSendTo(actor, roster, sourceAudience)
         ? sourceAudience
         : own?.length
-          ? { kind: 'CLASSES', classIds: [...own], guardianIds: [] }
+          ? { kind: 'CLASSES', classIds: [...own], guardianIds: [], includeStudents: sourceAudience.includeStudents }
           : null;
       if (!audience) throw forbidden(id);
       const copy = await tx.schoolAnnouncement.create({

@@ -24,14 +24,17 @@ export interface TestApp {
   close(): Promise<void>;
 }
 
-/** `swagger` — production kabi Swagger hujjatini ham quradi (ishga tushish testi). */
-export async function createTestApp(options: { swagger?: boolean } = {}): Promise<TestApp> {
+/**
+ * `swagger` — production kabi Swagger hujjatini ham quradi (ishga tushish testi).
+ * `storage` — soxta MinIO o'rniga o'z fake'i (masalan, xotiradagi `memoryStorage()`).
+ */
+export async function createTestApp(options: { swagger?: boolean; storage?: object } = {}): Promise<TestApp> {
   const fcm = new FakeFcm();
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(FcmService)
     .useValue(fcm)
     .overrideProvider(StorageService)
-    .useValue(fakeStorage())
+    .useValue(options.storage ?? fakeStorage())
     .compile();
 
   const app = moduleRef.createNestApplication<NestFastifyApplication>(

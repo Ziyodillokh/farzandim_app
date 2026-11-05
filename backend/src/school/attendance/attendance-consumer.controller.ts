@@ -6,6 +6,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
+import { AttendanceChildHistoryService } from './attendance-child-history.service';
 import { AttendanceChildService } from './attendance-child.service';
 import { AttendanceParentService } from './attendance-parent.service';
 
@@ -15,7 +16,10 @@ import { AttendanceParentService } from './attendance-parent.service';
 @Roles('CHILD')
 @Controller('child/school')
 export class AttendanceChildController {
-  constructor(private readonly child: AttendanceChildService) {}
+  constructor(
+    private readonly child: AttendanceChildService,
+    private readonly history: AttendanceChildHistoryService,
+  ) {}
 
   @Post('check-in')
   @HttpCode(HttpStatus.OK)
@@ -28,6 +32,12 @@ export class AttendanceChildController {
   @ApiOperation({ summary: 'Bugungi davomat holati; maktabga bog\'lanmagan bo\'lsa null' })
   today(@CurrentUser() user: JwtPayload) {
     return this.child.today(user.userId);
+  }
+
+  @Get('attendance')
+  @ApiOperation({ summary: "Oylik davomat tarixim (?month=YYYY-MM): kunlar, kiosk vaqtlari, jami" })
+  attendance(@CurrentUser() user: JwtPayload, @Query() query: unknown) {
+    return this.history.month(user.userId, query);
   }
 }
 

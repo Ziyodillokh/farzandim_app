@@ -187,7 +187,7 @@ describe('School comms: e\'lonlar (S4)', () => {
 
     const school = (await call(admin, 'POST', '/comms/announcements/send', draft(SCHOOL))).json();
     const homeroomCopy = (await call(homeroom, 'POST', `/comms/announcements/${school.id}/duplicate`)).json();
-    expect(homeroomCopy.audience).toEqual(classesAudience(cls7a));
+    expect(homeroomCopy.audience).toEqual({ ...classesAudience(cls7a), includeStudents: false });
     expect(homeroomCopy.byStaffId).toBe(homeroom.me.staff.id);
 
     const sendDraft = (await call(admin, 'POST', `/comms/announcements/${saved.id}/send`, draft(classesAudience(cls8b), 'Yakuniy'))).json();
