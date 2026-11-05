@@ -15,6 +15,7 @@ const titles: Record<string, string> = {
   '/content/categories': 'Kategoriyalar',
   '/olympiads': 'Konkurslar',
   '/kelajak': 'Kelajak savollari',
+  '/learning/topics': 'Mavzular',
   '/moderators': 'Moderatorlar',
   '/monetization/plans': 'Tariflar',
   '/monetization/promocodes': 'Promokodlar',

@@ -70,9 +70,9 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     ],
   },
   {
-    // Backend: Growth kunlik testlari va Kelajak savollar banki bitta ruxsatda.
+    // Backend: Growth kunlik testlari, Kelajak savollar banki va o'quv mavzulari bitta ruxsatda.
     group: 'Savollar banki',
-    permissions: [{ key: 'manage_learning', label: 'Growth va Kelajak savollari' }],
+    permissions: [{ key: 'manage_learning', label: "Growth va Kelajak savollari, o'quv mavzulari" }],
   },
 ];
 
