@@ -29,7 +29,6 @@ import {
   TOPIC_GOAL_MAX,
   TOPIC_TITLE_MAX,
 } from '../../modules/learning/domain/topic-input';
-import { MIN_TOPIC_QUESTIONS } from '../../modules/learning/domain/topic-mastery';
 import {
   CreateLearningTopicDto,
   LinkTopicQuestionsDto,
@@ -55,7 +54,7 @@ export class AdminLearningTopicsService {
       },
       orderBy: [{ subject: 'asc' }, { position: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
     });
-    return { minQuestions: MIN_TOPIC_QUESTIONS, items: await this.rows(topics) };
+    return this.rows(topics);
   }
 
   async create(dto: CreateLearningTopicDto, staffId: string, req: Req) {

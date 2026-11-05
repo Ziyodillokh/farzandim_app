@@ -30,6 +30,7 @@ import {
   ImportLearningQuestionsDto,
   LearningQuestionInputDto,
   ListLearningQuestionsQueryDto,
+  NO_TOPIC_FILTER,
   UpdateLearningQuestionDto,
 } from './dto/admin-learning.dto';
 
@@ -58,7 +59,7 @@ export class AdminLearningService {
     const where: Prisma.LearningQuestionWhereInput = {
       ...(query.subject && { subject: fromApiSubject(query.subject)! }),
       ...(query.status && { status: query.status }),
-      ...(query.topicId && { topicId: query.topicId }),
+      ...(query.topicId && { topicId: query.topicId === NO_TOPIC_FILTER ? null : query.topicId }),
       ...(query.difficulty && { difficulty: query.difficulty }),
       ...(query.grade && {
         minGrade: { lte: query.grade },

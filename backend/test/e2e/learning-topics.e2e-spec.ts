@@ -374,6 +374,15 @@ describe('Learning topics API (child)', () => {
       expect(classic.isDaily).toBe(false);
     });
 
+    it('parallel boshlash (qo\'sh bosish) — bitta urinish', async () => {
+      await setProfile();
+      const { topic } = await topicWithQuestions(10);
+      const results = await Promise.all(Array.from({ length: 4 }, () => startTopic(topic.id)));
+      expect(results.every((r) => r.statusCode === 200)).toBe(true);
+      expect(new Set(results.map((r) => r.json().id)).size).toBe(1);
+      expect(await t.prisma.learningAttempt.count()).toBe(1);
+    });
+
     it('kechagi yarim qolgan mavzu urinishi yopiladi va yangisi boshlanadi', async () => {
       await setProfile();
       const { topic, questions } = await topicWithQuestions(10);

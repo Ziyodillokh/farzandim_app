@@ -10,6 +10,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
   Max,
   MaxLength,
   Min,
@@ -18,6 +19,10 @@ import { LearningQuestionStatus } from '@prisma/client';
 import { API_SUBJECTS, ApiSubject, MAX_GRADE, MIN_GRADE } from '../../../modules/learning/domain/subjects';
 
 const STATUSES = Object.values(LearningQuestionStatus);
+
+/** `topicId=none` — mavzuga bog'lanmagan savollar. */
+export const NO_TOPIC_FILTER = 'none';
+const UUID_OR_NONE = /^(none|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 
 /** Ichki matnlar (`{uz, ru, en}`) `parseBankQuestion` bilan tekshiriladi. */
 export class LearningQuestionInputDto {
@@ -118,5 +123,6 @@ export class ListLearningQuestionsQueryDto {
   @IsOptional() @Type(() => Number) @IsInt() @Min(MIN_GRADE) @Max(MAX_GRADE) grade?: number;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(3) difficulty?: number;
   @IsOptional() @IsString() @MaxLength(100) q?: string;
-  @IsOptional() @IsUUID() topicId?: string;
+  /** Mavzu id'si yoki `none` (mavzusiz savollar). */
+  @IsOptional() @IsString() @Matches(UUID_OR_NONE, { message: 'topicId must be a UUID or "none"' }) topicId?: string;
 }

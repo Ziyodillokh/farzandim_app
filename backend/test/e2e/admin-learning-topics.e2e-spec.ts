@@ -172,16 +172,18 @@ describe('Admin learning topics API', () => {
       await createQuestions(t.prisma, 1, m1.id, { status: 'DRAFT' });
       await createQuestions(t.prisma, 4, null);
 
+      // Oddiy massiv (o'rovchi obyektsiz).
       const all = (await call('GET', '/topics')).json();
-      expect(all.minQuestions).toBe(10);
-      expect(all.items.map((x: { key: string }) => x.key)).toEqual(['m1', 'm2', 'p1']);
-      expect(all.items.map((x: { questionCount: number }) => x.questionCount)).toEqual([3, 0, 0]);
-      expect(all.items[0].subject).toBe('math');
+      expect(Array.isArray(all)).toBe(true);
+      expect(all.map((x: { key: string }) => x.key)).toEqual(['m1', 'm2', 'p1']);
+      expect(all.map((x: { questionCount: number }) => x.questionCount)).toEqual([3, 0, 0]);
+      // Fan qiymatlari bola API'dagi kabi kichik harfli enum nomlari.
+      expect(all.map((x: { subject: string }) => x.subject)).toEqual(['math', 'math', 'physics']);
 
-      expect((await call('GET', '/topics?subject=math')).json().items).toHaveLength(2);
-      const hidden = (await call('GET', '/topics?status=HIDDEN')).json().items;
+      expect((await call('GET', '/topics?subject=math')).json()).toHaveLength(2);
+      const hidden = (await call('GET', '/topics?status=HIDDEN')).json();
       expect(hidden.map((x: { key: string }) => x.key)).toEqual(['p1']);
-      expect((await call('GET', '/topics?subject=physics&status=ACTIVE')).json().items).toEqual([]);
+      expect((await call('GET', '/topics?subject=physics&status=ACTIVE')).json()).toEqual([]);
       expect((await call('GET', '/topics?subject=astrology')).statusCode).toBe(400);
       expect((await call('GET', '/topics?status=DELETED')).statusCode).toBe(400);
     });
@@ -292,7 +294,7 @@ describe('Admin learning topics API', () => {
       const { a, b, c } = await threeMath();
       const res = await call('POST', '/topics/reorder', { subject: 'math', ids: [c.id, a.id, b.id] });
       expect(res.statusCode).toBe(200);
-      expect(res.json().items.map((x: { key: string; position: number }) => [x.key, x.position])).toEqual([
+      expect(res.json().map((x: { key: string; position: number }) => [x.key, x.position])).toEqual([
         ['c', 0],
         ['a', 1],
         ['b', 2],
@@ -346,7 +348,7 @@ describe('Admin learning topics API', () => {
       expect(await t.prisma.learningQuestion.count({ where: { topicId: source.id } })).toBe(0);
 
       expect((await call('POST', `/topics/${target.id}/questions`, { questionIds: ids })).json().questionCount).toBe(5);
-      const listed = (await call('GET', '/topics?subject=math')).json().items;
+      const listed = (await call('GET', '/topics?subject=math')).json();
       expect(listed.find((x: { key: string }) => x.key === 'target').questionCount).toBe(5);
     });
 
@@ -397,6 +399,27 @@ describe('Admin learning topics API', () => {
       const all = (await call('GET', '/questions?subject=math&limit=50')).json();
       expect(all.items.find((x: { externalId: string }) => x.externalId === 'math-901').topicId).toBeNull();
       expect((await call('GET', '/questions?topicId=nope')).statusCode).toBe(400);
+    });
+
+    it('topicId=none — faqat mavzusiz savollar; har qator topicId (null) maydoniga ega', async () => {
+      const topic = await createTopic(t.prisma);
+      await createQuestions(t.prisma, 2, topic.id);
+      const free = await createQuestions(t.prisma, 3, null);
+      await createQuestions(t.prisma, 1, null, { subject: 'PHYSICS' });
+
+      const res = (await call('GET', '/questions?topicId=none&limit=50')).json();
+      expect(res.pagination.total).toBe(4);
+      expect(res.items.every((q: { topicId: string | null }) => q.topicId === null)).toBe(true);
+      expect(res.items.every((q: object) => 'topicId' in q)).toBe(true);
+      expect(res.items.map((q: { id: string }) => q.id)).toEqual(expect.arrayContaining(free.map((q) => q.id)));
+
+      const mathOnly = (await call('GET', '/questions?topicId=none&subject=math&limit=50')).json();
+      expect(mathOnly.pagination.total).toBe(3);
+      // Bog'langan savollar `none` ro'yxatida yo'q, topicId bilan filtrda esa bor.
+      expect((await call('GET', `/questions?topicId=${topic.id}`)).json().pagination.total).toBe(2);
+      // Bog'lagach mavzusiz ro'yxatdan chiqadi.
+      await call('POST', `/topics/${topic.id}/questions`, { questionIds: [free[0].id] });
+      expect((await call('GET', '/questions?topicId=none&subject=math&limit=50')).json().pagination.total).toBe(2);
     });
 
     it('400: mavzu mavjud emas yoki boshqa fanniki', async () => {
