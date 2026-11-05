@@ -23,6 +23,7 @@ import { settings } from './settings';
 import { shell } from './shell';
 import { staff } from './staff';
 import { students } from './students';
+import { timetable } from './timetable';
 
 export const uz = {
   common,
@@ -50,6 +51,7 @@ export const uz = {
   assessments,
   development,
   notifications,
+  timetable,
 };
 
 export type Dict = typeof uz;

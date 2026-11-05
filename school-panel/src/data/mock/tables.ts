@@ -28,6 +28,7 @@ import type {
   Student,
   StudentNote,
   TemplateId,
+  TimetableRecord,
   TemplateState,
   PsychAssignment,
   PsychHistoryConfig,
@@ -79,6 +80,8 @@ export type Tables = {
   /** Xodim bildirishnomalari (xavfsizlik signali, test yakunlandi) — max 200. */
   notifications: StaffNotification[];
   studentNotes: StudentNote[];
+  /** Sinflarning haftalik dars jadvali (sinfga bitta yozuv). */
+  timetables: TimetableRecord[];
   /** Simulyator holati: qaysi sana va qaysi daqiqagacha qayta ishlangan. */
   sim: { date: string; processedUntilMinute: number };
 };

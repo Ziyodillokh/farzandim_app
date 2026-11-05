@@ -20,6 +20,7 @@ export const nav = {
   schoolModePolicies: 'Cheklov siyosati',
   schoolModeExceptions: 'Istisnolar',
   schoolModeHolidays: 'Bayram kunlari',
+  timetable: 'Dars jadvali',
   classes: 'Sinflar',
   students: 'O\'quvchilar',
   parents: 'Ota-onalar',

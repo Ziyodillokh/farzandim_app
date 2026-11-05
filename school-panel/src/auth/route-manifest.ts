@@ -5,6 +5,7 @@ import {
   BookOpen,
   Brain,
   CalendarClock,
+  CalendarDays,
   CalendarOff,
   ClipboardCheck,
   ClipboardList,
@@ -92,6 +93,8 @@ export const ROUTES: readonly RouteDef[] = [
   { path: '/school-mode/policies', perm: 'schoolMode.view', titleKey: 'nav.schoolModePolicies', icon: ShieldCheck, parent: '/school-mode' },
   { path: '/school-mode/exceptions', perm: 'schoolMode.view', titleKey: 'nav.schoolModeExceptions', icon: ShieldOff, parent: '/school-mode' },
   { path: '/school-mode/holidays', perm: 'schoolMode.view', titleKey: 'nav.schoolModeHolidays', icon: CalendarOff, parent: '/school-mode' },
+
+  { path: '/timetable', perm: 'classes.view', titleKey: 'nav.timetable', icon: CalendarDays, group: 'school' },
 
   { path: '/classes', perm: 'classes.view', titleKey: 'nav.classes', icon: GraduationCap, group: 'school' },
   { path: '/classes/view', perm: 'classes.view', titleKey: 'nav.classes', icon: GraduationCap, hidden: true },

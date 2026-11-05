@@ -12,6 +12,7 @@ import { profileHttp } from './services/profile';
 import { schoolHttp } from './services/school';
 import { schoolModeHttp } from './services/school-mode';
 import { auditHttp, staffHttp } from './services/staff';
+import { timetableHttp } from './services/timetable';
 import { guardiansHttp, parentsHttp, studentsHttp } from './services/students';
 
 /**
@@ -29,6 +30,7 @@ export function createHttpApi(): Api {
     search: searchHttp,
     attendance: attendanceHttp,
     schoolMode: schoolModeHttp,
+    timetable: timetableHttp,
     comms: commsHttp,
     care: careHttp,
     learning: learningHttp,

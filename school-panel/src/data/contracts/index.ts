@@ -10,3 +10,4 @@ export * from './audit';
 export * from './assessments';
 export * from './notifications';
 export * from './development';
+export * from './timetable';

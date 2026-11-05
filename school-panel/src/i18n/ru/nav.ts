@@ -23,6 +23,7 @@ export const nav: DeepString<typeof uz> = {
   schoolModePolicies: 'Политика ограничений',
   schoolModeExceptions: 'Исключения',
   schoolModeHolidays: 'Праздничные дни',
+  timetable: 'Расписание уроков',
   classes: 'Классы',
   students: 'Ученики',
   parents: 'Родители',

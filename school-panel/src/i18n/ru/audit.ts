@@ -174,5 +174,6 @@ export const audit: DeepString<typeof uz> = {
     verification_close: '{name}: запрос проверки закрыт',
     learning_assign: '«{title}» назначено: {classes}',
     learning_unassign: 'Задание удалено',
+    timetable_save: 'Расписание {class} обновлено (уроков: {count})',
   },
 };

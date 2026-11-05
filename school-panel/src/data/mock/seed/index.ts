@@ -10,6 +10,7 @@ import { buildNotifications } from './notifications';
 import { buildPeople } from './people';
 import { buildDevices, buildExceptions, buildPolicies, INITIAL_EMERGENCY } from './school-mode';
 import { academicYearStart, buildClasses, buildHolidays, buildSchool, buildShifts } from './structure';
+import { buildTimetables } from './timetable';
 
 /**
  * Demo maktab — deterministik: bir xil `seed` va sana → bir xil ma'lumot.
@@ -62,6 +63,7 @@ export function generateSeed(seed: number, now: Date): Tables {
     ...buildPsychSeed({ classes, students: people.students }, baseIso, seed),
     notifications: buildNotifications(careRequests),
     studentNotes: [],
+    timetables: buildTimetables(classes, shifts),
     sim: { date: '', processedUntilMinute: -1 },
   };
 }

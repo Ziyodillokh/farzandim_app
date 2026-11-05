@@ -6,6 +6,7 @@ import { buildPsychSeed } from './psych/seed';
 import { generateSeed } from './seed';
 import { buildActivity, CLOSED_WEEKS } from './seed/learning';
 import { buildNotifications } from './seed/notifications';
+import { buildTimetables } from './seed/timetable';
 import type { DbSnapshot, Tables } from './tables';
 
 /**
@@ -89,7 +90,13 @@ function withActivityWeeks(db: DbSnapshot): DbSnapshot {
   return { ...db, tables: { ...db.tables, activity: buildActivity(db.tables.classes, sizes, db.baseDate) } };
 }
 
-const MIGRATIONS: readonly Migration[] = [withPortraits, withAssessments, withStaffTables, withActivityWeeks];
+/** Dars jadvali: avval saqlangan bazada sinflar uchun demo jadval yaratiladi. */
+function withTimetables(db: DbSnapshot): DbSnapshot {
+  if (db.tables.timetables) return db;
+  return { ...db, tables: { ...db.tables, timetables: buildTimetables(db.tables.classes, db.tables.shifts) } };
+}
+
+const MIGRATIONS: readonly Migration[] = [withPortraits, withAssessments, withStaffTables, withActivityWeeks, withTimetables];
 
 export function migrate(db: DbSnapshot): DbSnapshot {
   return MIGRATIONS.reduce((current, step) => step(current), db);
