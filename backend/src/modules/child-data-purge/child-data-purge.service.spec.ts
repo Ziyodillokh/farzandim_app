@@ -31,6 +31,8 @@ describe('ChildDataPurgeService', () => {
         deleteMany: jest.fn().mockResolvedValue({}),
       },
       aiMessage: { deleteMany: jest.fn().mockResolvedValue({}) },
+      schoolHomeworkPhoto: { findMany: jest.fn().mockResolvedValue([]) },
+      schoolHomeworkSubmission: { deleteMany: jest.fn().mockResolvedValue({ count: 0 }) },
       kelajakSession: { deleteMany: jest.fn().mockResolvedValue({ count: 2 }) },
       voiceMessage: {
         findMany: jest
@@ -137,6 +139,26 @@ describe('ChildDataPurgeService', () => {
       );
     });
 
+    it("deletes the child's school homework submissions and photo objects", async () => {
+      prisma.schoolHomeworkPhoto.findMany.mockResolvedValue([{ key: 'homework/s/a/st/1.jpg' }, { key: 'homework/s/a/st/2.png' }]);
+
+      const result = await service.deleteChildAccount(CHILD_USER);
+
+      expect(prisma.schoolHomeworkPhoto.findMany).toHaveBeenCalledWith({
+        where: { submission: { student: { childId: CHILD_ID } } },
+        select: { key: true },
+      });
+      expect(prisma.schoolHomeworkSubmission.deleteMany).toHaveBeenCalledWith({ where: { student: { childId: CHILD_ID } } });
+      const deleted = storage.delete.mock.calls.map((c) => `${c[0]}:${c[1]}`);
+      expect(deleted).toEqual(
+        expect.arrayContaining([
+          `${BUCKETS.schoolHomework}:homework/s/a/st/1.jpg`,
+          `${BUCKETS.schoolHomework}:homework/s/a/st/2.png`,
+        ]),
+      );
+      expect(result.mediaObjects).toBe(9);
+    });
+
     it('notifies the parent with a push and a notification record', async () => {
       await service.deleteChildAccount(CHILD_USER);
 
@@ -199,6 +221,24 @@ describe('ChildDataPurgeService', () => {
         'child-avatars/child-1.jpg',
       );
       expect(result).toEqual({ childUserDeleted: true, mediaObjects: 7 });
+    });
+
+    it('deletes school homework submissions BEFORE the profile (student link is SetNull) and their photo objects', async () => {
+      prisma.schoolHomeworkPhoto.findMany.mockResolvedValue([{ key: 'homework/s/a/st/1.jpg' }]);
+      const order: string[] = [];
+      prisma.schoolHomeworkSubmission.deleteMany.mockImplementation(async () => {
+        order.push('homework');
+        return { count: 1 };
+      });
+      prisma.child.delete.mockImplementation(async () => {
+        order.push('child');
+        return {};
+      });
+
+      await service.purgeChildProfile({ id: CHILD_ID, parentId: PARENT, name: 'Ali', childUserId: CHILD_USER, photoPath: null });
+
+      expect(order).toEqual(['homework', 'child']);
+      expect(storage.delete).toHaveBeenCalledWith(BUCKETS.schoolHomework, 'homework/s/a/st/1.jpg');
     });
 
     it('works for a profile that was never paired', async () => {

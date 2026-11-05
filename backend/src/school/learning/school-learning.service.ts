@@ -12,9 +12,12 @@ import { actorCan, allowedClassIds, assertCan, assertClassInScope, SchoolActor }
 import { compareClasses, matchesSearch } from '../common/list-query';
 import { SchoolAuditService } from '../common/school-audit.service';
 import { forbidden, invalid, notFound } from '../common/school-errors';
-import { isoDateSchema, msg, optionalText, parseOrThrow } from '../common/school-zod';
+import { parseOrThrow } from '../common/school-zod';
 import { buildCells, cellKey, LEARNING_MIN_COHORT, LearningCell, mondayOf, totalsOf } from './learning-cells';
 import { loadCatalog, PANEL_SUBJECT } from './school-learning-catalog';
+import { assignmentInputSchema, isWrittenInput, WRITTEN_KIND, WRITTEN_MATERIAL_ID } from './school-learning.schemas';
+import { HomeworkStorageService } from '../homework/homework-storage.service';
+import { homeworkKeysOf } from '../homework/homework-purge';
 
 /** Faollik grafigi — oxirgi shuncha hafta (panel: "oxirgi 6 hafta"). */
 const ACTIVITY_WEEKS = 6;
@@ -28,13 +31,6 @@ const materialFilterSchema = z.object({
   subject: z.string().max(20).optional(),
   grade: z.coerce.number().int().min(1).max(11).optional(),
   search: z.string().trim().max(80).optional(),
-});
-
-const assignmentInputSchema = z.object({
-  materialId: z.string({ error: msg.required }).min(1, msg.required).max(80),
-  classIds: z.array(z.string().min(1)).min(1, msg.atLeastOne).max(60),
-  dueDate: isoDateSchema,
-  note: optionalText(300),
 });
 
 /** Foizlarni yaxlitlash (eng katta qoldiq usuli) — jami aniq 100. */
@@ -53,6 +49,7 @@ export class SchoolLearningService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: SchoolAuditService,
+    private readonly homeworkStorage: HomeworkStorageService,
   ) {}
 
   /**
@@ -181,6 +178,7 @@ export class SchoolLearningService {
     const today = tashkentDay();
     return rows.map((a) => {
       const m = material.get(a.materialId);
+      const written = a.materialKind === WRITTEN_KIND;
       return {
         id: a.id,
         materialId: a.materialId,
@@ -189,8 +187,10 @@ export class SchoolLearningService {
         note: a.note,
         createdAt: a.createdAt.toISOString(),
         byStaffId: a.byStaffId,
-        materialTitle: m?.title ?? '—',
-        materialKind: m?.kind ?? null,
+        title: a.title,
+        estimatedMinutes: a.estimatedMinutes,
+        materialTitle: written ? (a.title ?? '—') : (m?.title ?? '—'),
+        materialKind: written ? WRITTEN_KIND : (m?.kind ?? null),
         subject: m?.subject ?? null,
         classNames: a.classIds
           .filter((id) => !allowed || allowed.includes(id))
@@ -263,14 +263,26 @@ export class SchoolLearningService {
     const data = parseOrThrow(assignmentInputSchema, input);
     for (const classId of data.classIds) assertClassInScope(actor, classId);
     if (data.dueDate < tashkentDay()) throw invalid('dueDate: errors.form.invalidDate');
-    const material = (await loadCatalog(this.prisma)).find((m) => m.id === data.materialId);
-    if (!material) throw invalid('materialId: errors.form.required');
+    const written = isWrittenInput(data);
+    const material = written ? null : (await loadCatalog(this.prisma)).find((m) => m.id === data.materialId);
+    if (!written && !material) throw invalid('materialId: errors.form.required');
+    const title = written ? (data.title ?? '') : material!.title;
     const classIds = [...new Set(data.classIds)];
     const classes = await this.prisma.schoolClass.findMany({ where: { schoolId: actor.schoolId, id: { in: classIds } }, select: { id: true, name: true, grade: true, letter: true } });
     if (classes.length !== classIds.length) throw invalid('classIds: errors.form.required');
     return this.prisma.$transaction(async (tx) => {
       const created = await tx.schoolLearningAssignment.create({
-        data: { schoolId: actor.schoolId, materialKind: material.kind, materialId: material.id, classIds, dueDate: data.dueDate, note: data.note, byStaffId: actor.staffId },
+        data: {
+          schoolId: actor.schoolId,
+          materialKind: written ? WRITTEN_KIND : material!.kind,
+          materialId: written ? WRITTEN_MATERIAL_ID : material!.id,
+          title: written ? title : null,
+          estimatedMinutes: data.estimatedMinutes ?? null,
+          classIds,
+          dueDate: data.dueDate,
+          note: data.note,
+          byStaffId: actor.staffId,
+        },
       });
       const names = [...classes].sort(compareClasses).map((c) => c.name).join(', ');
       await this.audit.write(
@@ -278,14 +290,25 @@ export class SchoolLearningService {
         {
           module: 'LEARNING',
           action: 'learning.assign',
-          summary: `"${material.title}" tayinlandi: ${names}`,
+          summary: `"${title}" tayinlandi: ${names}`,
           entityId: created.id,
-          after: { materialId: material.id, classIds, dueDate: data.dueDate },
-          params: { title: material.title, classes: names },
+          after: { materialId: created.materialId, classIds, dueDate: data.dueDate },
+          params: { title, classes: names },
         },
         tx,
       );
-      return { id: created.id, materialId: created.materialId, classIds, dueDate: created.dueDate, note: created.note, createdAt: created.createdAt.toISOString(), byStaffId: actor.staffId };
+      return {
+        id: created.id,
+        materialId: created.materialId,
+        materialKind: created.materialKind,
+        title: created.title,
+        estimatedMinutes: created.estimatedMinutes,
+        classIds,
+        dueDate: created.dueDate,
+        note: created.note,
+        createdAt: created.createdAt.toISOString(),
+        byStaffId: actor.staffId,
+      };
     });
   }
 
@@ -295,10 +318,13 @@ export class SchoolLearningService {
     if (!assignment) throw notFound(id);
     const allowed = allowedClassIds(actor);
     if (allowed && !assignment.classIds.every((c) => allowed.includes(c))) throw forbidden(id);
+    // Topshiriq rasmlari (MinIO) — qatorlar cascade o'chadi, obyektlar tranzaksiyadan keyin.
+    const keys = await homeworkKeysOf(this.prisma, { assignmentId: id });
     await this.prisma.$transaction(async (tx) => {
       await tx.schoolLearningAssignment.delete({ where: { id } });
       await this.audit.write(actor, { module: 'LEARNING', action: 'learning.unassign', summary: 'Topshiriq o\'chirildi', entityId: id, before: assignment, params: {} }, tx);
     });
+    await this.homeworkStorage.deleteKeys(keys);
   }
 
   /** (urinish paytidagi sinf, hafta) kataklari — barcha hisobotlarda bir xil bo'linish (learning-cells). */

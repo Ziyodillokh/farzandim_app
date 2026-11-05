@@ -45,11 +45,11 @@ export type MemoryStorage = ReturnType<typeof memoryStorage>;
 
 // ─── Rasmlar (to'g'ri magic bytes, kichik) ──────────────────────────
 
-/** JPEG; `exif` berilsa APP1 (EXIF) segmenti qo'shiladi — saqlashda olib tashlanishi kerak. */
+/** JPEG; `seed` APP2 segmentida (saqlanadi), `exif` berilsa APP1 (EXIF) segmenti — saqlashda olib tashlanadi. */
 export function jpeg(seed = 'a', exif?: string): Buffer {
   const app1 = exif ? Buffer.concat([Buffer.from([0xff, 0xe1]), u16(2 + 6 + exif.length), Buffer.from('Exif\0\0'), Buffer.from(exif)]) : Buffer.alloc(0);
   const app0 = Buffer.concat([Buffer.from([0xff, 0xe0, 0x00, 0x10]), Buffer.from('JFIF\0\x01\x01\0\0\x01\0\x01\0\0')]);
-  return Buffer.concat([Buffer.from([0xff, 0xd8]), app0, app1, Buffer.from([0xff, 0xfe]), u16(2 + seed.length), Buffer.from(seed), Buffer.from([0xff, 0xd9])]);
+  return Buffer.concat([Buffer.from([0xff, 0xd8]), app0, app1, Buffer.from([0xff, 0xe2]), u16(2 + seed.length), Buffer.from(seed), Buffer.from([0xff, 0xd9])]);
 }
 
 export const png = (): Buffer =>

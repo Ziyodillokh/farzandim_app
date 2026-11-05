@@ -10,6 +10,7 @@ export const BUCKETS = {
   support: 'farzandim-support',
   chat: 'farzandim-chat',
   olympiad: 'farzandim-olympiad',
+  schoolHomework: 'farzandim-school-homework',
 } as const;
 
 export type BucketName = (typeof BUCKETS)[keyof typeof BUCKETS];
