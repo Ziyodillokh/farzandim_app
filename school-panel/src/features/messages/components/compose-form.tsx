@@ -23,6 +23,7 @@ import { type ComposePrefill, EMPTY_PREFILL, usePrefillGuardianNames } from '../
 import { useAnnouncement, useAudienceReach, useClassChoices, useSaveDraft, useSendAnnouncement } from '../hooks';
 import { BRAND_GLOW, ICON_TONES } from '../styles';
 import { AudiencePicker } from './audience-picker';
+import { IncludeStudentsField, supportsIncludeStudents } from './include-students-field';
 import { ContentSection, type ScheduleMode, ScheduleSection } from './compose-sections';
 import { MessagePhonePreview } from './message-preview';
 import { RecipientsSummary } from './recipients-summary';
@@ -128,8 +129,14 @@ function ComposeEditor({ initial, prefill }: { initial: AnnouncementDetail | nul
   }, [prefillNames.data, prefill.guardianIds, form]);
 
   const values = form.watch();
-  const audience = { kind: values.audience.kind, classIds: values.audience.classIds ?? [], guardianIds: values.audience.guardianIds ?? [] };
-  const reach = useAudienceReach(audience);
+  const audience = {
+    kind: values.audience.kind,
+    classIds: values.audience.classIds ?? [],
+    guardianIds: values.audience.guardianIds ?? [],
+    includeStudents: values.audience.includeStudents === true,
+  };
+  // Qamrov faqat ota-onalar bo'yicha — `includeStudents` unga ta'sir qilmaydi va so'rovga qo'shilmaydi.
+  const reach = useAudienceReach({ kind: audience.kind, classIds: audience.classIds, guardianIds: audience.guardianIds });
   const audienceError = form.formState.errors.audience;
   const audienceMessage = audienceError?.classIds?.message ?? audienceError?.guardianIds?.message ?? audienceError?.message;
   const knownNames =
@@ -183,6 +190,15 @@ function ComposeEditor({ initial, prefill }: { initial: AnnouncementDetail | nul
               knownNames={knownNames}
               error={audienceMessage}
             />
+            {supportsIncludeStudents(audience.kind) && (
+              <div className="mt-4">
+                <IncludeStudentsField
+                  kind={audience.kind}
+                  checked={audience.includeStudents}
+                  onChange={(next) => form.setValue('audience', { ...audience, includeStudents: next })}
+                />
+              </div>
+            )}
           </SectionCard>
           <ScheduleSection
             mode={mode}

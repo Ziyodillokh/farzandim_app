@@ -10,7 +10,7 @@ import { SELECTED_TILE, TILE_BUTTON } from '../styles';
 import { ClassMultiSelect } from './class-multi-select';
 import { GuardianPicker } from './guardian-picker';
 
-export type AudienceValue = { kind: AudienceKind; classIds: string[]; guardianIds: string[] };
+export type AudienceValue = { kind: AudienceKind; classIds: string[]; guardianIds: string[]; includeStudents?: boolean };
 
 const KINDS: Array<{ kind: AudienceKind; icon: typeof School }> = [
   { kind: 'SCHOOL', icon: School },

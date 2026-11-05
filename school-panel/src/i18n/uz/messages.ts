@@ -105,6 +105,9 @@ export const messages = {
     noGuardians: 'Hech kim topilmadi',
     pickHint: 'Qidiruvdan ota-onani tanlang',
     remove: 'Olib tashlash',
+    includeStudents: 'Oʻquvchilarga ham koʻrsatish (Parvoz Growth ilovasida)',
+    includeStudentsHint: 'E’lon oʻquvchilarning Parvoz Growth ilovasida ham chiqadi. Ota-onalarga yuborish bundan oʻzgarmaydi.',
+    studentsAlsoSee: 'Oʻquvchilar ham koʻradi',
   },
   recipients: {
     title: 'Qabul qiluvchilar',

@@ -231,7 +231,11 @@ export const announcementsService = {
       const source = t.announcements.find((a) => a.id === id);
       if (!source || !isVisible(actor, t, source)) throw new ServiceError('NOT_FOUND', id);
       const own = allowedClassIds(actor);
-      const audience = canSendTo(actor, t, source.audience) ? source.audience : own?.length ? { kind: 'CLASSES' as const, classIds: own, guardianIds: [] } : null;
+      const audience = canSendTo(actor, t, source.audience)
+        ? source.audience
+        : own?.length
+          ? { kind: 'CLASSES' as const, classIds: own, guardianIds: [], ...(source.audience.includeStudents !== undefined && { includeStudents: source.audience.includeStudents }) }
+          : null;
       if (!audience) throw new ServiceError('FORBIDDEN', id);
       const copy: Announcement = { ...source, id: newId('ann'), audience, status: 'DRAFT', scheduledAt: null, sentAt: null, byStaffId: actor.staffId, stats: { recipients: reachOf(t, audience).guardians, delivered: 0, read: 0 } };
       t.announcements.push(copy);

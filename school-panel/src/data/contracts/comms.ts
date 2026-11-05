@@ -1,7 +1,13 @@
 import type { Id, IsoDate, IsoDateTime } from './common';
 
 export type AudienceKind = 'SCHOOL' | 'CLASSES' | 'GUARDIANS';
-export type Audience = { kind: AudienceKind; classIds: Id[]; guardianIds: Id[] };
+export type Audience = {
+  kind: AudienceKind;
+  classIds: Id[];
+  guardianIds: Id[];
+  /** E'lon o'quvchilarga ham (Parvoz Growth ilovasida) ko'rinadimi. Faqat SCHOOL va CLASSES uchun. */
+  includeStudents?: boolean;
+};
 export type MessagePriority = 'NORMAL' | 'IMPORTANT';
 export type MessageStatus = 'DRAFT' | 'SCHEDULED' | 'SENT';
 

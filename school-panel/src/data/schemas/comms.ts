@@ -17,6 +17,7 @@ export const audienceSchema = z
     kind: z.enum(['SCHOOL', 'CLASSES', 'GUARDIANS']),
     classIds: z.array(z.string().min(1)).default([]),
     guardianIds: z.array(z.string().min(1)).default([]),
+    includeStudents: z.boolean().optional(),
   })
   .superRefine((value, ctx) => {
     if (value.kind === 'CLASSES' && value.classIds.length === 0) {
@@ -30,14 +31,25 @@ export const audienceSchema = z
     kind: value.kind,
     classIds: value.kind === 'CLASSES' ? [...new Set(value.classIds)] : [],
     guardianIds: value.kind === 'GUARDIANS' ? [...new Set(value.guardianIds)] : [],
+    // `includeStudents` faqat butun maktab va sinflar auditoriyasida mavjud.
+    ...(value.kind !== 'GUARDIANS' && value.includeStudents !== undefined ? { includeStudents: value.includeStudents } : {}),
   }));
 
-export const announcementInputSchema = z.object({
-  title: requiredText(MESSAGE_TITLE_MAX),
-  body: requiredText(MESSAGE_BODY_MAX),
-  priority: z.enum(['NORMAL', 'IMPORTANT']),
-  audience: audienceSchema,
-});
+/**
+ * E'lon: SCHOOL / CLASSES auditoriyasida `includeStudents` har doim aniq mantiqiy qiymat
+ * (standart — false), GUARDIANS'da umuman yuborilmaydi (backend shartnomasi).
+ */
+export const announcementInputSchema = z
+  .object({
+    title: requiredText(MESSAGE_TITLE_MAX),
+    body: requiredText(MESSAGE_BODY_MAX),
+    priority: z.enum(['NORMAL', 'IMPORTANT']),
+    audience: audienceSchema,
+  })
+  .transform((value) => ({
+    ...value,
+    audience: value.audience.kind === 'GUARDIANS' ? value.audience : { ...value.audience, includeStudents: value.audience.includeStudents ?? false },
+  }));
 
 export const reminderInputSchema = z.object({
   kind: z.enum(['MEETING', 'EXAM', 'EVENT', 'HOLIDAY', 'ANNOUNCEMENT', 'SCHEDULE_CHANGE']),

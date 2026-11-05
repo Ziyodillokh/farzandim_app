@@ -70,7 +70,7 @@ export function AnnouncementCard({ row, onOpen }: { row: AnnouncementRow; onOpen
           <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{row.body}</p>
         </div>
 
-        <AudienceChips kind={row.audience.kind} names={row.audienceNames} max={3} />
+        <AudienceChips kind={row.audience.kind} names={row.audienceNames} max={3} includeStudents={row.audience.includeStudents === true} />
 
         <div className="mt-auto space-y-3 border-t border-border/50 pt-4 dark:border-white/[0.06]">
           {row.status === 'SENT' ? (

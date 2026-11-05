@@ -65,7 +65,7 @@ function DetailBody({ a }: { a: AnnouncementDetail }) {
     <div className="grid gap-6 p-6 lg:grid-cols-[1fr_auto]">
       <div className="min-w-0 space-y-5">
         <Field label={t('messages.detail.audience')}>
-          <AudienceChips kind={a.audience.kind} names={a.audienceNames} max={12} />
+          <AudienceChips kind={a.audience.kind} names={a.audienceNames} max={12} includeStudents={a.audience.includeStudents === true} />
         </Field>
         <div className="grid gap-4 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
           <Field label={t('messages.detail.author')}>
