@@ -155,7 +155,7 @@ describe('validatePeriod / validateGrid', () => {
     expect(validateCell({ subject: '', room: '12', teacherName: '' })).toBe('subjectRequired');
     expect(validateCell({ subject: 'x'.repeat(61), room: '', teacherName: '' })).toBe('subjectTooLong');
     expect(validateCell({ subject: 'x'.repeat(60), room: '', teacherName: '' })).toBeNull();
-    expect(validateCell({ subject: 'math', room: 'r'.repeat(31), teacherName: '' })).toBe('roomTooLong');
+    expect(validateCell({ subject: 'math', room: 'r'.repeat(21), teacherName: '' })).toBe('roomTooLong');
     expect(validateCell({ subject: 'math', room: '', teacherName: 't'.repeat(81) })).toBe('teacherTooLong');
   });
 

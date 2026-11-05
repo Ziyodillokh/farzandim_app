@@ -21,7 +21,7 @@ export type TimetableSubjectKey = (typeof TIMETABLE_SUBJECT_KEYS)[number];
 export const TIMETABLE_WEEKDAYS = [1, 2, 3, 4, 5, 6] as const;
 
 export const TIMETABLE_SUBJECT_MAX = 60;
-export const TIMETABLE_ROOM_MAX = 30;
+export const TIMETABLE_ROOM_MAX = 20;
 export const TIMETABLE_TEACHER_MAX = 80;
 /** Bir kunda eng ko'pi bilan shuncha dars davri (himoya chegarasi). */
 export const TIMETABLE_MAX_PERIOD_NO = 20;
