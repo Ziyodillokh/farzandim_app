@@ -80,13 +80,12 @@ export function AssignmentFormDialog({ open, onOpenChange, materialId }: { open:
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-4" noValidate>
-          <div role="radiogroup" aria-label={t('learning.assignments.kindLabel')} className="inline-flex w-fit rounded-xl bg-primary/[0.06] p-1 ring-1 ring-inset ring-border/50 dark:bg-white/[0.04]">
+          <div role="group" aria-label={t('learning.assignments.kindLabel')} className="inline-flex w-fit rounded-xl bg-primary/[0.06] p-1 ring-1 ring-inset ring-border/50 dark:bg-white/[0.04]">
             {(['catalog', 'written'] as const).map((k) => (
               <button
                 key={k}
                 type="button"
-                role="radio"
-                aria-checked={kind === k}
+                aria-pressed={kind === k}
                 onClick={() => switchKind(k)}
                 className={cn(
                   'rounded-lg px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',

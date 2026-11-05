@@ -70,7 +70,7 @@ export function PhotoGallery({ photos, studentName, onReload }: { photos: readon
               aria-label={t('learning.submissions.gallery.open', { n: i + 1, total })}
               className="group block w-full overflow-hidden rounded-xl ring-1 ring-inset ring-border/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <PhotoImage key={photo.url} photo={photo} alt={altOf(i + 1)} onReload={onReload} className="aspect-[3/4] w-full object-cover transition-transform group-hover:scale-[1.02]" />
+              <PhotoImage key={photo.url} photo={photo} alt={altOf(i + 1)} className="aspect-[3/4] w-full object-cover transition-transform group-hover:scale-[1.02]" />
             </button>
           </li>
         ))}
@@ -80,6 +80,9 @@ export function PhotoGallery({ photos, studentName, onReload }: { photos: readon
         <DialogContent className="max-w-3xl gap-3 p-4" onKeyDown={onKeyDown}>
           <DialogTitle className="pr-8 text-base">{t('learning.submissions.gallery.title', { name: studentName, n: (openIndex ?? 0) + 1, total })}</DialogTitle>
           <DialogDescription className="sr-only">{t('learning.submissions.gallery.description')}</DialogDescription>
+          <span role="status" aria-live="polite" className="sr-only">
+            {t('learning.submissions.gallery.title', { name: studentName, n: (openIndex ?? 0) + 1, total })}
+          </span>
           <div className="relative flex items-center justify-center">
             {current && (
               <PhotoImage

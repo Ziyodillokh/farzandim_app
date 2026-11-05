@@ -57,6 +57,16 @@ export function toGrid(lessons: readonly TimetableLesson[]): Grid {
 }
 
 /**
+ * Faqat smenaning DARS davrlariga to'g'ri keladigan darslar to'ri (jadvalda ko'rinadigani). Ko'rinmaydigan
+ * ("yetim") darslar to'rga kirmaydi — aks holda saqlashdan keyin (`toLessons` ularni tashlaydi) qoralama
+ * serverdagidan abadiy farq qilib turardi.
+ */
+export function toVisibleGrid(lessons: readonly TimetableLesson[], periods: readonly BellPeriod[]): Grid {
+  const known = new Set(lessonPeriods(periods).map((p) => p.no));
+  return toGrid(lessons.filter((l) => known.has(l.periodNo)));
+}
+
+/**
  * To'r → API darslari (kun, davr bo'yicha tartiblangan). Faqat smenaning DARS davrlariga tegishli,
  * fani bor kataklar; bo'sh xona/o'qituvchi umuman yuborilmaydi.
  */

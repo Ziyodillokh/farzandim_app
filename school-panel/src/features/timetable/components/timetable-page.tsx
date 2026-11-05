@@ -47,7 +47,7 @@ export function TimetablePage() {
   const [pickedClass, setPickedClass] = useState<string | null>(null);
   const classId = pickedClass ?? classes.data?.[0]?.id ?? null;
   const timetable = useTimetable(classId);
-  const draft = useTimetableDraft(classId, timetable.data?.lessons);
+  const draft = useTimetableDraft(classId, timetable.data);
   const save = useSaveTimetable(classId);
   const guard = useUnsavedChangesGuard(draft.isDirty);
 

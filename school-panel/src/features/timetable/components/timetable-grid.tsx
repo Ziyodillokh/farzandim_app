@@ -35,6 +35,7 @@ export function TimetableGrid({ periods, grid, errors, readOnly, className, onEd
   const tabbableKey = activeKey && periodNos.includes(Number(activeKey.split(':')[1])) ? activeKey : firstKey;
 
   const onKeyDown = (event: KeyboardEvent<HTMLTableElement>) => {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return; // brauzer yorliqlari (Alt+←) buzilmasin
     const direction = ARROWS[event.key];
     const current = event.target instanceof HTMLElement ? event.target.dataset.cell : undefined;
     if (!direction || !current) return;

@@ -10,7 +10,7 @@ test('sinf rahbari: yozma vazifa beradi (tekshiruv xatolari bilan)', async ({ pa
   await page.getByRole('button', { name: 'Topshiriq berish' }).click();
 
   const dialog = page.getByRole('dialog');
-  await dialog.getByRole('radio', { name: 'Yozma vazifa' }).click();
+  await dialog.getByRole('button', { name: 'Yozma vazifa' }).click();
   // Sarlavhasiz yuborib bo'lmaydi; vaqt 1–240 oralig'ida.
   await dialog.getByLabel(/Taxminiy vaqt/).fill('241');
   await dialog.getByRole('button', { name: 'Topshiriq berish' }).click();
@@ -39,6 +39,8 @@ test('sinf rahbari: topshirilgan ishni ko\'radi, rasmlarni kattalashtiradi, qayt
 
   const sheet = page.getByRole('dialog').first();
   await expect(sheet.getByRole('heading', { name: /Mening Vatanim/ })).toBeVisible();
+  // Ma'lumot yuklanmaguncha («Jami» 0) kutamiz — keyin sanoqlarni o'qiymiz.
+  await expect(sheet.getByText('Jami', { exact: true }).locator('xpath=following-sibling::dd')).not.toHaveText('0');
   const pendingBefore = Number(await sheet.getByText('Tekshirilmagan', { exact: true }).locator('xpath=following-sibling::dd').innerText());
   expect(pendingBefore).toBeGreaterThan(1);
 

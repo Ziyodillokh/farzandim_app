@@ -110,11 +110,11 @@ function ComposeEditor({ initial, prefill }: { initial: AnnouncementDetail | nul
     const current = form.getValues('audience');
     if (prefill.classIds.length > 0 && current.kind === 'CLASSES') {
       const kept = (current.classIds ?? []).filter((cid) => own.includes(cid));
-      if (kept.length !== (current.classIds ?? []).length) form.setValue('audience', { kind: 'CLASSES', classIds: kept.length || canSchool ? kept : own, guardianIds: [] });
+      if (kept.length !== (current.classIds ?? []).length) form.setValue('audience', { ...current, kind: 'CLASSES', classIds: kept.length || canSchool ? kept : own, guardianIds: [] });
       return;
     }
     if (canSchool || prefill.guardianIds.length > 0) return;
-    if ((current.classIds ?? []).length === 0) form.setValue('audience', { kind: 'CLASSES', classIds: own, guardianIds: [] });
+    if ((current.classIds ?? []).length === 0) form.setValue('audience', { ...current, kind: 'CLASSES', classIds: own, guardianIds: [] });
   }, [initial, canSchool, classes.data, form, prefill]);
 
   // Chuqur havoladagi ota-onalar nomi; doiradan tashqaridagilar auditoriyadan olib tashlanadi.

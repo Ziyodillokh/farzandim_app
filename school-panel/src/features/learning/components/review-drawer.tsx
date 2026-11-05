@@ -50,7 +50,6 @@ export function ReviewDrawer({ assignmentId, row, rows, className, canReview, on
         </SheetHeader>
         {row && submission && (
           <ReviewBody
-            key={row.student.id}
             assignmentId={assignmentId}
             studentName={row.student.fullName}
             submission={submission}
@@ -90,6 +89,13 @@ function ReviewBody({
   const review = useReviewSubmission(assignmentId);
   const [note, setNote] = useState(submission.reviewNote ?? '');
   const [showNoteError, setShowNoteError] = useState(false);
+  // O'quvchi almashganda izoh tozalanadi — lekin panelni qayta yaratmaymiz: «Keyingi ish» tugmasida fokus qoladi.
+  const [shownStudentId, setShownStudentId] = useState(studentId);
+  if (shownStudentId !== studentId) {
+    setShownStudentId(studentId);
+    setNote(submission.reviewNote ?? '');
+    setShowNoteError(false);
+  }
   const noteRef = useRef<HTMLTextAreaElement>(null);
   const [pendingStatus, setPendingStatus] = useState<'ACCEPTED' | 'RETURNED' | null>(null);
 

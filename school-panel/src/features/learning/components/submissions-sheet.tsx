@@ -33,6 +33,12 @@ export function SubmissionsSheet({ assignment, onClose }: { assignment: Assignme
   const visible = useMemo(() => filterRows(rows, filter), [rows, filter]);
   const className = (classId: string) => classes.data?.find((c) => c.id === classId)?.name ?? '—';
   const selectedRow = rows.find((r) => r.student.id === selected) ?? null;
+  /** Yopilganda filtr va tanlov tozalanadi — keyingi topshiriq toza holatda ochiladi. */
+  const close = () => {
+    setFilter('ALL');
+    setSelected(null);
+    onClose();
+  };
 
   const columns = useMemo<Column<StudentSubmissionRow>[]>(
     () => [
@@ -75,7 +81,7 @@ export function SubmissionsSheet({ assignment, onClose }: { assignment: Assignme
 
   return (
     <>
-      <Sheet open={assignment !== null} onOpenChange={(open) => !open && onClose()}>
+      <Sheet open={assignment !== null} onOpenChange={(open) => !open && close()}>
         <SheetContent className="w-[calc(100%-1rem)] overflow-y-auto sm:max-w-3xl">
           <SheetHeader>
             <SheetTitle className="pr-8">{assignment ? assignmentTitle(assignment) : t('learning.submissions.title')}</SheetTitle>
