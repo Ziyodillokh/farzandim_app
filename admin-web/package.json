@@ -9,6 +9,7 @@
     "start": "next start -p 4300",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test": "npx tsx --test src/components/*/*.test.ts",
     "format": "prettier --write \"src/**/*.{ts,tsx,json,md}\""
   },
   "dependencies": {

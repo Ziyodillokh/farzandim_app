@@ -457,6 +457,80 @@ export interface KelajakStats {
   sessions: { total: number; completed: number; completedLast7Days: number };
 }
 
+// ─── Learning (kunlik o'quv: mavzular katalogi) ─────────────────
+/**
+ * Backend `API_SUBJECTS` (backend/src/modules/learning/domain/subjects.ts).
+ * DB enum katta harfda (`MATH`), API esa kichik harfda (`math`) ishlaydi.
+ */
+export type LearningSubject =
+  | 'math'
+  | 'native'
+  | 'english'
+  | 'russian'
+  | 'history'
+  | 'biology'
+  | 'chemistry'
+  | 'physics'
+  | 'geography'
+  | 'informatics';
+
+export type LearningTopicStatus = 'ACTIVE' | 'HIDDEN';
+
+/** Mavzu nomi: `uz` majburiy, `ru`/`en` bo'lmasa ilova `uz`ni ko'rsatadi. */
+export interface LearningTopicTitle {
+  uz: string;
+  ru?: string;
+  en?: string;
+}
+
+/** Ko'p tilli matn, hamma til ixtiyoriy (mavzu maqsadi, savol matni). */
+export interface LearningText {
+  uz?: string;
+  ru?: string;
+  en?: string;
+}
+
+/** `GET /admin/learning/topics` elementi. */
+export interface LearningTopic {
+  id: string;
+  subject: LearningSubject;
+  /** Fan ichida noyob (`^[a-z0-9]+(-[a-z0-9]+)*$`, ≤ 80). */
+  key: string;
+  title: LearningTopicTitle;
+  /** Bola mavzu sahifasida ko'radigan o'quv maqsadi. */
+  goal: LearningText | null;
+  minGrade: number;
+  maxGrade: number;
+  position: number;
+  status: LearningTopicStatus;
+  /** Mavzuga biriktirilgan FAOL savollar soni (backend shuni qaytarishi shart). */
+  questionCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type LearningQuestionStatus = 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
+
+/**
+ * `GET /admin/learning/questions` qatori (admin-learning `row()` + `topicId`).
+ * Faqat ro'yxatda ishlatiladigan maydonlar; `topic` — eski erkin matnli mavzu.
+ */
+export interface LearningQuestion {
+  id: string;
+  externalId: string | null;
+  subject: LearningSubject;
+  difficulty: number;
+  minGrade: number;
+  maxGrade: number;
+  topic: LearningText;
+  prompt: LearningText;
+  status: LearningQuestionStatus;
+  /** Biriktirilgan mavzu; `null` — mavzusiz. */
+  topicId: string | null;
+  answers: number;
+  correctRate: number | null;
+}
+
 // ─── Audit Log ──────────────────────────────────────────────────
 export interface AuditLogEntry {
   id: string;

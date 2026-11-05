@@ -23,6 +23,13 @@ import type {
   KelajakQuestion,
   KelajakStats,
   KelajakText,
+  LearningQuestion,
+  LearningQuestionStatus,
+  LearningSubject,
+  LearningText,
+  LearningTopic,
+  LearningTopicStatus,
+  LearningTopicTitle,
   LoginResponse,
   Moderator,
   Olympiad,
@@ -378,6 +385,80 @@ export const kelajakApi = {
     api.post<KelajakQuestion>('/admin/kelajak/questions', data),
   update: (id: string, data: KelajakQuestionPatch) =>
     api.patch<KelajakQuestion>(`/admin/kelajak/questions/${id}`, data),
+};
+
+// ───────────────────────── LEARNING (mavzular katalogi) ─────────────────────────
+// Kontrakt: `manage_learning` ruxsati; fan qiymatlari kichik harfda (`math`).
+export interface LearningTopicListParams {
+  subject?: LearningSubject;
+  status?: LearningTopicStatus;
+}
+
+export interface LearningTopicCreatePayload {
+  subject: LearningSubject;
+  /** `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤ 80; fan ichida noyob (aks holda 409). */
+  key: string;
+  title: LearningTopicTitle;
+  /** Berilmasa maqsad yo'q. */
+  goal?: LearningText;
+  /** 1–11, `minGrade ≤ maxGrade`. */
+  minGrade: number;
+  maxGrade: number;
+  /** Berilmasa backend oxiriga qo'shadi. */
+  position?: number;
+  /** Berilmasa backend belgilaydi. */
+  status?: LearningTopicStatus;
+}
+
+/** PATCH — faqat o'zgargan maydonlar; fan o'zgarmaydi, `goal: null` maqsadni tozalaydi. */
+export type LearningTopicPatch = Partial<Omit<LearningTopicCreatePayload, 'subject' | 'goal'>> & {
+  goal?: LearningText | null;
+};
+
+export interface LearningTopicReorderPayload {
+  subject: LearningSubject;
+  /** Shu fanning BARCHA mavzu ID'lari — yangi tartibda. */
+  ids: string[];
+}
+
+export interface LearningQuestionListParams {
+  page?: number;
+  /** Backend ≤100. */
+  limit?: number;
+  subject?: LearningSubject;
+  status?: LearningQuestionStatus;
+  /** Faqat shu mavzuga biriktirilgan savollar. */
+  topicId?: string;
+  q?: string;
+}
+
+/** Kontrakt massiv qaytaradi; admin-learning ro'yxatlariga o'xshab `{ items }` kelsa ham ishlaydi. */
+const toTopicArray = (raw: LearningTopic[] | { items: LearningTopic[] }): LearningTopic[] =>
+  Array.isArray(raw) ? raw : raw.items;
+
+export const learningTopicsApi = {
+  list: (params: LearningTopicListParams = {}) =>
+    api
+      .get<LearningTopic[] | { items: LearningTopic[] }>('/admin/learning/topics', { params })
+      .then(toTopicArray),
+  create: (data: LearningTopicCreatePayload) =>
+    api.post<LearningTopic>('/admin/learning/topics', data),
+  update: (id: string, data: LearningTopicPatch) =>
+    api.patch<LearningTopic>(`/admin/learning/topics/${id}`, data),
+  reorder: (payload: LearningTopicReorderPayload) =>
+    api.post<unknown>('/admin/learning/topics/reorder', payload).then(() => undefined),
+  /** Savollarni mavzuga biriktiradi (faqat shu fan savollari). */
+  linkQuestions: (id: string, questionIds: string[]) =>
+    api
+      .post<unknown>(`/admin/learning/topics/${id}/questions`, { questionIds })
+      .then(() => undefined),
+};
+
+export const learningQuestionsApi = {
+  list: (params: LearningQuestionListParams = {}) =>
+    api
+      .get<RawPaginated<LearningQuestion>>('/admin/learning/questions', { params })
+      .then(normalizePagination),
 };
 
 // ───────────────────────── ANALYTICS ─────────────────────────
