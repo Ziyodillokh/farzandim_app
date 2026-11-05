@@ -1,7 +1,7 @@
 import { roleHas } from '@/auth/permissions';
-import type { ClassActivity, IsoDate, LearningAssignment, LearningMaterial, MaterialKind, Subject } from '@/data/contracts';
+import type { AssignmentKind, ClassActivity, IsoDate, LearningAssignment, LearningMaterial, Subject } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
-import { assignmentInputSchema, materialFilterSchema, SUBJECTS, type AssignmentInput, type MaterialFilter } from '@/data/schemas/learning';
+import { assignmentInputSchema, materialFilterSchema, SUBJECTS, WRITTEN_MATERIAL_ID, type AssignmentInput, type MaterialFilter } from '@/data/schemas/learning';
 import { parseOrThrow } from '@/data/schemas/validate';
 import { CARE_MIN_GROUP } from '@/lib/k-anon';
 import { matchesSearch } from '@/lib/normalize-search';
@@ -13,6 +13,7 @@ import { type Actor, allowedClassIds, assertCan, assertClassInScope, currentActo
 import { getTables, transact } from '../db';
 import { buildIndexes, classSizes, compareClasses } from '../lookups';
 import type { Tables } from '../tables';
+import { learningSubmissionsService } from './learning-submissions';
 
 /**
  * Growth Learning (maktab tomoni). Faollik — faqat SINF darajasida (shaxsiy reyting yo'q).
@@ -49,7 +50,7 @@ export type InterestRow = { grade: number; shares: Array<{ subject: Subject; per
 export type MaterialRow = LearningMaterial & { assignedClasses: number };
 export type AssignmentRow = LearningAssignment & {
   materialTitle: string;
-  materialKind: MaterialKind | null;
+  materialKind: AssignmentKind | null;
   subject: Subject | null;
   classNames: string[];
   byName: string;
@@ -215,10 +216,11 @@ export const learningService = {
       .filter((a) => !allowed || a.classIds.some((id) => allowed.includes(id)))
       .map((a) => {
         const material = materials.get(a.materialId);
+        const written = a.materialId === WRITTEN_MATERIAL_ID;
         return {
           ...a,
-          materialTitle: material?.title ?? '—',
-          materialKind: material?.kind ?? null,
+          materialTitle: written ? (a.title ?? '—') : (material?.title ?? '—'),
+          materialKind: written ? ('WRITTEN' as const) : (material?.kind ?? null),
           subject: material?.subject ?? null,
           classNames: a.classIds
             .filter((id) => !allowed || allowed.includes(id))
@@ -248,10 +250,12 @@ export const learningService = {
     const data = parseOrThrow(assignmentInputSchema, input);
     for (const classId of data.classIds) assertClassInScope(actor, classId);
     if (data.dueDate < clockToday()) throw new ServiceError('VALIDATION', 'dueDate: errors.form.invalidDate');
+    const isWritten = data.materialId === WRITTEN_MATERIAL_ID;
     return transact((t) => {
-      const material = t.materials.find((m) => m.id === data.materialId);
-      if (!material) throw new ServiceError('VALIDATION', 'materialId: errors.form.required');
+      const material = isWritten ? null : t.materials.find((m) => m.id === data.materialId);
+      if (!isWritten && !material) throw new ServiceError('VALIDATION', 'materialId: errors.form.required');
       if (data.classIds.some((id) => !t.classes.some((c) => c.id === id))) throw new ServiceError('VALIDATION', 'classIds');
+      const title = isWritten ? (data.title ?? '').trim() : (material?.title ?? '');
       const assignment: LearningAssignment = {
         id: newId('asg'),
         materialId: data.materialId,
@@ -260,13 +264,12 @@ export const learningService = {
         note: data.note,
         createdAt: new Date().toISOString(),
         byStaffId: actor.staffId,
+        ...(isWritten && { title }),
+        ...(data.estimatedMinutes !== undefined && { estimatedMinutes: data.estimatedMinutes }),
       };
       t.assignments.push(assignment);
       const names = assignment.classIds.map((id) => t.classes.find((c) => c.id === id)?.name ?? id).join(', ');
-      writeAudit(t, actor, 'LEARNING', 'learning.assign', `"${material.title}" tayinlandi: ${names}`, assignment.id, null, assignment, {
-        title: material.title,
-        classes: names,
-      });
+      writeAudit(t, actor, 'LEARNING', 'learning.assign', `"${title}" tayinlandi: ${names}`, assignment.id, null, assignment, { title, classes: names });
       return assignment;
     });
   },
@@ -280,7 +283,10 @@ export const learningService = {
       if (!assignment) throw new ServiceError('NOT_FOUND', id);
       if (!canDeleteAssignment(actor, assignment)) throw new ServiceError('FORBIDDEN', id);
       t.assignments = t.assignments.filter((a) => a.id !== id);
+      t.submissions = t.submissions.filter((s) => s.assignmentId !== id);
       writeAudit(t, actor, 'LEARNING', 'learning.unassign', 'Topshiriq o\'chirildi', id, assignment, null, {});
     });
   },
+
+  ...learningSubmissionsService,
 };

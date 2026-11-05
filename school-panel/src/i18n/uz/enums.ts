@@ -63,7 +63,7 @@ export const enums = {
   },
   ageGroup: { G1_4: '1–4-sinflar', G5_8: '5–8-sinflar', G9_11: '9–11-sinflar' },
   surveyStatus: { DRAFT: 'Qoralama', ACTIVE: 'Faol', CLOSED: 'Yakunlangan' },
-  materialKind: { AUDIOBOOK: 'Audiokitob', VIDEO: 'Video', TEST: 'Test' },
+  materialKind: { AUDIOBOOK: 'Audiokitob', VIDEO: 'Video', TEST: 'Test', WRITTEN: 'Yozma vazifa' },
   subject: {
     MATH: 'Matematika',
     ENGLISH: 'Ingliz tili',

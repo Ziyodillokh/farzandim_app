@@ -175,6 +175,8 @@ export const audit = {
     verification_close: '{name}ning tekshiruv so\'rovi yopildi',
     learning_assign: '«{title}» tayinlandi: {classes}',
     learning_unassign: 'Topshiriq o\'chirildi',
+    learning_review_accepted: '{student}: «{title}» ishi qabul qilindi',
+    learning_review_returned: '{student}: «{title}» ishi qaytarildi',
     timetable_save: '{class} dars jadvali yangilandi ({count} ta dars)',
   },
 };

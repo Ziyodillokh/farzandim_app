@@ -14,6 +14,7 @@ export const msg = {
   date: 'errors.form.invalidDate',
   endBeforeStart: 'errors.form.endBeforeStart',
   atLeastOne: 'errors.form.selectAtLeastOne',
+  minutes: 'errors.form.minutesRange',
 } as const;
 
 export const requiredText = (max = 120) =>

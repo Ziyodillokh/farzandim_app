@@ -1,16 +1,17 @@
-import { FileQuestion, Headphones, type LucideIcon, Video } from 'lucide-react';
+import { FileQuestion, Headphones, type LucideIcon, PenLine, Video } from 'lucide-react';
 
-import type { MaterialKind } from '@/data/contracts';
+import type { AssignmentKind } from '@/data/contracts';
 import type { useI18n } from '@/i18n';
 
 type T = ReturnType<typeof useI18n>['t'];
 
-export const KIND_ICONS: Record<MaterialKind, LucideIcon> = { AUDIOBOOK: Headphones, VIDEO: Video, TEST: FileQuestion };
+export const KIND_ICONS: Record<AssignmentKind, LucideIcon> = { AUDIOBOOK: Headphones, VIDEO: Video, TEST: FileQuestion, WRITTEN: PenLine };
 
-export const KIND_TONES: Record<MaterialKind, string> = {
+export const KIND_TONES: Record<AssignmentKind, string> = {
   AUDIOBOOK: 'bg-chart-5/10 text-chart-5 ring-chart-5/20',
   VIDEO: 'bg-primary/10 text-primary ring-primary/15',
   TEST: 'bg-success/10 text-success ring-success/20',
+  WRITTEN: 'bg-warning/10 text-warning ring-warning/25',
 };
 
 /** [6, 7, 8] → "6–8-sinflar"; [5] → "5-sinf". */

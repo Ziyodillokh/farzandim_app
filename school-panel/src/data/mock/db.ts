@@ -5,6 +5,7 @@ import { clockNow } from './clock';
 import { buildPsychSeed } from './psych/seed';
 import { generateSeed } from './seed';
 import { buildActivity, CLOSED_WEEKS } from './seed/learning';
+import { buildSubmissions, buildWrittenAssignments } from './seed/homework';
 import { buildNotifications } from './seed/notifications';
 import { buildTimetables } from './seed/timetable';
 import type { DbSnapshot, Tables } from './tables';
@@ -96,7 +97,15 @@ function withTimetables(db: DbSnapshot): DbSnapshot {
   return { ...db, tables: { ...db.tables, timetables: buildTimetables(db.tables.classes, db.tables.shifts) } };
 }
 
-const MIGRATIONS: readonly Migration[] = [withPortraits, withAssessments, withStaffTables, withActivityWeeks, withTimetables];
+/** Yozma vazifalar: demo vazifalar (yo'q bo'lsa) va o'quvchilar ishlari jadvali. */
+function withHomework(db: DbSnapshot): DbSnapshot {
+  if (db.tables.submissions) return db;
+  const known = new Set(db.tables.assignments.map((a) => a.id));
+  const assignments = [...db.tables.assignments, ...buildWrittenAssignments(db.baseDate).filter((a) => !known.has(a.id))];
+  return { ...db, tables: { ...db.tables, assignments, submissions: buildSubmissions(assignments, db.tables.students, db.baseDate) } };
+}
+
+const MIGRATIONS: readonly Migration[] = [withPortraits, withAssessments, withStaffTables, withActivityWeeks, withTimetables, withHomework];
 
 export function migrate(db: DbSnapshot): DbSnapshot {
   return MIGRATIONS.reduce((current, step) => step(current), db);

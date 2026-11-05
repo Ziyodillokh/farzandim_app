@@ -1,6 +1,6 @@
 'use client';
 
-import { ClipboardList, Plus, Trash2 } from 'lucide-react';
+import { ClipboardCheck, ClipboardList, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { Can } from '@/auth/can';
@@ -17,6 +17,8 @@ import { cn } from '@/lib/utils';
 import { useDeleteAssignment, useLearningAssignments } from '../hooks';
 import { KIND_ICONS, KIND_TONES } from '../lib/format';
 import { AssignmentFormDialog } from './assignment-form-dialog';
+import { SubmissionCounter } from './submission-counter';
+import { SubmissionsSheet } from './submissions-sheet';
 
 const DAY_MS = 86_400_000;
 
@@ -31,6 +33,8 @@ export function AssignmentsTab() {
   const remove = useDeleteAssignment();
   const [createOpen, setCreateOpen] = useState(false);
   const [deleting, setDeleting] = useState<AssignmentRow | null>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
+  const viewing = assignments.data?.find((a) => a.id === viewingId) ?? null;
 
   const columns = useMemo<Column<AssignmentRow>[]>(
     () => [
@@ -47,8 +51,13 @@ export function AssignmentsTab() {
               <div className="min-w-0">
                 <p className="truncate font-medium">{a.materialTitle}</p>
                 <p className="text-xs text-muted-foreground">
-                  {a.subject ? t(`enums.subject.${a.subject}`) : ''}
-                  {a.materialKind ? ` · ${t(`enums.materialKind.${a.materialKind}`)}` : ''}
+                  {[
+                    a.subject ? t(`enums.subject.${a.subject}`) : null,
+                    a.materialKind ? t(`enums.materialKind.${a.materialKind}`) : null,
+                    a.estimatedMinutes ? t('learning.assignments.estimated', { count: a.estimatedMinutes }) : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
                 </p>
               </div>
             </div>
@@ -86,8 +95,29 @@ export function AssignmentsTab() {
           );
         },
       },
-      { key: 'note', header: t('learning.assignments.columns.note'), className: 'max-w-[240px] text-sm text-muted-foreground', cell: (a) => a.note || '—' },
-      { key: 'by', header: t('learning.assignments.columns.by'), className: 'whitespace-nowrap text-sm text-muted-foreground', cell: (a) => a.byName },
+      {
+        key: 'submissions',
+        header: t('learning.assignments.columns.submissions'),
+        cell: (a) =>
+          a.materialKind === 'WRITTEN' ? (
+            <div className="flex flex-col items-start gap-2">
+              <SubmissionCounter assignment={a} />
+              <Button type="button" size="sm" variant="outline" onClick={() => setViewingId(a.id)} aria-label={`${t('learning.submissions.open')}: ${a.materialTitle}`}>
+                <ClipboardCheck />
+                {t('learning.submissions.open')}
+              </Button>
+            </div>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          ),
+      },
+      {
+        key: 'note',
+        header: t('learning.assignments.columns.note'),
+        className: 'min-w-[160px] max-w-[220px] text-sm text-muted-foreground',
+        cell: (a) => (a.note ? <span className="line-clamp-3" title={a.note}>{a.note}</span> : '—'),
+      },
+      { key: 'by', header: t('learning.assignments.columns.by'), className: 'max-w-[140px] text-sm text-muted-foreground', cell: (a) => a.byName },
       {
         key: 'actions',
         header: '',
@@ -125,6 +155,7 @@ export function AssignmentsTab() {
         emptyDescription={t('learning.assignments.emptyHint')}
       />
       <AssignmentFormDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <SubmissionsSheet assignment={viewing} onClose={() => setViewingId(null)} />
       <ConfirmDialog
         open={Boolean(deleting)}
         onOpenChange={(open) => !open && setDeleting(null)}

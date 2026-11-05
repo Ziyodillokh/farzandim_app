@@ -18,5 +18,6 @@ export const errors: DeepString<typeof uz> = {
     invalidDate: 'Неверная дата',
     endBeforeStart: 'Время окончания должно быть позже начала',
     selectAtLeastOne: 'Выберите хотя бы один вариант',
+    minutesRange: 'Время — от 1 до 240 минут',
   },
 };

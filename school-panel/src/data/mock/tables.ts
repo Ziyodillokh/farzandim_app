@@ -27,6 +27,7 @@ import type {
   StaffNotification,
   Student,
   StudentNote,
+  SubmissionRecord,
   TemplateId,
   TimetableRecord,
   TemplateState,
@@ -68,6 +69,8 @@ export type Tables = {
   careRequests: CareRequest[];
   materials: LearningMaterial[];
   assignments: LearningAssignment[];
+  /** Yozma vazifalar bo'yicha o'quvchilar topshirgan ishlar. */
+  submissions: SubmissionRecord[];
   activity: ClassActivity[];
   audit: AuditLog[];
   /** Psixologik testlar: maktabning o'z / import qilingan testlari (shablonlar kodda). */

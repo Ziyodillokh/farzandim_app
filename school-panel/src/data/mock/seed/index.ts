@@ -5,6 +5,7 @@ import type { Tables } from '../tables';
 import { buildAudit, buildEarlyExits } from './audit';
 import { buildCareRequests, buildQuestions, buildSurveys } from './care';
 import { buildAnnouncements, buildPayments, buildReminders, buildVerifications } from './comms';
+import { buildSubmissions, buildWrittenAssignments } from './homework';
 import { buildActivity, buildAssignments, buildMaterials } from './learning';
 import { buildNotifications } from './notifications';
 import { buildPeople } from './people';
@@ -31,6 +32,7 @@ export function generateSeed(seed: number, now: Date): Tables {
   const { surveys, responses } = buildSurveys(baseIso, classes, people.students, questions, seed);
   const payments = buildPayments(people.families, baseIso, seed);
   const careRequests = buildCareRequests(people.students, baseIso);
+  const assignments = [...buildAssignments(baseIso), ...buildWrittenAssignments(baseIso)];
 
   return {
     school,
@@ -57,7 +59,8 @@ export function generateSeed(seed: number, now: Date): Tables {
     careResponses: responses,
     careRequests,
     materials: buildMaterials(),
-    assignments: buildAssignments(baseIso),
+    assignments,
+    submissions: buildSubmissions(assignments, people.students, baseIso),
     activity: buildActivity(classes, sizes, baseIso),
     audit: buildAudit(people.staff, baseIso),
     ...buildPsychSeed({ classes, students: people.students }, baseIso, seed),

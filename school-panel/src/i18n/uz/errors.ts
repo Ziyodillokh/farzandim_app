@@ -15,5 +15,6 @@ export const errors = {
     invalidDate: 'Sana noto\'g\'ri',
     endBeforeStart: 'Tugash vaqti boshlanishdan keyin bo\'lishi kerak',
     selectAtLeastOne: 'Kamida bittasini tanlang',
+    minutesRange: 'Vaqt 1 dan 240 daqiqagacha boʻlishi kerak',
   },
 };

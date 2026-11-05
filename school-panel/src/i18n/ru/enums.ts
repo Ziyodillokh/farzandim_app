@@ -66,7 +66,7 @@ export const enums: DeepString<typeof uz> = {
   },
   ageGroup: { G1_4: '1–4 классы', G5_8: '5–8 классы', G9_11: '9–11 классы' },
   surveyStatus: { DRAFT: 'Черновик', ACTIVE: 'Активен', CLOSED: 'Завершён' },
-  materialKind: { AUDIOBOOK: 'Аудиокнига', VIDEO: 'Видео', TEST: 'Тест' },
+  materialKind: { AUDIOBOOK: 'Аудиокнига', VIDEO: 'Видео', TEST: 'Тест', WRITTEN: 'Письменное задание' },
   subject: {
     MATH: 'Математика',
     ENGLISH: 'Английский язык',
