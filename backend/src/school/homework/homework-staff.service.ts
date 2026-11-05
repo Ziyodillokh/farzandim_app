@@ -11,7 +11,7 @@ import { conflict, forbidden, notFound } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
 import { WRITTEN_KIND } from '../learning/school-learning.schemas';
 import { HomeworkPhotoUrlService } from './homework-photo-url.service';
-import { toStaffSubmissionView } from './homework-view';
+import { countStatuses, toStaffSubmissionView } from './homework-view';
 import { reviewInputSchema } from './homework.schemas';
 
 @Injectable()
@@ -32,29 +32,7 @@ export class HomeworkStaffService {
     const allowed = allowedClassIds(actor);
     const classIds = allowed ? assignment.classIds.filter((id) => allowed.includes(id)) : assignment.classIds;
     if (classIds.length === 0) throw forbidden(assignmentId);
-    const [classes, students, submissions] = await Promise.all([
-      this.prisma.schoolClass.findMany({ where: { schoolId: actor.schoolId, id: { in: classIds } }, select: { id: true, name: true, grade: true, letter: true } }),
-      this.prisma.schoolStudent.findMany({
-        where: { schoolId: actor.schoolId, archived: false, classId: { in: classIds } },
-        select: { id: true, classId: true, lastName: true, firstName: true },
-      }),
-      this.prisma.schoolHomeworkSubmission.findMany({ where: { assignmentId, student: { classId: { in: classIds } } }, include: { photos: true } }),
-    ]);
-    const classOf = new Map(classes.map((c) => [c.id, c]));
-    const submissionOf = new Map(submissions.map((s) => [s.studentId, s]));
-    const rank = new Map([...classes].sort(compareClasses).map((c, i) => [c.id, i]));
-    const rows = [...students]
-      .sort((a, b) => (rank.get(a.classId ?? '') ?? 0) - (rank.get(b.classId ?? '') ?? 0) || `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`))
-      .map((s) => {
-        const submission = submissionOf.get(s.id);
-        return {
-          studentId: s.id,
-          name: `${s.lastName} ${s.firstName}`,
-          classId: s.classId,
-          className: (s.classId && classOf.get(s.classId)?.name) || '',
-          submission: submission ? toStaffSubmissionView(submission, (id) => this.urls.url(id)) : null,
-        };
-      });
+    const students = await this.studentRows(actor.schoolId, assignmentId, classIds);
     return {
       assignment: {
         id: assignment.id,
@@ -64,15 +42,37 @@ export class HomeworkStaffService {
         note: assignment.note,
         classIds,
       },
-      counts: {
-        total: rows.length,
-        submitted: rows.filter((r) => r.submission?.status === 'SUBMITTED').length,
-        accepted: rows.filter((r) => r.submission?.status === 'ACCEPTED').length,
-        returned: rows.filter((r) => r.submission?.status === 'RETURNED').length,
-        missing: rows.filter((r) => !r.submission).length,
-      },
-      students: rows,
+      counts: countStatuses(students.map((s) => s.submission?.status ?? null)),
+      students,
     };
+  }
+
+  /** Sinf -> familiya tartibidagi qatorlar: o'quvchi + (bo'lsa) topshirig'i. */
+  private async studentRows(schoolId: string, assignmentId: string, classIds: string[]) {
+    const [classes, students, submissions] = await Promise.all([
+      this.prisma.schoolClass.findMany({ where: { schoolId, id: { in: classIds } }, select: { id: true, name: true, grade: true, letter: true } }),
+      this.prisma.schoolStudent.findMany({
+        where: { schoolId, archived: false, classId: { in: classIds } },
+        select: { id: true, classId: true, lastName: true, firstName: true },
+      }),
+      this.prisma.schoolHomeworkSubmission.findMany({ where: { assignmentId, student: { classId: { in: classIds } } }, include: { photos: true } }),
+    ]);
+    const classOf = new Map(classes.map((c) => [c.id, c]));
+    const submissionOf = new Map(submissions.map((s) => [s.studentId, s]));
+    const rank = new Map([...classes].sort(compareClasses).map((c, i) => [c.id, i]));
+    const fullName = (s: { lastName: string; firstName: string }) => `${s.lastName} ${s.firstName}`;
+    return [...students]
+      .sort((a, b) => (rank.get(a.classId ?? '') ?? 0) - (rank.get(b.classId ?? '') ?? 0) || fullName(a).localeCompare(fullName(b)))
+      .map((s) => {
+        const submission = submissionOf.get(s.id);
+        return {
+          studentId: s.id,
+          name: fullName(s),
+          classId: s.classId,
+          className: (s.classId && classOf.get(s.classId)?.name) || '',
+          submission: submission ? toStaffSubmissionView(submission, (id) => this.urls.url(id)) : null,
+        };
+      });
   }
 
   async review(actor: SchoolActor, submissionId: string, body: unknown) {

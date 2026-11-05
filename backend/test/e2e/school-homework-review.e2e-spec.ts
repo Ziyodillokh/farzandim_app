@@ -4,9 +4,9 @@
 import { ChildDataPurgeService } from '../../src/modules/child-data-purge/child-data-purge.service';
 import { BUCKETS } from '../../src/common/storage/storage.constants';
 import { resetDb } from './db';
-import { TestChild } from './factories';
+import { createModerator, TestChild } from './factories';
 import { at, DAY, seedWorld, setNow, World } from './school-attendance-fixtures';
-import { createWritten, jpeg, linkNewChild, memoryStorage, MemoryStorage, schoolReq, submitHomework } from './school-child-fixtures';
+import { appReq, createWritten, jpeg, linkNewChild, memoryStorage, MemoryStorage, schoolReq, submitHomework } from './school-child-fixtures';
 import { createTestApp, TestApp } from './test-app';
 
 const bucketKeys = (storage: MemoryStorage) => [...storage.objects.keys()].filter((k) => k.startsWith(`${BUCKETS.schoolHomework}/`));
@@ -196,6 +196,36 @@ describe('School homework: xodim tomoni va ma\'lumotlarni o\'chirish', () => {
       expect(await t.prisma.schoolHomeworkSubmission.count({ where: { studentId: w.bek } })).toBe(1);
       expect(bucketKeys(storage)).toHaveLength(1);
       expect(await t.prisma.schoolStudent.findUniqueOrThrow({ where: { id: w.vali } })).toMatchObject({ childId: null });
+    });
+
+    it("a parent deleting their account deletes their children's submissions and objects (other families untouched)", async () => {
+      const a = await createWritten(t, w.admin, [w.classA, w.classB]);
+      await submit(a.id, w.child.token, 2);
+      await submit(a.id, bekChild.token, 1);
+
+      const res = await appReq(t, w.parent.token, 'DELETE', '/users/me');
+
+      expect(res.statusCode).toBe(200);
+      expect(await t.prisma.schoolHomeworkSubmission.count({ where: { studentId: w.vali } })).toBe(0);
+      expect(await t.prisma.schoolHomeworkSubmission.count({ where: { studentId: w.bek } })).toBe(1);
+      expect(bucketKeys(storage)).toHaveLength(1);
+    });
+
+    it("an admin hard-deleting a parent or a child device user removes the linked child's submissions and objects", async () => {
+      const moderator = await createModerator(t.prisma, ['manage_users']);
+      const a = await createWritten(t, w.admin, [w.classA, w.classB]);
+      await submit(a.id, w.child.token, 2);
+      await submit(a.id, bekChild.token, 1);
+      const del = (userId: string) =>
+        t.app.inject({ method: 'DELETE', url: `/api/admin/users/${userId}`, headers: { authorization: `Bearer ${moderator.token}` } });
+
+      expect((await del(w.parent.userId)).statusCode).toBe(200);
+      expect(await t.prisma.schoolHomeworkSubmission.count({ where: { studentId: w.vali } })).toBe(0);
+      expect(bucketKeys(storage)).toHaveLength(1);
+
+      expect((await del(bekChild.userId)).statusCode).toBe(200);
+      expect(await t.prisma.schoolHomeworkSubmission.count()).toBe(0);
+      expect(bucketKeys(storage)).toHaveLength(0);
     });
 
     it('the child deleting their own account deletes their submissions and objects, keeps the student record', async () => {

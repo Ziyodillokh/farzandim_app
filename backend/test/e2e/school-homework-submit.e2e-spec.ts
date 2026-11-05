@@ -3,6 +3,8 @@
 
 import { resetDb } from './db';
 import { at, DAY, seedWorld, setNow, World } from './school-attendance-fixtures';
+import { InFlightGate } from '../../src/school/homework/homework-gate';
+import { HomeworkSubmitService } from '../../src/school/homework/homework-submit.service';
 import { signHomeworkPhoto } from '../../src/school/homework/homework-signature';
 import { BUCKETS } from '../../src/common/storage/storage.constants';
 import {
@@ -124,6 +126,24 @@ describe('School homework: topshirish va rasm proksisi', () => {
 
       expect(exact.length).toBe(8 * 1024 * 1024);
       expect((await submit(a.id, [{ data: exact }])).statusCode).toBe(200);
+    });
+
+    it('refuses new uploads with 429 BUSY while too many are in flight, and recovers', async () => {
+      const a = await createWritten(t, w.admin, [w.classA]);
+      const service = t.app.get(HomeworkSubmitService, { strict: false }) as unknown as { gate: InFlightGate };
+      const original = service.gate;
+      service.gate = new InFlightGate(0);
+
+      try {
+        const busy = await submit(a.id, [{ data: jpeg('x') }]);
+        expect(busy.statusCode).toBe(429);
+        expect(busy.json()).toMatchObject({ code: 'BUSY' });
+        expect(await t.prisma.schoolHomeworkSubmission.count()).toBe(0);
+      } finally {
+        service.gate = original;
+      }
+      expect((await submit(a.id, [{ data: jpeg('x') }])).statusCode).toBe(200);
+      expect(original.inFlight).toBe(0);
     });
 
     it('requires multipart', async () => {
@@ -309,6 +329,20 @@ describe('School homework: topshirish va rasm proksisi', () => {
 
       storage.objects.clear();
       expect((await fetchUrl(photos[0].url)).statusCode).toBe(404);
+    });
+
+    it('answers 503 (not 404) when the storage itself fails', async () => {
+      const { photos } = await submitted();
+      const original = storage.getObject;
+      storage.getObject = async () => {
+        throw new Error('connect ETIMEDOUT');
+      };
+
+      try {
+        expect((await fetchUrl(photos[0].url)).statusCode).toBe(503);
+      } finally {
+        storage.getObject = original;
+      }
     });
   });
 });

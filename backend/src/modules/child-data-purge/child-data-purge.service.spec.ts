@@ -145,10 +145,10 @@ describe('ChildDataPurgeService', () => {
       const result = await service.deleteChildAccount(CHILD_USER);
 
       expect(prisma.schoolHomeworkPhoto.findMany).toHaveBeenCalledWith({
-        where: { submission: { student: { childId: CHILD_ID } } },
+        where: { submission: { student: { childId: { in: [CHILD_ID] } } } },
         select: { key: true },
       });
-      expect(prisma.schoolHomeworkSubmission.deleteMany).toHaveBeenCalledWith({ where: { student: { childId: CHILD_ID } } });
+      expect(prisma.schoolHomeworkSubmission.deleteMany).toHaveBeenCalledWith({ where: { student: { childId: { in: [CHILD_ID] } } } });
       const deleted = storage.delete.mock.calls.map((c) => `${c[0]}:${c[1]}`);
       expect(deleted).toEqual(
         expect.arrayContaining([

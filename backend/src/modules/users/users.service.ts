@@ -16,6 +16,7 @@ import { MailService } from '../../common/mail/mail.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { BUCKETS, BucketName } from '../../common/storage/storage.constants';
 import { ChildDataPurgeService } from '../child-data-purge/child-data-purge.service';
+import { deleteHomeworkOfChildren, homeworkMediaOfChildren } from '../../school/homework/homework-purge';
 import {
   hashPassword,
   verifyPassword,
@@ -152,11 +153,15 @@ export class UsersService {
     await this.prisma.$transaction(async (tx) => {
       const children = await tx.child.findMany({
         where: { parentId: userId },
-        select: { childUserId: true },
+        select: { id: true, childUserId: true },
       });
       const childUserIds = children
         .map((c) => c.childUserId)
         .filter((id): id is string => Boolean(id));
+
+      // Maktab yozma vazifalari: o'quvchi bog'lanishi (childId) child o'chganda SetNull
+      // bo'ladi — topshiriqlar yetim qolmasligi uchun avval o'chiramiz.
+      await deleteHomeworkOfChildren(tx, children.map((c) => c.id));
 
       // Cascade: parent delete removes children + all related data
       await tx.user.delete({ where: { id: userId } });
@@ -287,6 +292,9 @@ export class UsersService {
       push(BUCKETS.avatars, p.photoPath);
       push(BUCKETS.avatars, p.thumbnailPath);
     }
+
+    // Maktab yozma vazifa rasmlari (bolalarga bog'langan o'quvchilar topshiriqlari).
+    objects.push(...(await homeworkMediaOfChildren(this.prisma, childIds)));
 
     return objects;
   }

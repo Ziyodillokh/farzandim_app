@@ -4,15 +4,16 @@
 // Idempotentlik: klient `requestId` — shu so'rov bilan allaqachon saqlangan yozuv
 // qaytadi (rasmlar takrorlanmaydi). Tenant: faqat bolaning o'z sinfiga berilgan topshiriq.
 
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, SchoolHomeworkPhoto } from '@prisma/client';
 import type { FastifyRequest } from 'fastify';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../../common/database/prisma.service';
 import { tashkentDay } from '../../common/time/tashkent';
-import { requireEnrolledStudent } from '../common/child-student';
+import { EnrolledStudent, requireEnrolledStudent } from '../common/child-student';
 import { childAssignmentWhere } from '../learning/assignment-visibility';
 import { WRITTEN_KIND } from '../learning/school-learning.schemas';
+import { InFlightGate, MAX_CONCURRENT_UPLOADS } from './homework-gate';
 import { homeworkPhotoKey } from './homework-image';
 import { HomeworkPhotoUrlService } from './homework-photo-url.service';
 import { HomeworkStorageService } from './homework-storage.service';
@@ -30,10 +31,14 @@ interface CommitResult {
 }
 
 const assignmentNotFound = () => new NotFoundException({ code: 'ASSIGNMENT_NOT_FOUND', message: 'Written assignment not found' });
+const busy = () => new HttpException({ code: 'BUSY', message: 'Too many uploads in progress, retry shortly' }, HttpStatus.TOO_MANY_REQUESTS);
 const alreadyAccepted = () => new ConflictException({ code: 'ALREADY_ACCEPTED', message: 'Accepted homework cannot be changed' });
 
 @Injectable()
 export class HomeworkSubmitService {
+  /** Xotirani himoya qiladi: bir vaqtda cheklangan son yuklash (jarayon ichida). */
+  private readonly gate = new InFlightGate(MAX_CONCURRENT_UPLOADS);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: HomeworkStorageService,
@@ -47,6 +52,15 @@ export class HomeworkSubmitService {
       select: { id: true },
     });
     if (!assignment) throw assignmentNotFound();
+    if (!this.gate.tryEnter()) throw busy();
+    try {
+      return await this.process(student, assignmentId, req);
+    } finally {
+      this.gate.leave();
+    }
+  }
+
+  private async process(student: EnrolledStudent, assignmentId: string, req: FastifyRequest) {
     const upload = await readHomeworkUpload(req);
     const key = { assignmentId, studentId: student.studentId };
 

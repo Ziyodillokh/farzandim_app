@@ -15,7 +15,7 @@ import { forbidden, invalid, notFound } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
 import { buildCells, cellKey, LEARNING_MIN_COHORT, LearningCell, mondayOf, totalsOf } from './learning-cells';
 import { loadCatalog, PANEL_SUBJECT } from './school-learning-catalog';
-import { assignmentInputSchema, isWrittenInput, WRITTEN_KIND, WRITTEN_MATERIAL_ID } from './school-learning.schemas';
+import { AssignmentInput, assignmentInputSchema, isWrittenInput, WRITTEN_KIND, WRITTEN_MATERIAL_ID } from './school-learning.schemas';
 import { HomeworkStorageService } from '../homework/homework-storage.service';
 import { homeworkKeysOf } from '../homework/homework-purge';
 
@@ -263,10 +263,7 @@ export class SchoolLearningService {
     const data = parseOrThrow(assignmentInputSchema, input);
     for (const classId of data.classIds) assertClassInScope(actor, classId);
     if (data.dueDate < tashkentDay()) throw invalid('dueDate: errors.form.invalidDate');
-    const written = isWrittenInput(data);
-    const material = written ? null : (await loadCatalog(this.prisma)).find((m) => m.id === data.materialId);
-    if (!written && !material) throw invalid('materialId: errors.form.required');
-    const title = written ? (data.title ?? '') : material!.title;
+    const material = await this.resolveMaterial(data);
     const classIds = [...new Set(data.classIds)];
     const classes = await this.prisma.schoolClass.findMany({ where: { schoolId: actor.schoolId, id: { in: classIds } }, select: { id: true, name: true, grade: true, letter: true } });
     if (classes.length !== classIds.length) throw invalid('classIds: errors.form.required');
@@ -274,9 +271,9 @@ export class SchoolLearningService {
       const created = await tx.schoolLearningAssignment.create({
         data: {
           schoolId: actor.schoolId,
-          materialKind: written ? WRITTEN_KIND : material!.kind,
-          materialId: written ? WRITTEN_MATERIAL_ID : material!.id,
-          title: written ? title : null,
+          materialKind: material.kind,
+          materialId: material.id,
+          title: material.kind === WRITTEN_KIND ? material.title : null,
           estimatedMinutes: data.estimatedMinutes ?? null,
           classIds,
           dueDate: data.dueDate,
@@ -290,10 +287,10 @@ export class SchoolLearningService {
         {
           module: 'LEARNING',
           action: 'learning.assign',
-          summary: `"${title}" tayinlandi: ${names}`,
+          summary: `"${material.title}" tayinlandi: ${names}`,
           entityId: created.id,
           after: { materialId: created.materialId, classIds, dueDate: data.dueDate },
-          params: { title, classes: names },
+          params: { title: material.title, classes: names },
         },
         tx,
       );
@@ -310,6 +307,14 @@ export class SchoolLearningService {
         byStaffId: actor.staffId,
       };
     });
+  }
+
+  /** Yozma vazifa (sarlavha xodimdan) yoki katalog materiali (test / audiokitob). */
+  private async resolveMaterial(data: AssignmentInput): Promise<{ kind: string; id: string; title: string }> {
+    if (isWrittenInput(data)) return { kind: WRITTEN_KIND, id: WRITTEN_MATERIAL_ID, title: data.title ?? '' };
+    const material = (await loadCatalog(this.prisma)).find((m) => m.id === data.materialId);
+    if (!material) throw invalid('materialId: errors.form.required');
+    return material;
   }
 
   async deleteAssignment(actor: SchoolActor, id: string): Promise<void> {

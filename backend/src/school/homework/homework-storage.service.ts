@@ -4,6 +4,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { BUCKETS } from '../../common/storage/storage.constants';
 import { StorageService } from '../../common/storage/storage.service';
+import { deleteHomeworkObjects } from './homework-purge';
 
 @Injectable()
 export class HomeworkStorageService {
@@ -19,10 +20,7 @@ export class HomeworkStorageService {
     return this.storage.getObject(BUCKETS.schoolHomework, key);
   }
 
-  async deleteKeys(keys: readonly string[]): Promise<void> {
-    if (keys.length === 0) return;
-    const results = await Promise.allSettled(keys.map((key) => this.storage.delete(BUCKETS.schoolHomework, key)));
-    const failed = results.filter((r) => r.status === 'rejected').length;
-    if (failed > 0) this.logger.warn(`vazifa rasmlari: ${failed}/${keys.length} obyekt o'chirilmadi`);
+  deleteKeys(keys: readonly string[]): Promise<void> {
+    return deleteHomeworkObjects(this.storage, keys, this.logger);
   }
 }

@@ -1,6 +1,6 @@
 // Topshiriq ko'rinishlari: bola va xodim uchun (rasmlar imzolangan havola bilan).
 
-import { SchoolHomeworkPhoto, SchoolHomeworkSubmission } from '@prisma/client';
+import { SchoolHomeworkPhoto, SchoolHomeworkStatus, SchoolHomeworkSubmission } from '@prisma/client';
 
 export type SubmissionWithPhotos = SchoolHomeworkSubmission & { photos: SchoolHomeworkPhoto[] };
 export type PhotoUrl = (photoId: string) => string;
@@ -37,5 +37,17 @@ export function toSubmissionSummary(s: SchoolHomeworkSubmission, photoCount: num
     reviewedAt: s.reviewedAt?.toISOString() ?? null,
     reviewNote: s.reviewNote,
     photoCount,
+  };
+}
+
+/** Holatlar bo'yicha hisob; `null` — topshirmagan. */
+export function countStatuses(statuses: readonly (SchoolHomeworkStatus | null)[]) {
+  const count = (status: SchoolHomeworkStatus | null) => statuses.filter((s) => s === status).length;
+  return {
+    total: statuses.length,
+    submitted: count('SUBMITTED'),
+    accepted: count('ACCEPTED'),
+    returned: count('RETURNED'),
+    missing: count(null),
   };
 }
