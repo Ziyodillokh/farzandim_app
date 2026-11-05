@@ -1,4 +1,4 @@
-import { readExifOrientation, stripImageMetadata } from './image-metadata';
+import { MalformedImageError, readExifOrientation, stripImageMetadata, stripImageMetadataStrict } from './image-metadata';
 
 const SECRET = 'GPS-41.3111-69.2797';
 
@@ -131,5 +131,20 @@ describe('stripImageMetadata', () => {
 
     expect(stripImageMetadata(garbage)).toBe(garbage);
     expect(stripImageMetadata(truncated)).toBe(truncated);
+  });
+});
+
+describe('stripImageMetadataStrict', () => {
+  it('strips a valid JPEG exactly like the lenient variant', () => {
+    const input = jpeg(6);
+    const out = stripImageMetadataStrict(input);
+
+    expect(out.includes(SECRET)).toBe(false);
+    expect(out).toEqual(stripImageMetadata(input));
+  });
+
+  it('throws instead of passing unknown or truncated data through', () => {
+    expect(() => stripImageMetadataStrict(Buffer.from('not an image'))).toThrow(MalformedImageError);
+    expect(() => stripImageMetadataStrict(jpeg(6).subarray(0, 30))).toThrow(MalformedImageError);
   });
 });

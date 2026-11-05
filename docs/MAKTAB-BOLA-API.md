@@ -146,14 +146,16 @@ WRITTEN uchun `done = (submission.status === 'ACCEPTED')`. Ko'rinish oynasi o'zg
 
 ### `POST /api/child/school/assignments/:id/submission` (multipart) → `200`
 - Fayllar: **1–5** ta rasm (maydon nomi ixtiyoriy, tavsiya `files`), har biri **≤ 8 MB**. Format faqat **magic bytes**
-  bo'yicha: JPEG, PNG, WebP, HEIC/HEIF (klientning Content-Type/fayl nomiga ishonilmaydi).
+  bo'yicha: JPEG, PNG, WebP (klientning Content-Type/fayl nomiga ishonilmaydi). **HEIC/HEIF rad etiladi** (`415`) —
+  undagi EXIF/GPS'ni tozalab bo'lmaydi; ilova rasmni JPEG qilib yuboradi.
 - Matn maydonlari: `comment` (ixtiyoriy, ≤ 1000), `requestId` (ixtiyoriy UUID — idempotentlik).
 - Faqat bolaga ko'rinadigan **WRITTEN** topshiriq (o'z sinfi, 7 kundan ortiq kechikmagan); aks holda `404 ASSIGNMENT_NOT_FOUND`.
 - Holat ACCEPTED bo'lmasa ruxsat: qayta yuborish **rasm va izohni almashtiradi**, holat `SUBMITTED`ga qaytadi, baho
   maydonlari tozalanadi, eski MinIO obyektlari o'chadi. ACCEPTED → `409 { code: "ALREADY_ACCEPTED" }`.
 - **Idempotent:** shu (topshiriq, bola) uchun saqlangan `requestId` bilan bir xil so'rov takrorlansa, yangi yuklash
   qilinmaydi — joriy topshiriq qaytadi (ACCEPTED bo'lsa ham). Parallel so'rovlar advisory lock bilan ketma-ket.
-- EXIF/GPS JPEG, PNG, WebP'dan olib tashlanadi (yo'nalish saqlanadi). HEIC o'zgarishsiz saqlanadi.
+- EXIF/GPS olib tashlanadi (yo'nalish saqlanadi). Tuzilmasi buzilgan (tozalab bo'lmaydigan) fayl → `415` — metadata qolib ketmasin.
+- Butun tanani o'qish muddati **120 s**; oshsa ulanish uziladi va `408 { code: "UPLOAD_TIMEOUT" }` (sekin klient yuklash slotini band qilmasin).
 - Xatolar: fayl yo'q / 5 tadan ko'p / `comment` > 1000 / `requestId` UUID emas → `400 VALIDATION`
   (`files: errors.form.selectAtLeastOne|tooMany`, `comment: errors.form.tooLong`); rasm emas → `415 UNSUPPORTED_IMAGE`;
   fayl > 8 MB → `413 FILE_TOO_LARGE`; jarayonda bir vaqtda 6 tadan ko'p yuklash ketayotgan bo'lsa → `429 { code: "BUSY" }`
@@ -184,8 +186,8 @@ yuborgan bo'lsa (`submittedAt` o'zgargan) → `409`. Javob — topshiriq (`revie
 ### Rasm proksisi: `GET /api/school/homework/photos/:photoId?exp=&sig=` (`@Public`)
 HMAC imzo (kalit `JWT_ACCESS_SECRET`dan **alohida maqsad belgisi** `school-homework-photo:v1` bilan ajratilgan; yangi env yo'q).
 Muddat soat chegarasiga yaxlitlanadi → havola 1–2 soat amal qiladi va soat ichida o'zgarmaydi (kesh). Imzo noto'g'ri/muddati
-o'tgan → `403`; rasm yoki obyekt yo'q → `404`; MinIO'ning o'zi ishlamasa → `503` (logga yoziladi, 404 emas). Javob: saqlangan `Content-Type`, `Cache-Control: private, max-age=3600`,
-`X-Content-Type-Options: nosniff`. Xodim va bola javoblari shu havolalarni beradi (MinIO presigned URL prod'da buzuq).
+o'tgan → `403`; rasm yoki obyekt yo'q → `404`; MinIO'ning o'zi ishlamasa → `503` (logga yoziladi, 404 emas). Javob: saqlangan `Content-Type`,
+`X-Content-Type-Options: nosniff`; `Cache-Control: private, max-age=3600` faqat muvaffaqiyatli (`200`) javobda. Xodim va bola javoblari shu havolalarni beradi (MinIO presigned URL prod'da buzuq).
 
 ### Ma'lumotlarni o'chirish
 - To'rt yo'lda ham shu bolaga bog'langan o'quvchining barcha topshiriqlari va MinIO rasmlari o'chadi, o'quvchi yozuvi qoladi:
@@ -208,7 +210,7 @@ o'tgan → `403`; rasm yoki obyekt yo'q → `404`; MinIO'ning o'zi ishlamasa →
 7. `POST …/submission` doim `200` (yaratish ham, almashtirish ham).
 8. Yozma bo'lmagan turlarda `title` saqlanmaydi (ko'rinadigan nom — katalogdan, "avvalgidek").
 9. Submission'ga ko'rinish oynasi ro'yxatniki bilan bir xil (`assignment-visibility.ts`): 7 kundan ortiq kechikkan vazifa topshirilmaydi.
-10. HEIC: qayta kodlanmaydi, EXIF'i tozalanmaydi; brauzerda (panel) ko'rinmasligi mumkin — panel `contentType` bo'yicha yuklab olish havolasi ko'rsatsin.
+10. HEIC qabul qilinmaydi (EXIF/GPS'ni tozalab bo'lmaydi, panel `<img>` da ham ko'rinmaydi); bola ilovasi rasmni JPEG qilib yuboradi.
 11. `audience.includeStudents` har doim javobda bor — mavjud e2e (`audience` `toEqual`) shunga moslab yangilandi.
 12. Yangi audit modul qo'shilmadi: dars jadvali → `CLASSES`, baholash → `LEARNING`. Yangi i18n kalitlari panel uchun:
     `errors.form.invalidWeekday|invalidPeriod|duplicate|tooMany|outOfRange`.

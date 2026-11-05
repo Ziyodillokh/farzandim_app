@@ -83,19 +83,19 @@ describe('School homework: topshirish va rasm proksisi', () => {
       expect(stored.every((b) => b.length > 0)).toBe(true);
     });
 
-    it('accepts jpeg, png, webp and heic by magic bytes (any declared type) and up to 5 files', async () => {
+    it('accepts jpeg, png and webp by magic bytes (any declared type) and up to 5 files', async () => {
       const a = await createWritten(t, w.admin, [w.classA]);
 
       const res = await submit(a.id, [
         { data: jpeg('a'), contentType: 'application/octet-stream', filename: 'x.bin' },
         { data: png() },
         { data: webp() },
-        { data: heic(), filename: 'IMG_1.HEIC', contentType: 'image/heic' },
+        { data: png(), filename: 'IMG_1.PNG' },
         { data: jpeg('e'), field: 'photos' },
       ]);
 
       expect(res.statusCode).toBe(200);
-      expect(res.json().photos.map((p: { contentType: string }) => p.contentType)).toEqual(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/jpeg']);
+      expect(res.json().photos.map((p: { contentType: string }) => p.contentType)).toEqual(['image/jpeg', 'image/png', 'image/webp', 'image/png', 'image/jpeg']);
       expect(bucketKeys(storage)).toHaveLength(5);
     });
 
@@ -110,6 +110,9 @@ describe('School homework: topshirish va rasm proksisi', () => {
       expect((await submit(a.id, [{ data: jpeg('ok') }, { data: Buffer.from('%PDF-1.7 not an image') }])).statusCode).toBe(415);
       expect((await submit(a.id, [{ data: Buffer.from('GIF89a.........') }])).statusCode).toBe(415);
       expect((await submit(a.id, [{ data: Buffer.alloc(0) }])).statusCode).toBe(415);
+      // HEIC: EXIF/GPS'ni tozalay olmaymiz — rad etiladi; buzilgan JPEG ham (metadata qolib ketmasin).
+      expect((await submit(a.id, [{ data: heic(), filename: 'IMG_1.HEIC', contentType: 'image/heic' }])).statusCode).toBe(415);
+      expect((await submit(a.id, [{ data: jpeg('cut').subarray(0, 24) }])).statusCode).toBe(415);
       const big = Buffer.concat([jpeg('big'), Buffer.alloc(8 * 1024 * 1024)]);
       expect((await submit(a.id, [{ data: big }])).statusCode).toBe(413);
       expect((await submit(a.id, [{ data: jpeg('c') }], { comment: 'x'.repeat(1001) })).json()).toMatchObject({ message: 'comment: errors.form.tooLong' });
@@ -326,6 +329,7 @@ describe('School homework: topshirish va rasm proksisi', () => {
 
       const unknown = await t.app.inject({ method: 'GET', url: `/api/school/homework/photos/${ghost}?exp=${exp}&sig=${signHomeworkPhoto(ghost, exp, secret)}` });
       expect(unknown.statusCode).toBe(404);
+      expect(unknown.headers['cache-control']).toBeUndefined(); // xato javobi keshlanmaydi
 
       storage.objects.clear();
       expect((await fetchUrl(photos[0].url)).statusCode).toBe(404);

@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Header, HttpCode, HttpStatus, Param, Post, Query, Req, StreamableFile, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Header, HttpCode, HttpStatus, Param, Post, Query, Req, Res, StreamableFile, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { FastifyRequest } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { CurrentUser, Public, Roles } from '../../common/decorators';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
@@ -43,7 +43,7 @@ export class HomeworkChildController {
   @Post(':id/submission')
   @HttpCode(HttpStatus.OK)
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: "Yozma vazifani topshirish: 1-5 rasm (JPEG/PNG/WebP/HEIC, <= 8 MB) + comment + requestId" })
+  @ApiOperation({ summary: "Yozma vazifani topshirish: 1-5 rasm (JPEG/PNG/WebP, <= 8 MB) + comment + requestId" })
   submission(@CurrentUser() user: JwtPayload, @Param('id') id: string, @Req() req: FastifyRequest) {
     return this.submit.submit(user.userId, id, req);
   }
@@ -60,11 +60,17 @@ export class HomeworkPhotoController {
 
   @Get(':photoId')
   @Public()
-  @Header('Cache-Control', 'private, max-age=3600')
   @Header('X-Content-Type-Options', 'nosniff')
   @ApiOperation({ summary: 'Yozma vazifa rasmi (imzolangan havola)' })
-  async photo(@Param('photoId') photoId: string, @Query('exp') exp?: string, @Query('sig') sig?: string) {
+  async photo(
+    @Param('photoId') photoId: string,
+    @Res({ passthrough: true }) reply: FastifyReply,
+    @Query('exp') exp?: string,
+    @Query('sig') sig?: string,
+  ) {
     const object = await this.photos.read(photoId, exp, sig);
+    // Faqat muvaffaqiyatli javob keshlanadi (403/404/503 emas).
+    reply.header('Cache-Control', 'private, max-age=3600');
     return new StreamableFile(object.body, { type: object.contentType });
   }
 }
