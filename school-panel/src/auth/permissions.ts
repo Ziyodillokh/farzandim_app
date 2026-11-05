@@ -41,7 +41,6 @@ export const PERMISSIONS = [
   'assessments.manage',
   'development.view',
   'development.individual',
-  'timetable.manage',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -83,7 +82,6 @@ export const ROLES: Record<RoleKey, RoleDefinition> = {
       'learning.view',
       'reports.view',
       'development.view',
-      'timetable.manage',
     ],
   },
   ADMIN: {
@@ -119,7 +117,6 @@ export const ROLES: Record<RoleKey, RoleDefinition> = {
       'learning.assign',
       'reports.view',
       'development.view',
-      'timetable.manage',
     ],
   },
   HOMEROOM: {
@@ -144,7 +141,6 @@ export const ROLES: Record<RoleKey, RoleDefinition> = {
       'learning.assign',
       'development.view',
       'development.individual',
-      'timetable.manage',
     ],
   },
   PSYCHOLOGIST: {
