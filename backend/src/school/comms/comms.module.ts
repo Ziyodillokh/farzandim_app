@@ -8,6 +8,8 @@ import { SchoolCoreModule } from '../school-core.module';
 import { AnnouncementDeliveryService } from './announcement-delivery.service';
 import { AnnouncementSendService } from './announcement-send.service';
 import { AnnouncementsService } from './announcements.service';
+import { ChildAnnouncementsController } from './child-announcements.controller';
+import { ChildAnnouncementsService } from './child-announcements.service';
 import { CommsAnnouncementsController } from './comms-announcements.controller';
 import { CommsDispatcherService } from './comms-dispatcher.service';
 import { CommsOverviewService } from './comms-overview.service';
@@ -31,6 +33,7 @@ import { VerificationsService } from './verifications.service';
     CommsPaymentsController,
     CommsVerificationsController,
     ParentSchoolCommsController,
+    ChildAnnouncementsController,
   ],
   providers: [
     CommsPushService,
@@ -44,6 +47,7 @@ import { VerificationsService } from './verifications.service';
     CommsOverviewService,
     CommsDispatcherService,
     ParentSchoolCommsService,
+    ChildAnnouncementsService,
   ],
 })
 export class CommsModule {}

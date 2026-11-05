@@ -21,11 +21,12 @@ import { SchoolModeModule } from './school-mode/school-mode.module';
 import { StaffController } from './staff/staff.controller';
 import { StaffService } from './staff/staff.service';
 import { StudentsModule } from './students/students.module';
+import { TimetableModule } from './timetable/timetable.module';
 import { SchoolInfoController } from './structure/school-info.controller';
 import { SchoolInfoService } from './structure/school-info.service';
 
 @Module({
-  imports: [SchoolCoreModule, StudentsModule, AttendanceModule, CommsModule, SchoolModeModule, CareModule, InsightsModule, SchoolLearningModule, AssessmentsModule, DevelopmentModule],
+  imports: [SchoolCoreModule, StudentsModule, AttendanceModule, CommsModule, SchoolModeModule, CareModule, InsightsModule, SchoolLearningModule, AssessmentsModule, DevelopmentModule, TimetableModule],
   controllers: [
     SchoolAuthController,
     SchoolInfoController,

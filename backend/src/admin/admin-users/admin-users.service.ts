@@ -14,6 +14,8 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { EnvConfig } from '../../common/config/env.schema';
 import { FcmService } from '../../common/fcm/fcm.service';
+import { StorageService } from '../../common/storage/storage.service';
+import { deleteHomeworkObjects, deleteHomeworkOfChildren, homeworkKeysOf } from '../../school/homework/homework-purge';
 import { AdminAuditService } from '../../common/audit/admin-audit.service';
 import { tr } from '../../common/i18n/notification-i18n';
 import { GrantSubscriptionDto } from './dto/grant-subscription.dto';
@@ -62,6 +64,7 @@ export class AdminUsersService {
     private readonly config: ConfigService<EnvConfig, true>,
     private readonly fcm: FcmService,
     private readonly audit: AdminAuditService,
+    private readonly storage: StorageService,
   ) {}
 
   // Bola fotosi backend proxy orqali (signed MinIO URL brauzerga yetmaydi).
@@ -608,13 +611,25 @@ export class AdminUsersService {
       select: { id: true, name: true, role: true, phone: true, email: true },
     });
     if (!user) throw new NotFoundException('User not found');
+    // Maktab yozma vazifalari: o'quvchi bog'lanishi (`childId`) child o'chganda SetNull
+    // bo'ladi, shuning uchun topshiriqlar (va rasm obyektlari) DB o'chirishdan OLDIN topiladi.
+    const children = await this.prisma.child.findMany({
+      where: { OR: [{ parentId: id }, { childUserId: id }] },
+      select: { id: true },
+    });
+    const childIds = children.map((c) => c.id);
+    const homeworkKeys = await homeworkKeysOf(this.prisma, { student: { childId: { in: childIds } } });
     try {
-      await this.prisma.user.delete({ where: { id } });
-      return { ok: true, deletedId: id };
+      await this.prisma.$transaction(async (tx) => {
+        await deleteHomeworkOfChildren(tx, childIds);
+        await tx.user.delete({ where: { id } });
+      });
     } catch (err: any) {
       if (err?.code === 'P2025')
         throw new NotFoundException('User not found');
       throw err;
     }
+    await deleteHomeworkObjects(this.storage, homeworkKeys, this.logger);
+    return { ok: true, deletedId: id };
   }
 }

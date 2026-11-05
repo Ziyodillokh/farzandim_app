@@ -2031,6 +2031,7 @@ model School {
   psychResults        SchoolPsychResult[]
   staffNotifications  SchoolStaffNotification[]
   learningAssignments SchoolLearningAssignment[]
+  timetableLessons    SchoolTimetableLesson[]
 
   @@map("schools")
 }
@@ -2081,11 +2082,12 @@ model SchoolClass {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  school   School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  shift    SchoolShift        @relation(fields: [shiftId], references: [id], onDelete: Restrict)
-  homeroom SchoolStaff?       @relation("ClassHomeroom", fields: [homeroomStaffId], references: [id], onDelete: SetNull)
-  staff    SchoolStaffClass[]
-  students SchoolStudent[]
+  school           School                  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  shift            SchoolShift             @relation(fields: [shiftId], references: [id], onDelete: Restrict)
+  homeroom         SchoolStaff?            @relation("ClassHomeroom", fields: [homeroomStaffId], references: [id], onDelete: SetNull)
+  staff            SchoolStaffClass[]
+  students         SchoolStudent[]
+  timetableLessons SchoolTimetableLesson[]
 
   @@unique([schoolId, name])
   @@index([schoolId, grade])
@@ -2208,12 +2210,14 @@ model SchoolStudent {
   createdAt   DateTime       @default(now()) @map("created_at")
   updatedAt   DateTime       @updatedAt @map("updated_at")
 
-  school     School                  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class      SchoolClass?            @relation(fields: [classId], references: [id], onDelete: SetNull)
-  child      Child?                  @relation(fields: [childId], references: [id], onDelete: SetNull)
-  guardians  SchoolStudentGuardian[]
-  attendance SchoolAttendance[]
-  notes      SchoolStudentNote[]
+  school              School                          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class               SchoolClass?                    @relation(fields: [classId], references: [id], onDelete: SetNull)
+  child               Child?                          @relation(fields: [childId], references: [id], onDelete: SetNull)
+  guardians           SchoolStudentGuardian[]
+  attendance          SchoolAttendance[]
+  notes               SchoolStudentNote[]
+  announcementReads   SchoolAnnouncementStudentRead[]
+  homeworkSubmissions SchoolHomeworkSubmission[]
 
   @@unique([schoolId, studentCode])
   @@index([schoolId, classId])
@@ -2400,8 +2404,9 @@ model SchoolAnnouncement {
   createdAt   DateTime            @default(now()) @map("created_at")
   updatedAt   DateTime            @updatedAt @map("updated_at")
 
-  school     School                       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  deliveries SchoolAnnouncementDelivery[]
+  school       School                          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  deliveries   SchoolAnnouncementDelivery[]
+  studentReads SchoolAnnouncementStudentRead[]
 
   @@index([schoolId, status])
   @@index([status, scheduledAt])
@@ -2732,20 +2737,110 @@ model SchoolNotificationRead {
   @@map("school_notification_reads")
 }
 
-/// O'qituvchi topshirig'i: Parvoz kontenti (video / audiokitob / test) sinflarga.
+/// O'qituvchi topshirig'i: Parvoz kontenti (video / audiokitob / test) yoki
+/// yozma vazifa (`materialKind` = WRITTEN, `materialId` = 'written') sinflarga.
 model SchoolLearningAssignment {
-  id           String   @id @default(uuid())
-  schoolId     String   @map("school_id")
-  materialKind String   @map("material_kind")
-  materialId   String   @map("material_id")
-  classIds     String[] @map("class_ids")
-  dueDate      String   @map("due_date")
-  note         String   @default("")
-  byStaffId    String   @map("by_staff_id")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id               String   @id @default(uuid())
+  schoolId         String   @map("school_id")
+  materialKind     String   @map("material_kind")
+  materialId       String   @map("material_id")
+  /// Yozma vazifa sarlavhasi (WRITTEN uchun majburiy, <= 120); boshqalarda null.
+  title            String?
+  /// Taxminiy vaqt, daqiqa (1-240), ixtiyoriy.
+  estimatedMinutes Int?     @map("estimated_minutes")
+  classIds         String[] @map("class_ids")
+  dueDate          String   @map("due_date")
+  note             String   @default("")
+  byStaffId        String   @map("by_staff_id")
+  createdAt        DateTime @default(now()) @map("created_at")
 
-  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school      School                     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  submissions SchoolHomeworkSubmission[]
 
   @@index([schoolId, dueDate])
   @@map("school_learning_assignments")
+}
+
+enum SchoolHomeworkStatus {
+  SUBMITTED
+  ACCEPTED
+  RETURNED
+}
+
+/// Yozma vazifa topshirig'i: o'quvchi daftar rasmlarini yuboradi, o'qituvchi
+/// qabul qiladi yoki qaytaradi. (topshiriq, o'quvchi) bo'yicha bitta yozuv;
+/// qayta yuborish rasmlarni almashtiradi.
+model SchoolHomeworkSubmission {
+  id                String               @id @default(uuid())
+  assignmentId      String               @map("assignment_id")
+  studentId         String               @map("student_id")
+  comment           String?
+  status            SchoolHomeworkStatus @default(SUBMITTED)
+  submittedAt       DateTime             @default(now()) @map("submitted_at")
+  reviewedAt        DateTime?            @map("reviewed_at")
+  reviewedByStaffId String?              @map("reviewed_by_staff_id")
+  reviewNote        String?              @map("review_note")
+  /// Klient bergan UUID: takroriy so'rov (tarmoq qayta urinishi) bir xil natija beradi.
+  requestId         String?              @map("request_id")
+
+  assignment SchoolLearningAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    SchoolStudent            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  photos     SchoolHomeworkPhoto[]
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId])
+  @@map("school_homework_submissions")
+}
+
+/// Topshiriq rasmi (MinIO `school-homework` bucket); bayt-lar backend proksi
+/// orqali beriladi (imzolangan havola).
+model SchoolHomeworkPhoto {
+  id           String @id @default(uuid())
+  submissionId String @map("submission_id")
+  key          String
+  contentType  String @map("content_type")
+  size         Int
+  position     Int
+
+  submission SchoolHomeworkSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId, position])
+  @@map("school_homework_photos")
+}
+
+/// Sinf dars jadvali: hafta kuni (1 = dushanba … 6 = shanba) + smena dars raqami.
+/// `subject` — LearningSubject kaliti (kichik harf, masalan 'math') yoki erkin nom.
+model SchoolTimetableLesson {
+  id          String   @id @default(uuid())
+  schoolId    String   @map("school_id")
+  classId     String   @map("class_id")
+  weekday     Int
+  periodNo    Int      @map("period_no")
+  subject     String
+  room        String?
+  teacherName String?  @map("teacher_name")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  school School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class  SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, weekday, periodNo])
+  @@index([schoolId])
+  @@map("school_timetable_lessons")
+}
+
+/// Bola ilovasida e'lon o'qildi (o'quvchi bo'yicha; ota-ona o'qishi alohida — Delivery).
+model SchoolAnnouncementStudentRead {
+  id             String   @id @default(uuid())
+  announcementId String   @map("announcement_id")
+  studentId      String   @map("student_id")
+  readAt         DateTime @default(now()) @map("read_at")
+
+  announcement SchoolAnnouncement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  student      SchoolStudent      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, studentId])
+  @@index([studentId])
+  @@map("school_announcement_student_reads")
 }

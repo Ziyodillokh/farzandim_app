@@ -65,6 +65,9 @@ export const monthReportQuerySchema = z.object({ month: monthSchema, classId: id
 
 export const studentMonthQuerySchema = z.object({ month: monthSchema });
 
+/** Bola ilovasi: `?month=YYYY-MM`, bo'sh bo'lsa joriy oy. */
+export const childMonthQuerySchema = z.object({ month: monthSchema.optional() });
+
 export const trendQuerySchema = z.object({
   daysBack: z.coerce.number().int().min(0).max(120).default(14),
 });

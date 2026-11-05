@@ -48,6 +48,8 @@ export const audienceSchema = z
     kind: z.enum(AUDIENCE_KINDS),
     classIds: idList().default([]),
     guardianIds: idList().default([]),
+    /** E'lon o'quvchilarning o'z ilovasida ham ko'rinadi (faqat SCHOOL / CLASSES). */
+    includeStudents: z.boolean({ error: msg.required }).default(false),
   })
   .superRefine((value, ctx) => {
     if (value.kind === 'CLASSES' && value.classIds.length === 0) {
@@ -61,6 +63,7 @@ export const audienceSchema = z
     kind: value.kind,
     classIds: value.kind === 'CLASSES' ? [...new Set(value.classIds)] : [],
     guardianIds: value.kind === 'GUARDIANS' ? [...new Set(value.guardianIds)] : [],
+    includeStudents: value.kind !== 'GUARDIANS' && value.includeStudents,
   }));
 
 export type Audience = z.output<typeof audienceSchema>;
@@ -159,4 +162,11 @@ export const overviewQuerySchema = z.object({
 export const parentPageSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+/** Bola ilovasi e'lonlari: kursor (opaque) + sahifa hajmi. */
+export const CHILD_ANNOUNCEMENTS_MAX_LIMIT = 50;
+export const childAnnouncementsQuerySchema = z.object({
+  cursor: z.string().max(200).optional(),
+  limit: z.coerce.number().int().min(1).max(CHILD_ANNOUNCEMENTS_MAX_LIMIT).default(20),
 });

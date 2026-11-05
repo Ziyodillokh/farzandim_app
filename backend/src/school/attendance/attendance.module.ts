@@ -7,6 +7,7 @@ import { SchoolCoreModule } from '../school-core.module';
 import { AttendanceAbsenceCron } from './attendance-absence.cron';
 import { AttendanceArrivalService } from './attendance-arrival.service';
 import { AttendanceBoardService } from './attendance-board.service';
+import { AttendanceChildHistoryService } from './attendance-child-history.service';
 import { AttendanceChildService } from './attendance-child.service';
 import { AttendanceChildController, AttendanceParentController } from './attendance-consumer.controller';
 import { AttendanceEarlyExitService } from './attendance-early-exit.service';
@@ -41,6 +42,7 @@ import { AttendanceController } from './attendance.controller';
     AttendanceEarlyExitService,
     AttendanceReportsService,
     AttendanceChildService,
+    AttendanceChildHistoryService,
     AttendanceParentService,
     AttendanceAbsenceCron,
   ],
