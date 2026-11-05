@@ -24,6 +24,7 @@ import {
   Receipt,
   FolderOpen,
   Telescope,
+  Route,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ParvozLogo } from './parvoz-logo';
@@ -77,6 +78,7 @@ const sections: NavSection[] = [
       },
       { label: 'Konkurslar', href: '/olympiads', icon: Trophy },
       { label: 'Kelajak savollari', href: '/kelajak', icon: Telescope },
+      { label: 'Mavzular', href: '/learning/topics', icon: Route },
       {
         label: 'Monetizatsiya',
         icon: CreditCard,
