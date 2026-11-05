@@ -55,6 +55,24 @@ export function stripImageMetadata(input: Buffer): Buffer {
   return input;
 }
 
+/** Rasm tuzilmasi buzilgan yoki formati tanilmagan. */
+export class MalformedImageError extends Error {
+  constructor() {
+    super('Malformed or unsupported image');
+  }
+}
+
+/**
+ * Qat'iy variant: format JPEG/PNG/WebP emas yoki tuzilma buzilgan bo'lsa xato tashlaydi —
+ * metadata qolib ketishi mumkin bo'lgan faylni saqlamaslik uchun (chaqiruvchi rad etadi).
+ */
+export function stripImageMetadataStrict(input: Buffer): Buffer {
+  if (isJpeg(input)) return stripJpeg(input);
+  if (isPng(input)) return stripPng(input);
+  if (isWebp(input)) return stripWebp(input);
+  throw new MalformedImageError();
+}
+
 function isJpeg(b: Buffer): boolean {
   return b.length > 4 && b[0] === 0xff && b[1] === JPEG_SOI;
 }
@@ -79,7 +97,7 @@ function stripJpeg(input: Buffer): Buffer {
   let offset = 2;
 
   while (offset < input.length) {
-    if (input[offset] !== 0xff) return input; // kutilmagan struktura
+    if (input[offset] !== 0xff) throw new MalformedImageError(); // kutilmagan struktura
     const marker = input[offset + 1];
     if (marker === 0xff) {
       offset += 1; // to'ldiruvchi bayt
@@ -96,7 +114,7 @@ function stripJpeg(input: Buffer): Buffer {
     }
     const length = input.readUInt16BE(offset + 2);
     const end = offset + 2 + length;
-    if (length < 2 || end > input.length) return input;
+    if (length < 2 || end > input.length) throw new MalformedImageError();
     const segment = input.subarray(offset, end);
     if (JPEG_DROPPED_MARKERS.has(marker)) {
       if (marker === JPEG_APP1) {
@@ -178,7 +196,7 @@ function stripPng(input: Buffer): Buffer {
     const length = input.readUInt32BE(offset);
     const type = input.toString('ascii', offset + 4, offset + 8);
     const end = offset + 12 + length;
-    if (end > input.length) return input;
+    if (end > input.length) throw new MalformedImageError();
     if (!PNG_DROPPED_CHUNKS.has(type)) kept.push(input.subarray(offset, end));
     offset = end;
     if (type === 'IEND') break;
@@ -195,7 +213,7 @@ function stripWebp(input: Buffer): Buffer {
     const type = input.toString('ascii', offset, offset + 4);
     const size = input.readUInt32LE(offset + 4);
     const end = offset + 8 + size + (size % 2); // juft chegaraga to'ldirish
-    if (end > input.length) return input;
+    if (end > input.length) throw new MalformedImageError();
     if (!WEBP_DROPPED_CHUNKS.has(type)) {
       const chunk = Buffer.from(input.subarray(offset, end));
       if (type === 'VP8X' && chunk.length > 8) {
