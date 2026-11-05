@@ -170,8 +170,11 @@ math 38, native 31, physics 25, russian 28); ikkinchi `--apply` ishga tushirishd
 1. `main`ga merge → CI `prisma migrate deploy` migratsiyani qo'llaydi. U **additive**: yangi jadval, nullable
    ustunlar, indekslar, FK (`ON DELETE SET NULL`); eski ilovalar va ma'lumotlar o'zgarmaydi. Ilova kodi migratsiyadan
    keyin ishga tushadi (mavjud deploy tartibi), eski ilova versiyalari yangi maydonlarni e'tiborsiz qoldiradi.
-2. Deploydan keyin serverda: avval `backfill-topics.ts` (dry-run), hisobotni ko'rib chiqing, keyin `--apply`.
-   Backfill takror ishga tushirilsa zarar yo'q.
+2. **Qaror (2026-11-06): backfill prod'da `--apply` qilinmaydi.** Mavjud 330 savoldagi erkin `topic` matnidan
+   273 ta mavzu chiqadi va har birida 1–2 savol bo'ladi (dry-run). Bu katalogni chalkashtirib yuboradi.
+   Shuning o'rniga metodistlar admin panelning «Mavzular» sahifasida dastur mavzularini (fan, sinf, tartib)
+   o'zlari yaratadi va «Mavzusiz» filtri orqali mavjud savollarni ularga biriktiradi. Skript tahlil uchun
+   (dry-run) qoladi; takror ishga tushirilsa zarar yo'q.
 3. Kontent jamoasi admin panelda mavzularni tartiblaydi/nomlaydi va har mavzuga 10–20+ savol yuklaydi
    (`POST /admin/learning/topics/:id/questions` yoki import `topicId`). 10 ta faol savol (bola sinfi uchun)
    to'lguncha mavzu `available: false` — ilova aralash kunlik mashqda qoladi.
