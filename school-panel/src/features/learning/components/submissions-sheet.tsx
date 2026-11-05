@@ -12,6 +12,7 @@ import type { AssignmentRow } from '@/data/mock/services/learning';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { useAssignmentSubmissions, useLearningClassOptions } from '../hooks';
+import { assignmentTitle } from '../lib/format';
 import { countSubmissions, filterRows, stateOf, type SubmissionFilter } from '../lib/submissions';
 import { ReviewDrawer } from './review-drawer';
 import { SubmissionStatusChip } from './submission-status';
@@ -77,7 +78,7 @@ export function SubmissionsSheet({ assignment, onClose }: { assignment: Assignme
       <Sheet open={assignment !== null} onOpenChange={(open) => !open && onClose()}>
         <SheetContent className="w-[calc(100%-1rem)] overflow-y-auto sm:max-w-3xl">
           <SheetHeader>
-            <SheetTitle className="pr-8">{assignment?.materialTitle ?? t('learning.submissions.title')}</SheetTitle>
+            <SheetTitle className="pr-8">{assignment ? assignmentTitle(assignment) : t('learning.submissions.title')}</SheetTitle>
             <SheetDescription>
               {assignment ? `${assignment.classNames.join(', ')} · ${formatDate(assignment.dueDate, 'd MMM yyyy')}` : t('learning.submissions.title')}
             </SheetDescription>

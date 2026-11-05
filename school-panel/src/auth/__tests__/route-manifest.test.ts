@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { roleHas } from '../permissions';
+import { PERMISSIONS, roleHas, ROLES } from '../permissions';
 import { findRoute, NAV_GROUP_ORDER, ROUTES } from '../route-manifest';
 
 describe('findRoute', () => {
@@ -31,5 +31,21 @@ describe('menyu tartibi', () => {
   it('yangi sahifalar o\'z ruxsati bilan tekshiriladi', () => {
     expect(findRoute('/assessments/view')?.perm).toBe('assessments.manage');
     expect(findRoute('/development')?.perm).toBe('development.view');
+  });
+});
+
+describe('dars jadvali', () => {
+  it('sahifa Maktab guruhida, School Mode bo\'limidan keyin; ko\'rish — classes.view', () => {
+    const school = ROUTES.filter((r) => r.group === 'school').map((r) => r.path);
+    expect(school.indexOf('/timetable')).toBe(school.indexOf('/school-mode') + 1);
+    expect(findRoute('/timetable')?.perm).toBe('classes.view');
+  });
+
+  it('tahrirlash (timetable.manage): direktor, admin, sinf rahbari; o\'qituvchi faqat ko\'radi', () => {
+    expect(PERMISSIONS).toContain('timetable.manage');
+    const editors = Object.values(ROLES).filter((r) => r.permissions.includes('timetable.manage')).map((r) => r.key).sort();
+    expect(editors).toEqual(['ADMIN', 'DIRECTOR', 'HOMEROOM']);
+    expect(roleHas('TEACHER', 'classes.view')).toBe(true);
+    expect(roleHas('TEACHER', 'timetable.manage')).toBe(false);
   });
 });

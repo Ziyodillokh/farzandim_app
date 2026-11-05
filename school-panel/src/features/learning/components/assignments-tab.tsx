@@ -15,7 +15,7 @@ import type { AssignmentRow } from '@/data/mock/services/learning';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { useDeleteAssignment, useLearningAssignments } from '../hooks';
-import { KIND_ICONS, KIND_TONES } from '../lib/format';
+import { assignmentKind, assignmentTitle, isWrittenAssignment, KIND_ICONS, KIND_TONES } from '../lib/format';
 import { AssignmentFormDialog } from './assignment-form-dialog';
 import { SubmissionCounter } from './submission-counter';
 import { SubmissionsSheet } from './submissions-sheet';
@@ -42,18 +42,19 @@ export function AssignmentsTab() {
         key: 'material',
         header: t('learning.assignments.columns.material'),
         cell: (a) => {
-          const Icon = a.materialKind ? KIND_ICONS[a.materialKind] : ClipboardList;
+          const kind = assignmentKind(a);
+          const Icon = kind ? KIND_ICONS[kind] : ClipboardList;
           return (
             <div className="flex items-center gap-3">
-              <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset', a.materialKind ? KIND_TONES[a.materialKind] : 'bg-muted ring-border')}>
+              <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset', kind ? KIND_TONES[kind] : 'bg-muted ring-border')}>
                 <Icon className="h-4 w-4" />
               </span>
               <div className="min-w-0">
-                <p className="truncate font-medium">{a.materialTitle}</p>
+                <p className="truncate font-medium">{assignmentTitle(a)}</p>
                 <p className="text-xs text-muted-foreground">
                   {[
                     a.subject ? t(`enums.subject.${a.subject}`) : null,
-                    a.materialKind ? t(`enums.materialKind.${a.materialKind}`) : null,
+                    kind ? t(`enums.materialKind.${kind}`) : null,
                     a.estimatedMinutes ? t('learning.assignments.estimated', { count: a.estimatedMinutes }) : null,
                   ]
                     .filter(Boolean)
@@ -99,10 +100,10 @@ export function AssignmentsTab() {
         key: 'submissions',
         header: t('learning.assignments.columns.submissions'),
         cell: (a) =>
-          a.materialKind === 'WRITTEN' ? (
+          isWrittenAssignment(a) ? (
             <div className="flex flex-col items-start gap-2">
               <SubmissionCounter assignment={a} />
-              <Button type="button" size="sm" variant="outline" onClick={() => setViewingId(a.id)} aria-label={`${t('learning.submissions.open')}: ${a.materialTitle}`}>
+              <Button type="button" size="sm" variant="outline" onClick={() => setViewingId(a.id)} aria-label={`${t('learning.submissions.open')}: ${assignmentTitle(a)}`}>
                 <ClipboardCheck />
                 {t('learning.submissions.open')}
               </Button>
@@ -160,7 +161,7 @@ export function AssignmentsTab() {
         open={Boolean(deleting)}
         onOpenChange={(open) => !open && setDeleting(null)}
         title={t('learning.assignments.deleteTitle')}
-        description={deleting ? `«${deleting.materialTitle}» — ${t('learning.assignments.deleteDescription')}` : undefined}
+        description={deleting ? `«${assignmentTitle(deleting)}» — ${t('learning.assignments.deleteDescription')}` : undefined}
         confirmLabel={t('common.delete')}
         destructive
         loading={remove.isPending}

@@ -164,7 +164,7 @@ function ReviewBody({
         )}
       </div>
 
-      <SheetFooter className="flex-wrap gap-2 sm:justify-between">
+      <SheetFooter className="sticky bottom-0 flex-wrap gap-2 bg-background/80 backdrop-blur-md sm:justify-between">
         <Button type="button" variant="ghost" disabled={!nextId} onClick={() => nextId && onSelectStudent(nextId)}>
           <SkipForward />
           {t('learning.submissions.drawer.next')}

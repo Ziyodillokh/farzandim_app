@@ -1,6 +1,7 @@
 import { FileQuestion, Headphones, type LucideIcon, PenLine, Video } from 'lucide-react';
 
-import type { AssignmentKind } from '@/data/contracts';
+import type { AssignmentKind, LearningAssignment } from '@/data/contracts';
+import { WRITTEN_MATERIAL_ID } from '@/data/schemas/learning';
 import type { useI18n } from '@/i18n';
 
 type T = ReturnType<typeof useI18n>['t'];
@@ -20,4 +21,20 @@ export function gradesLabel(t: T, grades: readonly number[]): string {
   const from = Math.min(...grades);
   const to = Math.max(...grades);
   return from === to ? t('learning.materials.gradeSingle', { grade: from }) : t('learning.materials.grades', { from, to });
+}
+
+type AssignmentLike = Pick<LearningAssignment, 'materialId' | 'title'> & { materialKind: AssignmentKind | null; materialTitle: string };
+
+/** Yozma vazifa: tur (`WRITTEN`) yoki katalogdan tashqari maxsus `materialId` bo'yicha aniqlanadi. */
+export function isWrittenAssignment(a: Pick<AssignmentLike, 'materialId' | 'materialKind'>): boolean {
+  return a.materialKind === 'WRITTEN' || a.materialId === WRITTEN_MATERIAL_ID;
+}
+
+/** Ko'rsatiladigan nom: yozma vazifada o'z sarlavhasi, aks holda material nomi. */
+export function assignmentTitle(a: AssignmentLike): string {
+  return isWrittenAssignment(a) ? (a.title?.trim() || a.materialTitle) : a.materialTitle;
+}
+
+export function assignmentKind(a: Pick<AssignmentLike, 'materialId' | 'materialKind'>): AssignmentKind | null {
+  return isWrittenAssignment(a) ? 'WRITTEN' : a.materialKind;
 }
