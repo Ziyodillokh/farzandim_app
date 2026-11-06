@@ -7,6 +7,7 @@ import { FcmService } from '../../common/fcm/fcm.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { BUCKETS, BucketName } from '../../common/storage/storage.constants';
 import { tr } from '../../common/i18n/notification-i18n';
+import { deleteCareOfChildren } from '../../school/care/care-purge';
 import { deleteHomeworkOfChildren, homeworkMediaOfChildren } from '../../school/homework/homework-purge';
 
 export interface MediaObject {
@@ -90,6 +91,8 @@ export class ChildDataPurgeService {
         await tx.aiMessage.deleteMany({ where: { childId: child.id } });
         // Maktab yozma vazifalari (daftar rasmlari) — bolaning shaxsiy yuklamalari.
         await deleteHomeworkOfChildren(tx, [child.id]);
+        // Bola ovozi: murojaatlar (yozishma cascade) va so'rovnoma ishtirok belgilari.
+        await deleteCareOfChildren(tx, [child.id]);
         // Kelajak: bolaning o'z javoblari (farovonlik, ochiq matn) va natijalari —
         // javoblar sessiya bilan cascade o'chadi; keyingi qurilma ularni ko'rmaydi.
         await tx.kelajakSession.deleteMany({ where: { childId: child.id } });
@@ -124,6 +127,7 @@ export class ChildDataPurgeService {
     await this.prisma.$transaction(async (tx) => {
       // O'quvchi bog'lanishi (childId) child.delete'dan keyin SetNull bo'ladi — avval o'chiramiz.
       await deleteHomeworkOfChildren(tx, [child.id]);
+      await deleteCareOfChildren(tx, [child.id]);
       // Cascade: lokatsiya, jadval, foto so'rovlar, AI suhbat va h.k.
       await tx.child.delete({ where: { id: child.id } });
       if (childUserId) {

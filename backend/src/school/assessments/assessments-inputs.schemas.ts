@@ -11,6 +11,8 @@ export const TEST_SOURCES = ['TEMPLATE', 'CUSTOM', 'IMPORTED', 'EXTERNAL'] as co
 export const ASSIGNMENT_STATES = ['SCHEDULED', 'ACTIVE', 'ENDED', 'CANCELLED'] as const;
 
 const ID_MAX = 64;
+/** Shaxsiy tayinlashda bir martada ko'pi bilan shuncha o'quvchi. */
+export const MAX_STUDENT_TARGETS = 30;
 const id = () => z.string({ error: msg.required }).trim().min(1, msg.required).max(ID_MAX, msg.tooLong);
 const TASHKENT_OFFSET_MS = 5 * 3_600_000;
 const HAS_ZONE = /[zZ]|[+-]\d{2}:?\d{2}$/;
@@ -46,7 +48,14 @@ export const assignInputSchema = z
     target: z.discriminatedUnion('kind', [
       z.strictObject({ kind: z.literal('CLASSES'), classIds: z.array(id()).min(1, msg.atLeastOne).max(60) }),
       z.strictObject({ kind: z.literal('GRADES'), grades: z.array(z.number().int().min(1).max(11)).min(1, msg.atLeastOne).max(11) }),
+      z.strictObject({
+        kind: z.literal('STUDENTS'),
+        studentIds: z.array(id()).min(1, msg.atLeastOne).max(MAX_STUDENT_TARGETS, msg.tooLong),
+        careRequestId: id().optional(),
+      }),
     ]),
+    /** Bola ovozi murojaatidan boshlangan tayinlash (ixtiyoriy); `target.careRequestId` ham qabul qilinadi. */
+    careRequestId: id().optional(),
     opensAt: dateTimeSchema,
     closesAt: dateTimeSchema,
     consent: z.literal(true, { error: vmsg.consent }),

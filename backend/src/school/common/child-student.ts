@@ -13,6 +13,10 @@ export interface EnrolledStudent {
   schoolId: string;
   classId: string;
   className: string;
+  /** Sinf darajasi (1..11). */
+  grade: number;
+  /** Bola ilovasi tili (`User.language`; noma'lum — `uz`). */
+  lang: 'uz' | 'ru';
   /** Maktabga qabul sanasi (YYYY-MM-DD). */
   enrolledAt: string;
   shift: SchoolShift;
@@ -23,7 +27,10 @@ export const notEnrolled = () =>
 
 /** Bog'langan o'quvchi yoki `null` (xato tashlamaydi). */
 export async function findEnrolledStudent(prisma: PrismaService, childUserId: string): Promise<EnrolledStudent | null> {
-  const child = await prisma.child.findUnique({ where: { childUserId }, select: { id: true } });
+  const child = await prisma.child.findUnique({
+    where: { childUserId },
+    select: { id: true, childUser: { select: { language: true } } },
+  });
   if (!child) return null;
   const student = await prisma.schoolStudent.findUnique({
     where: { childId: child.id },
@@ -32,7 +39,7 @@ export async function findEnrolledStudent(prisma: PrismaService, childUserId: st
       schoolId: true,
       archived: true,
       enrolledAt: true,
-      class: { select: { id: true, name: true, shift: true } },
+      class: { select: { id: true, name: true, grade: true, shift: true } },
       school: { select: { status: true } },
     },
   });
@@ -43,6 +50,8 @@ export async function findEnrolledStudent(prisma: PrismaService, childUserId: st
     schoolId: student.schoolId,
     classId: student.class.id,
     className: student.class.name,
+    grade: student.class.grade,
+    lang: child.childUser?.language === 'ru' ? 'ru' : 'uz',
     enrolledAt: student.enrolledAt,
     shift: student.class.shift,
   };

@@ -235,6 +235,14 @@ const T: Record<string, Record<NotifLang, string>> = {
   'subject.informatics': { uz: 'Informatika', ru: 'Информатика', en: 'Computer science' },
   'subject.russian': { uz: 'Rus tili', ru: 'Русский язык', en: 'Russian' },
 
+  // ── Bola ovozi: xodim javobi (bolaga). Matn NEYTRAL — mazmun ham, "psixolog" so'zi ham yo'q ──
+  'careMessage.title': { uz: 'Parvoz', ru: 'Parvoz', en: 'Parvoz' },
+  'careMessage.body': {
+    uz: 'Sizga yangi xabar keldi',
+    ru: 'Вам новое сообщение',
+    en: 'You have a new message',
+  },
+
   // ── Admin ogohlantirishi (matn admin tomonidan yoziladi) ──
   'adminWarning.title': {
     uz: 'Ogohlantirish',

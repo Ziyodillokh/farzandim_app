@@ -13,7 +13,11 @@ export interface QuestionMeta {
 }
 export type Questions = ReadonlyMap<string, QuestionMeta>;
 export interface ResponseRow {
-  studentId: string;
+  /**
+   * Respondent kaliti — faqat "necha KISHI" hisoblash uchun: eski javoblarda o'quvchi id'si,
+   * anonim javoblarda qatorning tasodifiy id'si. Hech qachon o'quvchiga bog'lanmaydi.
+   */
+  respondentId: string;
   classId: string;
   /** Javob berilgan paytdagi sinf darajasi (nusxa — keyingi tahrirlar natijaga ta'sir qilmaydi). */
   grade: number;
@@ -33,7 +37,7 @@ type Plan = { any: Atom[]; byTopic: ReadonlyMap<CareTopic, Atom[]> };
 const validAnswer = (raw: unknown): raw is number => typeof raw === 'number' && Number.isFinite(raw) && raw >= 1 && raw <= 5;
 const percent = (part: number, total: number) => (total > 0 ? Math.round((part / total) * 100) : 0);
 
-export const distinctRespondents = (responses: readonly ResponseRow[]) => new Set(responses.map((r) => r.studentId)).size;
+export const distinctRespondents = (responses: readonly ResponseRow[]) => new Set(responses.map((r) => r.respondentId)).size;
 
 function answeredTopics(response: ResponseRow, questions: Questions): Set<CareTopic> {
   const topics = new Set<CareTopic>();
@@ -52,7 +56,7 @@ function topicStats(responses: readonly ResponseRow[], questions: Questions): Ma
       const question = questions.get(questionId);
       if (!question || !validAnswer(raw)) continue;
       const entry = acc.get(question.topic) ?? { sum: 0, answers: 0, people: new Set<string>() };
-      entry.people.add(response.studentId);
+      entry.people.add(response.respondentId);
       acc.set(question.topic, { sum: entry.sum + (question.reverse ? 6 - raw : raw), answers: entry.answers + 1, people: entry.people });
     }
   }

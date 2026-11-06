@@ -92,7 +92,9 @@ describe('School care (Bola ovozi)', () => {
     expect((await child(kids[0]!, 'POST', `/survey/${survey.id}/responses`, { answers })).json().code).toBe('ALREADY_ANSWERED');
     expect((await child(kids[0]!, 'GET', '/survey')).json()).toMatchObject({ survey: null, answered: true });
     expect((await child(kids[5]!, 'POST', `/survey/${survey.id}/responses`, { answers: { [survey.questionIds[0]!]: 9 } })).statusCode).toBe(400);
-    const stored = await t.prisma.schoolCareResponse.findFirstOrThrow();
+    // Yangi javoblar anonim jadvalga yoziladi (eski jadval bo'sh qoladi).
+    expect(await t.prisma.schoolCareResponse.count()).toBe(0);
+    const stored = await t.prisma.schoolCareAnonResponse.findFirstOrThrow();
     expect(stored.answersEnc).toMatch(/^v1\./);
     expect(stored.answersEnc).not.toContain(survey.questionIds[0]);
 

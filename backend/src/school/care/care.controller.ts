@@ -4,6 +4,7 @@ import { Actor, SchoolAuth } from '../auth/decorators';
 import { SchoolActor } from '../auth/school-actor';
 import { CareInsightsService } from './care-insights.service';
 import { CareRequestsService } from './care-requests.service';
+import { CareSettingsService } from './care-settings.service';
 import { CareSurveysService } from './care-surveys.service';
 
 @ApiTags('School - Care')
@@ -14,6 +15,7 @@ export class CareController {
     private readonly insights: CareInsightsService,
     private readonly requests: CareRequestsService,
     private readonly surveys: CareSurveysService,
+    private readonly settings: CareSettingsService,
   ) {}
 
   // ── Anonim natija (care.aggregate) ─────────────────────────────────
@@ -46,6 +48,13 @@ export class CareController {
     return this.requests.getRequest(actor, id);
   }
 
+  @Post('requests/:id/messages')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Bolaga javob (matn shifrlanadi; bolaga neytral push)' })
+  reply(@Actor() actor: SchoolActor, @Param('id') id: string, @Body() body: unknown) {
+    return this.requests.reply(actor, id, body);
+  }
+
   @Put('requests/:id/status')
   updateStatus(@Actor() actor: SchoolActor, @Param('id') id: string, @Body() body: unknown) {
     return this.requests.updateRequestStatus(actor, id, body);
@@ -66,6 +75,19 @@ export class CareController {
   @ApiOperation({ summary: 'Himoya protokoli: direktor va navbatchiga signal (tafsilotsiz)' })
   activateProtocol(@Actor() actor: SchoolActor, @Param('id') id: string) {
     return this.requests.activateProtocol(actor, id);
+  }
+
+  // ── Sozlamalar: mas'ul psixolog, o'rinbosar, ish vaqti, muddatlar ───
+
+  @Get('settings')
+  @ApiOperation({ summary: 'Bola ovozi sozlamalari + tanlash uchun faol psixologlar' })
+  getSettings(@Actor() actor: SchoolActor) {
+    return this.settings.get(actor);
+  }
+
+  @Put('settings')
+  updateSettings(@Actor() actor: SchoolActor, @Body() body: unknown) {
+    return this.settings.update(actor, body);
   }
 
   // ── So'rovnomalar va savollar banki (care.surveys) ─────────────────

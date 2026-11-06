@@ -34,7 +34,7 @@ function school(seed: number) {
         const answers: Record<string, number> = { q1: 1 + Math.floor(r() * 5) };
         if (r() > 0.3) answers.q2 = 1 + Math.floor(r() * 5);
         if (r() > 0.6) answers.q3 = 1 + Math.floor(r() * 5);
-        responses.push({ studentId: `${id}-s${i}`, classId: id, grade, answers });
+        responses.push({ respondentId: `${id}-s${i}`, classId: id, grade, answers });
       }
     }
   }
@@ -88,7 +88,7 @@ describe('care aggregate — ayirish hujumidan himoya', () => {
           responses
             .filter((r) => ids.includes(r.classId))
             .filter((r) => stat === 'ANY' || Object.keys(r.answers).some((q) => questions.get(q)?.topic === stat))
-            .map((r) => r.studentId),
+            .map((r) => r.respondentId),
         ).size;
         expect(people === 0 || people >= K).toBe(true);
       }
@@ -97,7 +97,7 @@ describe('care aggregate — ayirish hujumidan himoya', () => {
 
   it('mavzu ko\'rsatkichi: teskari savol aylantiriladi, K dan kam bo\'lsa chiqmaydi', () => {
     const rows = (n: number, q2: number): ResponseRow[] =>
-      Array.from({ length: n }, (_, i) => ({ studentId: `s${i}`, classId: 'c', grade: 7, answers: { q1: 5, q2 } }));
+      Array.from({ length: n }, (_, i) => ({ respondentId: `s${i}`, classId: 'c', grade: 7, answers: { q1: 5, q2 } }));
     expect(topicScores(rows(5, 1), questions)).toEqual({ WELLBEING: 100, PEERS: 100 });
     expect(topicScores(rows(5, 5), questions)).toEqual({ WELLBEING: 100, PEERS: 0 });
     expect(topicScores(rows(4, 1), questions)).toEqual({});
@@ -109,8 +109,8 @@ describe('care aggregate — ayirish hujumidan himoya', () => {
       { id: 'b', name: '7-B', grade: 7, letter: 'B' },
     ];
     const responses = [
-      ...Array.from({ length: 6 }, (_, i) => ({ studentId: `a${i}`, classId: 'a', grade: 7, answers: { q1: 4 } })),
-      ...Array.from({ length: 2 }, (_, i) => ({ studentId: `b${i}`, classId: 'b', grade: 7, answers: { q1: 2 } })),
+      ...Array.from({ length: 6 }, (_, i) => ({ respondentId: `a${i}`, classId: 'a', grade: 7, answers: { q1: 4 } })),
+      ...Array.from({ length: 2 }, (_, i) => ({ respondentId: `b${i}`, classId: 'b', grade: 7, answers: { q1: 2 } })),
     ];
     const agg = computeCareAggregate({
       survey: { id: 's', invited: 30, ageGroups: ['G5_8'] },

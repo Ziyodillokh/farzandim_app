@@ -25,6 +25,10 @@ export type PsychAssignment = {
   testVersion: number;
   target: AssignmentTarget;
   classIds: string[];
+  /** Shaxsiy (STUDENTS) tayinlashda o'quvchilar; aks holda bo'sh. */
+  studentIds: string[];
+  /** Bola ovozi murojaatidan boshlangan bo'lsa — murojaat id'si. */
+  careRequestId: string | null;
   opensAt: string;
   closesAt: string;
   status: AssignmentStatus;
@@ -84,6 +88,8 @@ export function toAssignment(row: SchoolPsychAssignment): PsychAssignment {
     testVersion: row.testVersion,
     target: row.target as AssignmentTarget,
     classIds: row.classIds,
+    studentIds: row.studentIds,
+    careRequestId: row.careRequestId,
     opensAt: row.opensAt.toISOString(),
     closesAt: row.closesAt.toISOString(),
     status: ASSIGNMENT_STATUSES.includes(row.status as AssignmentStatus) ? (row.status as AssignmentStatus) : 'CLOSED',

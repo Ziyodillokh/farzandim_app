@@ -15,6 +15,7 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { EnvConfig } from '../../common/config/env.schema';
 import { FcmService } from '../../common/fcm/fcm.service';
 import { StorageService } from '../../common/storage/storage.service';
+import { deleteCareOfChildren } from '../../school/care/care-purge';
 import { deleteHomeworkObjects, deleteHomeworkOfChildren, homeworkKeysOf } from '../../school/homework/homework-purge';
 import { AdminAuditService } from '../../common/audit/admin-audit.service';
 import { tr } from '../../common/i18n/notification-i18n';
@@ -622,6 +623,7 @@ export class AdminUsersService {
     try {
       await this.prisma.$transaction(async (tx) => {
         await deleteHomeworkOfChildren(tx, childIds);
+        await deleteCareOfChildren(tx, childIds);
         await tx.user.delete({ where: { id } });
       });
     } catch (err: any) {

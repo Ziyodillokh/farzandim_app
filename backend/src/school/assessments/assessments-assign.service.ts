@@ -4,7 +4,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
-import { assertCan, SchoolActor } from '../auth/school-actor';
+import { allowedClassIds, assertCan, SchoolActor } from '../auth/school-actor';
 import { SchoolAuditService } from '../common/school-audit.service';
 import { conflict, invalid, notFound } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
@@ -16,10 +16,20 @@ import type { PsychTest } from './psych/types';
 
 /** Tayinlash maqsadi → sinflar (test parallellari bilan kesishma; faqat shu maktab sinflari). */
 export function resolveClasses(classes: readonly ClassRow[], target: AssignInput['target'], test: Pick<PsychTest, 'grades'>): string[] {
+  if (target.kind === 'STUDENTS') return [];
   return classes
     .filter((c) => test.grades.includes(c.grade))
     .filter((c) => (target.kind === 'CLASSES' ? target.classIds.includes(c.id) : target.grades.includes(c.grade)))
     .map((c) => c.id);
+}
+
+/** Tayinlash qamrovi: sinflar (sinf / daraja maqsadi) yoki shaxsiy o'quvchilar; taklif qilinganlar soni. */
+export interface AssignScope {
+  classIds: string[];
+  studentIds: string[];
+  invited: number;
+  /** Saqlanadigan maqsad (`STUDENTS` da `careRequestId` kirmaydi — u alohida ustunda). */
+  target: Prisma.InputJsonValue;
 }
 
 @Injectable()
@@ -66,20 +76,20 @@ export class AssessmentsAssignService {
       await this.store.lock(tx, `psych-test:${data.testId}`);
       const test = await this.store.requireTest(actor.schoolId, data.testId, tx);
       if (test.status !== 'PUBLISHED' || test.items.length === 0) throw conflict('test not assignable');
-      const classIds = resolveClasses(await this.store.classes(actor.schoolId, tx), data.target, test);
-      if (classIds.length === 0) throw invalid('target: assessments.validation.noClasses');
-      const invited = await tx.schoolStudent.count({ where: { schoolId: actor.schoolId, archived: false, classId: { in: classIds } } });
+      const scope = await this.resolveScope(tx, actor, data, test);
       const row = await tx.schoolPsychAssignment.create({
         data: {
           schoolId: actor.schoolId,
           testId: test.id,
           testVersion: test.version,
-          target: data.target as Prisma.InputJsonValue,
-          classIds,
+          target: scope.target,
+          classIds: scope.classIds,
+          studentIds: scope.studentIds,
+          careRequestId: await this.careRequestOf(tx, actor.schoolId, data),
           opensAt: toInstant(data.opensAt),
           closesAt: toInstant(data.closesAt),
           status: 'OPEN',
-          invited,
+          invited: scope.invited,
           consent: 'PARENTS_INFORMED',
           createdBy: actor.staffId,
         },
@@ -91,12 +101,44 @@ export class AssessmentsAssignService {
           action: 'assessments.assign',
           summary: `Test tayinlandi: ${test.title.uz}`,
           entityId: row.id,
-          params: { classes: classIds.length, count: invited, title: test.title.uz },
+          params: { classes: scope.classIds.length, count: scope.invited, title: test.title.uz },
         },
         tx,
       );
       return toAssignment(row);
     });
+  }
+
+  /**
+   * Sinf / daraja maqsadi — test parallellari bilan kesishma; `STUDENTS` — shu maktabning, doiradagi,
+   * arxivlanmagan, test darajasiga mos o'quvchilari (hammasi shart; begona yoki noma'lum id — 400,
+   * qaysi biri ekani oshkor qilinmaydi).
+   */
+  private async resolveScope(tx: Prisma.TransactionClient, actor: SchoolActor, data: AssignInput, test: Pick<PsychTest, 'grades'>): Promise<AssignScope> {
+    if (data.target.kind === 'STUDENTS') {
+      const studentIds = [...new Set(data.target.studentIds)];
+      const allowed = allowedClassIds(actor);
+      const students = await tx.schoolStudent.findMany({
+        where: { schoolId: actor.schoolId, archived: false, id: { in: studentIds } },
+        select: { id: true, classId: true, class: { select: { grade: true } } },
+      });
+      const usable = students.filter((s) => s.classId && s.class && test.grades.includes(s.class.grade) && (!allowed || allowed.includes(s.classId)));
+      if (usable.length !== studentIds.length) throw invalid('target.studentIds: assessments.validation.noStudents');
+      return { classIds: [], studentIds, invited: studentIds.length, target: { kind: 'STUDENTS', studentIds } };
+    }
+    const classIds = resolveClasses(await this.store.classes(actor.schoolId, tx), data.target, test);
+    if (classIds.length === 0) throw invalid('target: assessments.validation.noClasses');
+    const invited = await tx.schoolStudent.count({ where: { schoolId: actor.schoolId, archived: false, classId: { in: classIds } } });
+    return { classIds, studentIds: [], invited, target: data.target as Prisma.InputJsonValue };
+  }
+
+  /** Bola ovozi murojaati (ixtiyoriy): shu maktabniki bo'lishi shart. */
+  private async careRequestOf(tx: Prisma.TransactionClient, schoolId: string, data: AssignInput): Promise<string | null> {
+    const id = data.careRequestId ?? (data.target.kind === 'STUDENTS' ? data.target.careRequestId : undefined);
+    if (!id) return null;
+    const found = await tx.schoolCareRequest.findFirst({ where: { id, schoolId }, select: { id: true } });
+    if (!found) throw invalid('careRequestId: errors.form.invalid');
+    return found.id;
   }
 
   /**
@@ -107,20 +149,20 @@ export class AssessmentsAssignService {
   private assignIq(actor: SchoolActor, data: AssignInput): Promise<PsychAssignment> {
     return this.prisma.$transaction(async (tx) => {
       const allGrades = { grades: Array.from({ length: 11 }, (_, i) => i + 1) };
-      const classIds = resolveClasses(await this.store.classes(actor.schoolId, tx), data.target, allGrades);
-      if (classIds.length === 0) throw invalid('target: assessments.validation.noClasses');
-      const invited = await tx.schoolStudent.count({ where: { schoolId: actor.schoolId, archived: false, classId: { in: classIds } } });
+      const scope = await this.resolveScope(tx, actor, data, allGrades);
       const row = await tx.schoolPsychAssignment.create({
         data: {
           schoolId: actor.schoolId,
           testId: PARVOZ_IQ_TEST_ID,
           testVersion: 1,
-          target: data.target as Prisma.InputJsonValue,
-          classIds,
+          target: scope.target,
+          classIds: scope.classIds,
+          studentIds: scope.studentIds,
+          careRequestId: await this.careRequestOf(tx, actor.schoolId, data),
           opensAt: toInstant(data.opensAt),
           closesAt: toInstant(data.closesAt),
           status: 'OPEN',
-          invited,
+          invited: scope.invited,
           consent: 'PARENTS_INFORMED',
           createdBy: actor.staffId,
         },
@@ -132,7 +174,7 @@ export class AssessmentsAssignService {
           action: 'assessments.assign',
           summary: `Test tayinlandi: ${PARVOZ_IQ_TITLE.uz}`,
           entityId: row.id,
-          params: { classes: classIds.length, count: invited, title: PARVOZ_IQ_TITLE.uz },
+          params: { classes: scope.classIds.length, count: scope.invited, title: PARVOZ_IQ_TITLE.uz },
         },
         tx,
       );

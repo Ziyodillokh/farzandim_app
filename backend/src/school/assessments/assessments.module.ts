@@ -5,6 +5,7 @@
 
 import { Module } from '@nestjs/common';
 import { IqModule } from '../../modules/iq/iq.module';
+import { CareModule } from '../care/care.module';
 import { SchoolCoreModule } from '../school-core.module';
 import { AssessmentsAssignService } from './assessments-assign.service';
 import { AssessmentsChildController } from './assessments-child.controller';
@@ -19,7 +20,7 @@ import { AssessmentsStore } from './assessments-store';
 import { AssessmentsController } from './assessments.controller';
 
 @Module({
-  imports: [SchoolCoreModule, IqModule],
+  imports: [SchoolCoreModule, IqModule, CareModule],
   controllers: [AssessmentsController, AssessmentsChildController],
   providers: [
     AssessmentsStore,
