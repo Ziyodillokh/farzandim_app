@@ -17,8 +17,10 @@ export function RequestCard({ request, onDecide }: { request: LinkRequest; onDec
   const { t, formatDate, formatRelative } = useI18n();
   const correction = request.kind === 'CORRECTION';
 
+  // Telefonda amallar mazmun ostida (ustun), kengroq ekranda o'ngda (qator). `flex-1` + `flex-wrap` birga ishlatilsa
+  // mazmun 0 gacha siqilib ketadi (flex-basis 0) — shuning uchun ustun/qator almashinuvi `sm:` bilan.
   return (
-    <li className={cn('flex flex-wrap items-start justify-between gap-4 p-4', INNER_TILE)} data-testid="link-request" data-kind={request.kind}>
+    <li className={cn('flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between', INNER_TILE)} data-testid="link-request" data-kind={request.kind}>
       <div className="flex min-w-0 flex-1 gap-3">
         <Avatar className="h-10 w-10">
           <AvatarFallback className="bg-gradient-to-br from-brand-400 to-brand-800 text-2xs font-semibold text-white">{initials(request.studentName)}</AvatarFallback>
@@ -67,11 +69,11 @@ export function RequestCard({ request, onDecide }: { request: LinkRequest; onDec
           )}
         </div>
       </div>
-      <div className="flex shrink-0 flex-wrap gap-2">
-        <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => onDecide(request, 'reject')}>
+      <div className="flex gap-2 sm:shrink-0">
+        <Button size="sm" variant="outline" className="flex-1 text-destructive hover:text-destructive sm:flex-none" onClick={() => onDecide(request, 'reject')}>
           {t(correction ? 'linkRequests.correction.unlink' : 'linkRequests.review.reject')}
         </Button>
-        <Button size="sm" onClick={() => onDecide(request, 'confirm')}>
+        <Button size="sm" className="flex-1 sm:flex-none" onClick={() => onDecide(request, 'confirm')}>
           {t(correction ? 'linkRequests.correction.keep' : 'linkRequests.review.confirm')}
         </Button>
       </div>

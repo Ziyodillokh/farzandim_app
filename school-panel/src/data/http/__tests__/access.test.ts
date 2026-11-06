@@ -4,7 +4,6 @@ import { ServiceError } from '@/data/contracts';
 import { setAccessToken, setRefreshHandler, setSessionLostHandler } from '../client';
 import { accessHttp, linkRequestsHttp } from '../services/access';
 import {
-  isLoginTaken,
   isNotLinked,
   toChildCredentials,
   toGeneratedInviteCode,
@@ -264,13 +263,12 @@ describe('toLinkRequests (kontrakt K2: GET /school/link-requests)', () => {
 });
 
 describe('xato kodlari', () => {
-  it('isNotLinked / isLoginTaken faqat CONFLICT + aniq detail', () => {
+  it('isNotLinked faqat CONFLICT + NOT_LINKED detail', () => {
     expect(isNotLinked(new ServiceError('CONFLICT', 'x', 'NOT_LINKED'))).toBe(true);
     expect(isNotLinked(new ServiceError('CONFLICT', 'x', 'LOGIN_TAKEN'))).toBe(false);
+    expect(isNotLinked(new ServiceError('NOT_FOUND', 'x', 'NOT_LINKED'))).toBe(false);
     expect(isNotLinked(new ServiceError('CONFLICT', 'x'))).toBe(false);
     expect(isNotLinked(new Error('NOT_LINKED'))).toBe(false);
-    expect(isLoginTaken(new ServiceError('CONFLICT', 'x', 'LOGIN_TAKEN'))).toBe(true);
-    expect(isLoginTaken(new ServiceError('NOT_FOUND', 'x', 'LOGIN_TAKEN'))).toBe(false);
   });
 });
 
@@ -338,7 +336,7 @@ describe('accessHttp / linkRequestsHttp', () => {
 
   it('issueCredentials: 409 LOGIN_TAKEN va 409 NOT_LINKED — aniq detail bilan', async () => {
     mockFetch([{ status: 409, body: { statusCode: 409, code: 'LOGIN_TAKEN', message: 'taken' } }]);
-    await expect(accessHttp.issueCredentials('s1', { login: 'aziza.k24' })).rejects.toSatisfy(isLoginTaken);
+    await expect(accessHttp.issueCredentials('s1', { login: 'aziza.k24' })).rejects.toMatchObject({ code: 'CONFLICT', detail: 'LOGIN_TAKEN' });
     mockFetch([{ status: 409, body: { statusCode: 409, code: 'NOT_LINKED', message: 'no' } }]);
     await expect(accessHttp.issueCredentials('s1')).rejects.toSatisfy(isNotLinked);
   });

@@ -92,9 +92,12 @@ export function CredentialsCard({ studentId, onIssue, onReset }: { studentId: st
             <Row label={t('access.credentials.fields.issuedBy')}>{t(`access.credentials.issuer.${credentials.issuedBy}`)}</Row>
             <Row label={t('access.credentials.fields.issuedAt')}>{formatDate(credentials.issuedAt, 'dd.MM.yyyy, HH:mm')}</Row>
             <Row label={t('access.credentials.fields.password')}>
-              <Badge variant={credentials.mustChangePassword ? 'warning' : 'success'}>
-                {t(credentials.mustChangePassword ? 'access.credentials.passwordState.temporary' : 'access.credentials.passwordState.set')}
-              </Badge>
+              <span className="flex flex-col items-end gap-1">
+                <Badge variant={credentials.mustChangePassword ? 'warning' : 'success'}>
+                  {t(credentials.mustChangePassword ? 'access.credentials.passwordState.temporary' : 'access.credentials.passwordState.set')}
+                </Badge>
+                {credentials.mustChangePassword && <span className="text-xs font-normal text-muted-foreground">{t('access.credentials.passwordState.temporaryHint')}</span>}
+              </span>
             </Row>
             <Row label={t('access.credentials.fields.lastLogin')}>
               {credentials.lastLoginAt ? (

@@ -49,11 +49,6 @@ export function isNotLinked(error: unknown): boolean {
   return error instanceof ServiceError && error.code === 'CONFLICT' && error.detail === 'NOT_LINKED';
 }
 
-/** Backend `409 LOGIN_TAKEN`: so'ralgan login band. */
-export function isLoginTaken(error: unknown): boolean {
-  return error instanceof ServiceError && error.code === 'CONFLICT' && error.detail === 'LOGIN_TAKEN';
-}
-
 // ── Kirish ma'lumotlari (K1) ─────────────────────────────────────────────
 
 /** `GET /school/students/:id/credentials` → `{ login, issuedBy, issuedAt, mustChangePassword, lastLoginAt }` yoki `null`. */

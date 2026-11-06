@@ -185,16 +185,32 @@ test.describe('Ulanish soʻrovlari', () => {
   test.describe('390px', () => {
     test.use({ viewport: { width: 390, height: 844 } });
 
-    test('ro\'yxat ekranga sig\'adi, amal tugmalari ko\'rinadi', async ({ page }) => {
+    test('ro\'yxat ekranga sig\'adi: mazmun kengligi saqlanadi, amal tugmalari mazmun ostida', async ({ page }) => {
       await login(page, 'admin', 'Admin2026');
       await page.goto(url(PAGE));
-      const item = page.getByRole('main').getByTestId('link-request').first();
+      const main = page.getByRole('main');
+      const item = main.getByTestId('link-request').first();
       await expect(item).toBeVisible();
+      const itemBox = await item.boundingBox();
+      const nameBox = await item.getByRole('link').boundingBox();
+      expect(itemBox).not.toBeNull();
+      expect(nameBox).not.toBeNull();
       for (const name of [uzLink.review.confirm, uzLink.review.reject]) {
         const box = await item.getByRole('button', { name, exact: true }).boundingBox();
         expect(box, name).not.toBeNull();
         expect((box?.x ?? 0) + (box?.width ?? 0), name).toBeLessThanOrEqual(390);
+        // Telefonda amallar o'quvchi nomi ostida (yonida emas).
+        expect(box?.y ?? 0, name).toBeGreaterThan((nameBox?.y ?? 0) + (nameBox?.height ?? 0));
       }
+      // Mazmun ustuni kartaning katta qismini egallaydi (eski xato: ~60 px gacha siqilib, matn harfma-harf tushgan).
+      expect(nameBox?.width ?? 0).toBeGreaterThan(90);
+
+      // Tuzatish: bolaning izohi o'qiladigan kenglikda va balandligi oqilona.
+      const note = main.getByTestId('link-request-note').first();
+      await note.scrollIntoViewIfNeeded();
+      const noteBox = await note.boundingBox();
+      expect(noteBox?.width ?? 0).toBeGreaterThan(150);
+      expect(noteBox?.height ?? 0).toBeLessThan(140);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
     });
   });

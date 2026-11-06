@@ -190,6 +190,12 @@ export function CredentialsDialog({ studentId, studentName, className, mode, onC
                   aria-invalid={Boolean(loginError)}
                   autoFocus
                 />
+                {/* Xato matni ekran o'qish dasturiga darhol e'lon qilinadi (ko'rinadigan xabar FormField'da). */}
+                {loginError && (
+                  <span role="alert" className="sr-only">
+                    {loginError}
+                  </span>
+                )}
               </FormField>
             )}
             <DialogFooter>

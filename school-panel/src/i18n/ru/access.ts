@@ -2,11 +2,9 @@ import type { DeepString } from '../types';
 import type { access as uz } from '../uz/access';
 
 export const access: DeepString<typeof uz> = {
-  title: 'Вход и подключение',
   credentials: {
     title: 'Данные для входа',
     description: 'Ученик входит в детское приложение Parvoz по логину и паролю.',
-    loadError: 'Не удалось загрузить данные для входа',
     notLinked: {
       title: 'Ученик ещё не подключён к профилю Parvoz',
       text: 'Данные для входа выдаются только для детского профиля, подключённого с согласия родителя. Сначала родитель должен подключить ребёнка к этому ученику — либо ученик вводит код приглашения.',
@@ -27,10 +25,11 @@ export const access: DeepString<typeof uz> = {
     },
     issuer: { PARENT: 'Родитель', SCHOOL: 'Школа' },
     passwordState: {
-      temporary: 'Временный — будет заменён при первом входе',
+      temporary: 'Временный',
+      temporaryHint: 'Будет заменён при первом входе',
       set: 'Задан учеником',
     },
-    neverLoggedIn: 'Ещё не входил',
+    neverLoggedIn: 'Входа ещё не было',
     copyLogin: 'Скопировать логин',
   },
   issueDialog: {
@@ -72,7 +71,6 @@ export const access: DeepString<typeof uz> = {
   invite: {
     title: 'Код приглашения',
     description: 'По этому 6-значному коду ученик и родитель подключаются к школе. Код действует 24 часа.',
-    loadError: 'Не удалось загрузить код приглашения',
     none: { title: 'Активного кода нет', text: 'Создайте код и передайте его ученику и родителю.' },
     create: 'Создать код',
     regenerate: 'Новый код',
@@ -111,7 +109,6 @@ export const access: DeepString<typeof uz> = {
     rejectTitle: 'Отклонить запрос?',
     rejectText: 'Пароль не изменится. В приложении ученика будет видно, что запрос отклонён.',
     rejected: 'Запрос отклонён',
-    loadError: 'Не удалось загрузить запросы на восстановление',
   },
   toast: {
     issued: 'Данные для входа созданы',

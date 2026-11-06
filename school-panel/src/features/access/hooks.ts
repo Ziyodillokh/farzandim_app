@@ -40,7 +40,9 @@ export function useIssueCredentials(studentId: string): { issue: (input: IssueCr
       setPending(true);
       try {
         const issued = await api.access.issueCredentials(studentId, input);
-        void queryClient.invalidateQueries({ queryKey: accessKeys.all });
+        // Karta yangilanishi TUGAGUNCHA kutiladi (xatosi yutiladi): ochish oynasi yopilganda «Berish» tugmasi allaqachon
+        // tafsilotga almashgan bo'lsin — aks holda fokus yo'qolayotgan tugmaga qaytib, keyin `body` ga tushib qoladi.
+        await queryClient.invalidateQueries({ queryKey: accessKeys.all });
         return issued;
       } finally {
         setPending(false);

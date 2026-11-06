@@ -68,7 +68,8 @@ test.describe('Kirish ma\'lumotlari', () => {
 
     // Karta holati: login, kim bergan, vaqtinchalik parol.
     await expect(main.getByTestId('credentials-login')).toHaveText(loginName);
-    await expect(main.getByText(uzAccess.credentials.passwordState.temporary)).toBeVisible();
+    await expect(main.getByText(uzAccess.credentials.passwordState.temporary, { exact: true })).toBeVisible();
+    await expect(main.getByText(uzAccess.credentials.passwordState.temporaryHint)).toBeVisible();
     await expect(main.getByText(uzAccess.credentials.neverLoggedIn)).toBeVisible();
 
     // Tiklash: «boshqa qurilmalardan chiqarish» standart yoqilgan va tushuntirilgan.
@@ -105,6 +106,32 @@ test.describe('Kirish ma\'lumotlari', () => {
     expect(errors).toEqual([]);
   });
 
+  test('faqat klaviatura: Enter bilan ochiladi, matn kiritiladi, Enter bilan yuboriladi, Escape yopadi va fokus tugmaga qaytadi', async ({ page }) => {
+    await login(page, 'admin', 'Admin2026');
+    const student = await findStudent(page, 'linkedNoCredentials');
+    await openAccessTab(page, student.id);
+    const issue = page.getByRole('main').getByRole('button', { name: uzAccess.credentials.issue, exact: true });
+    await issue.focus();
+    await page.keyboard.press('Enter');
+
+    const dialog = page.getByRole('dialog');
+    const field = dialog.getByRole('textbox', { name: /Login/ });
+    await expect(field).toBeFocused();
+    await page.keyboard.type('klaviatura.7');
+    await page.keyboard.press('Enter');
+    await expect(dialog.getByTestId('issued-login')).toHaveText('klaviatura.7');
+    await expect(dialog.getByRole('button', { name: uzAccess.reveal.copyPassword })).toBeFocused();
+
+    // Tab aylanasi dialog ichida qoladi (fokus ushlagichi): 4 ta tabdan keyin ham dialog ichida.
+    for (let i = 0; i < 6; i++) await page.keyboard.press('Tab');
+    expect(await dialog.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    // «Berish» tugmasi yo'qoldi (karta tafsilotga o'tdi) — fokus faol tab paneliga qaytadi, `body` ga tushmaydi.
+    await expect(page.getByRole('tabpanel')).toBeFocused();
+  });
+
   test('band login: maydonda xato, oyna ochiq qoladi; yaroqsiz format; keyin yangi login qabul qilinadi', async ({ page }) => {
     await login(page, 'admin', 'Admin2026');
     const student = await findStudent(page, 'linkedNoCredentials');
@@ -116,18 +143,23 @@ test.describe('Kirish ma\'lumotlari', () => {
     const field = dialog.getByRole('textbox', { name: /Login/ });
     const submit = dialog.getByRole('button', { name: uzAccess.issueDialog.submitIssue, exact: true });
 
+    // Xato ikki joyda: ko'rinadigan matn (FormField) va ekran o'qish dasturi uchun darhol e'lon qilinadigan `alert`.
+    const visibleError = dialog.locator('p.text-destructive');
     await field.fill('a b');
     await submit.click();
-    await expect(dialog.getByText(uzErrors.form.invalidLogin)).toBeVisible();
+    await expect(visibleError).toHaveText(uzErrors.form.invalidLogin);
+    await expect(dialog.getByRole('alert')).toHaveText(uzErrors.form.invalidLogin);
     await expect(field).toHaveAttribute('aria-invalid', 'true');
 
     await field.fill(taken.toUpperCase());
     await submit.click();
-    await expect(dialog.getByText(uzErrors.detail.LOGIN_TAKEN)).toBeVisible();
+    await expect(visibleError).toHaveText(uzErrors.detail.LOGIN_TAKEN);
+    await expect(dialog.getByRole('alert')).toHaveText(uzErrors.detail.LOGIN_TAKEN);
     await expect(dialog.getByRole('heading', { name: uzAccess.issueDialog.issueTitle })).toBeVisible();
 
     await field.fill('yangi.bola7');
-    await expect(dialog.getByText(uzErrors.detail.LOGIN_TAKEN)).toBeHidden();
+    await expect(visibleError).toHaveCount(0);
+    await expect(dialog.getByRole('alert')).toHaveCount(0);
     await submit.click();
     await expect(dialog.getByTestId('issued-login')).toHaveText('yangi.bola7');
   });
@@ -355,6 +387,16 @@ test.describe('Parol tiklash so\'rovlari', () => {
   });
 });
 
+test.describe('Chuqur havola', () => {
+  test('/students?search=… qidiruvni oldindan to\'ldiradi (parol tiklash bildirishnomasidan o\'tish)', async ({ page }) => {
+    await login(page, 'admin', 'Admin2026');
+    const student = await findStudent(page, 'openRecovery');
+    await page.goto(url(`/students?search=${encodeURIComponent(student.name)}`));
+    await expect(page.getByRole('textbox', { name: 'Qidirish' })).toHaveValue(student.name);
+    await expect(page.getByRole('main').getByText(student.name, { exact: true }).first()).toBeVisible();
+  });
+});
+
 test.describe('Rollar va til', () => {
   test('psixolog «Kirish» tabini ko\'rmaydi; ?tab=access profilga qaytadi', async ({ page }) => {
     await login(page, 'psixolog', 'Psixolog2026');
@@ -383,5 +425,27 @@ test.describe('Rollar va til', () => {
     await dialog.getByRole('button', { name: ruAccess.issueDialog.submitIssue, exact: true }).click();
     await expect(dialog.getByRole('heading', { name: ruAccess.reveal.title })).toBeVisible();
     await expect(dialog.getByRole('note')).toContainText(ruAccess.reveal.warning);
+  });
+});
+
+test.describe('390px', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('«Kirish» tabi ekranga sig\'adi: tiklash so\'rovi, taklif kodi va kirish ma\'lumotlari', async ({ page }) => {
+    await login(page, 'admin', 'Admin2026');
+    const student = await findStudent(page, 'openRecovery');
+    await openAccessTab(page, student.id);
+    const main = page.getByRole('main');
+    const recovery = main.getByTestId('recovery-card');
+    await expect(recovery).toBeVisible();
+    await main.getByRole('button', { name: uzAccess.invite.create }).click();
+    await expect(main.getByTestId('invite-code')).toBeVisible();
+    await expect(main.getByTestId('credentials-details')).toBeVisible();
+    for (const name of [uzAccess.recovery.reject, uzAccess.recovery.reset]) {
+      const box = await recovery.getByRole('button', { name, exact: true }).boundingBox();
+      expect(box, name).not.toBeNull();
+      expect((box?.x ?? 0) + (box?.width ?? 0), name).toBeLessThanOrEqual(390);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   });
 });

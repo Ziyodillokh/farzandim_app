@@ -1,13 +1,11 @@
 /**
- * Kirish (5-bosqich): o'quvchi kartasidagi «Kirish» tabi — kirish maʼlumotlari, taklif kodi, parol tiklash soʻrovlari.
+ * Kirish (5-bosqich): oʻquvchi kartasidagi «Kirish» tabi — kirish maʼlumotlari, taklif kodi, parol tiklash soʻrovlari.
  * Parol matnlarida parolning oʻzi HECH QACHON yozilmaydi (faqat ochish oynasi va chop etiladigan karta ichida).
  */
 export const access = {
-  title: 'Kirish va ulanish',
   credentials: {
     title: 'Kirish maʼlumotlari',
     description: 'Oʻquvchi Parvoz bola ilovasiga login va parol bilan kiradi.',
-    loadError: 'Kirish maʼlumotlarini yuklab boʻlmadi',
     notLinked: {
       title: 'Oʻquvchi hali Parvoz profiliga ulanmagan',
       text: 'Kirish maʼlumotlari faqat ota-ona roziligi bilan ulangan bola profili uchun beriladi. Avval ota-ona farzandini shu oʻquvchiga ulashi kerak — yoki oʻquvchi taklif kodini kiritadi.',
@@ -28,7 +26,8 @@ export const access = {
     },
     issuer: { PARENT: 'Ota-ona', SCHOOL: 'Maktab' },
     passwordState: {
-      temporary: 'Vaqtinchalik — birinchi kirishda almashtiriladi',
+      temporary: 'Vaqtinchalik',
+      temporaryHint: 'Birinchi kirishda almashtiriladi',
       set: 'Oʻquvchi oʻrnatgan',
     },
     neverLoggedIn: 'Hali kirmagan',
@@ -73,7 +72,6 @@ export const access = {
   invite: {
     title: 'Taklif kodi',
     description: 'Oʻquvchi va ota-ona shu 6 xonali kod bilan maktabga ulanadi. Kod 24 soat amal qiladi.',
-    loadError: 'Taklif kodini yuklab boʻlmadi',
     none: { title: 'Faol kod yoʻq', text: 'Kod yarating va oʻquvchi hamda ota-onaga bering.' },
     create: 'Kod yaratish',
     regenerate: 'Yangi kod',
@@ -112,7 +110,6 @@ export const access = {
     rejectTitle: 'Soʻrov rad etilsinmi?',
     rejectText: 'Parol oʻzgarmaydi. Oʻquvchi ilovasida soʻrov rad etilgani koʻrinadi.',
     rejected: 'Soʻrov rad etildi',
-    loadError: 'Tiklash soʻrovlarini yuklab boʻlmadi',
   },
   toast: {
     issued: 'Kirish maʼlumotlari yaratildi',
