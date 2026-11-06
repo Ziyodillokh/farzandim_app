@@ -26,6 +26,7 @@ export const nav: DeepString<typeof uz> = {
   timetable: 'Расписание уроков',
   classes: 'Классы',
   students: 'Ученики',
+  linkRequests: 'Запросы на подключение',
   parents: 'Родители',
   messages: 'Сообщения',
   reminders: 'Smart Reminder',

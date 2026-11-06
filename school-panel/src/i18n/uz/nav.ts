@@ -23,6 +23,7 @@ export const nav = {
   timetable: 'Dars jadvali',
   classes: 'Sinflar',
   students: 'O\'quvchilar',
+  linkRequests: 'Ulanish soʻrovlari',
   parents: 'Ota-onalar',
   messages: 'Xabarlar',
   reminders: 'Smart Reminder',

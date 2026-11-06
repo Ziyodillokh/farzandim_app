@@ -89,6 +89,7 @@ export const students = {
     development: 'Rivojlanish',
     history: 'Tarix',
     notes: 'Eslatmalar',
+    access: 'Kirish',
   },
   actions: {
     messageParents: 'Ota-onaga xabar',

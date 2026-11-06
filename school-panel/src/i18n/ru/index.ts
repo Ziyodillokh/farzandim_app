@@ -1,6 +1,7 @@
 import type { DeepString } from '../types';
 import type { Dict } from '../uz';
 
+import { access } from './access';
 import { assessments } from './assessments';
 import { attendance } from './attendance';
 import { audit } from './audit';
@@ -14,6 +15,7 @@ import { development } from './development';
 import { enums } from './enums';
 import { errors } from './errors';
 import { learning } from './learning';
+import { linkRequests } from './linkRequests';
 import { messages } from './messages';
 import { nav } from './nav';
 import { notifications } from './notifications';
@@ -55,6 +57,8 @@ export const ru: DeepString<Dict> = {
   development,
   notifications,
   timetable,
+  access,
+  linkRequests,
 };
 
 
