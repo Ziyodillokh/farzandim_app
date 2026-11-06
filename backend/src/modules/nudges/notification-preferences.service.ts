@@ -1,9 +1,16 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
+import {
+  isValidReminderTime,
+  REMINDER_TIME_MAX,
+  REMINDER_TIME_MIN,
+  resolvePrefs,
+} from '../../common/notification-prefs/notification-prefs';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 
 @Injectable()
@@ -19,42 +26,24 @@ export class NotificationPreferencesService {
     return child;
   }
 
-  private serialize(p: {
-    studyNudge: boolean;
-    healthNudge: boolean;
-    contentReminder: boolean;
-    quietFrom: string | null;
-    quietTo: string | null;
-  }) {
-    return {
-      studyNudge: p.studyNudge,
-      healthNudge: p.healthNudge,
-      contentReminder: p.contentReminder,
-      quietFrom: p.quietFrom,
-      quietTo: p.quietTo,
-    };
-  }
-
-  /** Sozlamalarni o'qish — yozuv yo'q bo'lsa default (hammasi yoqilgan). */
+  /** Sozlamalarni o'qish — yozuv yo'q bo'lsa default (hammasi yoqilgan, kunlik eslatma 18:00, matn yashirilmagan). */
   async get(childId: string, userId: string) {
     await this.assertAccess(childId, userId);
     const pref = await this.prisma.notificationPreference.findUnique({
       where: { childId },
     });
-    return this.serialize(
-      pref ?? {
-        studyNudge: true,
-        healthNudge: true,
-        contentReminder: true,
-        quietFrom: null,
-        quietTo: null,
-      },
-    );
+    return resolvePrefs(pref);
   }
 
-  /** Sozlamalarni yangilash (upsert). */
+  /** Sozlamalarni yangilash (upsert, qisman). */
   async update(childId: string, userId: string, dto: UpdatePreferencesDto) {
     await this.assertAccess(childId, userId);
+    if (dto.dailyReminderTime !== undefined && !isValidReminderTime(dto.dailyReminderTime)) {
+      throw new BadRequestException({
+        code: 'VALIDATION',
+        message: `dailyReminderTime HH:MM formatida va ${REMINDER_TIME_MIN}–${REMINDER_TIME_MAX} oralig'ida bo'lishi kerak`,
+      });
+    }
     const data = {
       ...(dto.studyNudge !== undefined && { studyNudge: dto.studyNudge }),
       ...(dto.healthNudge !== undefined && { healthNudge: dto.healthNudge }),
@@ -63,12 +52,18 @@ export class NotificationPreferencesService {
       }),
       ...(dto.quietFrom !== undefined && { quietFrom: dto.quietFrom }),
       ...(dto.quietTo !== undefined && { quietTo: dto.quietTo }),
+      ...(dto.homeworkReminder !== undefined && { homeworkReminder: dto.homeworkReminder }),
+      ...(dto.schoolAnnouncements !== undefined && { schoolAnnouncements: dto.schoolAnnouncements }),
+      ...(dto.familyMessages !== undefined && { familyMessages: dto.familyMessages }),
+      ...(dto.dailyReminder !== undefined && { dailyReminder: dto.dailyReminder }),
+      ...(dto.dailyReminderTime !== undefined && { dailyReminderTime: dto.dailyReminderTime }),
+      ...(dto.hideText !== undefined && { hideText: dto.hideText }),
     };
     const pref = await this.prisma.notificationPreference.upsert({
       where: { childId },
       create: { childId, ...data },
       update: data,
     });
-    return this.serialize(pref);
+    return resolvePrefs(pref);
   }
 }

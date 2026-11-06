@@ -4,26 +4,24 @@ import { NotificationType, Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { FcmService } from '../../common/fcm/fcm.service';
 import { tr } from '../../common/i18n/notification-i18n';
-
-/** Asia/Tashkent (UTC+5, DST yo'q) — barcha vaqtlar shu mintaqada hisoblanadi. */
-const TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1000;
+import { isQuietAt } from '../../common/notification-prefs/notification-prefs';
+import { TASHKENT_OFFSET_MS } from '../../common/time/tashkent';
 
 /** Health: shu qadamdan kam bo'lsa "harakat qil" eslatmasi (faol bo'lsa jim). */
 const HEALTH_STEPS_THRESHOLD = 3000;
 
-type NudgeKind = 'STUDY' | 'HEALTH' | 'CONTENT';
+/** Soatlik nudge'lar. Kunlik o'qish eslatmasi (STUDY) — `DailyReminderService` (bola belgilagan vaqtda). */
+type NudgeKind = 'HEALTH' | 'CONTENT';
 
 interface NudgeChild {
   id: string;
   name: string;
   childUserId: string | null;
   notificationPreference: {
-    studyNudge: boolean;
     healthNudge: boolean;
     contentReminder: boolean;
     quietFrom: string | null;
     quietTo: string | null;
-    lastStudyNudgeAt: Date | null;
     lastHealthNudgeAt: Date | null;
     lastContentReminderAt: Date | null;
   } | null;
@@ -33,12 +31,6 @@ const NUDGE_COPY: Record<
   NudgeKind,
   { type: string; notif: NotificationType; bodyKey: string; route: string }
 > = {
-  STUDY: {
-    type: 'study_nudge',
-    notif: NotificationType.STUDY_NUDGE,
-    bodyKey: 'nudge.study',
-    route: '/contests',
-  },
   HEALTH: {
     type: 'health_nudge',
     notif: NotificationType.HEALTH_NUDGE,
@@ -72,8 +64,8 @@ export class NudgeService {
   }
 
   /**
-   * Soatlik tekshiruv (test uchun `nowReal` beriladi). STUDY 16:00, HEALTH
-   * 18:00, CONTENT shanba 11:00 (Tashkent). Boshqa soatlarda darhol chiqadi.
+   * Soatlik tekshiruv (test uchun `nowReal` beriladi). HEALTH 18:00, CONTENT
+   * shanba 11:00 (Tashkent). Boshqa soatlarda darhol chiqadi.
    */
   async tick(nowReal: Date): Promise<{ kind: NudgeKind | null; sent: number }> {
     const t = new Date(nowReal.getTime() + TASHKENT_OFFSET_MS);
@@ -81,13 +73,11 @@ export class NudgeService {
     const weekday = t.getUTCDay(); // 0=Yakshanba .. 6=Shanba
 
     const kind: NudgeKind | null =
-      hour === 16
-        ? 'STUDY'
-        : hour === 18
-          ? 'HEALTH'
-          : hour === 11 && weekday === 6
-            ? 'CONTENT'
-            : null;
+      hour === 18
+        ? 'HEALTH'
+        : hour === 11 && weekday === 6
+          ? 'CONTENT'
+          : null;
     if (!kind) return { kind: null, sent: 0 };
 
     const children = (await this.prisma.child.findMany({
@@ -98,12 +88,10 @@ export class NudgeService {
         childUserId: true,
         notificationPreference: {
           select: {
-            studyNudge: true,
             healthNudge: true,
             contentReminder: true,
             quietFrom: true,
             quietTo: true,
-            lastStudyNudgeAt: true,
             lastHealthNudgeAt: true,
             lastContentReminderAt: true,
           },
@@ -132,7 +120,6 @@ export class NudgeService {
     const pref = child.notificationPreference;
 
     // Preference (default true) — o'chirilgan bo'lsa jim.
-    if (kind === 'STUDY' && pref && !pref.studyNudge) return false;
     if (kind === 'HEALTH' && pref && !pref.healthNudge) return false;
     if (kind === 'CONTENT' && pref && !pref.contentReminder) return false;
 
@@ -140,9 +127,6 @@ export class NudgeService {
     if (this.isQuiet(pref, tash)) return false;
 
     // Kuniga/haftada bir marta (spam yo'q).
-    if (kind === 'STUDY' && this.isSameTashDay(pref?.lastStudyNudgeAt, tash)) {
-      return false;
-    }
     if (kind === 'HEALTH' && this.isSameTashDay(pref?.lastHealthNudgeAt, tash)) {
       return false;
     }
@@ -156,9 +140,6 @@ export class NudgeService {
     }
 
     // Kontekst — bola allaqachon faol bo'lsa bezovta qilmaymiz (ijobiy ohang).
-    if (kind === 'STUDY' && (await this.studiedToday(child.id, tash))) {
-      return false;
-    }
     if (kind === 'HEALTH' && (await this.activeToday(child.id, tash))) {
       return false;
     }
@@ -197,10 +178,7 @@ export class NudgeService {
       childId: child.id,
     };
     const update: Prisma.NotificationPreferenceUpdateInput = {};
-    if (kind === 'STUDY') {
-      stamp.lastStudyNudgeAt = nowReal;
-      update.lastStudyNudgeAt = nowReal;
-    } else if (kind === 'HEALTH') {
+    if (kind === 'HEALTH') {
       stamp.lastHealthNudgeAt = nowReal;
       update.lastHealthNudgeAt = nowReal;
     } else {
@@ -221,23 +199,8 @@ export class NudgeService {
     pref: NudgeChild['notificationPreference'],
     tash: Date,
   ): boolean {
-    const from = this.parseHhMm(pref?.quietFrom);
-    const to = this.parseHhMm(pref?.quietTo);
-    if (from === null || to === null || from === to) return false;
-    const cur = tash.getUTCHours() * 60 + tash.getUTCMinutes();
-    return from < to
-      ? cur >= from && cur < to
-      : cur >= from || cur < to; // tun (22:00–08:00) wrap
-  }
-
-  private parseHhMm(v: string | null | undefined): number | null {
-    if (!v) return null;
-    const m = /^(\d{1,2}):(\d{2})$/.exec(v);
-    if (!m) return null;
-    const h = Number(m[1]);
-    const min = Number(m[2]);
-    if (h > 23 || min > 59) return null;
-    return h * 60 + min;
+    const minutes = tash.getUTCHours() * 60 + tash.getUTCMinutes();
+    return isQuietAt(pref?.quietFrom, pref?.quietTo, minutes);
   }
 
   /** `d` Tashkent kuni `tash` bilan bir xilmi (kuniga-bir guard). */
@@ -249,24 +212,6 @@ export class NudgeService {
       a.getUTCMonth() === tash.getUTCMonth() &&
       a.getUTCDate() === tash.getUTCDate()
     );
-  }
-
-  /** Tashkent bugungi 00:00'ning real UTC instant'i. */
-  private todayStartUtc(tash: Date): Date {
-    const wall = Date.UTC(
-      tash.getUTCFullYear(),
-      tash.getUTCMonth(),
-      tash.getUTCDate(),
-    );
-    return new Date(wall - TASHKENT_OFFSET_MS);
-  }
-
-  /** Bugun test yechganmi (olimpiada urinishi). */
-  private async studiedToday(childId: string, tash: Date): Promise<boolean> {
-    const n = await this.prisma.olympiadAttempt.count({
-      where: { childId, startedAt: { gte: this.todayStartUtc(tash) } },
-    });
-    return n > 0;
   }
 
   /** Bugun yetarli harakat qilganmi (qadam). */

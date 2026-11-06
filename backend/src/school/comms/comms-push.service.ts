@@ -5,24 +5,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
 import { FcmService, PushPayload } from '../../common/fcm/fcm.service';
+import { mapLimit } from '../../common/helpers/map-limit';
 import type { NotifLang } from '../../common/i18n/notification-i18n';
 
 /** Bir vaqtda nechta foydalanuvchiga push yuboriladi. */
 const PUSH_CONCURRENCY = 8;
 
-/** Elementlarni `limit` tadan parallel qayta ishlash (tartib saqlanadi). */
-export async function mapLimit<T, R>(items: readonly T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-  const results: R[] = new Array<R>(items.length);
-  let cursor = 0;
-  const worker = async (): Promise<void> => {
-    while (cursor < items.length) {
-      const index = cursor++;
-      results[index] = await fn(items[index]!);
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
-  return results;
-}
+export { mapLimit };
 
 @Injectable()
 export class CommsPushService {

@@ -47,6 +47,10 @@ describe('ChildDataPurgeService', () => {
         update: jest.fn().mockResolvedValue({}),
       },
       kelajakSession: { deleteMany: jest.fn().mockResolvedValue({ count: 2 }) },
+      childDataDeletionRequest: {
+        findMany: jest.fn().mockResolvedValue([{ id: 'dr-1' }]),
+        deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
       voiceMessage: {
         findMany: jest
           .fn()
@@ -185,6 +189,21 @@ describe('ChildDataPurgeService', () => {
       expect(prisma.schoolCareAnonResponse.deleteMany).not.toHaveBeenCalled();
     });
 
+    it("deletes the child's data-deletion requests and their staff notification (the profile stays, so no cascade)", async () => {
+      await service.deleteChildAccount(CHILD_USER);
+
+      expect(prisma.childDataDeletionRequest.findMany).toHaveBeenCalledWith({
+        where: { childId: { in: [CHILD_ID] } },
+        select: { id: true },
+      });
+      expect(prisma.schoolStaffNotification.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ['data-deletion:dr-1'] } },
+      });
+      expect(prisma.childDataDeletionRequest.deleteMany).toHaveBeenCalledWith({
+        where: { childId: { in: [CHILD_ID] } },
+      });
+    });
+
     it("removes the student from personal assignments' studentIds and target.studentIds (assignment itself stays)", async () => {
       prisma.schoolPsychAssignment.findMany.mockResolvedValue([
         { id: 'a-1', studentIds: ['student-1', 'student-2'], target: { kind: 'STUDENTS', studentIds: ['student-1', 'student-2'] } },
@@ -308,6 +327,25 @@ describe('ChildDataPurgeService', () => {
       await service.purgeChildProfile({ id: CHILD_ID, parentId: PARENT, name: 'Ali', childUserId: CHILD_USER, photoPath: null });
 
       expect(order).toEqual(['care-requests', 'care-participation', 'child']);
+    });
+
+    it('deletes data-deletion requests and their staff notification BEFORE the profile', async () => {
+      const order: string[] = [];
+      prisma.childDataDeletionRequest.deleteMany.mockImplementation(async () => {
+        order.push('deletion-requests');
+        return { count: 1 };
+      });
+      prisma.child.delete.mockImplementation(async () => {
+        order.push('child');
+        return {};
+      });
+
+      await service.purgeChildProfile({ id: CHILD_ID, parentId: PARENT, name: 'Ali', childUserId: CHILD_USER, photoPath: null });
+
+      expect(order).toEqual(['deletion-requests', 'child']);
+      expect(prisma.schoolStaffNotification.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ['data-deletion:dr-1'] } },
+      });
     });
 
     it('works for a profile that was never paired', async () => {

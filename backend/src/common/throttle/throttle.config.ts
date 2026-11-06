@@ -23,9 +23,11 @@ export const THROTTLER_NAMES = {
   adminLogin: 'adminLogin',
   schoolLogin: 'schoolLogin',
   schoolLink: 'schoolLink',
+  dataDeletion: 'dataDeletion',
 } as const;
 
 const TEN_MINUTES_MS = 600_000;
+const ONE_DAY_MS = 86_400_000;
 
 /** child-pair: bitta (haqiqiy) IP'dan 10 daqiqada max urinishlar. */
 export const CHILD_PAIR_IP_LIMIT = { limit: 20, ttl: TEN_MINUTES_MS };
@@ -52,6 +54,12 @@ export const SCHOOL_LOGIN_LIMIT = { limit: 30, ttl: TEN_MINUTES_MS };
  * foydalanuvchi / IP limiti (`ParentLinksService`) va 8 belgili kod.
  */
 export const SCHOOL_LINK_LIMIT = { limit: 30, ttl: TEN_MINUTES_MS };
+
+/**
+ * Bola ma'lumotlarini o'chirish so'rovi (Men I09): foydalanuvchi boshiga (UserThrottlerGuard) sutkada
+ * 3 ta so'rov — takroriy (idempotent) javoblar ham hisobga olinadi. Faqat shu route'da `@Throttle` bilan e'lon qilingan.
+ */
+export const DATA_DELETION_LIMIT = { limit: 3, ttl: ONE_DAY_MS };
 
 const THROTTLER_LIMIT_KEY = 'THROTTLER:LIMIT';
 const reflector = new Reflector();
@@ -124,6 +132,11 @@ export function buildThrottlers(): ThrottlerOptions[] {
       name: THROTTLER_NAMES.schoolLink,
       ...SCHOOL_LINK_LIMIT,
       skipIf: onlyWhereDeclared(THROTTLER_NAMES.schoolLink),
+    },
+    {
+      name: THROTTLER_NAMES.dataDeletion,
+      ...DATA_DELETION_LIMIT,
+      skipIf: onlyWhereDeclared(THROTTLER_NAMES.dataDeletion),
     },
   ];
 }

@@ -8,6 +8,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { tashkentDay } from '../../common/time/tashkent';
 import { actorCan, allowedClassIds, assertCan, classScopeWhere, SchoolActor } from '../auth/school-actor';
+import { DATA_DELETION_NOTIFICATION_KIND } from '../../modules/data-deletion/data-deletion-purge';
 import { CARE_TOPIC_LABELS } from '../care/care-labels';
 import { audienceTouchesScope, loadRoster, toAudience } from '../comms/comms-roster';
 
@@ -24,7 +25,8 @@ export type NotificationKind =
   | 'CARE_NEW'
   | 'CARE_URGENT'
   | 'MESSAGE_SENT'
-  | 'EMERGENCY';
+  | 'EMERGENCY'
+  | 'DATA_DELETION_REQUEST';
 type Localized = { uz: string; ru: string };
 
 export interface NotificationItem {
@@ -46,6 +48,7 @@ export const NOTIFICATION_TONES: Record<NotificationKind, NotificationItem['tone
   CARE_URGENT: 'destructive',
   MESSAGE_SENT: 'success',
   EMERGENCY: 'destructive',
+  DATA_DELETION_REQUEST: 'warning',
 };
 
 /** Erkin matn (sabab, xabar) — ikkala tilda bir xil, qisqartirilgan. */
@@ -116,6 +119,12 @@ export class NotificationsService {
       if (n.kind === 'CARE_URGENT' || n.kind === 'CARE_NEW') {
         const params = (n.params ?? {}) as Record<string, string | number>;
         return item(n.kind, n.id, n.at, { params, subject: (n.subject as Localized | null) ?? null, href: n.href });
+      }
+      // Ma'lumot o'chirish so'rovi — faqat o'quvchi ismi va sinf nomi (boshqa hech narsa).
+      if (n.kind === DATA_DELETION_NOTIFICATION_KIND) {
+        const stored = (n.params ?? {}) as Record<string, unknown>;
+        const params = { studentName: String(stored.studentName ?? ''), className: String(stored.className ?? '') };
+        return item('DATA_DELETION_REQUEST', n.id, n.at, { params });
       }
       const kind = n.kind === 'SAFETY_SIGNAL' ? 'SAFETY_SIGNAL' : 'TEST_COMPLETED';
       // Xavfsizlik signalida ism / matn HECH QACHON yo'q.

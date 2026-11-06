@@ -12,7 +12,7 @@ import { randomUUID } from 'crypto';
 import { NotificationType } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { StorageService } from '../../common/storage/storage.service';
-import { FcmService } from '../../common/fcm/fcm.service';
+import { FamilyMessagePushService } from '../../common/notification-prefs/family-message-push.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { BUCKETS } from '../../common/storage/storage.constants';
 import { findFamilyLink } from '../../common/helpers/family-link';
@@ -45,7 +45,7 @@ export class VideoMessagesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
-    private readonly fcm: FcmService,
+    private readonly familyPush: FamilyMessagePushService,
     private readonly realtime: RealtimeGateway,
   ) {}
 
@@ -148,19 +148,12 @@ export class VideoMessagesService {
 
     const title = videoMessage.sender.name ?? 'Yangi xabar';
     const body = 'Video xabar yubordi';
-    try {
-      await this.fcm.sendPushToUser(receiverId, {
-        title,
-        body,
-        data: {
-          type: 'video',
-          messageId: videoMessage.id,
-          senderId,
-        },
-      });
-    } catch (err) {
-      this.logger.warn(`Video push failed for message ${videoMessage.id}`, err);
-    }
+    await this.familyPush.send({
+      link,
+      receiverId,
+      shown: { title, body },
+      data: { type: 'video', messageId: videoMessage.id, senderId },
+    });
     await this.createChatNotification({
       childId: link.childId,
       senderId,

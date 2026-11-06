@@ -13,7 +13,7 @@ import { extname } from 'path';
 import { NotificationType } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { StorageService } from '../../common/storage/storage.service';
-import { FcmService } from '../../common/fcm/fcm.service';
+import { FamilyMessagePushService } from '../../common/notification-prefs/family-message-push.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { BUCKETS } from '../../common/storage/storage.constants';
@@ -42,7 +42,7 @@ export class VoiceMessagesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
-    private readonly fcm: FcmService,
+    private readonly familyPush: FamilyMessagePushService,
     private readonly audit: AuditService,
     private readonly realtime: RealtimeGateway,
   ) {}
@@ -153,19 +153,12 @@ export class VoiceMessagesService {
 
     const title = voiceMessage.sender.name ?? 'Yangi xabar';
     const body = 'Ovozli xabar yubordi';
-    try {
-      await this.fcm.sendPushToUser(receiverId, {
-        title,
-        body,
-        data: {
-          type: 'voice',
-          messageId: voiceMessage.id,
-          senderId,
-        },
-      });
-    } catch (err) {
-      this.logger.warn(`Voice push failed for message ${voiceMessage.id}`, err);
-    }
+    await this.familyPush.send({
+      link,
+      receiverId,
+      shown: { title, body },
+      data: { type: 'voice', messageId: voiceMessage.id, senderId },
+    });
     await this.createChatNotification({
       childId: link.childId,
       senderId,
@@ -220,19 +213,12 @@ export class VoiceMessagesService {
 
     const title = voiceMessage.sender.name ?? 'Yangi xabar';
     const body = text.length > 80 ? `${text.slice(0, 80)}…` : text;
-    try {
-      await this.fcm.sendPushToUser(receiverId, {
-        title,
-        body,
-        data: {
-          type: 'voice',
-          messageId: voiceMessage.id,
-          senderId,
-        },
-      });
-    } catch (err) {
-      this.logger.warn(`Text push failed for message ${voiceMessage.id}`, err);
-    }
+    await this.familyPush.send({
+      link,
+      receiverId,
+      shown: { title, body },
+      data: { type: 'voice', messageId: voiceMessage.id, senderId },
+    });
     await this.createChatNotification({
       childId: link.childId,
       senderId,
@@ -328,19 +314,12 @@ export class VoiceMessagesService {
 
     const title = voiceMessage.sender.name ?? 'Yangi xabar';
     const body = isImage ? '🖼 Rasm yubordi' : '📎 Hujjat yubordi';
-    try {
-      await this.fcm.sendPushToUser(receiverId, {
-        title,
-        body,
-        data: {
-          type: 'voice',
-          messageId: voiceMessage.id,
-          senderId,
-        },
-      });
-    } catch (err) {
-      this.logger.warn(`Media push failed for message ${voiceMessage.id}`, err);
-    }
+    await this.familyPush.send({
+      link,
+      receiverId,
+      shown: { title, body },
+      data: { type: 'voice', messageId: voiceMessage.id, senderId },
+    });
     await this.createChatNotification({
       childId: link.childId,
       senderId,
