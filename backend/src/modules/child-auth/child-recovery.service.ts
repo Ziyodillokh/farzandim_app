@@ -14,6 +14,7 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { FcmService } from '../../common/fcm/fcm.service';
 import { tr } from '../../common/i18n/notification-i18n';
 import { errorLabel } from '../../common/notification-prefs/error-label';
+import { staffWithPermission } from '../../school/common/staff-recipients';
 import { ChildAuthClock } from './child-auth-clock';
 import {
   CHILD_RECOVERY_NOTIFICATION_KIND,
@@ -61,6 +62,9 @@ interface RecoveryTarget {
   school: { schoolId: string; classId: string | null; studentName: string; className: string } | null;
 }
 
+/** Mavjud bo'lmagan bola uchun "bir xil sondagi so'rovlar" (vaqt tartibi mos kelsin) — hech narsa topilmaydi. */
+const NO_CHILD_ID = '00000000-0000-0000-0000-000000000000';
+
 const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
 /** Poll tokeni topilmagan so'rov uchun ham xuddi shu solishtirish bajariladi. */
 const MISSING_HASH = hashToken('child-recovery:missing');
@@ -82,13 +86,13 @@ export class ChildRecoveryService {
   async request(dto: ChildRecoveryRequestDto): Promise<{ requestId: string; pollToken: string }> {
     const now = this.clock.now();
     const login = normalizeLogin(dto.login);
-    const target = isValidLogin(login) ? await this.resolveTarget(login, dto.channel) : null;
+    // Mavjud va mavjud bo'lmagan (yoki yaroqsiz formatdagi) login bir xil sondagi DB so'rovlari bilan o'tadi:
+    // javob vaqti tartibi ham login mavjudligini ko'rsatmasin.
+    const target = await this.resolveTarget(isValidLogin(login) ? login : '', dto.channel);
     // Bola uchun sutkadagi ta'sirli so'rovlar soni (throttler restartda nolga tushadi — bu DB asosida).
-    const recent = target
-      ? await this.prisma.childRecoveryRequest.count({
-          where: { childId: target.childId, createdAt: { gte: new Date(now.getTime() - DAY_MS) } },
-        })
-      : 0;
+    const recent = await this.prisma.childRecoveryRequest.count({
+      where: { childId: target?.childId ?? NO_CHILD_ID, createdAt: { gte: new Date(now.getTime() - DAY_MS) } },
+    });
 
     const pollToken = randomBytes(32).toString('base64url');
     const row = await this.prisma.childRecoveryRequest.create({
@@ -211,7 +215,11 @@ export class ChildRecoveryService {
       where: { login },
       select: { child: { select: { id: true, parentId: true } } },
     });
-    if (!cred) return null;
+    if (!cred) {
+      // Parite: mavjud bola uchun maktab qidiruvi bajariladi — mavjud bo'lmaganida ham xuddi shu so'rov.
+      if (requested === 'SCHOOL') await this.prisma.schoolStudent.findUnique({ where: { childId: NO_CHILD_ID }, select: { id: true } });
+      return null;
+    }
     const { id: childId, parentId } = cred.child;
     if (requested === 'SCHOOL') {
       const student = await this.prisma.schoolStudent.findUnique({
@@ -256,20 +264,26 @@ export class ChildRecoveryService {
     await this.safely('parent push', () => this.pushParent(target));
   }
 
-  /** Sinf rahbari (shu sinf) + administrator; sinfsiz o'quvchi uchun faqat administrator. */
+  /**
+   * Maktab xodimlariga saqlangan bildirishnoma: FAQAT ish qila oladiganlarga — o'quvchining maktabidagi FAOL xodimlar,
+   * `students.manage` ruxsatiga ega va doirasi shu o'quvchini qamraydi (DIRECTOR, ADMIN; sinf rahbari — agar unga
+   * `students.manage` berilgan bo'lsa). Hech kim mos kelmasa — direktor(lar)ga. Oluvchilar `staffIds`da, ularning
+   * rollari `roles`da (panel lentasi ikkala shartni ham tekshiradi).
+   */
   private async storeStaffNotification(
     requestId: string,
     school: NonNullable<RecoveryTarget['school']>,
     at: Date,
   ): Promise<void> {
+    const recipients = await staffWithPermission(this.prisma, school.schoolId, 'students.manage', school.classId);
     const id = childRecoveryNotificationId(requestId);
     const data = {
       schoolId: school.schoolId,
       kind: CHILD_RECOVERY_NOTIFICATION_KIND,
       at,
-      roles: school.classId ? ['HOMEROOM', 'ADMIN'] : ['ADMIN'],
+      roles: recipients.length > 0 ? [...new Set(recipients.map((r) => r.role))] : ['DIRECTOR'],
       classIds: school.classId ? [school.classId] : [],
-      staffIds: [],
+      staffIds: recipients.map((r) => r.id),
       params: { studentName: school.studentName, className: school.className },
     };
     await this.prisma.schoolStaffNotification.upsert({ where: { id }, create: { id, ...data }, update: data });

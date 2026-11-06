@@ -81,6 +81,17 @@ export class ChildrenController {
     });
   }
 
+  // Diqqat: `me` parametrli `@Get(':id')` dan OLDIN e'lon qilinadi (router tartibiga tayanmaslik uchun):
+  // bola O'Z profilini o'qiydi (jins, ta'lim tili va h.k.).
+  @Get('me')
+  @Roles('CHILD')
+  @ApiOperation({ summary: "Joriy bola o'z profilini o'qiydi" })
+  @ApiResponse({ status: 200, description: "Bola yozuvi (educationLanguage bilan)" })
+  @ApiResponse({ status: 404, description: 'Bola yozuvi topilmadi' })
+  async getMe(@CurrentUser() user: JwtPayload) {
+    return this.childrenService.findMe(user.userId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get child details by ID' })
   @ApiParam({ name: 'id', description: 'Child ID (UUID)' })
@@ -182,16 +193,6 @@ export class ChildrenController {
       ip: req.ip,
       headers: req.headers as Record<string, string | string[] | undefined>,
     });
-  }
-
-  // Diqqat: `me` `:id` dan OLDIN — bola O'Z profilini o'qiydi (jins, ta'lim tili va h.k.).
-  @Get('me')
-  @Roles('CHILD')
-  @ApiOperation({ summary: "Joriy bola o'z profilini o'qiydi" })
-  @ApiResponse({ status: 200, description: "Bola yozuvi (educationLanguage bilan)" })
-  @ApiResponse({ status: 404, description: 'Bola yozuvi topilmadi' })
-  async getMe(@CurrentUser() user: JwtPayload) {
-    return this.childrenService.findMe(user.userId);
   }
 
   // Diqqat: `/me/interests` `:id` dan OLDIN — static route param'ga tushib

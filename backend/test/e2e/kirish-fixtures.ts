@@ -2,6 +2,8 @@
 // yangi IP — 30/10daq limit testlarni to'smasin), WebSocket hodisalarini ushlash, soat.
 
 import { JwtService } from '@nestjs/jwt';
+import type { SchoolStaffRole } from '@prisma/client';
+import { SCHOOL_ROLES } from '../../src/school/auth/permissions';
 import { ChildAuthClock } from '../../src/modules/child-auth/child-auth-clock';
 import { RealtimeGateway } from '../../src/common/realtime/realtime.gateway';
 import { createChild, createParent, TestChild, TestParent } from './factories';
@@ -177,4 +179,17 @@ export async function dbContains(t: TestApp, needle: string): Promise<string[]> 
     if (rows[0]?.hit) hits.push(tablename);
   }
   return hits;
+}
+
+/**
+ * Maktab rollari jadvaliga testda vaqtincha ruxsat qo'shadi / olib tashlaydi (ilova va test bitta jarayonda, shuning
+ * uchun guard va oluvchilarni aniqlash ham yangi jadvalni ko'radi). Qaytgan funksiya jadvalni tiklaydi.
+ */
+export function patchRolePermissions(role: SchoolStaffRole, change: { add?: string[]; remove?: string[] }): () => void {
+  const definition = SCHOOL_ROLES[role] as unknown as { permissions: string[] };
+  const original = definition.permissions;
+  definition.permissions = [...original.filter((p) => !(change.remove ?? []).includes(p)), ...(change.add ?? [])];
+  return () => {
+    definition.permissions = original;
+  };
 }

@@ -95,8 +95,9 @@ export class StudentsService {
         where: { schoolId: actor.schoolId, studentId: id },
         orderBy: { from: 'desc' },
       }),
-      // Kirish (K1): maktab kanaliga tushgan ochiq tiklash so'rovlari (bola bog'langan bo'lsagina).
-      student.childId
+      // Kirish (K1): maktab kanaliga tushgan ochiq tiklash so'rovlari — bola bog'langan bo'lsa va xodim ularga
+      // javob bera olsa (`students.manage`; bildirishnoma ham faqat shularga boradi).
+      student.childId && actorCan(actor, 'students.manage')
         ? this.prisma.childRecoveryRequest.findMany({
             where: { childId: student.childId, channel: 'SCHOOL', status: 'RECEIVED' },
             orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
