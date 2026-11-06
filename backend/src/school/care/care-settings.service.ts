@@ -1,12 +1,12 @@
 // Bola ovozi sozlamalari: mas'ul psixolog, o'rinbosar, ish vaqti va javob muddatlari.
-// O'qish — `care.aggregate` yoki `care.individual`; yozish — psixolog (`care.individual`)
-// yoki direktor (`staff.manage`). Ichki xizmatlar (bola ilovasi, cron) `load` / `people` /
+// O'qish — `care.aggregate`, `care.individual` yoki `care.settings`; yozish — FAQAT `care.settings`
+// (direktor, administrator, psixolog). Ichki xizmatlar (bola ilovasi, cron) `load` / `people` /
 // `holidays` dan foydalanadi. Audit yozuvida shaxsiy ma'lumot yo'q.
 
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
-import { assertCanAny, SchoolActor } from '../auth/school-actor';
+import { assertCan, assertCanAny, SchoolActor } from '../auth/school-actor';
 import { SchoolAuditService } from '../common/school-audit.service';
 import { invalid } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
@@ -38,12 +38,12 @@ export class CareSettingsService {
   ) {}
 
   async get(actor: SchoolActor) {
-    assertCanAny(actor, ['care.aggregate', 'care.individual']);
+    assertCanAny(actor, ['care.aggregate', 'care.individual', 'care.settings']);
     return this.view(actor.schoolId);
   }
 
   async update(actor: SchoolActor, input: unknown) {
-    assertCanAny(actor, ['care.individual', 'staff.manage']);
+    assertCan(actor, 'care.settings');
     const data = parseOrThrow(careSettingsInputSchema, input);
     await this.assertPsychologists(actor.schoolId, data);
     await this.prisma.$transaction(async (tx) => {

@@ -2,7 +2,7 @@
 
 Branch: `feat/child-voice-api` (origin/main `5bf570ee`'dan). Migratsiya: **`20261107090000_child_voice`**
 (faqat qo'shuvchi: 4 yangi jadval — `school_care_participation`, `school_care_anon_responses`,
-`school_care_messages`, `school_care_settings`; `school_care_requests`ga 8 ta nullable ustun;
+`school_care_messages`, `school_care_settings`; `school_care_requests`ga 9 ta nullable ustun;
 `school_psych_assignments`ga `student_ids` (default `[]`) va `care_request_id`;
 `school_staff_notifications`ga `staff_ids` (default `[]`)). Mavjud qatorlarga tegilmaydi.
 
@@ -59,6 +59,7 @@ Body `{ "answers": { "<questionId>": 1..5 } }`. O'tkazib yuborilgan savol umuman
 Kamida 1 ta javob (aks holda `400 VALIDATION` `answers: errors.form.selectAtLeastOne`); so'rovnomada yo'q / nofaol / yosh guruhiga
 mos kelmaydigan savol id'si → `400` `answers: errors.form.invalid`; qiymat 1..5 butun son bo'lishi shart; faol bo'lmagan yoki
 boshqa maktab so'rovnomasi → `404 SURVEY_NOT_FOUND`; ikkinchi marta → `409 ALREADY_ANSWERED` (parallel so'rovlarda ham bitta qator).
+So'rovnoma holati tranzaksiya ichida `FOR SHARE` bilan qayta tekshiriladi: yopish bilan poygada javob yopilgan so'rovnomaga tushmaydi (`404`).
 
 ### Anonimlik kafolati va chegarasi
 
@@ -70,7 +71,7 @@ boshqa maktab so'rovnomasi → `404 SURVEY_NOT_FOUND`; ikkinchi marta → `409 A
 
 ## B. Murojaat yozishmasi (bola ↔ psixolog)
 
-`SchoolCareRequest`ga ustunlar: `clientRequestId` (`UNIQUE(studentId, clientRequestId)`), `assignedStaffId`, `openedAt`,
+`SchoolCareRequest`ga ustunlar: `clientRequestId` (`UNIQUE(studentId, clientRequestId)`), `childId` (murojaatni yozgan bola profili; eski qatorlarda `null`), `assignedStaffId`, `openedAt`,
 `openedByStaffId`, `repliedAt`, `resolvedAt`, `escalatedAt`, `lastMessageAt`. Yangi `SchoolCareMessage`
 (`requestId` cascade, `author` `CHILD|STAFF`, `staffId?`, `bodyEnc`, `clientMessageId?`, `createdAt`, `readByChildAt?`, `readByStaffAt?`,
 `UNIQUE(requestId, clientMessageId)`). Murojaat yaratilganda birinchi `CHILD` xabari ham yoziladi. Eski (xabarsiz) murojaat uchun
@@ -80,6 +81,8 @@ yozishma `messageEnc`dan id `"initial"` bo'lgan sintetik xabar bilan tuziladi (h
 `CLOSED` (`status = RESOLVED`). Xodim holatini (`NEW` dan boshqaga) o'zgartirgan eski murojaat `openedAt`siz ham `OPENED` hisoblanadi.
 **`handler`:** `escalatedAt` bor va o'rinbosar faol bo'lsa — o'rinbosar (`isDeputy: true`); aks holda mas'ul psixolog (`isDeputy: false`); aks holda `null`.
 Ichki eslatmalar (`notesEnc`) bolaga HECH QACHON qaytmaydi.
+**Egalik:** bola murojaatni o'quvchi yozuvi VA `childId` (yozgan bola profili) bo'yicha ko'radi. O'quvchi yozuvi boshqa bola profiliga (masalan aka-uka) qayta bog'lansa,
+avvalgi yozishma yangisiga ko'rinmaydi (`404`), xodim javobining push'i ham asl bolaga ketadi; eski qatorlarda (`childId = null`) faqat o'quvchi yozuvi tekshiriladi.
 
 ### Bola
 
@@ -136,14 +139,14 @@ psixolog "hal qildi" qilayotganda xabar o'tib ketmaydi.
 `workDays` (default `[1,2,3,4,5]`, ISO: 1 = dushanba … 7 = yakshanba), `workStart` (`09:00`), `workEnd` (`17:00`),
 `urgentSlaMinutes` (60), `normalSlaHours` (24), `updatedAt`, `updatedByStaffId?`.
 
-- `GET /api/school/care/settings` (`care.aggregate` YOKI `care.individual`: direktor, administrator, psixolog) — sozlamalar (qator yo'q bo'lsa standart
+- `GET /api/school/care/settings` (`care.aggregate` YOKI `care.individual` YOKI `care.settings`: direktor, administrator, psixolog) — sozlamalar (qator yo'q bo'lsa standart
   qiymatlar, `updatedAt: null`) + `staffOptions: [{ "id", "fullName" }]` (shu maktabning faol PSYCHOLOGIST xodimlari):
   ```json
   { "psychologistStaffId": null, "psychologistDisplayName": null, "deputyStaffId": null, "deputyDisplayName": null,
     "workDays": [1,2,3,4,5], "workStart": "09:00", "workEnd": "17:00", "urgentSlaMinutes": 60, "normalSlaHours": 24,
     "updatedAt": null, "updatedByStaffId": null, "staffOptions": [{ "id": "…", "fullName": "…" }] }
   ```
-- `PUT /api/school/care/settings` (`care.individual` YOKI `staff.manage`: psixolog, direktor) — to'liq almashtirish (berilmagan maydon → standart / `null`); javob GET bilan bir xil.
+- `PUT /api/school/care/settings` (FAQAT `care.settings` — YANGI ruxsat: direktor, administrator, psixolog; sinf rahbari / o'qituvchi / navbatchi → `403`) — to'liq almashtirish (berilmagan maydon → standart / `null`); javob GET bilan bir xil.
   Tekshiruv (`400 VALIDATION`, `maydon: errors.form.<kalit>`): xodim shu maktabda, faol va `PSYCHOLOGIST` (`psychologistStaffId|deputyStaffId: invalidStaff`);
   o'rinbosar ≠ psixolog (`deputyStaffId: duplicate`); ko'rsatiladigan ism ≤ 40 (`tooLong`); `workStart < workEnd` (`workEnd: endBeforeStart`;
   format `invalidTime`); `workDays` 1..7, takrorsiz, kamida bitta (`outOfRange` / `duplicate` / `selectAtLeastOne`); `urgentSlaMinutes` 15..1440, `normalSlaHours` 1..168 (`outOfRange`).
@@ -178,6 +181,8 @@ audit `care.request.escalate` (tizim, matnsiz). Shartli `UPDATE` — parallel nu
 `400 target.studentIds: assessments.validation.noStudents` (begona / noma'lum id farqlanmaydi). `consent: true` avvalgidek majburiy. `careRequestId` shu maktab murojaati
 bo'lishi shart (`careRequestId: errors.form.invalid`); `target` ichida ham qabul qilinadi, lekin saqlanadigan `target`ga kirmaydi. Parvoz IQ ham shaxsiy tayinlanadi.
 Qator: `classIds: []`, `studentIds`, `careRequestId`, `invited = studentIds.length`; ro'yxat va natijalarda taklif qilinganlar / yakunlaganlar shu o'quvchilar bo'yicha.
+**Natijalar maxfiyligi:** shaxsiy tayinlash natijalari faqat psixologga (`assessments.manage`) testlar bo'limida ko'rinadi; sinf rahbariga (`GET /tests/:id/results`, `taklif qilinganlar` ham 0)
+va rivojlanish indeksiga / profillariga (`AssessmentsStore.scoredResults`) kirmaydi.
 
 Bola ko'rinishi: `classIds has student.classId` YOKI `studentIds has student.id`. `GET /api/child/school/assessments` qatorlariga qo'shildi (mavjud maydonlar saqlangan):
 ```json
@@ -194,7 +199,7 @@ Bola ko'rinishi: `classIds has student.classId` YOKI `studentIds has student.id`
 - **`URGENT` murojaat yaratilsa:** sozlangan mas'ul psixolog va o'rinbosarga saqlangan bildirishnoma (`CARE_URGENT`, id `care:<requestId>`, faqat sinf nomi va mavzu yorlig'i).
   Hisoblangan lentadagi bir xil id'li yozuv bilan birlashtiriladi (nishonlangan xodimda bittadan ko'rinadi). Murojaat `NEW`dan chiqqach (javob / holat) saqlangan yozuvlar tozalanadi.
 - **Eskalatsiya:** o'rinbosarga (`CARE_URGENT` yoki `CARE_NEW`, id `care-esc:<requestId>`, izoh "Muddatida ochilmadi — sizga o'tkazildi"); `URGENT` bo'lsa direktorga
-  `SAFETY_SIGNAL` (id `care-esc-dir:<requestId>`, ism / sinf / havolasiz). `SchoolStaffNotification.staffIds` (bo'sh — rolga mos hammaga) nishonlash uchun.
+  `SAFETY_SIGNAL` (id `care-esc-dir:<murojaat id'sining sha256 xeshi>`, ism / sinf / havolasiz — direktorga murojaat id'si ochilmaydi). `SchoolStaffNotification.staffIds` (bo'sh — rolga mos hammaga) nishonlash uchun.
 - So'rovnoma va murojaat uchun DON / ball yo'q.
 
 ## F. Ma'lumotlarni o'chirish
@@ -202,6 +207,7 @@ Bola ko'rinishi: `classIds has student.classId` YOKI `studentIds has student.id`
 To'rt yo'lda ham (bola o'z akkauntini o'chirsa — `ChildDataPurgeService.deleteChildAccount`; ota-ona bola profilini o'chirsa — `purgeChildProfile`; ota-ona o'z akkauntini —
 `UsersService.deleteAccount`; admin foydalanuvchini — `AdminUsersService.deleteUser`) shu bolaga bog'langan o'quvchining **murojaatlari (xabarlar cascade)**, ularga bog'liq
 saqlangan xodim bildirishnomalari va **so'rovnoma ishtirok belgilari** o'chadi; o'quvchi qatori qoladi. O'chirish child o'chirilishidan OLDIN bajariladi (`childId` bog'lanishi `SetNull` bo'ladi).
+Shaxsiy test tayinlashidagi shu murojaatga havola (`careRequestId`) `null` qilinadi (tayinlashning o'zi qoladi). Qulf tartibi javob / eskalatsiya bilan bir xil (avval murojaat, keyin bildirishnomalar).
 Yordamchi: `school/care/care-purge.ts` (`deleteCareOfChildren`).
 
 **Anonim javoblar O'CHIRILMAYDI** — ular o'quvchiga bog'lanmagan (shunday loyihalangan), kimniki ekanini aniqlab bo'lmaydi. Eski `school_care_responses` qatorlari ham tegilmaydi
@@ -214,7 +220,8 @@ Yordamchi: `school/care/care-purge.ts` (`deleteCareOfChildren`).
 3. **`handler` va `contact`** bir xil qoida bilan mas'ul shaxsni aniqlaydi (sozlama yo'q / psixolog o'rnatilmagan — yagona faol psixolog); `assignedStaffId` esa faqat AYNAN sozlangan psixologdan olinadi.
 4. **`POST requests` takrori ham `201`** (yangi va mavjud murojaat uchun bir xil status, bir xil tana).
 5. **`SchoolCareAnonResponse.grade` majburiy** (kontraktda `grade?`): javob paytida sinf doim ma'lum; `classId` nullable (eski jadval kabi, sinfsiz qator hisobga kirmaydi).
-6. **Sozlamalarni yozish `care.individual` YOKI `staff.manage`**: ADMIN rolida `staff.manage` yo'q (matritsa o'zgartirilmadi, yangi ruxsat qo'shilmadi) — amalda psixolog va direktor yozadi, administrator faqat o'qiydi.
+6. **Yangi ruxsat `care.settings`** (mahsulot egasi qarori: administrator ham sozlamalarni tahrirlay olsin): DIRECTOR, ADMIN, PSYCHOLOGIST'ga beriladi (butun maktab). `PUT /school/care/settings` uchun YAGONA ruxsat; `GET` — `care.aggregate` YOKI `care.individual` YOKI `care.settings`.
+   `backend/src/school/auth/permissions.ts` va `school-panel/src/auth/permissions.ts` matritsalari bir xil (backend unit testi ikkalasini taqqoslaydi). `care.settings` himoyalangan rollar (`PROTECTED_ROLES`) ro'yxatiga ta'sir qilmaydi — administrator / direktor bolalar murojaati mazmunini ko'rmaydi.
 7. **Saqlangan bildirishnoma nishonlash:** `SchoolStaffNotification` faqat rolga mos edi, shuning uchun qo'shuvchi `staff_ids` ustuni qo'shildi. Yangi `kind` kiritilmadi (panel noma'lum kindda yiqilmasin): mavjud `CARE_URGENT` / `CARE_NEW` / `SAFETY_SIGNAL` ishlatiladi, farq `subject` matnida.
 8. **`ResponseRow.studentId` → `respondentId`** (`care-aggregate`): anonim qatorlarda o'quvchi id'si yo'q; eski qatorlarda o'quvchi id'si, anonimda qator id'si — faqat "necha KISHI" hisoblash uchun. `care-aggregate.spec.ts` fixture maydon nomi shunga moslandi (assertlar o'zgarmadi).
 9. **`EnrolledStudent` (`school/common/child-student.ts`)** ga `grade` va `lang` qo'shildi (qo'shimcha maydon, mavjud iste'molchilar o'zgarmadi).
@@ -222,17 +229,18 @@ Yordamchi: `school/care/care-purge.ts` (`deleteCareOfChildren`).
 11. **Yopiq murojaatga xodim javobi:** `409 CONFLICT` (`message: "REQUEST_CLOSED"`) — xodim xatolari `code` to'plamiga mos; bola tomonida `code: "REQUEST_CLOSED"`.
 12. **Bola xabarlari limiti (30/kun)** boshlang'ich xabarlarni ham hisoblaydi (ular ham `CHILD` xabari).
 13. **Shaxsiy test:** `careRequestId` so'rov tanasida (kanonik), `target` ichida ham qabul qilinadi; o'quvchi sinfi test darajasiga mos bo'lishi shart; sinf bo'yicha tayinlashdagi `classNames` shaxsiy tayinlashda bo'sh.
-14. **Shaxsiy test natijalari** boshqa natijalar kabi sinf kesimida (sinf rahbari — faqat darajalar) ko'rinadi; alohida yashirilmagan (mahsulot egasi savoli).
+14. **Shaxsiy test natijalari** sinf rahbari va rivojlanish ko'rinishlaridan YASHIRILGAN (mutaxassis tanlagan bola ajralib qolmasin); psixolog uchun rivojlanish profilida ham ular yo'q — faqat testlar natijalari sahifasida (mahsulot egasi tasdiqlasin).
 15. **Eskalatsiya o'rinbosari** faol `PSYCHOLOGIST` bo'lishi shart; o'rinbosar faol bo'lmasa cron murojaatni o'tkazmaydi (qayta urinadi). Ochilgandan keyin yoki bola yangi xabar yozganda qayta eskalatsiya yo'q.
 16. **Ishtirok belgisi o'chirilgach** (F bo'limi) o'quvchiga yangi bola akkaunti ulansa, u FAOL so'rovnomaga yana javob bera oladi — anonim javob o'chirilmagani uchun shu so'rovnomada bir o'quvchidan ikkita javob bo'lishi mumkin (kichik chekka holat; mahsulot egasi savoli).
-17. **Bola xabari uchun xodimga alohida bildirishnoma yo'q** (hisoblangan lenta faqat `NEW` murojaatlarni ko'rsatadi; panel `unreadFromChild`dan foydalanadi) — mahsulot egasi savoli.
+17. **Faol so'rovnomada psixolog jonli natijani ko'radi** (mavjud qaror o'zgarmadi): yangi javoblar sonining o'zgarishini murojaat vaqti bilan solishtirib, bitta bolaning javobini taxmin qilish mumkin. Faqat YOPILGANdan keyin ko'rsatish yoki yangilanishni to'plab berish tavsiya etiladi (mahsulot egasi savoli).
+18. **Bola xabari uchun xodimga alohida bildirishnoma yo'q** (hisoblangan lenta faqat `NEW` murojaatlarni ko'rsatadi; panel `unreadFromChild`dan foydalanadi) — mahsulot egasi savoli.
 
 ## Panel uchun yangi i18n kalitlari
 
 - `errors.form.invalidStaff` (xodim topilmadi / faol emas / psixolog emas), `errors.form.duplicate`, `errors.form.outOfRange`, `errors.form.invalid` (mavjud: `required`, `tooLong`, `invalidTime`, `endBeforeStart`, `selectAtLeastOne`).
 - `assessments.validation.noStudents` (shaxsiy tayinlash: o'quvchilar topilmadi / mos emas).
 - Audit amallari: `care.request.open`, `care.request.reply`, `care.request.escalate`, `care.settings.update` (`audit.actions.<action>`).
-- Yangi ruxsat qo'shilmadi — `school-panel/src/auth/permissions.ts` nusxasi o'zgarmaydi.
+- Yangi ruxsat `care.settings` — panel `school-panel/src/auth/permissions.ts` (`PERMISSIONS` va DIRECTOR / ADMIN / PSYCHOLOGIST) shu loyihada sinxronlandi; panel menyu / route-manifest va sozlamalar sahifasi hali yo'q (boshqa agent).
 
 ## Deploy eslatmalari
 

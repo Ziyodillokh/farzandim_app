@@ -96,18 +96,34 @@ describe('Bola ovozi — sozlamalar, contact va eskalatsiya', () => {
       for (const who of [w.homeroom, w.duty, w.teacher]) expect((await staff(who, 'GET', '/settings')).statusCode).toBe(403);
     });
 
-    it('PUT: psixolog va direktor yozadi, boshqalar 403; audit shaxssiz', async () => {
+    it('PUT: psixolog, direktor va administrator (care.settings) yozadi, qolganlari 403; audit shaxssiz', async () => {
       expect((await staff(w.psych, 'PUT', '/settings', settings())).statusCode).toBe(200);
       const saved = (await staff(w.director, 'PUT', '/settings', settings({ urgentSlaMinutes: 30, deputyDisplayName: null }))).json();
       expect(saved).toMatchObject({ psychologistStaffId: w.psych.staffId, psychologistDisplayName: 'Dilnoza opa', deputyDisplayName: null, urgentSlaMinutes: 30 });
       expect(saved.updatedAt).toEqual(expect.any(String));
       expect((await staff(w.director, 'GET', '/settings')).json()).toMatchObject({ urgentSlaMinutes: 30, updatedByStaffId: expect.any(String) });
-      for (const who of [w.admin, w.homeroom, w.duty, w.teacher]) expect((await staff(who, 'PUT', '/settings', settings())).statusCode).toBe(403);
+      const byAdmin = await staff(w.admin, 'PUT', '/settings', settings({ normalSlaHours: 48 }));
+      expect(byAdmin.statusCode).toBe(200);
+      expect(byAdmin.json()).toMatchObject({ normalSlaHours: 48, updatedByStaffId: w.admin.staffId });
+      for (const who of [w.homeroom, w.duty, w.teacher]) {
+        const res = await staff(who, 'PUT', '/settings', settings({ normalSlaHours: 1 }));
+        expect([res.statusCode, res.json().code]).toEqual([403, 'FORBIDDEN']);
+      }
+      expect((await staff(w.psych, 'GET', '/settings')).json().normalSlaHours).toBe(48);
 
       const audit = await t.prisma.schoolAuditLog.findMany({ where: { action: 'care.settings.update' } });
-      expect(audit).toHaveLength(2);
+      expect(audit).toHaveLength(3);
       expect(JSON.stringify(audit)).not.toMatch(/Dilnoza|Kamola|Yusupova/);
       expect(await t.prisma.schoolCareSettings.count()).toBe(1);
+    });
+
+    it('/auth/me: care.settings ruxsati direktor, administrator va psixologda bor; sinf rahbari, o\'qituvchi va navbatchida yo\'q', async () => {
+      const cases: Array<[Staff, boolean]> = [[w.director, true], [w.admin, true], [w.psych, true], [w.homeroom, false], [w.teacher, false], [w.duty, false]];
+      for (const [who, expected] of cases) {
+        const me = await school(who, 'GET', '/auth/me');
+        expect(me.statusCode).toBe(200);
+        expect((me.json().permissions as string[]).includes('care.settings')).toBe(expected);
+      }
     });
 
     it.each([
