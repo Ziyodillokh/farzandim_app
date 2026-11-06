@@ -175,6 +175,12 @@ const T: Record<string, Record<NotifLang, string>> = {
     ru: 'Завтра срок задания',
     en: 'An assignment is due tomorrow',
   },
+  // Bola kirish maʼlumotlarini tiklashni so'radi (ota-onaga). Bola ismi push'da yo'q.
+  'childRecovery.body': {
+    uz: 'Farzandingiz kirish ma\u02bclumotlarini tiklashni so\u02bbradi',
+    ru: 'Ваш ребёнок просит восстановить данные для входа',
+    en: 'Your child asked to restore their sign-in details',
+  },
   // Bola ma'lumotlarini o'chirishni so'radi (ota-onaga). Bola ismi push'da yo'q.
   'dataDeletion.body': {
     uz: 'Farzandingiz ma\u02bclumotlarini o\u02bbchirishni so\u02bbradi',

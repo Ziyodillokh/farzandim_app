@@ -24,6 +24,9 @@ export const THROTTLER_NAMES = {
   schoolLogin: 'schoolLogin',
   schoolLink: 'schoolLink',
   dataDeletion: 'dataDeletion',
+  childLogin: 'childLogin',
+  childRecoveryLogin: 'childRecoveryLogin',
+  childRecoveryIp: 'childRecoveryIp',
 } as const;
 
 const TEN_MINUTES_MS = 600_000;
@@ -61,6 +64,16 @@ export const SCHOOL_LINK_LIMIT = { limit: 30, ttl: TEN_MINUTES_MS };
  */
 export const DATA_DELETION_LIMIT = { limit: 3, ttl: ONE_DAY_MS };
 
+/**
+ * Bola login/parol bilan kirishi va birinchi kirishdagi parol o'rnatish (IP bo'yicha; har bir yo'l o'z
+ * hisobiga ega). Hisob darajasidagi himoya alohida: 15 daqiqada 5 xato -> blok (`ChildLoginService`).
+ */
+export const CHILD_LOGIN_IP_LIMIT = { limit: 30, ttl: TEN_MINUTES_MS };
+/** Kirish maʼlumotlarini tiklash so'rovi: bitta LOGIN (matn, mavjudligidan qat'i nazar) uchun sutkada 3 ta. */
+export const CHILD_RECOVERY_LOGIN_LIMIT = { limit: 3, ttl: ONE_DAY_MS };
+/** Kirish maʼlumotlarini tiklash so'rovi: bitta IP'dan sutkada 10 ta. */
+export const CHILD_RECOVERY_IP_LIMIT = { limit: 10, ttl: ONE_DAY_MS };
+
 const THROTTLER_LIMIT_KEY = 'THROTTLER:LIMIT';
 const reflector = new Reflector();
 
@@ -81,6 +94,16 @@ export function familyCodeTracker(req: Record<string, any>): string {
   const raw = (req as { body?: { familyCode?: unknown } }).body?.familyCode;
   const code = typeof raw === 'string' ? raw.trim().slice(0, 16) : '';
   return code ? `family:${code}` : `ip:${String(req.ip ?? 'unknown')}`;
+}
+
+/**
+ * Tiklash so'rovi tanasidagi login bo'yicha kuzatuv (bo'lmasa IP). Login MATNI sanaladi — u mavjudmi yoki
+ * yo'qligidan qat'i nazar, shuning uchun 429 login mavjudligini fosh qilmaydi.
+ */
+export function loginTracker(req: Record<string, any>): string {
+  const raw = (req as { body?: { login?: unknown } }).body?.login;
+  const login = typeof raw === 'string' ? raw.trim().toLowerCase().slice(0, 64) : '';
+  return login ? `login:${login}` : `ip:${String(req.ip ?? 'unknown')}`;
 }
 
 function onlyWhereDeclared(name: string): ThrottlerOptions['skipIf'] {
@@ -137,6 +160,22 @@ export function buildThrottlers(): ThrottlerOptions[] {
       name: THROTTLER_NAMES.dataDeletion,
       ...DATA_DELETION_LIMIT,
       skipIf: onlyWhereDeclared(THROTTLER_NAMES.dataDeletion),
+    },
+    {
+      name: THROTTLER_NAMES.childLogin,
+      ...CHILD_LOGIN_IP_LIMIT,
+      skipIf: onlyWhereDeclared(THROTTLER_NAMES.childLogin),
+    },
+    {
+      name: THROTTLER_NAMES.childRecoveryLogin,
+      ...CHILD_RECOVERY_LOGIN_LIMIT,
+      getTracker: loginTracker,
+      skipIf: onlyWhereDeclared(THROTTLER_NAMES.childRecoveryLogin),
+    },
+    {
+      name: THROTTLER_NAMES.childRecoveryIp,
+      ...CHILD_RECOVERY_IP_LIMIT,
+      skipIf: onlyWhereDeclared(THROTTLER_NAMES.childRecoveryIp),
     },
   ];
 }

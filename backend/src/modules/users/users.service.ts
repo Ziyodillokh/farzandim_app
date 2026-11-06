@@ -18,6 +18,7 @@ import { BUCKETS, BucketName } from '../../common/storage/storage.constants';
 import { ChildDataPurgeService } from '../child-data-purge/child-data-purge.service';
 import { deleteCareOfChildren } from '../../school/care/care-purge';
 import { deleteDeletionRequestsOfChildren } from '../data-deletion/data-deletion-purge';
+import { deleteChildAuthOfChildren } from '../child-auth/child-auth-purge';
 import { deleteHomeworkOfChildren, homeworkMediaOfChildren } from '../../school/homework/homework-purge';
 import {
   hashPassword,
@@ -168,6 +169,8 @@ export class UsersService {
       await deleteCareOfChildren(tx, children.map((c) => c.id));
       // Ma'lumot o'chirish so'rovlari va ularga bog'liq xodim bildirishnomalari (o'quvchi ismi shu yerda).
       await deleteDeletionRequestsOfChildren(tx, children.map((c) => c.id));
+      // Bola kirish maʼlumotlari va tiklash so'rovlari (xodim bildirishnomalari ham).
+      await deleteChildAuthOfChildren(tx, children.map((c) => c.id));
 
       // Cascade: parent delete removes children + all related data
       await tx.user.delete({ where: { id: userId } });

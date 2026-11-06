@@ -16,6 +16,7 @@ import { ConnectionMonitorModule } from './common/connection/connection-monitor.
 
 // Consumer feature modules
 import { AuthModule } from './modules/auth/auth.module';
+import { ChildAuthModule } from './modules/child-auth/child-auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ChildrenModule } from './modules/children/children.module';
 import { FcmTokensModule } from './modules/fcm-tokens/fcm-tokens.module';
@@ -98,6 +99,7 @@ import { AppController } from './app.controller';
 
     // Consumer modules
     AuthModule,
+    ChildAuthModule,
     UsersModule,
     ChildrenModule,
     FcmTokensModule,
