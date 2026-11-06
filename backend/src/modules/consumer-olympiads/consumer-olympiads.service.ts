@@ -385,7 +385,8 @@ export class ConsumerOlympiadsService {
         attemptId: existing.id,
         startedAt: existing.startedAt.toISOString(),
         status: existing.status,
-        score: existing.score,
+        // Musobaqa rejimida davom ettirishda ham ball oshkor qilinmaydi.
+        score: resultsHidden(olympiad) ? null : existing.score,
         resumed: true,
       };
     }
