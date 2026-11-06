@@ -28,6 +28,8 @@ describe('kirish demo ma\'lumotlari (seed)', () => {
       const code = access.inviteCodes.find((c) => c.studentId === r.studentId);
       expect(code?.studentUsedAt).toBe(r.createdAt);
       expect(Boolean(code?.parentUsedAt)).toBe(r.parentUsed);
+      // Ikkala o'rin ishlatilgan kod yopiq (kontrakt K2), aks holda faol.
+      expect(code?.closedAt !== null).toBe(r.parentUsed);
     }
     for (const r of access.linkRequests.filter((x) => x.kind === 'CORRECTION')) {
       expect(linked.has(r.studentId)).toBe(true);

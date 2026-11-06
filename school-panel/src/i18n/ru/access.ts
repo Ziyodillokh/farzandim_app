@@ -56,6 +56,7 @@ export const access: DeepString<typeof uz> = {
     copyPassword: 'Скопировать пароль',
     print: 'Распечатать карточку',
     done: 'Готово',
+    expired: 'Из соображений безопасности пароль скрыт — при необходимости создайте новый.',
   },
   card: {
     title: 'Parvoz — карточка для входа',

@@ -49,8 +49,8 @@ export function InviteCodeCard({ studentId, studentName, className }: { studentI
   const query = useInviteCode(studentId, true);
   const generate = useGenerateInviteCode(studentId);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [printing, setPrinting] = useState(false);
-  const donePrinting = useCallback(() => setPrinting(false), []);
+  const [printJob, setPrintJob] = useState(0);
+  const donePrinting = useCallback(() => setPrintJob(0), []);
   const focus = useFocusReturn();
 
   const invite = query.data ?? null;
@@ -117,7 +117,7 @@ export function InviteCodeCard({ studentId, studentName, className }: { studentI
           </ul>
           <p className="text-xs leading-relaxed text-muted-foreground">{t('access.invite.review')}</p>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={() => setPrinting(true)}>
+            <Button type="button" variant="outline" onClick={() => setPrintJob((n) => n + 1)}>
               <Printer />
               {t('access.invite.print')}
             </Button>
@@ -148,7 +148,7 @@ export function InviteCodeCard({ studentId, studentName, className }: { studentI
         onCloseAutoFocus={focus.restore}
       />
       {active && invite && (
-        <PrintOnly active={printing} onDone={donePrinting}>
+        <PrintOnly job={printJob} onDone={donePrinting}>
           <InvitePrintCard invite={invite} studentName={studentName} className={className} school={school.data?.school} />
         </PrintOnly>
       )}

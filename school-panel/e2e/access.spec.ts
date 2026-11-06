@@ -198,13 +198,61 @@ test.describe('Kirish ma\'lumotlari', () => {
     await expect(card).toBeHidden();
     await expect(dialog).toBeVisible();
 
-    // Chop etish oynasi yopilganda (afterprint) karta DOM'dan olinadi.
-    await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+    // Chop etish oynasi yopilgach sahifadagi keyingi bosishda karta DOM'dan olinadi.
+    await page.mouse.click(5, 5);
     await expect(page.getByTestId('credential-print-card')).toHaveCount(0);
 
     // Oyna yopilgach parol hech qayerda yo'q.
     await dialog.getByRole('button', { name: uzAccess.reveal.done, exact: true }).click();
     await expect(page.locator('body')).not.toContainText(password);
+  });
+
+  test('bir martalik parol 5 daqiqadan keyin o\'zi yopiladi (ochiq qoldirilgan ish joyida turmasin)', async ({ page }) => {
+    await page.clock.install();
+    await login(page, 'admin', 'Admin2026');
+    const student = await findStudent(page, 'linkedNoCredentials');
+    await openAccessTab(page, student.id);
+    await page.getByRole('main').getByRole('button', { name: uzAccess.credentials.issue, exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: uzAccess.issueDialog.submitIssue, exact: true }).click();
+    const password = (await dialog.getByTestId('issued-password').innerText()).trim();
+
+    // 4 daqiqa 30 soniya: hali ochiq.
+    await page.clock.fastForward('04:30');
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByTestId('issued-password')).toHaveText(password);
+
+    await page.clock.fastForward('00:40');
+    await expect(dialog).toBeHidden();
+    await expect(page.getByText(uzAccess.reveal.expired)).toBeVisible();
+    await expect(page.locator('body')).not.toContainText(password);
+    expect(await storageDump(page)).not.toContain(password);
+  });
+
+  test('keshdagi boshqa o\'quvchi kartasiga o\'tilganda (Orqaga/Oldinga) ochiq oyna va parol holati saqlanmaydi', async ({ page }) => {
+    await login(page, 'admin', 'Admin2026');
+    const first = await findStudent(page, 'linkedNoCredentials');
+    const second = await findStudent(page, 'linkedWithCredentials');
+    const push = (id: string) =>
+      page.evaluate((href) => (window as unknown as { next: { router: { push: (to: string) => void } } }).next.router.push(href), `/students/view?id=${id}&tab=access`);
+
+    // Ikkinchi o'quvchi keshga tushadi, keyin birinchisiga dastur ichida o'tamiz (sahifa qayta yuklanmaydi).
+    await openAccessTab(page, second.id);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(second.name);
+    await push(first.id);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(first.name);
+    await page.getByRole('main').getByRole('button', { name: uzAccess.credentials.issue, exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: uzAccess.issueDialog.submitIssue, exact: true }).click();
+    const password = (await dialog.getByTestId('issued-password').innerText()).trim();
+    await expect(dialog).toContainText(first.name);
+
+    // Orqaga (kesh): oyna va parol boshqa o'quvchi nomi ostida qolib ketmasligi kerak.
+    await push(second.id);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(second.name);
+    await expect(dialog).toBeHidden();
+    await expect(page.locator('body')).not.toContainText(password);
+    await expect(page.getByRole('main').getByTestId('credentials-details')).toBeVisible();
   });
 
   test('ulanmagan o\'quvchi: sababi tushuntiriladi (ota-ona avval ulashi kerak), berish tugmasi yo\'q; taklif kodi bor', async ({ page }) => {
@@ -294,7 +342,7 @@ test.describe('Taklif kodi', () => {
     await expect(page.getByRole('main')).toBeHidden();
     await page.emulateMedia({ media: 'screen' });
     await expect(card).toBeHidden();
-    await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+    await page.mouse.click(5, 5);
     await expect(page.getByTestId('invite-print-card')).toHaveCount(0);
 
     // Yangilash: avval bekor qilish (kod o'zgarmaydi), keyin tasdiq (yangi kod).
@@ -330,14 +378,16 @@ test.describe('Taklif kodi', () => {
     await expect(page.getByRole('main')).toContainText(uzErrors.FORBIDDEN);
   });
 
-  test('tekshiruv kutayotgan o\'quvchi: kodda «Oʻquvchi: foydalanildi»', async ({ page }) => {
+  test('tekshiruv kutayotgan o\'quvchi: kodda «Oʻquvchi: foydalanildi», «Ota-ona: kutilmoqda»', async ({ page }) => {
     await login(page, 'admin', 'Admin2026');
     const { tables } = await readDb(page);
-    const review = tables.access.linkRequests.find((r) => r.kind === 'REVIEW');
-    expect(review).toBeTruthy();
-    await openAccessTab(page, review?.studentId ?? '');
+    // Ota-ona o'rni ham ishlatilgan kod yopiladi (kontrakt) — faol kod faqat ota-ona o'rni bo'sh bo'lganda.
+    const open = tables.access.inviteCodes.find((c) => c.closedAt === null && c.studentUsedAt && tables.access.linkRequests.some((r) => r.studentId === c.studentId));
+    expect(open).toBeTruthy();
+    await openAccessTab(page, open?.studentId ?? '');
     const slots = page.getByRole('main').getByRole('list', { name: uzAccess.invite.slotsLabel });
     await expect(slots).toContainText(`${uzAccess.invite.slot.student}: ${uzAccess.invite.slotState.used}`);
+    await expect(slots).toContainText(`${uzAccess.invite.slot.parent}: ${uzAccess.invite.slotState.pending}`);
   });
 });
 

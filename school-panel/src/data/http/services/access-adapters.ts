@@ -175,7 +175,7 @@ function kindOf(raw: Wire, implied: LinkRequestKind | null): LinkRequestKind {
     if (implied) return implied;
     throw malformed('linkRequest.kind');
   }
-  const kind = typeof declared === 'string' ? KIND_ALIASES[declared] : undefined;
+  const kind = typeof declared === 'string' && Object.hasOwn(KIND_ALIASES, declared) ? KIND_ALIASES[declared] : undefined;
   if (!kind) throw malformed('linkRequest.kind');
   return kind;
 }

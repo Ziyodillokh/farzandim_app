@@ -67,7 +67,8 @@ function inviteFor(student: Student, input: Input, taken: Set<string>, request: 
     expiresAt: stamp(input.baseIso, INVITE_TTL_DAYS, '05:30'),
     studentUsedAt: request.createdAt,
     parentUsedAt: request.parentUsed ? stamp(input.baseIso, 0, '05:45') : null,
-    closedAt: null,
+    // Ikkala o'rin ishlatilsa kod yopiladi (kontrakt K2) — «faol kod» yo'q, tekshiruv so'rovi esa ochiq qoladi.
+    closedAt: request.parentUsed ? stamp(input.baseIso, 0, '05:45') : null,
     createdByStaffId: SEED_STAFF_ID,
   };
 }

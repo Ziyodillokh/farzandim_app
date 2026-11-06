@@ -24,6 +24,9 @@ import { PrintOnly } from './print-only';
 
 export type CredentialsMode = 'issue' | 'reset';
 
+/** Bir martalik parol ochiq qoldirilgan ish joyida cheksiz turmasin: shu muddatdan keyin oyna o'zi yopiladi. */
+export const REVEAL_TTL_MS = 5 * 60_000;
+
 type Props = {
   studentId: string;
   studentName: string;
@@ -71,6 +74,24 @@ function SecretRow({
   );
 }
 
+/** `active` davomida `REVEAL_TTL_MS` o'tsa yoki sahifa yashirilsa (yopish, bfcache) `onExpire`. */
+function useRevealExpiry(active: boolean, onExpire: () => void): void {
+  const latest = useRef(onExpire);
+  useEffect(() => {
+    latest.current = onExpire;
+  });
+  useEffect(() => {
+    if (!active) return;
+    const expire = () => latest.current();
+    const timer = window.setTimeout(expire, REVEAL_TTL_MS);
+    window.addEventListener('pagehide', expire);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('pagehide', expire);
+    };
+  }, [active]);
+}
+
 /**
  * Kirish ma'lumotlarini berish / parolni tiklash: 1) tasdiqlash (login, «boshqa qurilmalardan chiqarish»), 2) bir martalik
  * ochish (login + vaqtinchalik parol, nusxalash, chop etish). Parol FAQAT shu komponent holatida yashaydi: oyna yopilganda
@@ -86,7 +107,7 @@ export function CredentialsDialog({ studentId, studentName, className, mode, onC
   const [signOut, setSignOut] = useState(true);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [issued, setIssued] = useState<IssuedCredentials | null>(null);
-  const [printing, setPrinting] = useState(false);
+  const [printJob, setPrintJob] = useState(0);
   const alive = useRef(true);
   const passwordCopy = useRef<HTMLButtonElement>(null);
   const reset = mode === 'reset';
@@ -101,6 +122,11 @@ export function CredentialsDialog({ studentId, studentName, className, mode, onC
   useEffect(() => {
     if (step === 'reveal') passwordCopy.current?.focus();
   }, [step]);
+
+  useRevealExpiry(step === 'reveal', () => {
+    toast.info(t('access.reveal.expired'));
+    onClose();
+  });
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -133,7 +159,7 @@ export function CredentialsDialog({ studentId, studentName, className, mode, onC
     }
   };
 
-  const donePrinting = useCallback(() => setPrinting(false), []);
+  const donePrinting = useCallback(() => setPrintJob(0), []);
 
   const requestClose = (open: boolean) => {
     // So'rov ketayotganda yopilmaydi: natija (parol) yo'qolib qolmasin.
@@ -238,7 +264,7 @@ export function CredentialsDialog({ studentId, studentName, className, mode, onC
             />
             <p className="text-sm text-muted-foreground">{t('access.reveal.firstLogin')}</p>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setPrinting(true)}>
+              <Button type="button" variant="outline" onClick={() => setPrintJob((n) => n + 1)}>
                 <Printer />
                 {t('access.reveal.print')}
               </Button>
@@ -246,7 +272,7 @@ export function CredentialsDialog({ studentId, studentName, className, mode, onC
                 {t('access.reveal.done')}
               </Button>
             </DialogFooter>
-            <PrintOnly active={printing} onDone={donePrinting}>
+            <PrintOnly job={printJob} onDone={donePrinting}>
               <CredentialPrintCard issued={issued} studentName={studentName} className={className} school={school.data?.school} />
             </PrintOnly>
           </div>

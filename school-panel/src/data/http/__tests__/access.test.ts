@@ -253,6 +253,7 @@ describe('toLinkRequests (kontrakt K2: GET /school/link-requests)', () => {
     ['id yo\'q', [{ ...REVIEW, id: undefined }]],
     ['tur yo\'q', [{ ...REVIEW, kind: undefined }]],
     ['tur noma\'lum', [{ ...REVIEW, kind: 'BOSHQA' }]],
+    ['tur — prototip kaliti', [{ ...REVIEW, kind: 'constructor' }]],
     ['o\'quvchi ismi yo\'q', [{ ...REVIEW, studentName: '' }]],
     ['vaqt yo\'q', [{ ...REVIEW, createdAt: undefined }]],
     ['tekshiruvda ota-ona o\'rni holati yo\'q', [{ ...REVIEW, parentUsed: undefined }]],

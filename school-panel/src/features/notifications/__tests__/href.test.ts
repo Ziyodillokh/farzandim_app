@@ -8,7 +8,11 @@ const item = (kind: NotificationItem['kind'], href: string | null, params: Notif
 describe('isPanelPath', () => {
   it('faqat panel ichidagi yo\'l', () => {
     expect(isPanelPath('/students/view?id=1')).toBe(true);
+    expect(isPanelPath('/care/requests/view?id=care-1')).toBe(true);
     expect(isPanelPath('//evil.example/x')).toBe(false);
+    expect(isPanelPath('/\\evil.example/x')).toBe(false);
+    expect(isPanelPath('/\t/evil.example')).toBe(false);
+    expect(isPanelPath('/a\nb')).toBe(false);
     expect(isPanelPath('https://evil.example/x')).toBe(false);
     expect(isPanelPath('javascript:alert(1)')).toBe(false);
     expect(isPanelPath('')).toBe(false);
@@ -37,10 +41,18 @@ describe('notificationHref: kirish turlari', () => {
   });
 });
 
-describe('notificationHref: boshqa turlar o\'zgarishsiz', () => {
-  it('href — qanday kelgan bo\'lsa shunday (yoki null)', () => {
+describe('notificationHref: boshqa turlar', () => {
+  it('panel ichidagi href o\'zgarishsiz; href yo\'q — null', () => {
     expect(notificationHref(item('EARLY_EXIT_PENDING', '/attendance/early-exit'))).toBe('/attendance/early-exit');
+    expect(notificationHref(item('CARE_NEW', '/care/requests/view?id=r1'))).toBe('/care/requests/view?id=r1');
     expect(notificationHref(item('SAFETY_SIGNAL', null))).toBeNull();
     expect(notificationHref(item('DATA_DELETION_REQUEST', null, { studentName: 'x' }))).toBeNull();
+  });
+
+  it('begona href (tashqi manzil, javascript:, //host) bosilganda hech qaerga olib bormaydi', () => {
+    for (const href of ['https://evil.example/', 'javascript:alert(1)', '//evil.example/x', '/\\evil.example']) {
+      expect(notificationHref(item('EARLY_EXIT_PENDING', href)), href).toBeNull();
+      expect(notificationHref(item('MESSAGE_SENT', href)), href).toBeNull();
+    }
   });
 });

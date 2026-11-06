@@ -57,6 +57,7 @@ export const access = {
     copyPassword: 'Parolni nusxalash',
     print: 'Kartani chop etish',
     done: 'Tayyor',
+    expired: 'Xavfsizlik uchun parol yashirildi — kerak boʻlsa yangisini yarating.',
   },
   card: {
     title: 'Parvoz — kirish kartasi',

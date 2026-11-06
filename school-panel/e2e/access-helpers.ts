@@ -10,7 +10,7 @@ type Db = {
       credentials: Array<{ studentId: string; login: string }>;
       recoveryRequests: Array<{ id: string; studentId: string; status: string }>;
       linkRequests: Array<{ id: string; kind: string; studentId: string; status: string }>;
-      inviteCodes: Array<{ studentId: string; code: string; closedAt: string | null }>;
+      inviteCodes: Array<{ studentId: string; code: string; closedAt: string | null; studentUsedAt: string | null }>;
     };
   };
 };

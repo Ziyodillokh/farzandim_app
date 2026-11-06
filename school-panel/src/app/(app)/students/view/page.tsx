@@ -147,7 +147,7 @@ function StudentDetailView() {
           )}
           {tabs.includes('access') && (
             <TabsContent value="access">
-              <AccessPanel student={s} />
+              <AccessPanel key={s.id} student={s} />
             </TabsContent>
           )}
         </Tabs>

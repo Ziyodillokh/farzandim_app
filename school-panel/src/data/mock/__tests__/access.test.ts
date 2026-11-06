@@ -234,12 +234,17 @@ describe('accessService: 6 xonali taklif kodi', () => {
     expect(mine.find((c) => c.code === first.code && c.closedAt !== null)).toBeDefined();
   });
 
-  it('seed: o\'quvchi o\'rni ishlatilgan kod ko\'rinadi (ota-ona o\'rni — so\'rovga qarab)', async () => {
+  it('seed: o\'quvchi o\'rni ishlatilgan faol kod ko\'rinadi; ikkala o\'rin ishlatilgan kod yopiq — faol kod yo\'q', async () => {
     const review = getTables().access.linkRequests.filter((r) => r.kind === 'REVIEW');
+    expect(review.some((r) => r.parentUsed)).toBe(true);
     for (const r of review) {
       const invite = await accessService.inviteCode(r.studentId);
-      expect(invite?.student.used).toBe(true);
-      expect(invite?.parent.used).toBe(r.parentUsed);
+      if (r.parentUsed) {
+        expect(invite).toBeNull();
+      } else {
+        expect(invite?.student.used).toBe(true);
+        expect(invite?.parent.used).toBe(false);
+      }
     }
   });
 
