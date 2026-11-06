@@ -1,8 +1,9 @@
 import type { AttendanceEvent } from '@/data/contracts';
 import { simulateSurveyResponses } from '@/data/mock/care-sim';
-import { clockMinute, clockToday, getClockState } from '@/data/mock/clock';
+import { clockMinute, clockNow, clockToday, getClockState } from '@/data/mock/clock';
 import { getTables, transact } from '@/data/mock/db';
 import { tickPsychAssignments } from '@/data/mock/psych/sim';
+import { escalateOverdueRequests } from '@/data/mock/services/care-escalation';
 import { simulate } from '@/data/mock/simulator';
 
 /** Shundan katta sakrash (fon tab, qayta boshlash) — "yetib olish": toast'siz. */
@@ -14,10 +15,12 @@ export type EngineTick = {
   catchingUp: boolean;
   tests: number;
   surveys: number;
+  /** Muddatdan o'tib o'rinbosarga o'tkazilgan murojaatlar. */
+  escalated: number;
 };
 
 /**
- * Bitta demo daqiqasi: davomat, psixologik testlar va so'rovnoma javoblari —
+ * Bitta demo daqiqasi: davomat, psixologik testlar, so'rovnoma javoblari va murojaatlarni o'rinbosarga o'tkazish —
  * hammasi BITTA `transact` ichida. Panel ham, kiosk ham shu funksiyani chaqiradi
  * (simulyator `processedUntilMinute` bo'yicha idempotent).
  */
@@ -37,5 +40,6 @@ export function runEngineTick(lastKey: { current: string }): EngineTick | null {
     catchingUp,
     tests: tickPsychAssignments(tables, date, minute),
     surveys: simulateSurveyResponses(tables, date, minute),
+    escalated: escalateOverdueRequests(tables, clockNow().getTime()),
   }));
 }

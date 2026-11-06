@@ -123,22 +123,141 @@ export function buildSurveys(baseIso: string, classes: SchoolClass[], students: 
   return { surveys, responses };
 }
 
+/** Bola ↔ psixolog yozishmasi (seed): [muallif, vaqt, matn, xodim hali o'qimagan]. */
+type SeedMessage = readonly ['CHILD' | 'STAFF', string, string, true?];
+type SeedThread = { opened?: string; replies?: readonly SeedMessage[]; resolved?: string };
+type SeedRequest = Omit<
+  CareRequest,
+  'id' | 'studentId' | 'classId' | 'messages' | 'assignedStaffId' | 'openedAt' | 'openedByStaffId' | 'repliedAt' | 'resolvedAt' | 'escalatedAt' | 'lastMessageAt'
+>;
+
+/** Seed murojaatiga yozishma va holat vaqtlarini qo'shadi (birinchi xabar — bolaning murojaati). */
+function withThread(id: string, base: SeedRequest, thread: SeedThread = {}): Omit<CareRequest, 'studentId' | 'classId'> {
+  const staff = FIXED_STAFF.psychologist;
+  const first = { id: `${id}-m1`, author: 'CHILD', staffId: null, text: base.message, createdAt: base.createdAt, readByStaffAt: thread.opened ?? null } as const;
+  const followUps = (thread.replies ?? []).map(([author, at, text, unread], i) => ({
+    id: `${id}-m${i + 2}`,
+    author,
+    staffId: author === 'STAFF' ? staff : null,
+    text,
+    createdAt: at,
+    readByStaffAt: unread ? null : at,
+  }));
+  const messages = [first, ...followUps];
+  const replied = messages.find((m) => m.author === 'STAFF');
+  return {
+    id,
+    ...base,
+    messages,
+    assignedStaffId: staff,
+    openedAt: thread.opened ?? null,
+    openedByStaffId: thread.opened ? staff : null,
+    repliedAt: replied?.createdAt ?? null,
+    resolvedAt: thread.resolved ?? null,
+    escalatedAt: null,
+    lastMessageAt: messages.at(-1)?.createdAt ?? base.createdAt,
+  };
+}
+
 export function buildCareRequests(students: Student[], baseIso: string): CareRequest[] {
   const byClass = (classId: string, i: number) => students.filter((s) => s.classId === classId)[i];
   const at = (offset: number, time: string) => `${addDays(baseIso, offset)}T${time}:00`;
-  const spec: Array<[Student | undefined, Omit<CareRequest, 'id' | 'studentId' | 'classId'>]> = [
-    [byClass('cls-8b', 4), { createdAt: at(0, '07:52'), topic: 'BULLYING', message: 'Tanaffuslarda bir guruh bolalar meni doim masxara qilishadi. Uyalib hech kimga aytolmadim.', urgency: 'URGENT', status: 'NEW', meetingAt: null, notes: [], protocolActivated: false }],
-    [byClass('cls-10b', 7), { createdAt: at(-1, '19:20'), topic: 'EMOTIONS', message: 'Oxirgi paytlarda uxlay olmayapman, imtihonlardan juda qo\'rqaman.', urgency: 'NORMAL', status: 'NEW', meetingAt: null, notes: [], protocolActivated: false }],
-    [byClass('cls-6a', 2), { createdAt: at(-1, '16:05'), topic: 'LEARNING', message: 'Matematikani umuman tushunmayapman, so\'rashga uyalaman.', urgency: 'NORMAL', status: 'IN_PROGRESS', meetingAt: null, notes: [{ at: at(0, '09:10'), byStaffId: FIXED_STAFF.psychologist, text: 'Sinf rahbari bilan qo\'shimcha mashg\'ulot imkoniyatini muhokama qilaman (ism aytilmaydi).' }], protocolActivated: false }],
-    [byClass('cls-9a', 9), { createdAt: at(-2, '20:40'), topic: 'FAMILY', message: 'Uyda vaziyat og\'ir, kim bilandir gaplashgim keladi.', urgency: 'NORMAL', status: 'SCHEDULED', meetingAt: at(1, '12:30'), notes: [{ at: at(-1, '10:00'), byStaffId: FIXED_STAFF.psychologist, text: 'Suhbat ertaga katta tanaffusda, psixolog xonasida.' }], protocolActivated: false }],
-    [byClass('cls-11a', 6), { createdAt: at(-3, '18:15'), topic: 'EMOTIONS', message: 'Kasb tanlashda adashib qolganman, kim bilan maslahatlashsam bo\'ladi?', urgency: 'NORMAL', status: 'RESOLVED', meetingAt: at(-1, '13:20'), notes: [{ at: at(-1, '14:00'), byStaffId: FIXED_STAFF.psychologist, text: 'Kasbga yo\'naltirish testi o\'tkazildi, tavsiyalar berildi.' }], protocolActivated: false }],
-    [byClass('cls-7b', 3), { createdAt: at(-4, '17:30'), topic: 'PEERS', message: 'Yangi sinfga o\'tdim, hali do\'stlarim yo\'q.', urgency: 'NORMAL', status: 'RESOLVED', meetingAt: at(-3, '12:40'), notes: [{ at: at(-3, '13:30'), byStaffId: FIXED_STAFF.psychologist, text: 'Sinf rahbari bilan guruh topshiriqlari orqali moslashuv rejasi.' }], protocolActivated: false }],
-    [byClass('cls-5b', 8), { createdAt: at(-5, '15:45'), topic: 'SAFETY', message: 'Maktabdan qaytayotganda katta bolalar pul so\'rashdi.', urgency: 'URGENT', status: 'IN_PROGRESS', meetingAt: null, notes: [{ at: at(-5, '16:10'), byStaffId: FIXED_STAFF.psychologist, text: 'Himoya protokoli ishga tushirildi: direktor va navbatchi xabardor (bolaning ismi tashqariga berilmadi).' }], protocolActivated: true }],
-    [byClass('cls-8a', 1), { createdAt: at(-6, '21:10'), topic: 'OTHER', message: 'Kutubxonada ko\'proq ingliz tilidagi kitob bo\'lishini xohlardim.', urgency: 'NORMAL', status: 'RESOLVED', meetingAt: null, notes: [{ at: at(-5, '09:00'), byStaffId: FIXED_STAFF.psychologist, text: 'Taklif (anonim) ma\'muriyatga yetkazildi.' }], protocolActivated: false }],
+  const spec: Array<[Student | undefined, (id: string) => Omit<CareRequest, 'studentId' | 'classId'>]> = [
+    [byClass('cls-8b', 4), (id) => withThread(id, { createdAt: at(0, '07:52'), topic: 'BULLYING', message: 'Tanaffuslarda bir guruh bolalar meni doim masxara qilishadi. Uyalib hech kimga aytolmadim.', urgency: 'URGENT', status: 'NEW', meetingAt: null, notes: [], protocolActivated: false })],
+    [byClass('cls-10b', 7), (id) => withThread(id, { createdAt: at(-1, '19:20'), topic: 'EMOTIONS', message: 'Oxirgi paytlarda uxlay olmayapman, imtihonlardan juda qo\'rqaman.', urgency: 'NORMAL', status: 'NEW', meetingAt: null, notes: [], protocolActivated: false })],
+    [
+      byClass('cls-6a', 2),
+      (id) =>
+        withThread(
+          id,
+          { createdAt: at(-1, '16:05'), topic: 'LEARNING', message: 'Matematikani umuman tushunmayapman, so\'rashga uyalaman.', urgency: 'NORMAL', status: 'IN_PROGRESS', meetingAt: null, notes: [{ at: at(0, '09:10'), byStaffId: FIXED_STAFF.psychologist, text: 'Sinf rahbari bilan qo\'shimcha mashg\'ulot imkoniyatini muhokama qilaman (ism aytilmaydi).' }], protocolActivated: false },
+          {
+            opened: at(0, '09:05'),
+            replies: [
+              ['STAFF', at(0, '09:12'), 'Salom! Yozganing uchun rahmat, bu juda to\'g\'ri qadam. Qaysi mavzular qiyin bo\'layotganini aytsang, birga yo\'l topamiz.'],
+              ['CHILD', at(0, '09:40'), 'Kasrlar va tenglamalar. Rahmat, opa.', true],
+            ],
+          },
+        ),
+    ],
+    [
+      byClass('cls-9a', 9),
+      (id) =>
+        withThread(
+          id,
+          { createdAt: at(-2, '20:40'), topic: 'FAMILY', message: 'Uyda vaziyat og\'ir, kim bilandir gaplashgim keladi.', urgency: 'NORMAL', status: 'SCHEDULED', meetingAt: at(1, '12:30'), notes: [{ at: at(-1, '10:00'), byStaffId: FIXED_STAFF.psychologist, text: 'Suhbat ertaga katta tanaffusda, psixolog xonasida.' }], protocolActivated: false },
+          {
+            opened: at(-1, '09:50'),
+            replies: [
+              ['STAFF', at(-1, '10:05'), 'Salom. Ertaga katta tanaffusda psixolog xonasida gaplashamiz. Men seni eshitaman, xavotir olma.'],
+              ['CHILD', at(-1, '12:00'), 'Yaxshi, kelaman.'],
+            ],
+          },
+        ),
+    ],
+    [
+      byClass('cls-11a', 6),
+      (id) =>
+        withThread(
+          id,
+          { createdAt: at(-3, '18:15'), topic: 'EMOTIONS', message: 'Kasb tanlashda adashib qolganman, kim bilan maslahatlashsam bo\'ladi?', urgency: 'NORMAL', status: 'RESOLVED', meetingAt: at(-1, '13:20'), notes: [{ at: at(-1, '14:00'), byStaffId: FIXED_STAFF.psychologist, text: 'Kasbga yo\'naltirish testi o\'tkazildi, tavsiyalar berildi.' }], protocolActivated: false },
+          { opened: at(-2, '08:50'), replies: [['STAFF', at(-2, '09:05'), 'Salom! Kasb tanlash — katta qaror, hamma ham shunday qiynaladi. Seshanba kuni birga gaplashamiz.'], ['CHILD', at(-2, '12:10'), 'Rahmat, kelaman.']], resolved: at(-1, '14:00') },
+        ),
+    ],
+    [
+      byClass('cls-7b', 3),
+      (id) =>
+        withThread(
+          id,
+          { createdAt: at(-4, '17:30'), topic: 'PEERS', message: 'Yangi sinfga o\'tdim, hali do\'stlarim yo\'q.', urgency: 'NORMAL', status: 'RESOLVED', meetingAt: at(-3, '12:40'), notes: [{ at: at(-3, '13:30'), byStaffId: FIXED_STAFF.psychologist, text: 'Sinf rahbari bilan guruh topshiriqlari orqali moslashuv rejasi.' }], protocolActivated: false },
+          { opened: at(-3, '08:45'), replies: [['STAFF', at(-3, '09:00'), 'Salom! Yangi sinfda o\'zini begona his qilish tabiiy. Bugun tanaffusda gaplashamiz.']], resolved: at(-3, '13:30') },
+        ),
+    ],
+    [
+      byClass('cls-5b', 8),
+      (id) =>
+        withThread(
+          id,
+          { createdAt: at(-5, '15:45'), topic: 'SAFETY', message: 'Maktabdan qaytayotganda katta bolalar pul so\'rashdi.', urgency: 'URGENT', status: 'IN_PROGRESS', meetingAt: null, notes: [{ at: at(-5, '16:10'), byStaffId: FIXED_STAFF.psychologist, text: 'Himoya protokoli ishga tushirildi: direktor va navbatchi xabardor (bolaning ismi tashqariga berilmadi).' }], protocolActivated: true },
+          { opened: at(-5, '15:50'), replies: [['STAFF', at(-5, '16:00'), 'Yozganing uchun rahmat, sen to\'g\'ri qilding. Hozir yordam beramiz. Bugun mening xonamga kela olasanmi?'], ['CHILD', at(-5, '16:25'), 'Ha, ertaga ertalab kelaman.']] },
+        ),
+    ],
+    [
+      byClass('cls-8a', 1),
+      (id) =>
+        withThread(
+          id,
+          { createdAt: at(-6, '21:10'), topic: 'OTHER', message: 'Kutubxonada ko\'proq ingliz tilidagi kitob bo\'lishini xohlardim.', urgency: 'NORMAL', status: 'RESOLVED', meetingAt: null, notes: [{ at: at(-5, '09:00'), byStaffId: FIXED_STAFF.psychologist, text: 'Taklif (anonim) ma\'muriyatga yetkazildi.' }], protocolActivated: false },
+          { opened: at(-5, '08:40'), replies: [['STAFF', at(-5, '08:55'), 'Taklifing uchun rahmat! Ma\'muriyatga yetkazamiz.']], resolved: at(-5, '09:00') },
+        ),
+    ],
   ];
   return spec
-    .filter((entry): entry is [Student, Omit<CareRequest, 'id' | 'studentId' | 'classId'>] => Boolean(entry[0]))
-    .map(([student, rest], i) => ({ id: `care-${i + 1}`, studentId: student.id, classId: student.classId, ...rest }));
+    .filter((entry): entry is [Student, (typeof entry)[1]] => Boolean(entry[0]))
+    .map(([student, build], i) => ({ ...build(`care-${i + 1}`), studentId: student.id, classId: student.classId }));
+}
+
+/**
+ * Yangi (hozirgina yuborilgan) murojaat: bolaning birinchi xabari bilan, mas'ul psixologga biriktirilgan.
+ * Demo trigger va testlar shu yordamchidan foydalanadi.
+ */
+export function newCareRequest(
+  base: Pick<CareRequest, 'id' | 'studentId' | 'classId' | 'createdAt' | 'topic' | 'message' | 'urgency'> & { assignedStaffId: string | null },
+): CareRequest {
+  return {
+    ...base,
+    status: 'NEW',
+    meetingAt: null,
+    notes: [],
+    protocolActivated: false,
+    messages: [{ id: `${base.id}-m1`, author: 'CHILD', staffId: null, text: base.message, createdAt: base.createdAt, readByStaffAt: null }],
+    openedAt: null,
+    openedByStaffId: null,
+    repliedAt: null,
+    resolvedAt: null,
+    escalatedAt: null,
+    lastMessageAt: base.createdAt,
+  };
 }
 
 /**

@@ -9,6 +9,8 @@ import { assertCan, currentActor, inScope, newId, writeAudit } from '../context'
 import { getTables, resetDb, transact } from '../db';
 import { studentName } from '../lookups';
 import { tickPsychAssignments } from '../psych/sim';
+import { newCareRequest } from '../seed/care';
+import { readCareSettings } from './care-settings';
 
 export type DemoTrigger = 'LATE' | 'EARLY_EXIT' | 'CARE_URGENT' | 'VERIFICATION' | 'SURVEY_RESPONSES' | 'TEST_COMPLETIONS';
 
@@ -90,7 +92,18 @@ export const demoService = {
           return studentName(pick);
         }
         case 'CARE_URGENT': {
-          t.careRequests.push({ id: newId('care'), studentId: pick.id, classId: pick.classId, createdAt: now, topic: 'BULLYING', message: 'Menga tanaffusda tazyiq o\'tkazishyapti, qo\'rqyapman.', urgency: 'URGENT', status: 'NEW', meetingAt: null, notes: [], protocolActivated: false });
+          t.careRequests.push(
+            newCareRequest({
+              id: newId('care'),
+              studentId: pick.id,
+              classId: pick.classId,
+              createdAt: now,
+              topic: 'BULLYING',
+              message: 'Menga tanaffusda tazyiq o\'tkazishyapti, qo\'rqyapman.',
+              urgency: 'URGENT',
+              assignedStaffId: readCareSettings(t).psychologistStaffId,
+            }),
+          );
           return 'care';
         }
         case 'VERIFICATION': {

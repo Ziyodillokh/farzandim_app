@@ -4,8 +4,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { toast } from 'sonner';
 
 import { api } from '@/data/api';
-import type { CareRequestStatus } from '@/data/contracts';
-import type { CareRequestFilter } from '@/data/mock/services/care';
+import { type CareRequestFilter, type CareRequestStatus, ServiceError } from '@/data/contracts';
 import type { CareAggregateQuery, CareQuestionInput, CareSettingsInput, CareSurveyInput } from '@/data/schemas/care';
 import { type TKey, useI18n } from '@/i18n';
 import { errorKey } from '@/lib/errors';
@@ -66,8 +65,11 @@ export function useCareQuestions() {
   return useQuery({ queryKey: careKeys.questions, queryFn: () => api.care.listQuestions() });
 }
 
-/** Bola ovozi o'zgarishlari — ro'yxatlarni yangilaydi va toast ko'rsatadi. */
-function useCareMutation<TVars, TResult>(fn: (vars: TVars) => Promise<TResult>, successKey: TKey) {
+/**
+ * Bola ovozi o'zgarishlari — ro'yxatlarni yangilaydi va toast ko'rsatadi.
+ * `errorOf` — maxsus xato matni kerak bo'lsa (masalan, yopilgan murojaatga javob).
+ */
+function useCareMutation<TVars, TResult>(fn: (vars: TVars) => Promise<TResult>, successKey: TKey, errorOf: (error: unknown) => TKey = errorKey) {
   const queryClient = useQueryClient();
   const { t } = useI18n();
   return useMutation({
@@ -76,7 +78,7 @@ function useCareMutation<TVars, TResult>(fn: (vars: TVars) => Promise<TResult>, 
       void queryClient.invalidateQueries();
       toast.success(t(successKey));
     },
-    onError: (error) => toast.error(t(errorKey(error))),
+    onError: (error) => toast.error(t(errorOf(error))),
   });
 }
 
@@ -89,6 +91,16 @@ export function useUpdateRequestStatus() {
 
 export function useAddRequestNote() {
   return useCareMutation(({ id, text }: { id: string; text: string }) => api.care.addRequestNote(id, text), 'care.request.noteAdded');
+}
+
+/** Yopilgan murojaatga javob (409) — «avval qayta oching»; boshqa xatolar odatdagidek. */
+function replyErrorKey(error: unknown): TKey {
+  return error instanceof ServiceError && error.code === 'CONFLICT' ? 'care.request.reply.closedError' : errorKey(error);
+}
+
+/** Bolaga javob (yozishma). Ichki eslatmadan ALOHIDA. */
+export function useReplyToRequest() {
+  return useCareMutation(({ id, text }: { id: string; text: string }) => api.care.replyToRequest(id, text), 'care.request.reply.sent', replyErrorKey);
 }
 
 export function useScheduleMeeting() {

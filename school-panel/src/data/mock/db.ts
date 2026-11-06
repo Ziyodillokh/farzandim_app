@@ -118,6 +118,31 @@ function withCareSettings(db: DbSnapshot): DbSnapshot {
   return { ...db, tables: { ...db.tables, staff, careSettings: buildCareSettings(db.baseDate) } };
 }
 
+/**
+ * Bola ↔ psixolog yozishmasi: avval saqlangan murojaatlarga bolaning birinchi xabari (id `initial`) va
+ * holat vaqtlari qo'shiladi. Holati NEW bo'lmagan murojaat «ochilgan» deb hisoblanadi (xodim uni allaqachon ko'rgan).
+ */
+function withCareThread(db: DbSnapshot): DbSnapshot {
+  if (db.tables.careRequests.every((r) => Array.isArray(r.messages))) return db;
+  const careRequests = db.tables.careRequests.map((r) => {
+    if (Array.isArray(r.messages)) return r;
+    const seen = r.status !== 'NEW';
+    const opened = seen ? (r.notes[0]?.at ?? r.createdAt) : null;
+    return {
+      ...r,
+      messages: [{ id: 'initial', author: 'CHILD' as const, staffId: null, text: r.message, createdAt: r.createdAt, readByStaffAt: opened }],
+      assignedStaffId: db.tables.careSettings?.psychologistStaffId ?? null,
+      openedAt: opened,
+      openedByStaffId: null,
+      repliedAt: null,
+      resolvedAt: r.status === 'RESOLVED' ? (r.notes.at(-1)?.at ?? r.createdAt) : null,
+      escalatedAt: null,
+      lastMessageAt: r.createdAt,
+    };
+  });
+  return { ...db, tables: { ...db.tables, careRequests } };
+}
+
 const MIGRATIONS: readonly Migration[] = [
   withPortraits,
   withAssessments,
@@ -126,6 +151,7 @@ const MIGRATIONS: readonly Migration[] = [
   withTimetables,
   withHomework,
   withCareSettings,
+  withCareThread,
 ];
 
 export function migrate(db: DbSnapshot): DbSnapshot {

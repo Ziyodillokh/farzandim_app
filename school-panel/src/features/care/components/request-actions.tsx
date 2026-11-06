@@ -11,17 +11,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import type { CareRequestStatus } from '@/data/contracts';
-import type { CareRequestDetail } from '@/data/mock/services/care';
+import type { CareRequestDetail } from '@/data/contracts';
 import { CARE_REQUEST_STATUSES } from '@/data/schemas/care';
 import { TILE } from '@/features/dashboard/lib/tile';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { useActivateProtocol, useScheduleMeeting, useUpdateRequestStatus } from '../hooks';
-
-/** "YYYY-MM-DDTHH:MM:SS" → datetime-local qiymati. */
-function toLocalInput(value: string | null): string {
-  return value ? value.slice(0, 16) : '';
-}
+import { toLocalInput } from '../lib/datetime';
 
 /** Psixolog amallari: holat, suhbat vaqti, himoya protokoli. */
 export function RequestActions({ request }: { request: CareRequestDetail }) {

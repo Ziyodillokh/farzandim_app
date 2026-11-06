@@ -2,7 +2,7 @@ import type { CareAggregate, CareQuestion, CareRequest, CareSurvey } from '@/dat
 import type { careService } from '@/data/mock/services/care';
 import type { CareAggregateQuery, CareQuestionInput, CareSettingsInput, CareSurveyInput } from '@/data/schemas/care';
 import { http } from '../client';
-import { toCareSettingsBody, toCareSettingsView } from './care-adapters';
+import { toCareMessage, toCareRequestDetail, toCareRequestList, toCareSettingsBody, toCareSettingsView } from './care-adapters';
 
 type Care = typeof careService;
 type Result<K extends keyof Care> = Awaited<ReturnType<Care[K]>>;
@@ -13,8 +13,11 @@ export const careHttp: Care = {
   surveyOptions: () => http<Result<'surveyOptions'>>('GET', `${BASE}/surveys/options`),
   surveySummaries: () => http<Result<'surveySummaries'>>('GET', `${BASE}/surveys/summaries`),
   aggregate: (query: CareAggregateQuery) => http<CareAggregate>('GET', `${BASE}/aggregate`, { query }),
-  listRequests: (filter = {}) => http<Result<'listRequests'>>('GET', `${BASE}/requests`, { query: filter }),
-  getRequest: (requestId) => http<Result<'getRequest'>>('GET', `${BASE}/requests/${id(requestId)}`),
+  listRequests: async (filter = {}) => toCareRequestList(await http<unknown>('GET', `${BASE}/requests`, { query: filter })),
+  /** Birinchi ochilishda backend `openedAt`ni qo'yadi va bola xabarlarini o'qilgan qiladi. */
+  getRequest: async (requestId) => toCareRequestDetail(await http<unknown>('GET', `${BASE}/requests/${id(requestId)}`)),
+  /** Bolaga javob (yozishma). Ichki eslatma — alohida `/notes`. */
+  replyToRequest: async (requestId, text) => toCareMessage(await http<unknown>('POST', `${BASE}/requests/${id(requestId)}/messages`, { body: { text } })),
   updateRequestStatus: (requestId, status) => http<CareRequest>('PUT', `${BASE}/requests/${id(requestId)}/status`, { body: { status } }),
   addRequestNote: (requestId, text) => http<CareRequest>('POST', `${BASE}/requests/${id(requestId)}/notes`, { body: { text } }),
   scheduleMeeting: (requestId, meetingAt) => http<CareRequest>('PUT', `${BASE}/requests/${id(requestId)}/meeting`, { body: { meetingAt } }),

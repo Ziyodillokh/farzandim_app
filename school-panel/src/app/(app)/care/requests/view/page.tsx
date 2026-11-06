@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarClock, Clock3, MessageSquareQuote, ShieldAlert, Tag, UserRound } from 'lucide-react';
+import { ArrowUpRight, CalendarClock, Clock3, Eye, EyeOff, MessageSquareQuote, ShieldAlert, Tag, UserRound, UserRoundCheck } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, type ReactNode } from 'react';
 
@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ServiceError } from '@/data/contracts';
 import { ConfidentialityCard } from '@/features/care/components/confidentiality-card';
 import { RequestActions } from '@/features/care/components/request-actions';
+import { RequestThread } from '@/features/care/components/request-thread';
 import { RequestTimeline } from '@/features/care/components/request-timeline';
 import { useCareRequest } from '@/features/care/hooks';
 import { ICON_CHIP, TILE } from '@/features/dashboard/lib/tile';
@@ -51,7 +52,7 @@ function Detail({ icon, label, children }: { icon: ReactNode; label: string; chi
 }
 
 function RequestView() {
-  const { t, formatDate, formatRelative } = useI18n();
+  const { t, formatDate } = useI18n();
   const id = useSearchParams().get('id');
   const query = useCareRequest(id);
   const request = query.data;
@@ -88,9 +89,21 @@ function RequestView() {
         title={t('care.request.title')}
         {...back}
         badge={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <UrgencyBadge urgency={request.urgency} />
             <CareStatusBadge status={request.status} />
+            {request.assignedTo && (
+              <Badge variant="outline" data-testid="handler-badge">
+                {request.escalatedAt ? <UserRoundCheck className="h-3 w-3" aria-hidden /> : <UserRound className="h-3 w-3" aria-hidden />}
+                {t('care.requests.assignedTo', { name: request.assignedTo.name })}
+              </Badge>
+            )}
+            {request.escalatedAt && (
+              <Badge variant="warning" data-testid="escalated-badge">
+                <ArrowUpRight className="h-3 w-3" aria-hidden />
+                {t('care.request.escalatedBadge')}
+              </Badge>
+            )}
           </div>
         }
       />
@@ -116,18 +129,7 @@ function RequestView() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          <SectionCard title={t('care.request.message')} icon={<MessageSquareQuote />}>
-            <figure className={cn(TILE, 'relative overflow-hidden p-5 pl-6')}>
-              <span aria-hidden className="absolute inset-y-4 left-0 w-1 rounded-r-full bg-gradient-to-b from-sky-400 to-primary" />
-              <MessageSquareQuote className="absolute right-4 top-4 h-6 w-6 text-primary/15" aria-hidden />
-              <blockquote className="pr-8 text-[0.95rem] leading-relaxed">«{request.message}»</blockquote>
-              <figcaption className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <Badge variant="secondary" size="sm">{t(`enums.careTopicTag.${request.topic}`)}</Badge>
-                <span>{formatDate(request.createdAt, 'd MMMM, HH:mm')}</span>
-                <span>· {formatRelative(request.createdAt)}</span>
-              </figcaption>
-            </figure>
-          </SectionCard>
+          <RequestThread request={request} />
           <RequestTimeline request={request} />
         </div>
 
@@ -154,6 +156,14 @@ function RequestView() {
               </Detail>
               <Detail icon={<CalendarClock />} label={t('care.request.meeting')}>
                 {request.meetingAt ? formatDate(request.meetingAt, 'd MMMM, EEEE, HH:mm') : t('care.request.noMeeting')}
+              </Detail>
+              <Detail icon={<UserRound />} label={t('care.request.handler')}>
+                {request.assignedTo?.name ?? t('care.request.unassigned')}
+              </Detail>
+              <Detail icon={request.openedAt ? <Eye /> : <EyeOff />} label={t('care.request.openedAt')}>
+                {request.openedAt
+                  ? `${formatDate(request.openedAt, 'd MMM, HH:mm')}${request.openedBy ? ` · ${request.openedBy.name}` : ''}`
+                  : t('care.request.notOpened')}
               </Detail>
             </div>
           </SectionCard>

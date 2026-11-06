@@ -1,12 +1,12 @@
 import type {
   CareAggregate,
-  CareNote,
   CareRequest,
+  CareRequestDetail,
+  CareRequestFilter,
+  CareRequestList,
   CareRequestStatus,
   CareSurvey,
   CareTopic,
-  CareUrgency,
-  RoleKey,
 } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
 import {
@@ -25,11 +25,12 @@ import { percent } from '@/lib/utils';
 import { clockNow, clockToday } from '../clock';
 import { type Actor, assertCan, currentActor, latency, writeAudit } from '../context';
 import { getTables, transact } from '../db';
-import { buildIndexes, studentName } from '../lookups';
 import { pushNotification } from '../notify';
 import type { Tables } from '../tables';
 import { compareSurveysByRecency, computeCareAggregate, defaultSurvey, isSurveyReady, surveyRespondentCount } from './care-aggregate';
 import { careSettingsService } from './care-settings';
+import { careThreadService } from './care-thread';
+import { protocolRecipients, toDetail, toRow, unreadFromChild } from './care-views';
 import { careSurveysService } from './care-surveys';
 
 /**
@@ -48,12 +49,7 @@ export type CareSurveySummary = Pick<CareSurvey, 'id' | 'title' | 'weekStart' | 
   /** Faqat respondentlar ≥ K bo'lsa; aks holda null. */
   participation: { respondents: number; invited: number; rate: number } | null;
 };
-export type CareRequestRow = CareRequest & { studentName: string; className: string };
-export type CareNoteView = CareNote & { byName: string };
-export type CareNotified = { role: RoleKey; name: string };
-export type CareRequestDetail = Omit<CareRequestRow, 'notes'> & { notes: CareNoteView[]; notified: CareNotified[] };
-export type CareRequestFilter = { status?: CareRequestStatus; urgency?: CareUrgency; search?: string };
-export type CareRequestList = { items: CareRequestRow[]; counts: Record<CareRequestStatus, number> };
+export type { CareNoteView, CareNotified, CareRequestDetail, CareRequestFilter, CareRequestList, CareRequestRow } from '@/data/contracts';
 
 /**
  * Murojaatlar bo'yicha audit — direktor/admin ham audit jurnalini ko'radi, shuning uchun
@@ -63,6 +59,7 @@ const REQUEST_AUDIT = {
   status: 'Bola ovozi: murojaat holati yangilandi',
   note: 'Bola ovozi: ichki eslatma qo\'shildi',
   meeting: 'Bola ovozi: suhbat vaqti belgilandi',
+  open: 'Bola ovozi: murojaat ochildi',
   protocol: 'Bola ovozi: himoya protokoli ishga tushirildi',
 } as const;
 
@@ -70,25 +67,6 @@ function requireIndividual(): Actor {
   const actor = currentActor();
   assertCan(actor, 'care.individual');
   return actor;
-}
-
-function toRow(t: Tables, request: CareRequest): CareRequestRow {
-  const idx = buildIndexes(t);
-  const student = idx.students.get(request.studentId);
-  return {
-    ...request,
-    studentName: student ? studentName(student) : '—',
-    className: idx.classes.get(request.classId)?.name ?? '—',
-  };
-}
-
-/** Himoya protokolida xabardor qilinadiganlar: direktor va navbatchi (tafsilotsiz). */
-function protocolRecipients(t: Tables): CareNotified[] {
-  const pick = (role: RoleKey) => t.staff.find((s) => s.role === role && s.active);
-  return (['DIRECTOR', 'DUTY'] as const)
-    .map((role) => ({ role, staff: pick(role) }))
-    .filter((r) => Boolean(r.staff))
-    .map((r) => ({ role: r.role, name: r.staff?.fullName ?? '' }));
 }
 
 /** Shoshilinch va yopilmagan — tepada, keyin yangilari. */
@@ -178,20 +156,32 @@ export const careService = {
     return { items: filter.status ? searched.filter((r) => r.status === filter.status) : searched, counts };
   },
 
+  /**
+   * Murojaat tafsiloti. Xodim BIRINCHI marta ochganda `openedAt` / `openedByStaffId` qo'yiladi (audit
+   * `care.request.open`, matnsiz); bolaning o'qilmagan xabarlari o'qilgan deb belgilanadi (kontrakt B).
+   * Hech narsa o'zgarmasa — yozuv yo'q (har yangilanishda bazani qayta yozmaslik uchun).
+   */
   async getRequest(id: string): Promise<CareRequestDetail> {
     await latency(60, 140);
-    requireIndividual();
-    const t = getTables();
-    const request = t.careRequests.find((r) => r.id === id);
-    if (!request) throw new ServiceError('NOT_FOUND', id);
-    const staff = buildIndexes(t).staff;
-    return {
-      ...toRow(t, request),
-      notes: [...request.notes]
-        .sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
-        .map((n) => ({ ...n, byName: staff.get(n.byStaffId)?.fullName ?? '—' })),
-      notified: request.protocolActivated ? protocolRecipients(t) : [],
-    };
+    const actor = requireIndividual();
+    const found = getTables().careRequests.find((r) => r.id === id);
+    if (!found) throw new ServiceError('NOT_FOUND', id);
+    if (found.openedAt !== null && unreadFromChild(found) === 0) return toDetail(getTables(), found);
+    return transact((t) => {
+      const request = t.careRequests.find((r) => r.id === id);
+      if (!request) throw new ServiceError('NOT_FOUND', id);
+      const now = localStamp(clockNow());
+      const firstView = request.openedAt === null;
+      const next: CareRequest = {
+        ...request,
+        openedAt: request.openedAt ?? now,
+        openedByStaffId: request.openedByStaffId ?? actor.staffId,
+        messages: request.messages.map((m) => (m.author === 'CHILD' && !m.readByStaffAt ? { ...m, readByStaffAt: now } : m)),
+      };
+      t.careRequests = t.careRequests.map((r) => (r.id === id ? next : r));
+      if (firstView) writeAudit(t, actor, 'CARE', 'care.request.open', REQUEST_AUDIT.open);
+      return toDetail(t, next);
+    });
   },
 
   async updateRequestStatus(id: string, status: CareRequestStatus): Promise<CareRequest> {
@@ -200,6 +190,8 @@ export const careService = {
     return mutateRequest(id, (t, request, actor) => {
       if (data.status === 'SCHEDULED' && !request.meetingAt) throw new ServiceError('VALIDATION', 'meetingAt: errors.form.required');
       request.status = data.status;
+      // Yopilganda `resolvedAt` qo'yiladi, qayta ochilganda tozalanadi (kontrakt B).
+      request.resolvedAt = data.status === 'RESOLVED' ? (request.resolvedAt ?? localStamp(clockNow())) : null;
       writeAudit(t, actor, 'CARE', 'care.request.status', REQUEST_AUDIT.status);
     });
   },
@@ -262,5 +254,6 @@ export const careService = {
   },
 
   ...careSettingsService,
+  ...careThreadService,
   ...careSurveysService,
 };

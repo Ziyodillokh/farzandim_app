@@ -30,6 +30,10 @@ export const careStatusSchema = z.object({ status: z.enum(CARE_REQUEST_STATUSES)
 
 export const careNoteSchema = z.object({ text: requiredText(1000) });
 
+/** Bolaga javob (kontrakt B: 1..2000 belgi). */
+export const CARE_REPLY_MAX = 2000;
+export const careReplySchema = z.object({ text: requiredText(CARE_REPLY_MAX) });
+
 /** "YYYY-MM-DDTHH:MM" (datetime-local) yoki to'liq ISO. */
 export const careMeetingSchema = z.object({
   meetingAt: z
