@@ -283,5 +283,8 @@
   .no-print { display: none !important; }
   .print-only { display: block !important; }
   .print-break { break-before: page; }
+  /* Kirish kartasi / taklif kodi: ochiq `[data-print-card-root]` bor bo'lsa, faqat shu blok chop etiladi */
+  body[data-print-card] { overflow: visible !important; height: auto !important; }
+  body[data-print-card] > *:not([data-print-card-root]) { display: none !important; }
 }
 .print-only { display: none; }

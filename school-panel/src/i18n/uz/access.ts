@@ -57,7 +57,7 @@ export const access = {
     copyLogin: 'Loginni nusxalash',
     copyPassword: 'Parolni nusxalash',
     print: 'Kartani chop etish',
-    done: 'Yopish',
+    done: 'Tayyor',
   },
   card: {
     title: 'Parvoz — kirish kartasi',

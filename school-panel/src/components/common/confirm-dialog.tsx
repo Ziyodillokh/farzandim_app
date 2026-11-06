@@ -23,6 +23,7 @@ export function ConfirmDialog({
   reasonLabel,
   loading,
   onConfirm,
+  onCloseAutoFocus,
   children,
 }: {
   open: boolean;
@@ -35,6 +36,8 @@ export function ConfirmDialog({
   reasonLabel?: string;
   loading?: boolean;
   onConfirm: (reason: string) => void;
+  /** Oyna yopilgach fokusni qaytarish (holat orqali ochilgan oynada Radix uni `body` ga tashlaydi). */
+  onCloseAutoFocus?: (event: Event) => void;
   children?: ReactNode;
 }) {
   const { t } = useI18n();
@@ -49,7 +52,7 @@ export function ConfirmDialog({
         onOpenChange(next);
       }}
     >
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" onCloseAutoFocus={onCloseAutoFocus}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}

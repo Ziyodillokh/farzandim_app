@@ -23,14 +23,14 @@ async function student7a(page: Page): Promise<StudentInfo> {
 
 const tabNames = (page: Page) => page.getByRole('tab').allInnerTexts();
 
-test('sinf rahbari: 5 ta tab, ?tab= bilan ochiladi va URL bilan almashadi; eslatma qo\'shiladi', async ({ page }) => {
+test('sinf rahbari: 6 ta tab, ?tab= bilan ochiladi va URL bilan almashadi; eslatma qo\'shiladi', async ({ page }) => {
   const errors = trackErrors(page);
   await login(page, 'sinf7a', 'Sinf2026');
   const s = await student7a(page);
 
   await page.goto(url(`/students/view?id=${s.id}&tab=history`));
-  await expect(page.getByRole('tab')).toHaveCount(5);
-  expect((await tabNames(page)).map((x) => x.trim())).toEqual(['Profil', 'Davomat', 'Rivojlanish', 'Tarix', 'Eslatmalar']);
+  await expect(page.getByRole('tab')).toHaveCount(6);
+  expect((await tabNames(page)).map((x) => x.trim())).toEqual(['Profil', 'Davomat', 'Rivojlanish', 'Tarix', 'Eslatmalar', 'Kirish']);
   await expect(page.getByRole('tab', { name: 'Tarix' })).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByRole('heading', { name: 'Tarix', level: 2 })).toBeVisible();
 
@@ -62,8 +62,8 @@ test('direktor: rivojlanish tabi yo\'q, erta ketish tugmasi yo\'q, istisno bor',
   await login(page, 'direktor', 'Direktor2026');
   const s = await student7a(page);
   await page.goto(url(`/students/view?id=${s.id}`));
-  await expect(page.getByRole('tab')).toHaveCount(4);
-  expect((await tabNames(page)).map((x) => x.trim())).toEqual(['Profil', 'Davomat', 'Tarix', 'Eslatmalar']);
+  await expect(page.getByRole('tab')).toHaveCount(5);
+  expect((await tabNames(page)).map((x) => x.trim())).toEqual(['Profil', 'Davomat', 'Tarix', 'Eslatmalar', 'Kirish']);
   const main = page.getByRole('main');
   await expect(main.getByRole('button', { name: 'School Mode istisnosi' })).toBeVisible();
   await expect(main.getByRole('button', { name: 'Erta ketish', exact: true })).toHaveCount(0);
