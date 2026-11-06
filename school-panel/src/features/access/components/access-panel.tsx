@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import { useCan } from '@/auth/use-session';
 import type { StudentDetail } from '@/data/mock/services/students';
+import { studentKeys } from '@/features/students/hooks';
 import { markNotLinked } from '../hooks';
 import { useFocusReturn } from '../lib/use-focus-return';
 import { CredentialsCard } from './credentials-card';
@@ -28,13 +29,15 @@ export function AccessPanel({ student }: { student: StudentDetail }) {
   const canManage = can('students.manage');
   const canLink = can('guardians.link');
   const name = `${student.lastName} ${student.firstName}`;
+  // Arxivdagi o'quvchi: ma'lumot o'qiladi, yangi kod / kirish ma'lumoti berilmaydi (backend `409`).
+  const archived = student.archived;
 
   return (
     <div className="space-y-6">
-      {canManage && <RecoveryCard studentId={student.id} onReset={() => openDialog('reset')} />}
+      {canManage && <RecoveryCard studentId={student.id} archived={archived} onReset={() => openDialog('reset')} />}
       <div className="grid items-start gap-6 lg:grid-cols-2">
-        {canLink && <InviteCodeCard studentId={student.id} studentName={name} className={student.className} />}
-        {canManage && <CredentialsCard studentId={student.id} onIssue={() => openDialog('issue')} onReset={() => openDialog('reset')} />}
+        {canLink && <InviteCodeCard studentId={student.id} studentName={name} className={student.className} archived={archived} />}
+        {canManage && <CredentialsCard studentId={student.id} archived={archived} onIssue={() => openDialog('issue')} onReset={() => openDialog('reset')} />}
       </div>
       {dialog && (
         <CredentialsDialog
@@ -45,6 +48,8 @@ export function AccessPanel({ student }: { student: StudentDetail }) {
           onClose={() => setDialog(null)}
           onCloseAutoFocus={focus.restore}
           onNotLinked={() => markNotLinked(queryClient, student.id)}
+          // Karta eskirgan: o'quvchi arxivga olingan — ko'rinish yangilanadi, berish/tiklash tugmalari yo'qoladi.
+          onArchived={() => void queryClient.invalidateQueries({ queryKey: studentKeys.all })}
         />
       )}
     </div>

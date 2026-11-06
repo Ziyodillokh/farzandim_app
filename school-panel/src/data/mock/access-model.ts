@@ -1,5 +1,5 @@
-import { type Permission, roleHas } from '@/auth/permissions';
-import type { InviteCode, RecoveryRequest, RoleKey, Student } from '@/data/contracts';
+import { type Permission, ROLES, roleHas } from '@/auth/permissions';
+import type { InviteCode, RecoveryRequest, RoleKey, Staff, Student } from '@/data/contracts';
 import { LOGIN_PATTERN } from '@/data/schemas/access';
 import { hashString } from '@/lib/rng';
 import type { AccessTables, MockInviteCode } from './access-tables';
@@ -87,12 +87,14 @@ export function activeInviteOf(invites: readonly MockInviteCode[], studentId: st
   return active[0] ?? null;
 }
 
+/** K2 §2: o'quvchi o'rni `FREE` | `UNDER_REVIEW` (bola kiritdi, tasdiq kutilmoqda) | `CONFIRMED`; ota-ona o'rni `FREE` | `USED`. */
 export function toInviteCodeView(invite: MockInviteCode): InviteCode {
+  const studentStatus = invite.studentUsedAt === null ? 'FREE' : invite.studentConfirmedAt === null ? 'UNDER_REVIEW' : 'CONFIRMED';
   return {
     code: invite.code,
     expiresAt: invite.expiresAt,
-    student: { used: invite.studentUsedAt !== null, usedAt: invite.studentUsedAt },
-    parent: { used: invite.parentUsedAt !== null, usedAt: invite.parentUsedAt },
+    student: { status: studentStatus, usedAt: invite.studentUsedAt },
+    parent: { status: invite.parentUsedAt === null ? 'FREE' : 'USED', usedAt: invite.parentUsedAt },
   };
 }
 
@@ -115,6 +117,11 @@ export function openRecoveryOf(access: AccessTables, studentId: string): Recover
 
 export type AccessNotificationKind = 'CHILD_RECOVERY_REQUEST' | 'LINK_REVIEW' | 'LINK_CORRECTION';
 
+/** Bildirishnoma id'si so'rov id'siga bog'langan (backend: `link-review:<id>`, `link-correction:<id>`, `child-recovery:<id>`): so'rov hal bo'lganda o'chiriladi. */
+export function accessNotificationId(kind: AccessNotificationKind, requestId: string): string {
+  return `ntf-${kind.toLowerCase().replace(/_/g, '-')}-${requestId}`;
+}
+
 /** Bildirishnoma ko'rsatadigan amalni bajarish uchun kerak bo'lgan ruxsat (amal endpoint'lari talab qiladigani). */
 export const ACTION_PERMISSION: Readonly<Record<AccessNotificationKind, Permission>> = {
   CHILD_RECOVERY_REQUEST: 'students.manage',
@@ -122,17 +129,39 @@ export const ACTION_PERMISSION: Readonly<Record<AccessNotificationKind, Permissi
   LINK_CORRECTION: 'guardians.link',
 };
 
-/** Kontrakt (K1/K2) qabul qiluvchilari: sinf rahbari + admin. */
-const CONTRACT_RECIPIENTS: readonly RoleKey[] = ['HOMEROOM', 'ADMIN'];
+/** Xodim bildirishnomasining qabul qiluvchilari: `staffIds` (aniq xodimlar) va ularning rollari. */
+export type NotificationAudience = { staffIds: string[]; roles: RoleKey[] };
+
+type Recipient = Pick<Staff, 'id' | 'role' | 'active' | 'classIds'>;
+
+/** Rol doirasi o'quvchi sinfini qamraydimi: `SCHOOL` — hammasi; sinf doirali rol — faqat o'z sinflari (sinfsiz o'quvchi — yo'q). */
+function coversClass(staff: Recipient, classId: string | null): boolean {
+  if (ROLES[staff.role].scope === 'SCHOOL') return true;
+  return classId !== null && staff.classIds.includes(classId);
+}
+
+const ROLE_ORDER = Object.keys(ROLES) as RoleKey[];
 
 /**
- * Xodim bildirishnomasi FAQAT uni hal qila oladigan xodimga yuboriladi: kontrakt qabul qiluvchilari ∩ amal ruxsatiga ega
- * rollar. Sinf rahbarida `students.manage` yo'q — unga parol tiklash so'rovi kelmaydi (bajara olmaydigan xabar boshi berk
- * ko'cha bo'lardi); unga shu ruxsat berilsa, o'zi qo'shiladi. Sinf doirasi bildirishnomaning `classIds` orqali.
+ * Xodim bildirishnomasi FAQAT uni hal qila oladigan xodimlarga yuboriladi (backend `school/common/staff-recipients.ts`, K1 §5 va K2 §7):
+ * maktabning FAOL xodimlari, amal endpoint'i talab qiladigan ruxsatga ega (`ACTION_PERMISSION`; rol/ruxsat jadvali bo'yicha — rol
+ * nomlari qattiq yozilmagan) va o'quvchi sinfi ularning doirasida. Hozirgi jadvalda: `students.manage` — direktor va administrator;
+ * `guardians.link` — direktor, administrator va O'QUVCHI SINFINING sinf rahbari. Sinf rahbariga `students.manage` berilsa — u ham
+ * (faqat o'z sinfi uchun) tiklash so'rovini oladi.
+ * Hech kim mos kelmasa — maktabning faol direktorlari (ruxsati bo'lmasa ham: e'tiborsiz qolmasin); faol direktor ham yo'q — `null`
+ * (bildirishnoma yozilmaydi, so'rovning o'zi saqlanadi).
  */
-export function recipientRoles(
+export function notificationAudience(
+  staff: readonly Recipient[],
   kind: AccessNotificationKind,
+  classId: string | null,
   can: (role: RoleKey, permission: Permission) => boolean = roleHas,
-): RoleKey[] {
-  return CONTRACT_RECIPIENTS.filter((role) => can(role, ACTION_PERMISSION[kind]));
+): NotificationAudience | null {
+  const permission = ACTION_PERMISSION[kind];
+  const recipients = staff.filter((s) => s.active && can(s.role, permission) && coversClass(s, classId));
+  if (recipients.length > 0) {
+    const roles = new Set(recipients.map((s) => s.role));
+    return { staffIds: recipients.map((s) => s.id), roles: ROLE_ORDER.filter((role) => roles.has(role)) };
+  }
+  return staff.some((s) => s.active && s.role === 'DIRECTOR') ? { staffIds: [], roles: ['DIRECTOR'] } : null;
 }

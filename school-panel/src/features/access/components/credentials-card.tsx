@@ -27,8 +27,9 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 /**
  * «Kirish maʼlumotlari»: login, kim bergan, holat; berish yoki tiklash (`students.manage`).
  * Faqat bola profiliga ulangan o'quvchiga beriladi — aks holda sababi tushuntiriladi (ota-ona avval ulashi kerak).
+ * Arxivdagi o'quvchida ma'lumot o'qiladi, lekin berish/tiklash yo'q (K1: `409 STUDENT_ARCHIVED`).
  */
-export function CredentialsCard({ studentId, onIssue, onReset }: { studentId: string; onIssue: () => void; onReset: () => void }) {
+export function CredentialsCard({ studentId, archived = false, onIssue, onReset }: { studentId: string; archived?: boolean; onIssue: () => void; onReset: () => void }) {
   const { t, formatDate } = useI18n();
   const copy = useCopy();
   const query = useCredentials(studentId);
@@ -60,13 +61,15 @@ export function CredentialsCard({ studentId, onIssue, onReset }: { studentId: st
         <EmptyState
           icon={<UserCheck />}
           title={t('access.credentials.none.title')}
-          description={t('access.credentials.none.text')}
+          description={archived ? t('access.archived.credentials') : t('access.credentials.none.text')}
           className="py-6"
           action={
-            <Button onClick={onIssue}>
-              <KeyRound />
-              {t('access.credentials.issue')}
-            </Button>
+            archived ? undefined : (
+              <Button onClick={onIssue}>
+                <KeyRound />
+                {t('access.credentials.issue')}
+              </Button>
+            )
           }
         />
       ) : (
@@ -107,10 +110,16 @@ export function CredentialsCard({ studentId, onIssue, onReset }: { studentId: st
               )}
             </Row>
           </dl>
-          <Button type="button" variant="outline" onClick={onReset}>
-            <KeyRound />
-            {t('access.credentials.reset')}
-          </Button>
+          {archived ? (
+            <p className="text-xs leading-relaxed text-muted-foreground" data-testid="credentials-archived">
+              {t('access.archived.credentials')}
+            </p>
+          ) : (
+            <Button type="button" variant="outline" onClick={onReset}>
+              <KeyRound />
+              {t('access.credentials.reset')}
+            </Button>
+          )}
         </div>
       )}
     </SectionCard>

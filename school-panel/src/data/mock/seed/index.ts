@@ -34,7 +34,7 @@ export function generateSeed(seed: number, now: Date): Tables {
   const payments = buildPayments(people.families, baseIso, seed);
   const careRequests = buildCareRequests(people.students, baseIso);
   const assignments = [...buildAssignments(baseIso), ...buildWrittenAssignments(baseIso)];
-  const access = buildAccess({ students: people.students, guardians: people.guardians, classes, baseIso, seed });
+  const access = buildAccess({ students: people.students, guardians: people.guardians, classes, staff: people.staff, baseIso, seed });
 
   return {
     school,

@@ -36,6 +36,8 @@ type Props = {
   onClose: () => void;
   /** Backend `NOT_LINKED` desa — ota karta holatni yangilaydi. */
   onNotLinked: () => void;
+  /** Backend `STUDENT_ARCHIVED` desa — o'quvchi arxivga olingan: ota ko'rinishni yangilaydi. */
+  onArchived: () => void;
   /** Yopilgach fokus oynani ochgan tugmaga qaytadi. */
   onCloseAutoFocus: (event: Event) => void;
 };
@@ -118,7 +120,7 @@ function useRevealExpiry(active: boolean, onExpire: () => void): { secondsLeft: 
  * Modal ochiqligida Sonner toast'lari ekran o'qish dasturi uchun yashirin (aria-hidden) — shuning uchun natija, nusxalash
  * va xatolar oyna ichidagi `role="status"` hududida ham e'lon qilinadi; ochilganda fokus sarlavhaga o'tadi.
  */
-export function CredentialsDialog({ studentId, studentName, className, mode, onClose, onNotLinked, onCloseAutoFocus }: Props) {
+export function CredentialsDialog({ studentId, studentName, className, mode, onClose, onNotLinked, onArchived, onCloseAutoFocus }: Props) {
   const { t } = useI18n();
   const copy = useCopy();
   const school = useSchool();
@@ -203,6 +205,9 @@ export function CredentialsDialog({ studentId, studentName, className, mode, onC
       announce(message);
       if (detail === 'NOT_LINKED') {
         onNotLinked();
+        onClose();
+      } else if (detail === 'STUDENT_ARCHIVED') {
+        onArchived();
         onClose();
       }
     }

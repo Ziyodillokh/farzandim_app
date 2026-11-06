@@ -21,7 +21,7 @@ import { useFocusReturn } from '../lib/use-focus-return';
  * Bolaning ochiq parol tiklash so'rovlari (CHILD_RECOVERY_REQUEST): «Parolni tiklash» (= kirish ma'lumotlarini tiklash oqimi)
  * va «Rad etish». Ochiq so'rov bo'lmasa karta ko'rinmaydi.
  */
-export function RecoveryCard({ studentId, onReset }: { studentId: string; onReset: () => void }) {
+export function RecoveryCard({ studentId, archived = false, onReset }: { studentId: string; archived?: boolean; onReset: () => void }) {
   const { t, formatDate, formatRelative } = useI18n();
   const query = useRecoveryRequests(studentId);
   const reject = useRejectRecovery(studentId);
@@ -65,11 +65,9 @@ export function RecoveryCard({ studentId, onReset }: { studentId: string; onRese
                   </p>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                     <time dateTime={request.createdAt}>{formatDate(request.createdAt, 'dd.MM.yyyy, HH:mm')}</time>
-                    {request.channel && (
-                      <Badge variant="outline" size="sm">
-                        {t(`access.recovery.channel.${request.channel}`)}
-                      </Badge>
-                    )}
+                    <Badge variant="outline" size="sm">
+                      {t(`access.recovery.channel.${request.channel}`)}
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -86,10 +84,13 @@ export function RecoveryCard({ studentId, onReset }: { studentId: string; onRese
                 >
                   {t('access.recovery.reject')}
                 </Button>
-                <Button size="sm" aria-describedby={`recovery-${request.id}-label`} onClick={onReset}>
-                  <KeyRound />
-                  {t('access.recovery.reset')}
-                </Button>
+                {/* Arxivdagi o'quvchiga parol tiklab bo'lmaydi (K1: `409 STUDENT_ARCHIVED`); so'rovni rad etish mumkin. */}
+                {!archived && (
+                  <Button size="sm" aria-describedby={`recovery-${request.id}-label`} onClick={onReset}>
+                    <KeyRound />
+                    {t('access.recovery.reset')}
+                  </Button>
+                )}
               </div>
             </li>
           ))}

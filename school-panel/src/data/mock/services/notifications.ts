@@ -31,7 +31,7 @@ export const NOTIFICATION_TONES: Record<NotificationKind, NotificationTone> = {
   EMERGENCY: 'destructive',
   DATA_DELETION_REQUEST: 'warning',
   CHILD_RECOVERY_REQUEST: 'warning',
-  LINK_REVIEW: 'info',
+  LINK_REVIEW: 'warning',
   LINK_CORRECTION: 'warning',
 };
 

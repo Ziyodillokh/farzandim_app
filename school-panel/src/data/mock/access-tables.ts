@@ -10,7 +10,10 @@ export type MockInviteCode = {
   code: string;
   createdAt: IsoDateTime;
   expiresAt: IsoDateTime;
+  /** Bola kodni kiritgan payt (o'quvchi o'rni band). */
   studentUsedAt: IsoDateTime | null;
+  /** Kiritilgan o'rin tasdiqlangan payt: `studentUsedAt` bor, bu yo'q — `UNDER_REVIEW` (K2 §1). */
+  studentConfirmedAt: IsoDateTime | null;
   parentUsedAt: IsoDateTime | null;
   /** Yangi kod yaratilganda yoki ikkala o'rin ishlatilganda to'ldiriladi. */
   closedAt: IsoDateTime | null;
@@ -31,11 +34,15 @@ export type MockRecoveryRequest = {
 export type LinkRequestState = 'OPEN' | 'CONFIRMED' | 'REJECTED';
 
 export type MockLinkRequest = {
-  id: Id;
+  /** Shaffof id (backenddagidek): REVIEW — `<kod yozuvi>:<bola>`, CORRECTION — so'rov id'si. */
+  id: string;
   kind: LinkRequestKind;
   studentId: Id;
+  /** Ota-ona bolaga bergan ism. */
+  childName: string;
   createdAt: IsoDateTime;
-  parentUsed: boolean;
+  /** Bolaning o'z ota-onasi o'quvchining ulangan vasiysi. */
+  parentLinked: boolean;
   note: string | null;
   reason: LinkCorrectionReason | null;
   status: LinkRequestState;

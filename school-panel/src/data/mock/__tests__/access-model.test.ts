@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
+import { roleHas } from '@/auth/permissions';
+import type { Staff } from '@/data/contracts';
 import { LOGIN_PATTERN } from '@/data/schemas/access';
 import type { MockInviteCode } from '../access-tables';
 import {
+  accessNotificationId,
   activeInviteOf,
   generateInviteCodeDigits,
   generateTemporaryPassword,
   isActiveInvite,
-  recipientRoles,
+  notificationAudience,
   TEMP_PASSWORD_ALPHABET,
   TEMP_PASSWORD_LENGTH,
   suggestLogin,
@@ -24,6 +27,7 @@ const invite = (patch: Partial<MockInviteCode> = {}): MockInviteCode => ({
   createdAt: '2026-10-12T09:00:00',
   expiresAt: '2026-10-13T09:00:00',
   studentUsedAt: null,
+  studentConfirmedAt: null,
   parentUsedAt: null,
   closedAt: null,
   createdByStaffId: 'stf-admin',
@@ -76,13 +80,25 @@ describe('faol kod', () => {
     expect(activeInviteOf([], 'stu-1', NOW)).toBeNull();
   });
 
-  it('ko\'rinish: o\'rin holati vaqt bilan', () => {
-    expect(toInviteCodeView(invite({ studentUsedAt: '2026-10-12T09:10:00' }))).toEqual({
+  it('ko\'rinish (K2 §2): ikkala o\'rin bo\'sh — FREE / FREE', () => {
+    expect(toInviteCodeView(invite())).toEqual({
       code: '012345',
       expiresAt: '2026-10-13T09:00:00',
-      student: { used: true, usedAt: '2026-10-12T09:10:00' },
-      parent: { used: false, usedAt: null },
+      student: { status: 'FREE', usedAt: null },
+      parent: { status: 'FREE', usedAt: null },
     });
+  });
+
+  it('o\'quvchi o\'rni uch holatli: kiritilmagan → tekshiruvda (kiritdi, tasdiq yo\'q) → tasdiqlangan', () => {
+    expect(toInviteCodeView(invite({ studentUsedAt: '2026-10-12T09:10:00' })).student).toEqual({ status: 'UNDER_REVIEW', usedAt: '2026-10-12T09:10:00' });
+    expect(toInviteCodeView(invite({ studentUsedAt: '2026-10-12T09:10:00', studentConfirmedAt: '2026-10-12T09:20:00' })).student).toEqual({
+      status: 'CONFIRMED',
+      usedAt: '2026-10-12T09:10:00',
+    });
+  });
+
+  it('ota-ona o\'rni: FREE | USED (vaqt bilan)', () => {
+    expect(toInviteCodeView(invite({ parentUsedAt: '2026-10-12T09:15:00' })).parent).toEqual({ status: 'USED', usedAt: '2026-10-12T09:15:00' });
   });
 });
 
@@ -129,16 +145,68 @@ describe('suggestLogin', () => {
   });
 });
 
-describe('recipientRoles: bildirishnoma faqat uni hal qila oladigan xodimga', () => {
-  it('kontrakt qabul qiluvchilari ∩ amal ruxsati: tiklash (`students.manage`) — faqat admin; ulanish (`guardians.link`) — sinf rahbari + admin', () => {
-    expect(recipientRoles('CHILD_RECOVERY_REQUEST')).toEqual(['ADMIN']);
-    expect(recipientRoles('LINK_REVIEW')).toEqual(['HOMEROOM', 'ADMIN']);
-    expect(recipientRoles('LINK_CORRECTION')).toEqual(['HOMEROOM', 'ADMIN']);
+describe('accessNotificationId', () => {
+  it('so\'rov id\'siga bog\'langan (hal bo\'lganda shu id o\'chiriladi); REVIEW id\'sidagi ":" saqlanadi', () => {
+    expect(accessNotificationId('LINK_REVIEW', 'inv-1:chd-1')).toBe('ntf-link-review-inv-1:chd-1');
+    expect(accessNotificationId('LINK_CORRECTION', 'lnk-correction-stu-1')).toBe('ntf-link-correction-lnk-correction-stu-1');
+    expect(accessNotificationId('CHILD_RECOVERY_REQUEST', 'rec-1')).toBe('ntf-child-recovery-request-rec-1');
+  });
+});
+
+describe('notificationAudience: bildirishnoma FAOL va ish qila oladigan xodimlarga (backend `staff-recipients.ts`)', () => {
+  const person = (id: string, role: Staff['role'], patch: Partial<Staff> = {}): Pick<Staff, 'id' | 'role' | 'active' | 'classIds'> => ({
+    id,
+    role,
+    active: true,
+    classIds: role === 'HOMEROOM' || role === 'TEACHER' ? [`cls-${id}`] : [],
+    ...patch,
+  });
+  const staff = [
+    person('dir', 'DIRECTOR'),
+    person('adm', 'ADMIN'),
+    person('hr-a', 'HOMEROOM', { classIds: ['cls-a'] }),
+    person('hr-b', 'HOMEROOM', { classIds: ['cls-b'] }),
+    person('psy', 'PSYCHOLOGIST'),
+    person('duty', 'DUTY'),
+    person('teacher', 'TEACHER', { classIds: ['cls-a'] }),
+  ];
+
+  it('tiklash so\'rovi (`students.manage`): direktor va administrator; sinf rahbari — yo\'q (unda bu ruxsat yo\'q)', () => {
+    expect(notificationAudience(staff, 'CHILD_RECOVERY_REQUEST', 'cls-a')).toEqual({ staffIds: ['dir', 'adm'], roles: ['DIRECTOR', 'ADMIN'] });
   });
 
-  it('sinf rahbariga `students.manage` berilsa — tiklash so\'rovi unga ham keladi; ruxsati olinsa — hech kimga', () => {
-    const granted = (role: string, permission: string) => role === 'HOMEROOM' || (role === 'ADMIN' && permission !== 'none');
-    expect(recipientRoles('CHILD_RECOVERY_REQUEST', granted)).toEqual(['HOMEROOM', 'ADMIN']);
-    expect(recipientRoles('LINK_REVIEW', () => false)).toEqual([]);
+  it.each(['LINK_REVIEW', 'LINK_CORRECTION'] as const)('%s (`guardians.link`): direktor, administrator va FAQAT o\'quvchi sinfining sinf rahbari', (kind) => {
+    expect(notificationAudience(staff, kind, 'cls-a')).toEqual({ staffIds: ['dir', 'adm', 'hr-a'], roles: ['DIRECTOR', 'ADMIN', 'HOMEROOM'] });
+    expect(notificationAudience(staff, kind, 'cls-b')).toEqual({ staffIds: ['dir', 'adm', 'hr-b'], roles: ['DIRECTOR', 'ADMIN', 'HOMEROOM'] });
+  });
+
+  it('sinfsiz o\'quvchi: faqat butun maktab doirasidagi rollar (sinf rahbari yo\'q)', () => {
+    expect(notificationAudience(staff, 'LINK_REVIEW', null)).toEqual({ staffIds: ['dir', 'adm'], roles: ['DIRECTOR', 'ADMIN'] });
+  });
+
+  it('sinf rahbariga `students.manage` berilsa — tiklash so\'rovi unga ham keladi, lekin faqat o\'z sinfi uchun', () => {
+    const granted: Parameters<typeof notificationAudience>[3] = (role, permission) =>
+      roleHas(role, permission) || (role === 'HOMEROOM' && permission === 'students.manage');
+    expect(notificationAudience(staff, 'CHILD_RECOVERY_REQUEST', 'cls-a', granted)).toEqual({
+      staffIds: ['dir', 'adm', 'hr-a'],
+      roles: ['DIRECTOR', 'ADMIN', 'HOMEROOM'],
+    });
+  });
+
+  it('faol bo\'lmagan xodim qabul qiluvchi emas (sinf rahbari ish tashlagan — direktor va admin baribir oladi)', () => {
+    const inactive = staff.map((s) => (s.id === 'hr-a' ? { ...s, active: false } : s));
+    expect(notificationAudience(inactive, 'LINK_REVIEW', 'cls-a')?.staffIds).toEqual(['dir', 'adm']);
+  });
+
+  it('hech kim mos kelmasa — maktabning faol direktorlari (ruxsati bo\'lmasa ham); `staffIds` bo\'sh, rol bo\'yicha', () => {
+    expect(notificationAudience(staff, 'LINK_REVIEW', 'cls-a', () => false)).toEqual({ staffIds: [], roles: ['DIRECTOR'] });
+    const onlyDirector = [person('dir', 'DIRECTOR'), person('hr-a', 'HOMEROOM', { classIds: ['cls-a'] })];
+    expect(notificationAudience(onlyDirector, 'LINK_CORRECTION', 'cls-a', (role) => role === 'TEACHER')).toEqual({ staffIds: [], roles: ['DIRECTOR'] });
+  });
+
+  it('faol direktor ham yo\'q — bildirishnoma yozilmaydi (`null`)', () => {
+    const noDirector = staff.map((s) => (s.role === 'DIRECTOR' ? { ...s, active: false } : s));
+    expect(notificationAudience(noDirector, 'LINK_REVIEW', 'cls-a', () => false)).toBeNull();
+    expect(notificationAudience([], 'LINK_REVIEW', 'cls-a')).toBeNull();
   });
 });

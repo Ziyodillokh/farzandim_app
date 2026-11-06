@@ -13,11 +13,14 @@ export function pushNotification(t: Tables, n: Omit<StaffNotification, 'id'> & {
   return item;
 }
 
-/** Foydalanuvchi ko'ra oladigan saqlangan bildirishnomalar (rol va sinf doirasi bo'yicha). */
+/** Foydalanuvchi ko'ra oladigan saqlangan bildirishnomalar (rol, aniq xodimlar (bo'lsa) va sinf doirasi bo'yicha). */
 export function notificationsFor(t: Tables, actor: Actor): StaffNotification[] {
   const allowed = allowedClassIds(actor);
   return (t.notifications ?? []).filter(
-    (n) => n.roles.includes(actor.role) && (n.classIds === null || !allowed || n.classIds.some((c) => allowed.includes(c))),
+    (n) =>
+      n.roles.includes(actor.role) &&
+      (!n.staffIds || n.staffIds.length === 0 || n.staffIds.includes(actor.staffId)) &&
+      (n.classIds === null || !allowed || n.classIds.some((c) => allowed.includes(c))),
   );
 }
 

@@ -11,9 +11,9 @@ import {
   readKey,
   unreadCount,
 } from '@/features/notifications/read-state';
-import { currentActor } from '../context';
+import { type Actor, currentActor } from '../context';
 import { getTables, transact } from '../db';
-import { pushNotification } from '../notify';
+import { notificationsFor, pushNotification } from '../notify';
 import { buildFeed, FEED_LIMIT, notificationsService, openRequests } from '../services/notifications';
 import { freshDb, loginAs } from './helpers';
 
@@ -27,6 +27,49 @@ function feedAs(role: Parameters<typeof loginAs>[0]): NotificationItem[] {
   loginAs(role);
   return buildFeed(getTables(), currentActor(), NOW);
 }
+
+describe('saqlangan bildirishnomalar: aniq xodimlarga (`staffIds`) belgilanishi', () => {
+  beforeEach(freshDb);
+
+  const actor = (staffId: string, role: Actor['role'], classIds: string[] = []): Actor => ({
+    staffId,
+    name: staffId,
+    role,
+    scope: role === 'HOMEROOM' ? 'OWN_CLASS' : 'SCHOOL',
+    classIds,
+  });
+  const push = (patch: { roles: Actor['role'][]; staffIds?: string[]; classIds: string[] | null }) =>
+    transact((t) =>
+      pushNotification(t, { id: 'ntf-test-staff', kind: 'LINK_REVIEW', at: '2026-10-12T05:00:00', params: { studentName: 'A B', className: '7-A' }, subject: null, href: null, ...patch }),
+    );
+  const visibleTo = (a: Actor) => notificationsFor(getTables(), a).some((n) => n.id === 'ntf-test-staff');
+
+  it('`staffIds` bo\'sh emas: faqat shu xodimlar (rol sharti ham saqlanadi); yozuv yaratilgandan keyin qo\'shilgan xodim lentada ko\'rmaydi', () => {
+    push({ roles: ['DIRECTOR', 'ADMIN'], staffIds: ['stf-director'], classIds: ['cls-7a'] });
+    expect(visibleTo(actor('stf-director', 'DIRECTOR'))).toBe(true);
+    // Xuddi shu rol, lekin ro'yxatda yo'q (keyin tayinlangan direktor) — lentada yo'q (so'rovlar sahifasida ko'radi).
+    expect(visibleTo(actor('stf-director-2', 'DIRECTOR'))).toBe(false);
+    // Ro'yxatda bor, lekin roli mos emas.
+    expect(visibleTo(actor('stf-director', 'PSYCHOLOGIST'))).toBe(false);
+  });
+
+  it('`staffIds` yo\'q yoki bo\'sh (hech kim mos kelmasa — direktorlarga zaxira): rol bo\'yicha', () => {
+    push({ roles: ['DIRECTOR'], staffIds: [], classIds: ['cls-7a'] });
+    expect(visibleTo(actor('stf-director', 'DIRECTOR'))).toBe(true);
+    expect(visibleTo(actor('stf-director-2', 'DIRECTOR'))).toBe(true);
+    expect(visibleTo(actor('stf-admin', 'ADMIN'))).toBe(false);
+  });
+
+  it('sinf doirasi: sinf rahbari faqat o\'z sinfi bildirishnomasini ko\'radi; sinfsiz o\'quvchi (classIds: []) — faqat butun maktab doirasidagilar', () => {
+    push({ roles: ['HOMEROOM', 'DIRECTOR'], staffIds: ['hr-a', 'hr-b', 'stf-director'], classIds: ['cls-a'] });
+    expect(visibleTo(actor('hr-a', 'HOMEROOM', ['cls-a']))).toBe(true);
+    expect(visibleTo(actor('hr-b', 'HOMEROOM', ['cls-b']))).toBe(false);
+    expect(visibleTo(actor('stf-director', 'DIRECTOR'))).toBe(true);
+    push({ roles: ['HOMEROOM', 'DIRECTOR'], staffIds: ['hr-a', 'stf-director'], classIds: [] });
+    expect(visibleTo(actor('hr-a', 'HOMEROOM', ['cls-a']))).toBe(false);
+    expect(visibleTo(actor('stf-director', 'DIRECTOR'))).toBe(true);
+  });
+});
 
 describe('bildirishnomalar lentasi: rolga mos', () => {
   beforeEach(freshDb);

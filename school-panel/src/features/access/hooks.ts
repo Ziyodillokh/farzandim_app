@@ -6,8 +6,9 @@ import { toast } from 'sonner';
 
 import { api } from '@/data/api';
 import type { InviteCode, IssuedCredentials, IssueCredentialsInput } from '@/data/contracts';
+import { studentKeys } from '@/features/students/hooks';
 import { useI18n } from '@/i18n';
-import { errorKey } from '@/lib/errors';
+import { errorDetail, errorKey } from '@/lib/errors';
 import { useSingleFlight } from '@/lib/single-flight';
 import { accessKeys } from './keys';
 import { REFRESH_WAIT_MS, settleWithin } from './lib/settle';
@@ -68,7 +69,11 @@ export function useGenerateInviteCode(studentId: string): { generate: () => Prom
       void queryClient.invalidateQueries({ queryKey: accessKeys.all });
       toast.success(t('access.invite.created'));
     },
-    onError: (error) => toast.error(t(errorKey(error))),
+    onError: (error) => {
+      toast.error(t(errorKey(error)));
+      // O'quvchi arxivga olingan (karta eskirgan): ko'rinish yangilansa kod yaratish tugmalari o'zi yo'qoladi.
+      if (errorDetail(error) === 'STUDENT_ARCHIVED') void queryClient.invalidateQueries({ queryKey: studentKeys.all });
+    },
   });
   // Tez-tez bosish ikkinchi kod yaratmasin (`isPending` qayta chizilgunicha tugma hali faol bo'ladi).
   const once = useSingleFlight(mutation.mutateAsync);

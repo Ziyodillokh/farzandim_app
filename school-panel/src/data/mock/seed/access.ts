@@ -1,6 +1,6 @@
-import type { Guardian, SchoolClass, StaffNotification, Student } from '@/data/contracts';
+import type { Guardian, SchoolClass, Staff, StaffNotification, Student } from '@/data/contracts';
 import { hashString } from '@/lib/rng';
-import { type AccessNotificationKind, recipientRoles, suggestLogin } from '../access-model';
+import { type AccessNotificationKind, accessNotificationId, notificationAudience, suggestLogin } from '../access-model';
 import type { AccessTables, MockCredential, MockInviteCode, MockLinkRequest, MockRecoveryRequest } from '../access-tables';
 import { addDays } from '../calendar';
 import { studentName } from '../lookups';
@@ -16,11 +16,15 @@ const CREDENTIAL_SHARE = 55;
 const INVITE_TTL_DAYS = 1;
 const SEED_STAFF_ID = 'stf-admin';
 const CORRECTION_NOTE = 'Men boshqa sinfda oʻqiyman — bu yerda sinf notoʻgʻri koʻrsatilgan.';
+/** Ota-ona bolaga bergan ism, o'quvchi ismiga mos kelmaydigan holat uchun (xodim qaror qilishida yordam beradi). */
+const MISMATCHED_CHILD_NAMES = { MALE: ['Sardor', 'Jasur'], FEMALE: ['Madina', 'Dilnoza'] } as const;
 
 type Input = {
   students: readonly Student[];
   guardians: readonly Guardian[];
   classes: readonly SchoolClass[];
+  /** Bildirishnoma qabul qiluvchilarini aniqlash uchun (faol xodimlar, rol, sinf). */
+  staff: readonly Staff[];
   baseIso: string;
   seed: number;
 };
@@ -54,6 +58,7 @@ function credentialFor(student: Student, input: Input, taken: Set<string>): Mock
   };
 }
 
+/** Bola kodni kiritdi (o'quvchi o'rni band, tasdiq kutilmoqda); ota-ona kiritgan bo'lsa ikkala o'rin band — kod yopiladi (K2 §2). */
 function inviteFor(student: Student, input: Input, taken: Set<string>, request: MockLinkRequest): MockInviteCode {
   let code = String(hashString(`${input.seed}|code|${student.id}`) % 1_000_000).padStart(6, '0');
   for (let n = 1; taken.has(code); n++) code = String((Number(code) + n) % 1_000_000).padStart(6, '0');
@@ -65,11 +70,18 @@ function inviteFor(student: Student, input: Input, taken: Set<string>, request: 
     createdAt: stamp(input.baseIso, 0, '05:30'),
     expiresAt: stamp(input.baseIso, INVITE_TTL_DAYS, '05:30'),
     studentUsedAt: request.createdAt,
-    parentUsedAt: request.parentUsed ? stamp(input.baseIso, 0, '05:45') : null,
-    // Ikkala o'rin ishlatilsa kod yopiladi (kontrakt K2) — «faol kod» yo'q, tekshiruv so'rovi esa ochiq qoladi.
-    closedAt: request.parentUsed ? stamp(input.baseIso, 0, '05:45') : null,
+    studentConfirmedAt: null,
+    parentUsedAt: request.parentLinked ? stamp(input.baseIso, 0, '05:45') : null,
+    closedAt: request.parentLinked ? stamp(input.baseIso, 0, '05:45') : null,
     createdByStaffId: SEED_STAFF_ID,
   };
+}
+
+/** Ota-ona bolaga bergan ism: odatda o'quvchining ismi; `mismatched` — mos kelmaydigani. */
+function childNameOf(student: Student, mismatched: boolean): string {
+  if (!mismatched) return student.firstName;
+  const own = student.firstName.toLowerCase();
+  return MISMATCHED_CHILD_NAMES[student.gender].find((name) => name.toLowerCase() !== own) ?? 'Bola';
 }
 
 function classMap(classes: readonly SchoolClass[]): Map<string, SchoolClass> {
@@ -88,12 +100,15 @@ export function buildAccess(input: Input): AccessSeed {
   // Tekshiruv kutayotgan ulanishlar: hali ulanmaganlar (7-A ikkita, 8-B bitta).
   const unlinked = (classId: string) => active.filter((s) => s.classId === classId && !linkedIds.has(s.id));
   const reviewStudents = [...unlinked('cls-7a').slice(0, 2), ...unlinked('cls-8b').slice(0, 1)];
+  // REVIEW id'si shaffof: `<kod yozuvi>:<bola>` (K2 §5).
   const reviewRequests: MockLinkRequest[] = reviewStudents.map((s, i) => ({
-    id: `lnk-review-${s.id}`,
+    id: `inv-${s.id}:chd-${s.id}`,
     kind: 'REVIEW',
     studentId: s.id,
+    // Uchinchisida bola profilidagi ism o'quvchinikiga mos emas — xodim buni ko'rib qaror qiladi.
+    childName: childNameOf(s, i === 2),
     createdAt: stamp(baseIso, 0, ['06:10', '05:40', '06:25'][i] ?? '06:00'),
-    parentUsed: i === 1,
+    parentLinked: i === 1,
     note: null,
     reason: null,
     status: 'OPEN',
@@ -108,8 +123,9 @@ export function buildAccess(input: Input): AccessSeed {
     id: `lnk-correction-${s.id}`,
     kind: 'CORRECTION',
     studentId: s.id,
+    childName: childNameOf(s, false),
     createdAt: i === 0 ? stamp(baseIso, -1, '16:20') : stamp(baseIso, 0, '05:55'),
-    parentUsed: false,
+    parentLinked: i === 0,
     note: CORRECTION_NOTE,
     reason: 'WRONG_SCHOOL_OR_CLASS',
     status: 'OPEN',
@@ -140,22 +156,29 @@ export function buildAccess(input: Input): AccessSeed {
   });
 
   const classes = classMap(input.classes);
-  const notificationOf = (kind: AccessNotificationKind, id: string, student: Student, createdAt: string, href: string): StaffNotification => ({
-    id: `ntf-${kind.toLowerCase().replace(/_/g, '-')}-${id}`,
-    kind,
-    at: createdAt,
-    // Faqat amalni bajara oladigan rollarga (sinf rahbarida `students.manage` yo'q — tiklash so'rovi unga kelmaydi).
-    roles: recipientRoles(kind),
-    classIds: [student.classId],
-    params: { studentName: studentName(student), className: classes.get(student.classId)?.name ?? '' },
-    subject: null,
-    href,
-  });
+  // Qabul qiluvchilar yozuv yaratilganda belgilanadi (K1 §5, K2 §7): ish qila oladigan faol xodimlar; hech kim bo'lmasa — direktorlar.
+  const notificationOf = (kind: AccessNotificationKind, id: string, student: Student, createdAt: string, href: string): StaffNotification[] => {
+    const audience = notificationAudience(input.staff, kind, student.classId);
+    if (!audience) return [];
+    return [
+      {
+        id: accessNotificationId(kind, id),
+        kind,
+        at: createdAt,
+        roles: audience.roles,
+        staffIds: audience.staffIds,
+        classIds: [student.classId],
+        params: { studentName: studentName(student), className: classes.get(student.classId)?.name ?? '' },
+        subject: null,
+        href,
+      },
+    ];
+  };
   const studentById = (id: string) => active.find((s) => s.id === id) as Student;
   const notifications: StaffNotification[] = [
-    ...reviewRequests.map((r) => notificationOf('LINK_REVIEW', r.id, studentById(r.studentId), r.createdAt, '/students/link-requests')),
-    ...correctionRequests.map((r) => notificationOf('LINK_CORRECTION', r.id, studentById(r.studentId), r.createdAt, '/students/link-requests')),
-    ...recoveryRequests.map((r) =>
+    ...reviewRequests.flatMap((r) => notificationOf('LINK_REVIEW', r.id, studentById(r.studentId), r.createdAt, '/students/link-requests')),
+    ...correctionRequests.flatMap((r) => notificationOf('LINK_CORRECTION', r.id, studentById(r.studentId), r.createdAt, '/students/link-requests')),
+    ...recoveryRequests.flatMap((r) =>
       notificationOf('CHILD_RECOVERY_REQUEST', r.id, studentById(r.studentId), r.createdAt, `/students/view?id=${encodeURIComponent(r.studentId)}&tab=access`),
     ),
   ];

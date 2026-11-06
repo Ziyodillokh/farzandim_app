@@ -4,88 +4,134 @@ import { ServiceError } from '@/data/contracts';
 import { setAccessToken, setRefreshHandler, setSessionLostHandler } from '../client';
 import { accessHttp, linkRequestsHttp } from '../services/access';
 import {
+  asStudentArchived,
   isNotLinked,
   toChildCredentials,
   toGeneratedInviteCode,
   toInviteCode,
   toIssueBody,
   toIssuedCredentials,
+  toLinkDecision,
   toLinkRequests,
   toRecoveryRequests,
+  toStudentRecoveryRequests,
 } from '../services/access-adapters';
 
 const MALFORMED = /kutilmagan javob shakli/;
 
-/** Kontrakt K1: `GET /school/students/:id/credentials`. */
-const CREDENTIALS_WIRE = {
-  login: 'aziza.k24',
-  issuedBy: 'SCHOOL',
-  issuedAt: '2026-11-06T04:00:00.000Z',
-  mustChangePassword: true,
-  lastLoginAt: null,
+/*
+ * Quyidagi JSON'lar backend hujjatlaridan AYNAN ko'chirilgan:
+ *  K1 `docs/KIRISH-AUTH-API.md` §2, §5, §8   |   K2 `docs/KIRISH-SCHOOL-API.md` §2, §5.
+ * (Hujjatdagi qisqartirilgan id'lar — «5d3c…» — ham o'zgartirilmagan.)
+ */
+
+/** K1 §2: `GET …/credentials`. */
+const K1_CREDENTIALS = { login: 'aziza.k24', issuedBy: 'PARENT', issuedAt: '2026-11-09T09:00:00.000Z', mustChangePassword: true, lastLoginAt: null };
+/** K1 §2: `POST …/credentials` → 201. */
+const K1_ISSUED = { login: 'aziza.k24', temporaryPassword: 'k7m2qx9d', issuedAt: '2026-11-09T09:00:00.000Z' };
+/** K1 §5: o'quvchi kartasidagi `recoveryRequests` elementi. */
+const K1_RECOVERY = { id: 'f1c2…', channel: 'SCHOOL', status: 'RECEIVED', createdAt: '2026-11-09T09:00:00.000Z' };
+/** K2 §2: `GET …/invite-code` (faol kod). */
+const K2_INVITE = {
+  id: '5d3c…',
+  code: '048213',
+  expiresAt: '2026-11-10T09:30:12.345Z',
+  createdAt: '2026-11-09T09:30:12.345Z',
+  student: { status: 'FREE', usedAt: null },
+  parent: { status: 'USED', usedAt: '2026-11-09T10:02:44.001Z' },
+};
+/** K2 §2: `POST …/invite-code` → 201. */
+const K2_GENERATED = { code: '048213', expiresAt: '2026-11-10T09:30:12.345Z' };
+/** K2 §5: `GET /school/link-requests` (ikki tur). */
+const K2_REVIEW = {
+  id: '5d3c…:7a21…',
+  kind: 'REVIEW',
+  createdAt: '2026-11-09T10:01:02.000Z',
+  student: { id: '…', fullName: 'Karimov Aziz', classId: '…', className: '7-A' },
+  child: { name: 'Aziz' },
+  parentLinked: false,
+  reason: null,
+  note: null,
+};
+const K2_CORRECTION = {
+  id: '9b8f…',
+  kind: 'CORRECTION',
+  createdAt: '2026-11-09T11:20:00.000Z',
+  student: { id: '…', fullName: 'Rahimov Bobur', classId: '…', className: '7-A' },
+  child: { name: 'Bobur' },
+  parentLinked: true,
+  reason: 'WRONG_SCHOOL_OR_CLASS',
+  note: 'Men 7-B sinfdaman',
+};
+const K2_LIST = [K2_REVIEW, K2_CORRECTION];
+
+/** Backend xato tanalari (`{ statusCode, code, message }`; xabarlar backend kodidan). */
+const ERR = {
+  notLinked: { statusCode: 409, code: 'NOT_LINKED', message: 'Student is not linked to a Parvoz child profile' },
+  archived: { statusCode: 409, code: 'STUDENT_ARCHIVED', message: 'Student is archived' },
+  loginTaken: { statusCode: 409, code: 'LOGIN_TAKEN', message: 'Login is taken' },
+  inviteArchived: { statusCode: 409, code: 'CONFLICT', message: 'archived' },
+  stale: { statusCode: 409, code: 'REQUEST_STALE', message: 'Link request is no longer open' },
+  elsewhere: { statusCode: 409, code: 'STUDENT_LINKED_ELSEWHERE', message: 'Linked by another family member' },
+  enrolled: { statusCode: 409, code: 'ALREADY_ENROLLED', message: 'Child is already linked to a student' },
+  gone: { statusCode: 404, code: 'NOT_FOUND', message: 'Link request not found' },
+  forbidden: { statusCode: 403, code: 'FORBIDDEN', message: 'class c1' },
 };
 
-describe('toChildCredentials (kontrakt K1)', () => {
-  it('aynan kontrakt maydonlari; ortiqcha (parol xeshi kabi) maydonlar o\'tkazilmaydi', () => {
-    const view = toChildCredentials({ ...CREDENTIALS_WIRE, passwordHash: '$2b$12$x', childId: 'c1', failedLogins: 2, lastLoginAt: '2026-11-05T10:00:00.000Z' });
-    expect(view).toEqual({ ...CREDENTIALS_WIRE, lastLoginAt: '2026-11-05T10:00:00.000Z' });
+describe('toChildCredentials (K1 §2)', () => {
+  it('hujjatdagi JSON aynan shu maydonlarga; ortiqcha (parol xeshi kabi) maydonlar o\'tkazilmaydi', () => {
+    expect(toChildCredentials(K1_CREDENTIALS)).toEqual(K1_CREDENTIALS);
+    const view = toChildCredentials({ ...K1_CREDENTIALS, passwordHash: '$2b$12$x', childId: 'c1', failedLogins: 2, lastLoginAt: '2026-11-10T10:00:00.000Z' });
+    expect(view).toEqual({ ...K1_CREDENTIALS, lastLoginAt: '2026-11-10T10:00:00.000Z' });
     expect(Object.keys(view ?? {}).sort()).toEqual(['issuedAt', 'issuedBy', 'lastLoginAt', 'login', 'mustChangePassword']);
   });
 
-  it('null va bo\'sh javob — "berilmagan"', () => {
+  it('maktab bergan; null va bo\'sh tana — "berilmagan"', () => {
+    expect(toChildCredentials({ ...K1_CREDENTIALS, issuedBy: 'SCHOOL' })?.issuedBy).toBe('SCHOOL');
     expect(toChildCredentials(null)).toBeNull();
     expect(toChildCredentials(undefined)).toBeNull();
-  });
-
-  it('lastLoginAt yo\'q yoki bo\'sh — null; ota-ona bergan', () => {
-    const { lastLoginAt: _omit, ...rest } = CREDENTIALS_WIRE;
-    void _omit;
-    expect(toChildCredentials({ ...rest, issuedBy: 'PARENT' })).toMatchObject({ issuedBy: 'PARENT', lastLoginAt: null });
-    expect(toChildCredentials({ ...CREDENTIALS_WIRE, lastLoginAt: '' })?.lastLoginAt).toBeNull();
   });
 
   const broken: Array<[string, unknown]> = [
     ['obyekt emas', 'ok'],
     ['massiv', []],
-    ['login yo\'q', { ...CREDENTIALS_WIRE, login: undefined }],
-    ['login bo\'sh', { ...CREDENTIALS_WIRE, login: '' }],
-    ['issuedBy noma\'lum', { ...CREDENTIALS_WIRE, issuedBy: 'ADMIN' }],
-    ['issuedBy kichik harf', { ...CREDENTIALS_WIRE, issuedBy: 'school' }],
-    ['issuedAt yo\'q', { ...CREDENTIALS_WIRE, issuedAt: null }],
-    ['mustChangePassword satr', { ...CREDENTIALS_WIRE, mustChangePassword: 'true' }],
-    ['mustChangePassword yo\'q', { ...CREDENTIALS_WIRE, mustChangePassword: undefined }],
-    ['lastLoginAt son', { ...CREDENTIALS_WIRE, lastLoginAt: 1730000000 }],
+    ['login yo\'q', { ...K1_CREDENTIALS, login: undefined }],
+    ['login bo\'sh', { ...K1_CREDENTIALS, login: '' }],
+    ['issuedBy noma\'lum', { ...K1_CREDENTIALS, issuedBy: 'ADMIN' }],
+    ['issuedBy kichik harf', { ...K1_CREDENTIALS, issuedBy: 'school' }],
+    ['issuedAt yo\'q', { ...K1_CREDENTIALS, issuedAt: null }],
+    ['mustChangePassword satr', { ...K1_CREDENTIALS, mustChangePassword: 'true' }],
+    ['mustChangePassword yo\'q', { ...K1_CREDENTIALS, mustChangePassword: undefined }],
+    ['lastLoginAt son', { ...K1_CREDENTIALS, lastLoginAt: 1730000000 }],
   ];
   it.each(broken)('kutilmagan shakl aniq xato beradi: %s', (_name, wire) => {
     expect(() => toChildCredentials(wire)).toThrowError(MALFORMED);
   });
 });
 
-describe('toIssuedCredentials (kontrakt K1: 201 { login, temporaryPassword, issuedAt })', () => {
-  const WIRE = { login: 'aziza.k24', temporaryPassword: 'k7m3pq9x', issuedAt: '2026-11-06T04:00:00.000Z' };
-
-  it('uch maydon; ortiqchasi tashlanadi', () => {
-    expect(toIssuedCredentials({ ...WIRE, passwordHash: 'x', childId: 'c1' })).toEqual(WIRE);
+describe('toIssuedCredentials (K1 §2: 201 { login, temporaryPassword, issuedAt })', () => {
+  it('hujjatdagi JSON; ortiqchasi tashlanadi', () => {
+    expect(toIssuedCredentials(K1_ISSUED)).toEqual(K1_ISSUED);
+    expect(toIssuedCredentials({ ...K1_ISSUED, passwordHash: 'x', childId: 'c1' })).toEqual(K1_ISSUED);
   });
 
   it('parol yo\'q yoki noto\'g\'ri tur — xato, va xato matnida parol/qiymat YO\'Q', () => {
-    for (const wire of [{ ...WIRE, temporaryPassword: undefined }, { ...WIRE, temporaryPassword: '' }, { ...WIRE, temporaryPassword: 12345678 }, null, 'k7m3pq9x']) {
+    for (const wire of [{ ...K1_ISSUED, temporaryPassword: undefined }, { ...K1_ISSUED, temporaryPassword: '' }, { ...K1_ISSUED, temporaryPassword: 12345678 }, null, 'k7m2qx9d']) {
       expect(() => toIssuedCredentials(wire)).toThrowError(MALFORMED);
     }
-    // Xato matniga qiymat (parol) tushmaydi — faqat maydon nomi. Xato albatta tashlanishi tekshiriladi.
     let thrown: unknown;
     try {
-      toIssuedCredentials({ ...WIRE, login: 5, temporaryPassword: 'k7m3pq9x' });
+      toIssuedCredentials({ ...K1_ISSUED, login: 5 });
     } catch (error) {
       thrown = error;
     }
     expect(thrown).toBeInstanceOf(ServiceError);
     expect((thrown as ServiceError).message).toMatch(MALFORMED);
-    expect((thrown as ServiceError).message).not.toContain('k7m3pq9x');
+    expect((thrown as ServiceError).message).not.toContain(K1_ISSUED.temporaryPassword);
   });
 });
 
-describe('toIssueBody', () => {
+describe('toIssueBody (K1 §2: { login?, signOutDevices? })', () => {
   it('faqat berilganlari: bo\'sh login tushiriladi (tizim taklif qiladi), login kichik harfga', () => {
     expect(toIssueBody({})).toEqual({});
     expect(toIssueBody({ login: '' })).toEqual({});
@@ -96,175 +142,214 @@ describe('toIssueBody', () => {
   });
 });
 
-describe('toRecoveryRequests (o\'quvchi kartasi ichida)', () => {
-  it('maydon yo\'q yoki null — bo\'sh ro\'yxat', () => {
-    expect(toRecoveryRequests(undefined)).toEqual([]);
-    expect(toRecoveryRequests(null)).toEqual([]);
+describe('toRecoveryRequests (K1 §5: o\'quvchi kartasidagi recoveryRequests)', () => {
+  it('hujjatdagi element: { id, channel: SCHOOL, status: RECEIVED, createdAt } → panel turi', () => {
+    expect(toRecoveryRequests([K1_RECOVERY])).toEqual([{ id: 'f1c2…', channel: 'SCHOOL', createdAt: '2026-11-09T09:00:00.000Z' }]);
     expect(toRecoveryRequests([])).toEqual([]);
   });
 
-  it('faqat ochiq (RECEIVED yoki status yo\'q) so\'rovlar, eng yangisi birinchi; kanal ixtiyoriy', () => {
+  it('faqat ochiq (RECEIVED) so\'rovlar, eng yangisi birinchi', () => {
     const list = toRecoveryRequests([
-      { id: 'r1', status: 'RECEIVED', channel: 'SCHOOL', createdAt: '2026-11-05T10:00:00.000Z', pollTokenHash: 'zzz' },
-      { id: 'r2', status: 'RESTORED', channel: 'SCHOOL', createdAt: '2026-11-06T09:00:00.000Z' },
-      { id: 'r3', createdAt: '2026-11-06T08:00:00.000Z' },
-      { id: 'r4', status: 'REJECTED', createdAt: '2026-11-06T07:00:00.000Z' },
-      { id: 'r5', status: 'RECEIVED', channel: 'PARENT', createdAt: '2026-11-04T08:00:00.000Z' },
+      { ...K1_RECOVERY, id: 'r1', createdAt: '2026-11-08T10:00:00.000Z', pollTokenHash: 'zzz' },
+      { ...K1_RECOVERY, id: 'r2', status: 'RESTORED', createdAt: '2026-11-09T09:00:00.000Z' },
+      { ...K1_RECOVERY, id: 'r3', createdAt: '2026-11-09T08:00:00.000Z' },
+      { ...K1_RECOVERY, id: 'r4', status: 'REJECTED' },
+      { ...K1_RECOVERY, id: 'r5', channel: 'PARENT', createdAt: '2026-11-07T08:00:00.000Z' },
     ]);
-    expect(list).toEqual([
-      { id: 'r3', channel: null, createdAt: '2026-11-06T08:00:00.000Z' },
-      { id: 'r1', channel: 'SCHOOL', createdAt: '2026-11-05T10:00:00.000Z' },
-      { id: 'r5', channel: 'PARENT', createdAt: '2026-11-04T08:00:00.000Z' },
-    ]);
+    expect(list.map((r) => r.id)).toEqual(['r3', 'r1', 'r5']);
+    expect(list.every((r) => Object.keys(r).sort().join() === 'channel,createdAt,id')).toBe(true);
+  });
+
+  it('o\'quvchi kartasidan: maydon bo\'sh massiv ham bo\'lishi mumkin (`students.manage` bo\'lmagan rol)', () => {
+    expect(toStudentRecoveryRequests({ id: 's1', recoveryRequests: [K1_RECOVERY] })).toHaveLength(1);
+    expect(toStudentRecoveryRequests({ id: 's1', recoveryRequests: [] })).toEqual([]);
   });
 
   const broken: Array<[string, unknown]> = [
     ['massiv emas', { id: 'r1' }],
+    ['maydon yo\'q (null)', null],
     ['element obyekt emas', ['r1']],
-    ['id yo\'q', [{ createdAt: '2026-11-06T08:00:00.000Z' }]],
-    ['createdAt yo\'q', [{ id: 'r1' }]],
-    ['status noma\'lum', [{ id: 'r1', status: 'OPEN', createdAt: '2026-11-06T08:00:00.000Z' }]],
+    ['id yo\'q', [{ ...K1_RECOVERY, id: undefined }]],
+    ['createdAt yo\'q', [{ ...K1_RECOVERY, createdAt: undefined }]],
+    ['kanal yo\'q', [{ ...K1_RECOVERY, channel: undefined }]],
+    ['kanal noma\'lum', [{ ...K1_RECOVERY, channel: 'EMAIL' }]],
+    ['status yo\'q', [{ ...K1_RECOVERY, status: undefined }]],
+    ['status noma\'lum', [{ ...K1_RECOVERY, status: 'OPEN' }]],
   ];
   it.each(broken)('kutilmagan shakl aniq xato beradi: %s', (_name, wire) => {
     expect(() => toRecoveryRequests(wire)).toThrowError(MALFORMED);
   });
+
+  it('o\'quvchi kartasi: obyekt emas yoki `recoveryRequests` yo\'q — xato (jim bo\'sh ro\'yxat emas)', () => {
+    expect(() => toStudentRecoveryRequests(null)).toThrowError(MALFORMED);
+    expect(() => toStudentRecoveryRequests({ id: 's1' })).toThrowError(MALFORMED);
+  });
 });
 
-describe('toInviteCode / toGeneratedInviteCode (kontrakt K2)', () => {
-  const BASE = { code: '012345', expiresAt: '2026-11-07T04:00:00.000Z' };
-  const PENDING = { used: false, usedAt: null };
+describe('toInviteCode / toGeneratedInviteCode (K2 §2)', () => {
+  const FREE = { status: 'FREE', usedAt: null };
 
-  it('POST natijasi `{ code, expiresAt }`: ikkala o\'rin bo\'sh, bosh nollar saqlanadi', () => {
-    expect(toGeneratedInviteCode({ ...BASE, id: 'x', studentId: 's1' })).toEqual({ ...BASE, student: PENDING, parent: PENDING });
+  it('GET: hujjatdagi JSON — o\'quvchi o\'rni FREE, ota-ona o\'rni USED (id va createdAt panelga kerak emas)', () => {
+    expect(toInviteCode(K2_INVITE)).toEqual({
+      code: '048213',
+      expiresAt: '2026-11-10T09:30:12.345Z',
+      student: { status: 'FREE', usedAt: null },
+      parent: { status: 'USED', usedAt: '2026-11-09T10:02:44.001Z' },
+    });
   });
 
-  it('GET: bo\'sh javob / null — faol kod yo\'q', () => {
+  it.each(['FREE', 'UNDER_REVIEW', 'CONFIRMED'] as const)('o\'quvchi o\'rni uch holatdan biri: %s', (status) => {
+    const usedAt = status === 'FREE' ? null : '2026-11-09T10:00:00.000Z';
+    expect(toInviteCode({ ...K2_INVITE, student: { status, usedAt } })?.student).toEqual({ status, usedAt });
+  });
+
+  it('ota-ona o\'rni: FREE | USED', () => {
+    expect(toInviteCode({ ...K2_INVITE, parent: FREE })?.parent).toEqual(FREE);
+    expect(toInviteCode(K2_INVITE)?.parent.status).toBe('USED');
+  });
+
+  it('faol kod yo\'q: tana JSON `null` (K2 §2) yoki bo\'sh', () => {
     expect(toInviteCode(null)).toBeNull();
     expect(toInviteCode(undefined)).toBeNull();
   });
 
-  it('GET shakl 1 (model maydonlari): studentUsedAt / parentUsedAt', () => {
-    expect(toInviteCode({ ...BASE, studentUsedAt: '2026-11-06T05:00:00.000Z', parentUsedAt: null })).toEqual({
-      ...BASE,
-      student: { used: true, usedAt: '2026-11-06T05:00:00.000Z' },
-      parent: PENDING,
+  it('POST: hujjatdagi `{ code, expiresAt }` → ikkala o\'rin bo\'sh, bosh nollar saqlanadi', () => {
+    expect(toGeneratedInviteCode({ code: '000123', expiresAt: K2_GENERATED.expiresAt })).toEqual({
+      code: '000123',
+      expiresAt: K2_GENERATED.expiresAt,
+      student: FREE,
+      parent: FREE,
     });
-  });
-
-  it('GET shakl 2 (mantiqiy): studentUsed / parentUsed', () => {
-    expect(toInviteCode({ ...BASE, studentUsed: false, parentUsed: true })).toEqual({ ...BASE, student: PENDING, parent: { used: true, usedAt: null } });
-  });
-
-  it('GET shakl 3 (ichma-ich): student: { used | usedAt }, parent: { … }', () => {
-    expect(toInviteCode({ ...BASE, student: { used: true }, parent: { usedAt: '2026-11-06T06:00:00.000Z' } })).toEqual({
-      ...BASE,
-      student: { used: true, usedAt: null },
-      parent: { used: true, usedAt: '2026-11-06T06:00:00.000Z' },
-    });
-    expect(toInviteCode({ ...BASE, student: { used: false, usedAt: null }, parent: { used: false, usedAt: null } })).toEqual({ ...BASE, student: PENDING, parent: PENDING });
+    expect(toGeneratedInviteCode(K2_GENERATED)).toMatchObject({ code: '048213', student: FREE, parent: FREE });
   });
 
   const broken: Array<[string, unknown]> = [
     ['obyekt emas', 'ok'],
-    ['kod 5 xonali', { ...BASE, code: '12345', studentUsedAt: null, parentUsedAt: null }],
-    ['kod harfli (8 belgili ota-ona kodi)', { ...BASE, code: 'ABCD2345', studentUsedAt: null, parentUsedAt: null }],
-    ['kod son', { ...BASE, code: 123456, studentUsedAt: null, parentUsedAt: null }],
-    ['expiresAt yo\'q', { code: '123456', studentUsedAt: null, parentUsedAt: null }],
-    ['o\'rin holatlari yo\'q', BASE],
-    ['faqat bitta o\'rin', { ...BASE, studentUsedAt: null }],
-    ['o\'rin holati noto\'g\'ri tur', { ...BASE, studentUsedAt: 5, parentUsedAt: null }],
+    ['kod 5 xonali', { ...K2_INVITE, code: '12345' }],
+    ['kod harfli (8 belgili vasiy kodi)', { ...K2_INVITE, code: 'ABCD2345' }],
+    ['kod son', { ...K2_INVITE, code: 48213 }],
+    ['expiresAt yo\'q', { ...K2_INVITE, expiresAt: undefined }],
+    ['o\'quvchi o\'rni yo\'q', { ...K2_INVITE, student: undefined }],
+    ['ota-ona o\'rni yo\'q', { ...K2_INVITE, parent: undefined }],
+    ['o\'quvchi holati noma\'lum', { ...K2_INVITE, student: { status: 'USED', usedAt: null } }],
+    ['o\'quvchi holati yo\'q (eski mantiqiy shakl)', { ...K2_INVITE, student: { used: true, usedAt: null } }],
+    ['ota-ona holati noma\'lum', { ...K2_INVITE, parent: { status: 'UNDER_REVIEW', usedAt: null } }],
+    ['usedAt noto\'g\'ri tur', { ...K2_INVITE, parent: { status: 'USED', usedAt: 5 } }],
+    ['tekis eski shakl (studentUsedAt/parentUsedAt)', { code: '048213', expiresAt: K2_INVITE.expiresAt, studentUsedAt: null, parentUsedAt: null }],
   ];
   it.each(broken)('GET kutilmagan shakl aniq xato beradi: %s', (_name, wire) => {
     expect(() => toInviteCode(wire)).toThrowError(MALFORMED);
   });
 
   it('POST: kod yoki muddat yo\'q — xato', () => {
-    expect(() => toGeneratedInviteCode({ expiresAt: BASE.expiresAt })).toThrowError(MALFORMED);
+    expect(() => toGeneratedInviteCode({ expiresAt: K2_GENERATED.expiresAt })).toThrowError(MALFORMED);
     expect(() => toGeneratedInviteCode({ code: '123456' })).toThrowError(MALFORMED);
+    expect(() => toGeneratedInviteCode({ code: 'ABC', expiresAt: K2_GENERATED.expiresAt })).toThrowError(MALFORMED);
     expect(() => toGeneratedInviteCode(null)).toThrowError(MALFORMED);
   });
 });
 
-describe('toLinkRequests (kontrakt K2: GET /school/link-requests)', () => {
-  const REVIEW = { id: 'l1', kind: 'REVIEW', studentId: 's1', studentName: 'Karimova Aziza', className: '7-A', createdAt: '2026-11-06T04:00:00.000Z', parentUsed: true };
-  const CORRECTION = {
-    id: 'c1',
-    kind: 'CORRECTION',
-    studentId: 's2',
-    studentName: 'Aliyev Vali',
-    className: '8-B',
-    createdAt: '2026-11-06T05:00:00.000Z',
-    reason: 'WRONG_SCHOOL_OR_CLASS',
-    note: '  Men 8-A da oʻqiyman  ',
-  };
-
-  it('massiv: tekshiruv va tuzatish; eng yangisi birinchi; maydonlar panel turiga', () => {
-    expect(toLinkRequests([REVIEW, CORRECTION])).toEqual([
-      { id: 'c1', kind: 'CORRECTION', studentId: 's2', studentName: 'Aliyev Vali', className: '8-B', createdAt: CORRECTION.createdAt, parentUsed: false, note: 'Men 8-A da oʻqiyman', reason: 'WRONG_SCHOOL_OR_CLASS' },
-      { id: 'l1', kind: 'REVIEW', studentId: 's1', studentName: 'Karimova Aziza', className: '7-A', createdAt: REVIEW.createdAt, parentUsed: true, note: null, reason: null },
+describe('toLinkRequests (K2 §5: GET /school/link-requests)', () => {
+  it('hujjatdagi massiv: ichma-ich o\'quvchi, bola ismi, parentLinked; tartib backendniki (eng eskilari birinchi)', () => {
+    expect(toLinkRequests(K2_LIST)).toEqual([
+      {
+        id: '5d3c…:7a21…',
+        kind: 'REVIEW',
+        createdAt: '2026-11-09T10:01:02.000Z',
+        student: { id: '…', fullName: 'Karimov Aziz', classId: '…', className: '7-A' },
+        child: { name: 'Aziz' },
+        parentLinked: false,
+        reason: null,
+        note: null,
+      },
+      {
+        id: '9b8f…',
+        kind: 'CORRECTION',
+        createdAt: '2026-11-09T11:20:00.000Z',
+        student: { id: '…', fullName: 'Rahimov Bobur', classId: '…', className: '7-A' },
+        child: { name: 'Bobur' },
+        parentLinked: true,
+        reason: 'WRONG_SCHOOL_OR_CLASS',
+        note: 'Men 7-B sinfdaman',
+      },
     ]);
+    // Adapter qayta tartiblamaydi: backend tartibi — navbat tartibi.
+    expect(toLinkRequests([...K2_LIST].reverse()).map((r) => r.id)).toEqual(['9b8f…', '5d3c…:7a21…']);
   });
 
-  it('`{ items }` va `{ links, corrections }` shakllari ham xuddi shunday', () => {
-    const expected = toLinkRequests([REVIEW, CORRECTION]);
-    expect(toLinkRequests({ items: [REVIEW, CORRECTION], pagination: { total: 2 } })).toEqual(expected);
-    const { kind: _k1, ...review } = REVIEW;
-    const { kind: _k2, ...correction } = CORRECTION;
-    void _k1;
-    void _k2;
-    expect(toLinkRequests({ links: [review], corrections: [correction] })).toEqual(expected);
-    expect(toLinkRequests({ links: [review] })).toHaveLength(1);
+  it('REVIEW id\'si shaffof: o\'zgartirilmaydi (":" saqlanadi)', () => {
+    const id = '5d3c9e1a-0b1c-4d2e-8f3a-1b2c3d4e5f60:7a21c3d4-5e6f-4a1b-9c2d-3e4f5a6b7c8d';
+    expect(toLinkRequests([{ ...K2_REVIEW, id }])[0]?.id).toBe(id);
   });
 
-  it('bo\'sh javob / bo\'sh ro\'yxat — bo\'sh', () => {
+  it('bo\'sh ro\'yxat', () => {
     expect(toLinkRequests([])).toEqual([]);
-    expect(toLinkRequests({ items: [] })).toEqual([]);
-    expect(toLinkRequests(null)).toEqual([]);
-    expect(toLinkRequests({ links: [], corrections: [] })).toEqual([]);
   });
 
-  it('tur sinonimlari (`type`, LINK, LINK_REVIEW, UNDER_REVIEW, LINK_CORRECTION)', () => {
-    const { kind: _k, ...rest } = REVIEW;
-    void _k;
-    for (const declared of ['LINK', 'LINK_REVIEW', 'UNDER_REVIEW', 'REVIEW']) {
-      expect(toLinkRequests([{ ...rest, type: declared }])[0]?.kind).toBe('REVIEW');
-    }
-    const { kind: _c, ...corr } = CORRECTION;
-    void _c;
-    expect(toLinkRequests([{ ...corr, type: 'LINK_CORRECTION' }])[0]?.kind).toBe('CORRECTION');
+  it('sinfsiz o\'quvchi: classId null, className bo\'sh satr (backend shunday beradi)', () => {
+    expect(toLinkRequests([{ ...K2_REVIEW, student: { ...K2_REVIEW.student, classId: null, className: '' } }])[0]?.student).toEqual({
+      id: '…',
+      fullName: 'Karimov Aziz',
+      classId: null,
+      className: '',
+    });
   });
 
-  it('ota-ona o\'rni: `parentUsed` (mantiqiy) yoki `parentUsedAt` (model maydoni)', () => {
-    const { parentUsed: _p, ...rest } = REVIEW;
-    void _p;
-    expect(toLinkRequests([{ ...rest, parentUsedAt: '2026-11-06T04:30:00.000Z' }])[0]?.parentUsed).toBe(true);
-    expect(toLinkRequests([{ ...rest, parentUsedAt: null }])[0]?.parentUsed).toBe(false);
-    expect(toLinkRequests([{ ...REVIEW, parentUsed: false }])[0]?.parentUsed).toBe(false);
-  });
-
-  it('ixtiyoriy qo\'shimchalar yumshoq: studentId/sinf/izoh/sabab yo\'q bo\'lsa ham ishlaydi', () => {
-    const [item] = toLinkRequests([{ id: 'c9', kind: 'CORRECTION', studentName: 'Aliyev Vali', createdAt: CORRECTION.createdAt }]);
-    expect(item).toMatchObject({ studentId: null, className: '—', note: null, reason: null, parentUsed: false });
-    expect(toLinkRequests([{ ...CORRECTION, reason: 'BOSHQA', note: '   ' }])[0]).toMatchObject({ reason: null, note: null });
-    // Tekshiruvda izoh bo'lmaydi.
-    expect(toLinkRequests([{ ...REVIEW, note: 'yashirin' }])[0]?.note).toBeNull();
+  it('izoh kesiladi; bo\'sh izoh — null; yangi (noma\'lum) sabab butun ro\'yxatni buzmaydi', () => {
+    expect(toLinkRequests([{ ...K2_CORRECTION, note: '  Men 7-B sinfdaman  ' }])[0]?.note).toBe('Men 7-B sinfdaman');
+    expect(toLinkRequests([{ ...K2_CORRECTION, note: '   ' }])[0]?.note).toBeNull();
+    expect(toLinkRequests([{ ...K2_CORRECTION, reason: 'WRONG_CHILD' }])[0]?.reason).toBeNull();
   });
 
   const broken: Array<[string, unknown]> = [
-    ['javob obyekt/massiv emas', 'ok'],
-    ['{ items } massiv emas', { items: 'x' }],
-    ['{ links } massiv emas', { links: 'x' }],
+    ['javob massiv emas', 'ok'],
+    ['{ items } o\'ramasi (hujjatda yo\'q)', { items: K2_LIST }],
+    ['bo\'sh tana', undefined],
     ['element obyekt emas', ['x']],
-    ['id yo\'q', [{ ...REVIEW, id: undefined }]],
-    ['tur yo\'q', [{ ...REVIEW, kind: undefined }]],
-    ['tur noma\'lum', [{ ...REVIEW, kind: 'BOSHQA' }]],
-    ['tur — prototip kaliti', [{ ...REVIEW, kind: 'constructor' }]],
-    ['o\'quvchi ismi yo\'q', [{ ...REVIEW, studentName: '' }]],
-    ['vaqt yo\'q', [{ ...REVIEW, createdAt: undefined }]],
-    ['tekshiruvda ota-ona o\'rni holati yo\'q', [{ ...REVIEW, parentUsed: undefined }]],
+    ['id yo\'q', [{ ...K2_REVIEW, id: undefined }]],
+    ['tur yo\'q', [{ ...K2_REVIEW, kind: undefined }]],
+    ['tur noma\'lum', [{ ...K2_REVIEW, kind: 'BOSHQA' }]],
+    ['tur — prototip kaliti', [{ ...K2_REVIEW, kind: 'constructor' }]],
+    ['tur sinonimi (LINK_REVIEW)', [{ ...K2_REVIEW, kind: 'LINK_REVIEW' }]],
+    ['vaqt yo\'q', [{ ...K2_REVIEW, createdAt: undefined }]],
+    ['o\'quvchi yo\'q (eski tekis shakl)', [{ ...K2_REVIEW, student: undefined, studentName: 'Karimov Aziz', className: '7-A' }]],
+    ['o\'quvchi id\'si yo\'q', [{ ...K2_REVIEW, student: { ...K2_REVIEW.student, id: '' } }]],
+    ['o\'quvchi ismi yo\'q', [{ ...K2_REVIEW, student: { ...K2_REVIEW.student, fullName: '' } }]],
+    ['sinf noto\'g\'ri tur', [{ ...K2_REVIEW, student: { ...K2_REVIEW.student, className: 7 } }]],
+    ['bola yo\'q', [{ ...K2_REVIEW, child: undefined }]],
+    ['bola ismi yo\'q', [{ ...K2_REVIEW, child: { name: '' } }]],
+    ['parentLinked yo\'q (eski parentUsed)', [{ ...K2_REVIEW, parentLinked: undefined, parentUsed: false }]],
+    ['parentLinked satr', [{ ...K2_REVIEW, parentLinked: 'true' }]],
+    ['izoh noto\'g\'ri tur', [{ ...K2_CORRECTION, note: 5 }]],
   ];
   it.each(broken)('kutilmagan shakl aniq xato beradi: %s', (_name, wire) => {
     expect(() => toLinkRequests(wire)).toThrowError(MALFORMED);
+  });
+});
+
+describe('toLinkDecision (K2 §5: 200 { id, kind, status })', () => {
+  it('confirm → CONFIRMED, reject → REJECTED (ikkala tur uchun)', () => {
+    expect(toLinkDecision({ id: '5d3c…:7a21…', kind: 'REVIEW', status: 'CONFIRMED' }, 'confirm')).toEqual({ id: '5d3c…:7a21…', kind: 'REVIEW', status: 'CONFIRMED' });
+    expect(toLinkDecision({ id: '5d3c…:7a21…', kind: 'REVIEW', status: 'REJECTED' }, 'reject').status).toBe('REJECTED');
+    expect(toLinkDecision({ id: '9b8f…', kind: 'CORRECTION', status: 'CONFIRMED' }, 'confirm')).toMatchObject({ kind: 'CORRECTION', status: 'CONFIRMED' });
+    expect(toLinkDecision({ id: '9b8f…', kind: 'CORRECTION', status: 'REJECTED' }, 'reject')).toMatchObject({ kind: 'CORRECTION', status: 'REJECTED' });
+  });
+
+  it('so\'ralgan amalga mos kelmaydigan natija — xato (UI teskari natijani "bajarildi" demasin)', () => {
+    expect(() => toLinkDecision({ id: 'x', kind: 'REVIEW', status: 'REJECTED' }, 'confirm')).toThrowError(MALFORMED);
+    expect(() => toLinkDecision({ id: 'x', kind: 'CORRECTION', status: 'CONFIRMED' }, 'reject')).toThrowError(MALFORMED);
+  });
+
+  const broken: Array<[string, unknown]> = [
+    ['obyekt emas', 'ok'],
+    ['bo\'sh tana', undefined],
+    ['id yo\'q', { kind: 'REVIEW', status: 'CONFIRMED' }],
+    ['tur noma\'lum', { id: 'x', kind: 'OTHER', status: 'CONFIRMED' }],
+    ['status noma\'lum', { id: 'x', kind: 'REVIEW', status: 'OPEN' }],
+    ['status yo\'q', { id: 'x', kind: 'REVIEW' }],
+  ];
+  it.each(broken)('kutilmagan shakl aniq xato beradi: %s', (_name, wire) => {
+    expect(() => toLinkDecision(wire, 'confirm')).toThrowError(MALFORMED);
   });
 });
 
@@ -276,13 +361,29 @@ describe('xato kodlari', () => {
     expect(isNotLinked(new ServiceError('CONFLICT', 'x'))).toBe(false);
     expect(isNotLinked(new Error('NOT_LINKED'))).toBe(false);
   });
+
+  it('asStudentArchived: faqat umumiy CONFLICT (aniq kodsiz 409) STUDENT_ARCHIVED bo\'ladi', () => {
+    const generic = asStudentArchived(new ServiceError('CONFLICT', 'archived', 'CONFLICT'));
+    expect(generic).toBeInstanceOf(ServiceError);
+    expect(generic).toMatchObject({ code: 'CONFLICT', detail: 'STUDENT_ARCHIVED' });
+    expect(asStudentArchived(new ServiceError('CONFLICT', 'archived', null))).toMatchObject({ detail: 'STUDENT_ARCHIVED' });
+    // Aniq kod bor bo'lsa (yoki boshqa tur) — o'zgarishsiz.
+    const specific = new ServiceError('CONFLICT', 'x', 'STUDENT_ARCHIVED');
+    expect(asStudentArchived(specific)).toBe(specific);
+    const other = new ServiceError('CONFLICT', 'x', 'REQUEST_STALE');
+    expect(asStudentArchived(other)).toBe(other);
+    const forbidden = new ServiceError('FORBIDDEN', 'x', 'FORBIDDEN');
+    expect(asStudentArchived(forbidden)).toBe(forbidden);
+    const plain = new Error('boom');
+    expect(asStudentArchived(plain)).toBe(plain);
+  });
 });
 
 // ── HTTP servislari (fetch soxta) ────────────────────────────────────────
 
 type Call = { url: string; method: string; body: string | null };
 
-function mockFetch(responses: Array<{ status: number; body?: unknown }>): Call[] {
+function mockFetch(responses: Array<{ status: number; body?: unknown; text?: string }>): Call[] {
   const calls: Call[] = [];
   const queue = [...responses];
   vi.stubGlobal(
@@ -290,49 +391,55 @@ function mockFetch(responses: Array<{ status: number; body?: unknown }>): Call[]
     vi.fn(async (url: string, init: RequestInit) => {
       calls.push({ url, method: String(init.method), body: typeof init.body === 'string' ? init.body : null });
       const next = queue.shift() ?? { status: 500 };
-      return new Response(next.body === undefined ? null : JSON.stringify(next.body), { status: next.status });
+      const payload = next.text ?? (next.body === undefined ? null : JSON.stringify(next.body));
+      return new Response(payload, { status: next.status });
     }),
   );
   return calls;
 }
 
-describe('accessHttp / linkRequestsHttp', () => {
+function useFakeSession(): void {
   beforeEach(() => {
     setAccessToken('t1');
     setRefreshHandler(async () => false);
     setSessionLostHandler(null);
   });
   afterEach(() => vi.unstubAllGlobals());
+}
+
+describe('accessHttp: kirish ma\'lumotlari (K1)', () => {
+  useFakeSession();
 
   it('credentials: GET /school/students/:id/credentials → linked: true', async () => {
-    const calls = mockFetch([{ status: 200, body: CREDENTIALS_WIRE }]);
-    await expect(accessHttp.credentials('stu 1')).resolves.toEqual({ linked: true, credentials: CREDENTIALS_WIRE });
+    const calls = mockFetch([{ status: 200, body: K1_CREDENTIALS }]);
+    await expect(accessHttp.credentials('stu 1')).resolves.toEqual({ linked: true, credentials: K1_CREDENTIALS });
     expect(calls[0]).toMatchObject({ method: 'GET', url: '/api/school/students/stu%201/credentials' });
   });
 
-  it('credentials: `null` yoki bo\'sh javob — ulangan, lekin berilmagan', async () => {
-    mockFetch([{ status: 200, body: null }]);
+  it('credentials: matni `null` (K1 §2) yoki bo\'sh tana — ulangan, lekin berilmagan', async () => {
+    mockFetch([{ status: 200, text: 'null' }]);
     await expect(accessHttp.credentials('s1')).resolves.toEqual({ linked: true, credentials: null });
     mockFetch([{ status: 200 }]);
     await expect(accessHttp.credentials('s1')).resolves.toEqual({ linked: true, credentials: null });
   });
 
   it('credentials: 409 NOT_LINKED xato emas — linked: false', async () => {
-    mockFetch([{ status: 409, body: { statusCode: 409, code: 'NOT_LINKED', message: 'Student is not linked' } }]);
+    mockFetch([{ status: 409, body: ERR.notLinked }]);
     await expect(accessHttp.credentials('s1')).resolves.toEqual({ linked: false, credentials: null });
   });
 
-  it('credentials: boshqa 409 yoki 403 — xato sifatida o\'tadi', async () => {
+  it('credentials: boshqa 409, 403 va 404 — xato sifatida o\'tadi', async () => {
     mockFetch([{ status: 409, body: { statusCode: 409, code: 'SOMETHING_ELSE', message: 'x' } }]);
     await expect(accessHttp.credentials('s1')).rejects.toMatchObject({ code: 'CONFLICT', detail: 'SOMETHING_ELSE' });
-    mockFetch([{ status: 403, body: { statusCode: 403, code: 'FORBIDDEN', message: 'x' } }]);
+    mockFetch([{ status: 403, body: ERR.forbidden }]);
     await expect(accessHttp.credentials('s1')).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    mockFetch([{ status: 404, body: { statusCode: 404, code: 'NOT_FOUND', message: 's1' } }]);
+    await expect(accessHttp.credentials('s1')).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 
   it('issueCredentials: POST tanasi faqat berilganlar; 201 javobi adapterdan o\'tadi', async () => {
-    const wire = { login: 'aziza.k24', temporaryPassword: 'k7m3pq9x', issuedAt: '2026-11-06T04:00:00.000Z' };
-    const calls = mockFetch([{ status: 201, body: wire }, { status: 201, body: wire }]);
-    await expect(accessHttp.issueCredentials('s1')).resolves.toEqual(wire);
+    const calls = mockFetch([{ status: 201, body: K1_ISSUED }, { status: 201, body: K1_ISSUED }]);
+    await expect(accessHttp.issueCredentials('s1')).resolves.toEqual(K1_ISSUED);
     await accessHttp.issueCredentials('s1', { login: ' Aziza.K24 ', signOutDevices: false });
     expect(calls.map((c) => [c.method, c.url, c.body])).toEqual([
       ['POST', '/api/school/students/s1/credentials', '{}'],
@@ -340,70 +447,151 @@ describe('accessHttp / linkRequestsHttp', () => {
     ]);
   });
 
-  it('issueCredentials: 409 LOGIN_TAKEN va 409 NOT_LINKED — aniq detail bilan', async () => {
-    mockFetch([{ status: 409, body: { statusCode: 409, code: 'LOGIN_TAKEN', message: 'taken' } }]);
+  it('issueCredentials: 409 LOGIN_TAKEN, NOT_LINKED va STUDENT_ARCHIVED — aniq detail bilan', async () => {
+    mockFetch([{ status: 409, body: ERR.loginTaken }]);
     await expect(accessHttp.issueCredentials('s1', { login: 'aziza.k24' })).rejects.toMatchObject({ code: 'CONFLICT', detail: 'LOGIN_TAKEN' });
-    mockFetch([{ status: 409, body: { statusCode: 409, code: 'NOT_LINKED', message: 'no' } }]);
+    mockFetch([{ status: 409, body: ERR.notLinked }]);
     await expect(accessHttp.issueCredentials('s1')).rejects.toSatisfy(isNotLinked);
+    mockFetch([{ status: 409, body: ERR.archived }]);
+    await expect(accessHttp.issueCredentials('s1')).rejects.toMatchObject({ code: 'CONFLICT', detail: 'STUDENT_ARCHIVED' });
   });
 
   it('issueCredentials: javobda parol bo\'lmasa — xato (jim standart qiymat emas)', async () => {
-    mockFetch([{ status: 201, body: { login: 'aziza.k24', issuedAt: '2026-11-06T04:00:00.000Z' } }]);
+    mockFetch([{ status: 201, body: { login: 'aziza.k24', issuedAt: '2026-11-09T09:00:00.000Z' } }]);
     await expect(accessHttp.issueCredentials('s1')).rejects.toThrowError(MALFORMED);
   });
 
   it('recoveryRequests: o\'quvchi kartasi (GET /school/students/:id) ichidagi `recoveryRequests`', async () => {
-    const calls = mockFetch([{ status: 200, body: { id: 's1', lastName: 'K', recoveryRequests: [{ id: 'r1', status: 'RECEIVED', channel: 'SCHOOL', createdAt: '2026-11-06T04:00:00.000Z' }] } }]);
-    await expect(accessHttp.recoveryRequests('s1')).resolves.toEqual([{ id: 'r1', channel: 'SCHOOL', createdAt: '2026-11-06T04:00:00.000Z' }]);
+    const calls = mockFetch([{ status: 200, body: { id: 's1', lastName: 'Karimov', recoveryRequests: [K1_RECOVERY] } }]);
+    await expect(accessHttp.recoveryRequests('s1')).resolves.toEqual([{ id: 'f1c2…', channel: 'SCHOOL', createdAt: '2026-11-09T09:00:00.000Z' }]);
     expect(calls[0]).toMatchObject({ method: 'GET', url: '/api/school/students/s1' });
-    mockFetch([{ status: 200, body: { id: 's1' } }]);
+    mockFetch([{ status: 200, body: { id: 's1', recoveryRequests: [] } }]);
     await expect(accessHttp.recoveryRequests('s1')).resolves.toEqual([]);
+    // Maydon yo'q — jim bo'sh ro'yxat emas, aniq xato.
+    mockFetch([{ status: 200, body: { id: 's1' } }]);
+    await expect(accessHttp.recoveryRequests('s1')).rejects.toThrowError(MALFORMED);
   });
 
-  it('rejectRecovery: POST /school/students/:id/recovery-requests/:requestId/reject', async () => {
-    const calls = mockFetch([{ status: 201, body: { ok: true } }]);
+  it('rejectRecovery: POST /school/students/:id/recovery-requests/:requestId/reject (200 REJECTED ko\'rinishi)', async () => {
+    const calls = mockFetch([{ status: 200, body: { ...K1_RECOVERY, status: 'REJECTED' } }]);
     await expect(accessHttp.rejectRecovery('s1', 'r 1')).resolves.toBeUndefined();
     expect(calls[0]).toMatchObject({ method: 'POST', url: '/api/school/students/s1/recovery-requests/r%201/reject', body: null });
   });
 
-  it('inviteCode: faol kod; null/bo\'sh/404 — faol kod yo\'q; boshqa xato o\'tadi', async () => {
-    const calls = mockFetch([{ status: 200, body: { code: '123456', expiresAt: '2026-11-07T04:00:00.000Z', studentUsedAt: null, parentUsedAt: null } }]);
-    await expect(accessHttp.inviteCode('s1')).resolves.toMatchObject({ code: '123456' });
+  it('rejectRecovery: 404 REQUEST_NOT_FOUND va 409 ALREADY_RESOLVED / NOT_LINKED — aniq detail', async () => {
+    mockFetch([{ status: 404, body: { statusCode: 404, code: 'REQUEST_NOT_FOUND', message: 'x' } }]);
+    await expect(accessHttp.rejectRecovery('s1', 'r1')).rejects.toMatchObject({ code: 'NOT_FOUND', detail: 'REQUEST_NOT_FOUND' });
+    mockFetch([{ status: 409, body: { statusCode: 409, code: 'ALREADY_RESOLVED', message: 'x' } }]);
+    await expect(accessHttp.rejectRecovery('s1', 'r1')).rejects.toMatchObject({ code: 'CONFLICT', detail: 'ALREADY_RESOLVED' });
+    mockFetch([{ status: 409, body: ERR.notLinked }]);
+    await expect(accessHttp.rejectRecovery('s1', 'r1')).rejects.toSatisfy(isNotLinked);
+  });
+});
+
+describe('accessHttp: maktab kodi (K2 §2)', () => {
+  useFakeSession();
+
+  it('inviteCode: faol kod hujjatdagi JSON\'dan', async () => {
+    const calls = mockFetch([{ status: 200, body: K2_INVITE }]);
+    await expect(accessHttp.inviteCode('s1')).resolves.toMatchObject({
+      code: '048213',
+      student: { status: 'FREE', usedAt: null },
+      parent: { status: 'USED', usedAt: '2026-11-09T10:02:44.001Z' },
+    });
     expect(calls[0]).toMatchObject({ method: 'GET', url: '/api/school/students/s1/invite-code' });
-    mockFetch([{ status: 200, body: null }]);
+  });
+
+  it('inviteCode: faol kod yo\'q — matni `null` (200); bo\'sh tana ham shunday', async () => {
+    mockFetch([{ status: 200, text: 'null' }]);
     await expect(accessHttp.inviteCode('s1')).resolves.toBeNull();
     mockFetch([{ status: 200 }]);
     await expect(accessHttp.inviteCode('s1')).resolves.toBeNull();
-    mockFetch([{ status: 404, body: { statusCode: 404, code: 'NOT_FOUND', message: 'x' } }]);
-    await expect(accessHttp.inviteCode('s1')).resolves.toBeNull();
-    mockFetch([{ status: 403, body: { statusCode: 403, code: 'FORBIDDEN', message: 'x' } }]);
+  });
+
+  it('inviteCode: 404 (begona maktab / noma\'lum id) "kod yo\'q" EMAS — xato; 403 ham', async () => {
+    mockFetch([{ status: 404, body: { statusCode: 404, code: 'NOT_FOUND', message: 's1' } }]);
+    await expect(accessHttp.inviteCode('s1')).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    mockFetch([{ status: 403, body: ERR.forbidden }]);
     await expect(accessHttp.inviteCode('s1')).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
 
-  it('generateInviteCode: POST /school/students/:id/invite-code → { code, expiresAt }', async () => {
-    const calls = mockFetch([{ status: 201, body: { code: '000123', expiresAt: '2026-11-07T04:00:00.000Z' } }]);
+  it('inviteCode: eski taxminiy shakl (tekis studentUsedAt) endi aniq xato', async () => {
+    mockFetch([{ status: 200, body: { code: '123456', expiresAt: '2026-11-10T09:30:12.345Z', studentUsedAt: null, parentUsedAt: null } }]);
+    await expect(accessHttp.inviteCode('s1')).rejects.toThrowError(MALFORMED);
+  });
+
+  it('generateInviteCode: POST /school/students/:id/invite-code → 201 { code, expiresAt }', async () => {
+    const calls = mockFetch([{ status: 201, body: K2_GENERATED }]);
     await expect(accessHttp.generateInviteCode('s1')).resolves.toEqual({
-      code: '000123',
-      expiresAt: '2026-11-07T04:00:00.000Z',
-      student: { used: false, usedAt: null },
-      parent: { used: false, usedAt: null },
+      code: '048213',
+      expiresAt: '2026-11-10T09:30:12.345Z',
+      student: { status: 'FREE', usedAt: null },
+      parent: { status: 'FREE', usedAt: null },
     });
     expect(calls[0]).toMatchObject({ method: 'POST', url: '/api/school/students/s1/invite-code', body: null });
   });
 
-  it('linkRequestsHttp: ro\'yxat adapterdan o\'tadi; confirm/reject — POST /school/link-requests/:id/…', async () => {
+  it('generateInviteCode: arxivdagi o\'quvchi — 409 CONFLICT → STUDENT_ARCHIVED; 403 o\'zgarishsiz', async () => {
+    mockFetch([{ status: 409, body: ERR.inviteArchived }]);
+    await expect(accessHttp.generateInviteCode('s1')).rejects.toMatchObject({ code: 'CONFLICT', detail: 'STUDENT_ARCHIVED' });
+    mockFetch([{ status: 403, body: ERR.forbidden }]);
+    await expect(accessHttp.generateInviteCode('s1')).rejects.toMatchObject({ code: 'FORBIDDEN', detail: 'FORBIDDEN' });
+  });
+});
+
+describe('linkRequestsHttp (K2 §5)', () => {
+  useFakeSession();
+
+  it('list: GET /school/link-requests — hujjatdagi JSON adapterdan o\'tadi', async () => {
+    const calls = mockFetch([{ status: 200, body: K2_LIST }]);
+    const list = await linkRequestsHttp.list();
+    expect(list.map((r) => [r.id, r.kind, r.student.fullName, r.child.name, r.parentLinked])).toEqual([
+      ['5d3c…:7a21…', 'REVIEW', 'Karimov Aziz', 'Aziz', false],
+      ['9b8f…', 'CORRECTION', 'Rahimov Bobur', 'Bobur', true],
+    ]);
+    expect(calls[0]).toMatchObject({ method: 'GET', url: '/api/school/link-requests' });
+  });
+
+  it('confirm / reject: REVIEW id\'si ("<kod>:<bola>") o\'zgartirilmay URL-kodlanadi; 200 { id, kind, status }', async () => {
+    const id = '5d3c9e1a-0b1c-4d2e-8f3a-1b2c3d4e5f60:7a21c3d4-5e6f-4a1b-9c2d-3e4f5a6b7c8d';
     const calls = mockFetch([
-      { status: 200, body: [{ id: 'l1', kind: 'REVIEW', studentName: 'Karimova Aziza', className: '7-A', createdAt: '2026-11-06T04:00:00.000Z', parentUsed: false }] },
-      { status: 201, body: { ok: true } },
-      { status: 204 },
+      { status: 200, body: { id, kind: 'REVIEW', status: 'CONFIRMED' } },
+      { status: 200, body: { id, kind: 'REVIEW', status: 'REJECTED' } },
     ]);
-    await expect(linkRequestsHttp.list()).resolves.toHaveLength(1);
-    await expect(linkRequestsHttp.confirm('l 1')).resolves.toBeUndefined();
-    await expect(linkRequestsHttp.reject('l1')).resolves.toBeUndefined();
-    expect(calls.map((c) => [c.method, c.url])).toEqual([
-      ['GET', '/api/school/link-requests'],
-      ['POST', '/api/school/link-requests/l%201/confirm'],
-      ['POST', '/api/school/link-requests/l1/reject'],
+    await expect(linkRequestsHttp.confirm(id)).resolves.toEqual({ id, kind: 'REVIEW', status: 'CONFIRMED' });
+    await expect(linkRequestsHttp.reject(id)).resolves.toEqual({ id, kind: 'REVIEW', status: 'REJECTED' });
+    const encoded = encodeURIComponent(id);
+    expect(encoded).toContain('%3A');
+    expect(calls.map((c) => [c.method, c.url, c.body])).toEqual([
+      ['POST', `/api/school/link-requests/${encoded}/confirm`, null],
+      ['POST', `/api/school/link-requests/${encoded}/reject`, null],
     ]);
+  });
+
+  it('CORRECTION: confirm = ulanishni SAQLASH (CONFIRMED), reject = UZISH (REJECTED)', async () => {
+    const calls = mockFetch([
+      { status: 200, body: { id: '9b8f…', kind: 'CORRECTION', status: 'CONFIRMED' } },
+      { status: 200, body: { id: '9b8f…', kind: 'CORRECTION', status: 'REJECTED' } },
+    ]);
+    await expect(linkRequestsHttp.confirm('9b8f…')).resolves.toMatchObject({ kind: 'CORRECTION', status: 'CONFIRMED' });
+    await expect(linkRequestsHttp.reject('9b8f…')).resolves.toMatchObject({ kind: 'CORRECTION', status: 'REJECTED' });
+    expect(calls.map((c) => c.url.split('/').pop())).toEqual(['confirm', 'reject']);
+  });
+
+  it('confirm: teskari natija qaytsa — shakl xatosi', async () => {
+    mockFetch([{ status: 200, body: { id: 'x', kind: 'REVIEW', status: 'REJECTED' } }]);
+    await expect(linkRequestsHttp.confirm('x')).rejects.toThrowError(MALFORMED);
+  });
+
+  it.each([
+    ['REQUEST_STALE', 409, ERR.stale, { code: 'CONFLICT', detail: 'REQUEST_STALE' }],
+    ['STUDENT_LINKED_ELSEWHERE', 409, ERR.elsewhere, { code: 'CONFLICT', detail: 'STUDENT_LINKED_ELSEWHERE' }],
+    ['ALREADY_ENROLLED', 409, ERR.enrolled, { code: 'CONFLICT', detail: 'ALREADY_ENROLLED' }],
+    ['404 so\'rov topilmadi', 404, ERR.gone, { code: 'NOT_FOUND', detail: 'NOT_FOUND' }],
+    ['403 sinf doirasidan tashqari', 403, ERR.forbidden, { code: 'FORBIDDEN', detail: 'FORBIDDEN' }],
+  ])('xato: %s — ServiceError kodi va detail', async (_name, status, body, expected) => {
+    mockFetch([{ status, body }, { status, body }]);
+    await expect(linkRequestsHttp.confirm('l1')).rejects.toMatchObject(expected);
+    await expect(linkRequestsHttp.reject('l1')).rejects.toMatchObject(expected);
   });
 });

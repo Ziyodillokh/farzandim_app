@@ -1,6 +1,7 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 
 import { access as uzAccess } from '../src/i18n/uz/access';
+import { errors as uzErrors } from '../src/i18n/uz/errors';
 import { linkRequests as ruLink } from '../src/i18n/ru/linkRequests';
 import { linkRequests as uzLink } from '../src/i18n/uz/linkRequests';
 import { notifications as uzNotifications } from '../src/i18n/uz/notifications';
@@ -10,7 +11,32 @@ import { login, trackErrors, url } from './helpers';
 const PAGE = '/students/link-requests';
 const REQUESTS_URL = /\/students\/link-requests\/?$/;
 
-const navLink = (page: import('@playwright/test').Page) => page.locator('aside').getByRole('link', { name: /Ulanish soʻrovlari/ });
+const navLink = (page: Page) => page.locator('aside').getByRole('link', { name: /Ulanish soʻrovlari/ });
+
+const studentIdOf = async (item: import('@playwright/test').Locator) =>
+  new URL((await item.getByRole('link').getAttribute('href')) ?? '', 'http://x').searchParams.get('id') ?? '';
+
+/** Faol kodli (ota-ona o'rni bo'sh) tekshiruv so'rovi: bola profilidagi ism o'quvchinikiga yaqin, kartada "hali ulanmagan". */
+const pendingReview = (page: Page) =>
+  page
+    .getByRole('main')
+    .getByRole('region', { name: new RegExp(uzLink.review.title) })
+    .getByTestId('link-request')
+    .filter({ hasText: uzLink.parent.notLinked })
+    .first();
+
+/** Boshqa tabda (boshqa xodim) shu o'quvchining so'rovini hal qiladi: tasdiqlash yoki rad etish (UI orqali). */
+async function decideInOtherTab(page: Page, studentId: string, decision: 'confirm' | 'reject'): Promise<void> {
+  const other = await page.context().newPage();
+  await other.goto(url(PAGE));
+  const card = other.getByTestId('link-request').filter({ has: other.locator(`a[href$="id=${studentId}"]`) });
+  await expect(card).toHaveCount(1);
+  const label = decision === 'confirm' ? uzLink.review.confirm : uzLink.review.reject;
+  await card.getByRole('button', { name: label, exact: true }).click();
+  await other.getByRole('dialog').getByRole('button', { name: label, exact: true }).click();
+  await expect(other.getByText(decision === 'confirm' ? uzLink.toast.confirmed : uzLink.toast.rejected).first()).toBeVisible();
+  await other.close();
+}
 
 test.describe('Ulanish soʻrovlari', () => {
   test('admin: tekshiruv va tuzatish bo\'limlari, nishon; tasdiqlash o\'quvchini bola profiliga ulaydi (kirish ma\'lumotlari endi mumkin)', async ({ page }) => {
@@ -38,11 +64,16 @@ test.describe('Ulanish soʻrovlari', () => {
     expect(await main.evaluate((el) => [...el.querySelectorAll('figcaption')].filter((c) => c.parentElement?.tagName !== 'FIGURE').length)).toBe(0);
     await expect(main.locator('figcaption')).toHaveCount(2);
 
-    // Har bir tekshiruv: o'quvchi, sinf, vaqt, ota-ona kodi holati.
+    // Har bir tekshiruv: o'quvchi, sinf, bola profilidagi ism, vaqt, ishonch belgisi (bolaning ota-onasi ulanganmi).
     const first = review.getByTestId('link-request').first();
     await expect(first.getByRole('link')).toHaveAttribute('href', /\/students\/view\/?\?id=/);
     await expect(first).toContainText(/Soʻrov: .+ · \d{2}\.\d{2}\.\d{4}, \d{2}:\d{2}/);
-    await expect(first).toContainText(/Ota-ona kodi: (kiritilgan|kiritilmagan)/);
+    await expect(first.getByTestId('link-request-child')).toHaveText(/^Bola profilidagi ism: \S+/);
+    await expect(first.getByTestId('link-request-parent')).toHaveText(new RegExp(`^(${uzLink.parent.linked}|${uzLink.parent.notLinked})$`));
+    // Navbat: ENG ESKILARI BIRINCHI (backend tartibi).
+    const stamps = await review.locator('time').evaluateAll((els) => els.map((el) => Date.parse(el.getAttribute('datetime') ?? '')));
+    expect(stamps).toHaveLength(3);
+    expect(stamps).toEqual([...stamps].sort((a, b) => a - b));
     const studentName = (await first.getByRole('link').innerText()).trim();
     // Bir xil nomli tugmalar qaysi o'quvchiga tegishli ekani ekran o'qish dasturiga ham ma'lum (aria-describedby → ism va sinf).
     for (const name of [uzLink.review.confirm, uzLink.review.reject]) {
@@ -112,13 +143,16 @@ test.describe('Ulanish soʻrovlari', () => {
     await page.goto(url(PAGE));
     const main = page.getByRole('main');
     const review = main.getByRole('region', { name: new RegExp(uzLink.review.title) });
-    const item = review.getByTestId('link-request').first();
+    // Faol kodli so'rov (ota-ona o'rni hali bo'sh): rad etgach kod o'rni bo'shashi kartada ko'rinadi.
+    const item = review.getByTestId('link-request').filter({ hasText: uzLink.parent.notLinked }).first();
     const studentId = new URL((await item.getByRole('link').getAttribute('href')) ?? '', 'http://x').searchParams.get('id') ?? '';
 
     await item.getByRole('button', { name: uzLink.review.reject, exact: true }).click();
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByRole('heading', { name: uzLink.review.rejectTitle })).toBeVisible();
-    await expect(dialog).toContainText('Kod oʻrni boʻshaydi');
+    await expect(dialog).toContainText('Oʻquvchi oʻrni boʻshaydi');
+    // Oyna bola profilidagi ismni ham ko'rsatadi (qaror aynan shu bolaga tegishli).
+    await expect(dialog).toContainText(/«\S+»/);
     await dialog.getByRole('button', { name: uzLink.review.reject, exact: true }).click();
 
     await expect(page.getByText(uzLink.toast.rejected).first()).toBeVisible();
@@ -162,9 +196,12 @@ test.describe('Ulanish soʻrovlari', () => {
     await expect(page.getByText(uzLink.toast.unlinked).first()).toBeVisible();
     await expect(correction).toHaveCount(0);
 
-    const linked = (await readDb(page)).tables.access.linkedStudentIds;
-    expect(linked).toContain(keepId);
-    expect(linked).not.toContain(unlinkId);
+    const db = (await readDb(page)).tables;
+    expect(db.access.linkedStudentIds).toContain(keepId);
+    expect(db.access.linkedStudentIds).not.toContain(unlinkId);
+    // «Saqlash» = confirm → `student.linkCorrectionKept`; «Uzish» = reject → `student.childUnlinked` (K2 §5).
+    expect(db.audit.filter((a) => a.entityId === keepId).at(-1)?.action).toBe('student.linkCorrectionKept');
+    expect(db.audit.filter((a) => a.entityId === unlinkId).at(-1)?.action).toBe('student.childUnlinked');
     // Tuzatishlar hal bo'ldi, 3 ta tekshiruv qoldi.
     await expect(navLink(page)).toHaveAccessibleName(/Ochiq soʻrovlar: 3/);
 
@@ -189,6 +226,102 @@ test.describe('Ulanish soʻrovlari', () => {
     await expect(main.getByText(uzLink.empty.title)).toBeVisible();
     await expect(main.getByText(uzLink.empty.text)).toBeVisible();
     await expect(navLink(page)).toHaveAccessibleName('Ulanish soʻrovlari');
+  });
+
+  test('bola profilidagi ism va ishonch belgisi har bir kartada: ota-ona bergan ism o\'quvchinikidan farq qilsa, xodim buni ko\'radi', async ({ page }) => {
+    await login(page, 'admin', 'Admin2026');
+    await page.goto(url(PAGE));
+    const items = page.getByRole('main').getByTestId('link-request');
+    await expect(items).toHaveCount(5);
+    const { tables } = await readDb(page);
+    let mismatched = 0;
+    for (let i = 0; i < 5; i++) {
+      const item = items.nth(i);
+      const studentId = await studentIdOf(item);
+      const request = tables.access.linkRequests.find((r) => r.studentId === studentId)!;
+      await expect(item.getByTestId('link-request-child')).toHaveText(`Bola profilidagi ism: ${request.childName}`);
+      await expect(item.getByTestId('link-request-parent')).toHaveText(request.parentLinked ? uzLink.parent.linked : uzLink.parent.notLinked);
+      if (request.childName !== tables.students.find((s) => s.id === studentId)?.firstName) mismatched += 1;
+    }
+    expect(mismatched).toBe(1);
+  });
+
+  test('409 REQUEST_STALE (tasdiq oynasi ochiq turganda boshqa xodim hal qildi): aniq xabar, hech narsa o\'zgarmaydi, ro\'yxat yangilanadi', async ({ page }) => {
+    await login(page, 'admin', 'Admin2026');
+    await page.goto(url(PAGE));
+    const item = pendingReview(page);
+    const studentId = await studentIdOf(item);
+    await item.getByRole('button', { name: uzLink.review.reject, exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByRole('heading', { name: uzLink.review.rejectTitle })).toBeVisible();
+
+    // Boshqa xodim shu so'rovni TASDIQLADI; bizning oynamiz hali ochiq (eskirgan qaror — qarama-qarshi).
+    await decideInOtherTab(page, studentId, 'confirm');
+    const card = page.getByTestId('link-request').filter({ has: page.locator(`a[href$="id=${studentId}"]`) });
+    await expect(card).toHaveCount(0);
+
+    await dialog.getByRole('button', { name: uzLink.review.reject, exact: true }).click();
+    await expect(page.getByText(uzErrors.detail.REQUEST_STALE).first()).toBeVisible();
+    await expect(dialog).toBeHidden();
+    await expect(card).toHaveCount(0);
+
+    const db = (await readDb(page)).tables;
+    expect(db.access.linkRequests.find((r) => r.studentId === studentId)?.status).toBe('CONFIRMED');
+    expect(db.access.linkedStudentIds).toContain(studentId);
+    expect(db.audit.filter((a) => a.entityId === studentId).map((a) => a.action)).toEqual(['student.childLinked']);
+  });
+
+  test('404 (so\'rov allaqachon yo\'q: boshqa xodim rad etgan): "so\'rov topilmadi, ro\'yxat yangilandi" xabari', async ({ page }) => {
+    await login(page, 'admin', 'Admin2026');
+    await page.goto(url(PAGE));
+    const item = pendingReview(page);
+    const studentId = await studentIdOf(item);
+    await item.getByRole('button', { name: uzLink.review.reject, exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByRole('heading', { name: uzLink.review.rejectTitle })).toBeVisible();
+
+    await decideInOtherTab(page, studentId, 'reject');
+    const card = page.getByTestId('link-request').filter({ has: page.locator(`a[href$="id=${studentId}"]`) });
+    await expect(card).toHaveCount(0);
+
+    // Rad etilgan REVIEW ro'yxatdan chiqqan: takroriy rad etish backendda 404.
+    await dialog.getByRole('button', { name: uzLink.review.reject, exact: true }).click();
+    await expect(page.getByText(uzLink.errors.gone).first()).toBeVisible();
+    await expect(page.getByText(uzErrors.NOT_FOUND, { exact: true })).toHaveCount(0);
+    await expect(dialog).toBeHidden();
+    expect((await readDb(page)).tables.access.linkedStudentIds).not.toContain(studentId);
+  });
+
+  test('409 STUDENT_LINKED_ELSEWHERE: tasdiqlab bo\'lmaydi, xabar rad etishni taklif qiladi; so\'rov ochiq qoladi va rad etish ishlaydi', async ({ page }) => {
+    await login(page, 'admin', 'Admin2026');
+    await page.goto(url(PAGE));
+    const item = pendingReview(page);
+    const studentId = await studentIdOf(item);
+
+    // O'quvchi shu orada boshqa oila farzandiga ulandi (boshqa tab).
+    const other = await page.context().newPage();
+    await other.goto(url('/dashboard'));
+    await expect(other.locator('main h1').first()).toBeVisible();
+    await other.evaluate((id) => {
+      const key = 'parvoz-school:db:v1';
+      const db = JSON.parse(localStorage.getItem(key) ?? '{}') as { tables: { access: { linkedStudentIds: string[] } } };
+      db.tables.access.linkedStudentIds.push(id);
+      localStorage.setItem(key, JSON.stringify(db));
+    }, studentId);
+    await expect.poll(async () => (await readDb(page)).tables.access.linkedStudentIds.includes(studentId)).toBe(true);
+    await other.close();
+
+    await item.getByRole('button', { name: uzLink.review.confirm, exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: uzLink.review.confirm, exact: true }).click();
+    await expect(page.getByText(uzErrors.detail.STUDENT_LINKED_ELSEWHERE).first()).toBeVisible();
+    await expect(dialog).toBeHidden();
+    await expect(item).toBeVisible();
+
+    await item.getByRole('button', { name: uzLink.review.reject, exact: true }).click();
+    await dialog.getByRole('button', { name: uzLink.review.reject, exact: true }).click();
+    await expect(page.getByText(uzLink.toast.rejected).first()).toBeVisible();
+    await expect(page.getByTestId('link-request').filter({ has: page.locator(`a[href$="id=${studentId}"]`) })).toHaveCount(0);
   });
 
   test('sinf rahbari: faqat o\'z sinfi (7-A) so\'rovlari; menyuda bor', async ({ page }) => {
@@ -278,6 +411,17 @@ test.describe('Bildirishnomadan o\'tish', () => {
     await expect(popover.getByRole('button', { name: /maktabga ulanishi tekshiruvni kutmoqda/ }).first()).toBeVisible();
     await expect(popover.getByRole('button', { name: /maktab yoki sinf notoʻgʻri ekanini bildirdi/ }).first()).toBeVisible();
     await expect(popover.getByRole('button', { name: /kirish parolini tiklashni soʻradi/ })).toHaveCount(0);
+  });
+
+  test('direktor ham oladi (K1 §5 / K2 §7: `students.manage` va `guardians.link` egasi): tiklash va ulanish bildirishnomalarining hammasi', async ({ page }) => {
+    await login(page, 'direktor', 'Direktor2026');
+    await page.getByRole('button', { name: /^Bildirishnomalar/ }).click();
+    const popover = page.getByRole('dialog');
+    await expect(popover.getByRole('button', { name: /kirish parolini tiklashni soʻradi/ }).first()).toBeVisible();
+    await expect(popover.getByRole('button', { name: /maktabga ulanishi tekshiruvni kutmoqda/ }).first()).toBeVisible();
+    await expect(popover.getByRole('button', { name: /maktab yoki sinf notoʻgʻri ekanini bildirdi/ }).first()).toBeVisible();
+    // Direktor hamma sinfni ko'radi: yetti bildirishnomaning hammasi.
+    await expect(popover.getByRole('button', { name: /kirish parolini tiklashni soʻradi|maktabga ulanishi tekshiruvni kutmoqda|maktab yoki sinf notoʻgʻri ekanini bildirdi/ })).toHaveCount(7);
   });
 
   test('admin: «kirish parolini tiklashni so\'radi» → o\'quvchi kartasi, «Kirish» tabi, so\'rov ko\'rinadi', async ({ page }) => {

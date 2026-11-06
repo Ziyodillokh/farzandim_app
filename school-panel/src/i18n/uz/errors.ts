@@ -9,6 +9,12 @@ export const errors = {
     LOGIN_TAKEN: 'Bu login band — boshqasini tanlang',
     ALREADY_RESOLVED: 'Soʻrov allaqachon koʻrib chiqilgan',
     REQUEST_NOT_FOUND: 'Soʻrov topilmadi — allaqachon koʻrib chiqilgan boʻlishi mumkin',
+    STUDENT_ARCHIVED: 'Oʻquvchi arxivda — bu amalni bajarib boʻlmaydi. Avval oʻquvchini arxivdan tiklang',
+    REQUEST_STALE: 'Soʻrov allaqachon hal qilingan yoki oʻzgargan. Roʻyxat yangilandi — joriy holatni tekshiring',
+    STUDENT_LINKED_ELSEWHERE:
+      'Bu oʻquvchi boshqa oila farzandiga ulangan — tasdiqlab boʻlmaydi. Soʻrovni rad etib, oʻquvchi oʻrnini boʻshatishingiz mumkin',
+    ALREADY_ENROLLED:
+      'Bu bola allaqachon boshqa faol oʻquvchiga ulangan — tasdiqlab boʻlmaydi. Soʻrovni rad etib, oʻquvchi oʻrnini boʻshatishingiz mumkin',
   },
   storageFull: 'Brauzer xotirasi to\'ldi — o\'zgarishlar faqat shu sessiyada saqlanadi',
   form: {

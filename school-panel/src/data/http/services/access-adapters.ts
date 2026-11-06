@@ -2,10 +2,15 @@ import type {
   ChildCredentials,
   CredentialIssuer,
   InviteCode,
-  InviteSlot,
+  InviteParentSlot,
+  InviteParentStatus,
+  InviteStudentSlot,
+  InviteStudentStatus,
   IssuedCredentials,
   IssueCredentialsInput,
   LinkCorrectionReason,
+  LinkDecisionResult,
+  LinkDecisionStatus,
   LinkRequest,
   LinkRequestKind,
   RecoveryChannel,
@@ -15,21 +20,24 @@ import { ServiceError } from '@/data/contracts';
 import { isRecord, malformed, nullableString, requiredString, type Wire } from './care-adapters';
 
 /**
- * Kirish (5-bosqich, kontrakt K1/K2): backend javoblarini panel turlariga keltiruvchi ADAPTERLAR. Har biri unit-test bilan
- * qoplangan (`__tests__/access.test.ts`). Qoida: ko'rsatiladigan FAKT (login, kod, o'rin holati, id) yo'q yoki turi noto'g'ri
- * bo'lsa — jim standart qiymat EMAS, aniq xato; faqat ixtiyoriy qo'shimchalar (`channel`, `reason`, `studentId`, `note`) yumshoq.
+ * Kirish (5-bosqich, backend kontraktlari K1 `KIRISH-AUTH-API.md` va K2 `KIRISH-SCHOOL-API.md`): javoblarni panel turlariga
+ * keltiruvchi ADAPTERLAR. Har biri hujjatdagi AYNAN shu JSON bilan unit-test qilingan (`__tests__/access.test.ts`).
+ *
+ * Qoida: ko'rsatiladigan FAKT (login, kod, o'rin holati, id, o'quvchi, qaror) yo'q yoki turi noto'g'ri bo'lsa — jim standart
+ * qiymat EMAS, aniq xato (`kutilmagan javob shakli`); faqat ma'lumot beruvchi qo'shimcha (`reason` ning yangi qiymati) yumshoq.
  * Xato xabarlariga qiymatlar yozilmaydi (parol xato matniga tushib qolmasin).
  *
- * Kontraktda ANIQ berilgan shakllar: `credentials` (K1), `POST credentials` natijasi, `POST invite-code` natijasi `{ code, expiresAt }`.
- * Kontrakt ANIQ bermagan, shuning uchun taxmin qilingan va hujjatlashtirilgan shakllar:
- *  - `GET /school/students/:id/invite-code` — `{ code, expiresAt }` + o'rin holatlari (quyida `inviteSlot`);
- *  - `GET /school/link-requests` — massiv yoki `{ items }` (har element `kind`/`type`), yoki `{ links, corrections }`;
- *  - o'quvchi kartasidagi `recoveryRequests` — `[{ id, createdAt, channel?, status? }]`.
+ * Eslatma: ba'zi javoblar `null` tana bilan keladi (K1 `GET credentials`, K2 `GET invite-code`: backend Fastify — `null` JSON
+ * matni). Bo'sh tana (`undefined`) ham shu ma'noda («yo'q») qabul qilinadi.
  */
 
 const ISSUERS: readonly CredentialIssuer[] = ['PARENT', 'SCHOOL'];
 const CHANNELS: readonly RecoveryChannel[] = ['PARENT', 'SCHOOL'];
 const RECOVERY_STATUSES = ['RECEIVED', 'RESTORED', 'REJECTED'] as const;
+const STUDENT_SLOT_STATUSES: readonly InviteStudentStatus[] = ['FREE', 'UNDER_REVIEW', 'CONFIRMED'];
+const PARENT_SLOT_STATUSES: readonly InviteParentStatus[] = ['FREE', 'USED'];
+const LINK_KINDS: readonly LinkRequestKind[] = ['REVIEW', 'CORRECTION'];
+const DECISION_STATUSES: readonly LinkDecisionStatus[] = ['CONFIRMED', 'REJECTED'];
 const CORRECTION_REASONS: readonly LinkCorrectionReason[] = ['WRONG_SCHOOL_OR_CLASS'];
 const SIX_DIGITS = /^\d{6}$/;
 
@@ -44,33 +52,50 @@ function requiredBool(value: unknown, what: string): boolean {
   throw malformed(what);
 }
 
+function requiredRecord(value: unknown, what: string): Wire {
+  if (isRecord(value)) return value;
+  throw malformed(what);
+}
+
 /** Backend `409 NOT_LINKED`: o'quvchi hali bola profiliga ulanmagan (xato emas — «avval ota-ona ulashi kerak»). Kod aniq — status qat'iy emas. */
 export function isNotLinked(error: unknown): boolean {
   return error instanceof ServiceError && error.detail === 'NOT_LINKED';
 }
 
-// ── Kirish ma'lumotlari (K1) ─────────────────────────────────────────────
+/**
+ * `POST /school/students/:id/invite-code` ning YAGONA `409`i — arxivdagi o'quvchi (K2 §2). Backend uni aniq kodsiz,
+ * umumiy `{ code: 'CONFLICT', message: 'archived' }` bilan qaytaradi; panel `STUDENT_ARCHIVED` (K1 bilan bir xil) deb ko'rsatadi.
+ * Boshqa xatolar o'zgarishsiz o'tadi.
+ */
+export function asStudentArchived(error: unknown): unknown {
+  if (error instanceof ServiceError && error.code === 'CONFLICT' && (error.detail === null || error.detail === 'CONFLICT')) {
+    return new ServiceError('CONFLICT', error.message, 'STUDENT_ARCHIVED');
+  }
+  return error;
+}
+
+// ── Kirish ma'lumotlari (K1 §2) ──────────────────────────────────────────
 
 /** `GET /school/students/:id/credentials` → `{ login, issuedBy, issuedAt, mustChangePassword, lastLoginAt }` yoki `null`. */
 export function toChildCredentials(raw: unknown): ChildCredentials | null {
   if (raw === null || raw === undefined) return null;
-  if (!isRecord(raw)) throw malformed('credentials');
+  const body = requiredRecord(raw, 'credentials');
   return {
-    login: requiredString(raw.login, 'credentials.login'),
-    issuedBy: oneOf(raw.issuedBy, ISSUERS, 'credentials.issuedBy'),
-    issuedAt: requiredString(raw.issuedAt, 'credentials.issuedAt'),
-    mustChangePassword: requiredBool(raw.mustChangePassword, 'credentials.mustChangePassword'),
-    lastLoginAt: nullableString(raw.lastLoginAt, 'credentials.lastLoginAt'),
+    login: requiredString(body.login, 'credentials.login'),
+    issuedBy: oneOf(body.issuedBy, ISSUERS, 'credentials.issuedBy'),
+    issuedAt: requiredString(body.issuedAt, 'credentials.issuedAt'),
+    mustChangePassword: requiredBool(body.mustChangePassword, 'credentials.mustChangePassword'),
+    lastLoginAt: nullableString(body.lastLoginAt, 'credentials.lastLoginAt'),
   };
 }
 
 /** `POST /school/students/:id/credentials` → `201 { login, temporaryPassword, issuedAt }` (parol FAQAT shu javobda). */
 export function toIssuedCredentials(raw: unknown): IssuedCredentials {
-  if (!isRecord(raw)) throw malformed('issued');
+  const body = requiredRecord(raw, 'issued');
   return {
-    login: requiredString(raw.login, 'issued.login'),
-    temporaryPassword: requiredString(raw.temporaryPassword, 'issued.temporaryPassword'),
-    issuedAt: requiredString(raw.issuedAt, 'issued.issuedAt'),
+    login: requiredString(body.login, 'issued.login'),
+    temporaryPassword: requiredString(body.temporaryPassword, 'issued.temporaryPassword'),
+    issuedAt: requiredString(body.issuedAt, 'issued.issuedAt'),
   };
 }
 
@@ -83,154 +108,130 @@ export function toIssueBody(input: IssueCredentialsInput): Wire {
   return body;
 }
 
-// ── Parol tiklash so'rovlari (K1) ────────────────────────────────────────
+// ── Parol tiklash so'rovlari (K1 §5) ─────────────────────────────────────
 
 /**
- * O'quvchi kartasidagi `recoveryRequests` (kontrakt: «school student detail» ichida): `[{ id, createdAt, channel?, status? }]`.
- * Faqat OCHIQ (`status` yo'q yoki `RECEIVED`) so'rovlar, eng yangisi birinchi. Maydon yo'q — bo'sh ro'yxat.
+ * `GET /school/students/:id` ichidagi `recoveryRequests: [{ id, channel: 'SCHOOL', status: 'RECEIVED', createdAt }]`
+ * (maktab kanaliga tushgan OCHIQ so'rovlar; `students.manage` bo'lmagan rol uchun `[]`). Faqat `RECEIVED`, eng yangisi birinchi.
  */
 export function toRecoveryRequests(raw: unknown): RecoveryRequest[] {
-  if (raw === undefined || raw === null) return [];
   if (!Array.isArray(raw)) throw malformed('recoveryRequests');
   return raw
     .map((item) => {
-      if (!isRecord(item)) throw malformed('recoveryRequests');
-      const status = item.status === undefined || item.status === null ? 'RECEIVED' : oneOf(item.status, RECOVERY_STATUSES, 'recoveryRequests.status');
-      const channel = CHANNELS.find((c) => c === item.channel) ?? null;
-      return { status, request: { id: requiredString(item.id, 'recoveryRequests.id'), channel, createdAt: requiredString(item.createdAt, 'recoveryRequests.createdAt') } };
+      const row = requiredRecord(item, 'recoveryRequests');
+      return {
+        id: requiredString(row.id, 'recoveryRequests.id'),
+        channel: oneOf(row.channel, CHANNELS, 'recoveryRequests.channel'),
+        status: oneOf(row.status, RECOVERY_STATUSES, 'recoveryRequests.status'),
+        createdAt: requiredString(row.createdAt, 'recoveryRequests.createdAt'),
+      };
     })
-    .filter((x) => x.status === 'RECEIVED')
-    .map((x) => x.request)
+    .filter((row) => row.status === 'RECEIVED')
+    .map(({ id, channel, createdAt }) => ({ id, channel, createdAt }))
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
-// ── 6 xonali maktab kodi (K2) ────────────────────────────────────────────
+/** O'quvchi kartasi (`GET /school/students/:id`) javobidan `recoveryRequests`. */
+export function toStudentRecoveryRequests(detail: unknown): RecoveryRequest[] {
+  return toRecoveryRequests(requiredRecord(detail, 'student').recoveryRequests);
+}
+
+// ── 6 xonali maktab kodi (K2 §2) ─────────────────────────────────────────
 
 function sixDigitCode(value: unknown): string {
-  const code = requiredString(value, 'code');
-  if (!SIX_DIGITS.test(code)) throw malformed('code');
+  const code = requiredString(value, 'inviteCode.code');
+  if (!SIX_DIGITS.test(code)) throw malformed('inviteCode.code');
   return code;
 }
 
-/**
- * Kod o'rni (`student` / `parent`). Qabul qilinadigan shakllar (kontrakt «slot states» ni aniq bermagan):
- *  1. model maydonlari: `studentUsedAt` / `parentUsedAt` (ISO yoki null);
- *  2. mantiqiy: `studentUsed` / `parentUsed` (+ ixtiyoriy `…UsedAt`);
- *  3. ichma-ich: `student: { used?, usedAt? }`, `parent: { … }`.
- */
-function inviteSlot(raw: Wire, slot: 'student' | 'parent'): InviteSlot {
-  const stamp = raw[`${slot}UsedAt`];
-  if (stamp !== undefined) {
-    const usedAt = nullableString(stamp, `${slot}UsedAt`);
-    return { used: usedAt !== null, usedAt };
-  }
-  const flag = raw[`${slot}Used`];
-  if (typeof flag === 'boolean') return { used: flag, usedAt: null };
-  const nested = raw[slot];
-  if (isRecord(nested)) {
-    const usedAt = nullableString(nested.usedAt, `${slot}.usedAt`);
-    if (typeof nested.used === 'boolean') return { used: nested.used, usedAt };
-    if (nested.usedAt !== undefined) return { used: usedAt !== null, usedAt };
-  }
-  throw malformed(`${slot} o'rni`);
+function studentSlot(raw: unknown): InviteStudentSlot {
+  const slot = requiredRecord(raw, 'inviteCode.student');
+  return {
+    status: oneOf(slot.status, STUDENT_SLOT_STATUSES, 'inviteCode.student.status'),
+    usedAt: nullableString(slot.usedAt, 'inviteCode.student.usedAt'),
+  };
 }
 
-/** `GET /school/students/:id/invite-code` → faol kod yoki `null` (bo'sh javob ham «faol kod yo'q»). */
+function parentSlot(raw: unknown): InviteParentSlot {
+  const slot = requiredRecord(raw, 'inviteCode.parent');
+  return {
+    status: oneOf(slot.status, PARENT_SLOT_STATUSES, 'inviteCode.parent.status'),
+    usedAt: nullableString(slot.usedAt, 'inviteCode.parent.usedAt'),
+  };
+}
+
+/**
+ * `GET /school/students/:id/invite-code` → faol kod yoki `null` (faol kod yo'q: hech qachon yaratilmagan, muddati o'tgan,
+ * yopilgan yoki ikkala o'rin band). Backend yana `id` va `createdAt` beradi — panelga kerak emas.
+ */
 export function toInviteCode(raw: unknown): InviteCode | null {
   if (raw === null || raw === undefined) return null;
-  if (!isRecord(raw)) throw malformed('inviteCode');
+  const body = requiredRecord(raw, 'inviteCode');
   return {
-    code: sixDigitCode(raw.code),
-    expiresAt: requiredString(raw.expiresAt, 'inviteCode.expiresAt'),
-    student: inviteSlot(raw, 'student'),
-    parent: inviteSlot(raw, 'parent'),
+    code: sixDigitCode(body.code),
+    expiresAt: requiredString(body.expiresAt, 'inviteCode.expiresAt'),
+    student: studentSlot(body.student),
+    parent: parentSlot(body.parent),
   };
 }
 
-/** `POST /school/students/:id/invite-code` → `{ code, expiresAt }`: yangi kodda ikkala o'rin bo'sh. */
+/** `POST /school/students/:id/invite-code` → `201 { code, expiresAt }`: yangi kodda ikkala o'rin bo'sh. */
 export function toGeneratedInviteCode(raw: unknown): InviteCode {
-  if (!isRecord(raw)) throw malformed('inviteCode');
+  const body = requiredRecord(raw, 'inviteCode');
   return {
-    code: sixDigitCode(raw.code),
-    expiresAt: requiredString(raw.expiresAt, 'inviteCode.expiresAt'),
-    student: { used: false, usedAt: null },
-    parent: { used: false, usedAt: null },
+    code: sixDigitCode(body.code),
+    expiresAt: requiredString(body.expiresAt, 'inviteCode.expiresAt'),
+    student: { status: 'FREE', usedAt: null },
+    parent: { status: 'FREE', usedAt: null },
   };
 }
 
-// ── Ulanish so'rovlari (K2) ──────────────────────────────────────────────
+// ── Ulanish so'rovlari (K2 §5) ───────────────────────────────────────────
 
-const KIND_ALIASES: Readonly<Record<string, LinkRequestKind>> = {
-  REVIEW: 'REVIEW',
-  LINK: 'REVIEW',
-  LINK_REVIEW: 'REVIEW',
-  UNDER_REVIEW: 'REVIEW',
-  CORRECTION: 'CORRECTION',
-  LINK_CORRECTION: 'CORRECTION',
-};
-
-function kindOf(raw: Wire, implied: LinkRequestKind | null): LinkRequestKind {
-  const declared = raw.kind ?? raw.type;
-  if (declared === undefined || declared === null) {
-    if (implied) return implied;
-    throw malformed('linkRequest.kind');
-  }
-  const kind = typeof declared === 'string' && Object.hasOwn(KIND_ALIASES, declared) ? KIND_ALIASES[declared] : undefined;
-  if (!kind) throw malformed('linkRequest.kind');
-  return kind;
-}
-
-/** Ota-ona o'rni ishlatilganmi: `parentUsed` (mantiqiy) yoki `parentUsedAt` (model maydoni). Tuzatishda ahamiyatsiz. */
-function parentUsed(raw: Wire, kind: LinkRequestKind): boolean {
-  if (typeof raw.parentUsed === 'boolean') return raw.parentUsed;
-  if (raw.parentUsedAt !== undefined) return nullableString(raw.parentUsedAt, 'linkRequest.parentUsedAt') !== null;
-  if (kind === 'CORRECTION') return false;
-  throw malformed('linkRequest.parentUsed');
-}
-
-function toLinkRequest(raw: unknown, implied: LinkRequestKind | null): LinkRequest {
-  if (!isRecord(raw)) throw malformed('linkRequest');
-  const kind = kindOf(raw, implied);
+function toLinkRequest(raw: unknown): LinkRequest {
+  const body = requiredRecord(raw, 'linkRequest');
+  const student = requiredRecord(body.student, 'linkRequest.student');
+  const child = requiredRecord(body.child, 'linkRequest.child');
+  const note = nullableString(body.note, 'linkRequest.note')?.trim();
   return {
-    id: requiredString(raw.id, 'linkRequest.id'),
-    kind,
-    studentId: typeof raw.studentId === 'string' && raw.studentId !== '' ? raw.studentId : null,
-    studentName: requiredString(raw.studentName, 'linkRequest.studentName'),
-    className: typeof raw.className === 'string' && raw.className !== '' ? raw.className : '—',
-    createdAt: requiredString(raw.createdAt, 'linkRequest.createdAt'),
-    parentUsed: parentUsed(raw, kind),
-    note: kind === 'CORRECTION' && typeof raw.note === 'string' && raw.note.trim() !== '' ? raw.note.trim() : null,
-    reason: CORRECTION_REASONS.find((r) => r === raw.reason) ?? null,
+    // Shaffof id: o'zgartirilmaydi (REVIEW: `<kod yozuvi>:<bola>`).
+    id: requiredString(body.id, 'linkRequest.id'),
+    kind: oneOf(body.kind, LINK_KINDS, 'linkRequest.kind'),
+    createdAt: requiredString(body.createdAt, 'linkRequest.createdAt'),
+    student: {
+      id: requiredString(student.id, 'linkRequest.student.id'),
+      fullName: requiredString(student.fullName, 'linkRequest.student.fullName'),
+      classId: nullableString(student.classId, 'linkRequest.student.classId'),
+      // Sinfsiz o'quvchida backend bo'sh satr beradi.
+      className: nullableString(student.className, 'linkRequest.student.className') ?? '',
+    },
+    child: { name: requiredString(child.name, 'linkRequest.child.name') },
+    parentLinked: requiredBool(body.parentLinked, 'linkRequest.parentLinked'),
+    // Sabab — faqat ko'rsatma: kelajakdagi yangi qiymat butun ro'yxatni buzmasin.
+    reason: CORRECTION_REASONS.find((r) => r === body.reason) ?? null,
+    note: note ? note : null,
   };
-}
-
-function listOf(value: unknown, what: string): unknown[] {
-  if (value === undefined || value === null) return [];
-  if (!Array.isArray(value)) throw malformed(what);
-  return value;
 }
 
 /**
- * `GET /school/link-requests`: massiv, `{ items }` yoki `{ links, corrections }` — natija bir xil: eng yangisi birinchi.
- * Nom/sinf/vaqt/o'rin maydonlari — `studentName`, `className`, `createdAt`, `parentUsed|parentUsedAt`; tuzatishda `note`.
+ * `GET /school/link-requests` → massiv (≤ 200), ENG ESKILARI BIRINCHI — tartib o'zgartirilmaydi (navbat: eng uzoq kutayotgani tepada).
  */
 export function toLinkRequests(raw: unknown): LinkRequest[] {
-  let items: Array<{ item: unknown; implied: LinkRequestKind | null }>;
-  if (Array.isArray(raw)) {
-    items = raw.map((item) => ({ item, implied: null }));
-  } else if (isRecord(raw) && Array.isArray(raw.items)) {
-    items = raw.items.map((item) => ({ item, implied: null }));
-  } else if (isRecord(raw) && (raw.links !== undefined || raw.corrections !== undefined)) {
-    items = [
-      ...listOf(raw.links, 'links').map((item) => ({ item, implied: 'REVIEW' as const })),
-      ...listOf(raw.corrections, 'corrections').map((item) => ({ item, implied: 'CORRECTION' as const })),
-    ];
-  } else if (raw === undefined || raw === null) {
-    items = [];
-  } else {
-    throw malformed('linkRequests');
-  }
-  return items
-    .map(({ item, implied }) => toLinkRequest(item, implied))
-    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt) || a.id.localeCompare(b.id));
+  if (!Array.isArray(raw)) throw malformed('linkRequests');
+  return raw.map(toLinkRequest);
+}
+
+export type LinkDecisionAction = 'confirm' | 'reject';
+
+const DECISION_OF: Readonly<Record<LinkDecisionAction, LinkDecisionStatus>> = { confirm: 'CONFIRMED', reject: 'REJECTED' };
+
+/**
+ * `POST /school/link-requests/:id/(confirm|reject)` → `200 { id, kind, status }`. `status` so'ralgan amalga mos bo'lishi shart
+ * (`confirm` → `CONFIRMED`, `reject` → `REJECTED`); aks holda — shakl xatosi (UI noto'g'ri natijani «bajarildi» deb ko'rsatmasin).
+ */
+export function toLinkDecision(raw: unknown, action: LinkDecisionAction): LinkDecisionResult {
+  const body = requiredRecord(raw, 'linkDecision');
+  const status = oneOf(body.status, DECISION_STATUSES, 'linkDecision.status');
+  if (status !== DECISION_OF[action]) throw malformed('linkDecision.status');
+  return { id: requiredString(body.id, 'linkDecision.id'), kind: oneOf(body.kind, LINK_KINDS, 'linkDecision.kind'), status };
 }

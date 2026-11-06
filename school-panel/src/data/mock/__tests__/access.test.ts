@@ -4,9 +4,9 @@ import { LOGIN_PATTERN } from '@/data/schemas/access';
 import { auditText } from '@/features/audit/audit-text';
 import { type TKey, translate } from '@/i18n/translate';
 import type { Vars } from '@/i18n/types';
-import { TEMP_PASSWORD_ALPHABET } from '../access-model';
-import { clockNow } from '../clock';
 import { roleHas } from '@/auth/permissions';
+import { accessNotificationId, TEMP_PASSWORD_ALPHABET } from '../access-model';
+import { clockNow } from '../clock';
 import { currentActor } from '../context';
 import { getTables, transact } from '../db';
 import { accessService } from '../services/access';
@@ -40,6 +40,14 @@ function unlinkedStudent(classId = 'cls-7a'): string {
   return id;
 }
 
+/** O'quvchini arxivga olish (soxta: to'g'ridan-to'g'ri jadvalda). */
+function archive(studentId: string): void {
+  transact((t) => {
+    const student = t.students.find((s) => s.id === studentId);
+    if (student) student.archived = true;
+  });
+}
+
 const studentIn = (classId: string): string => {
   const id = getTables().students.find((s) => s.classId === classId && !s.archived)?.id;
   if (!id) throw new Error(classId);
@@ -64,6 +72,14 @@ describe('accessService.credentials', () => {
     const view = await accessService.credentials(linkedWithCredentials());
     expect(view.linked).toBe(true);
     expect(Object.keys(view.credentials ?? {}).sort()).toEqual(['issuedAt', 'issuedBy', 'lastLoginAt', 'login', 'mustChangePassword']);
+  });
+
+  it('arxivdagi o\'quvchida ma\'lumot o\'qiladi (K1: berish/tiklash taqiqlangan, o\'qish mumkin)', async () => {
+    const id = linkedWithCredentials();
+    archive(id);
+    const view = await accessService.credentials(id);
+    expect(view.linked).toBe(true);
+    expect(view.credentials).not.toBeNull();
   });
 
   it('ruxsat: faqat `students.manage` — sinf rahbari va psixolog uchun FORBIDDEN; noma\'lum o\'quvchi — NOT_FOUND', async () => {
@@ -141,24 +157,40 @@ describe('accessService.issueCredentials', () => {
     await expect(accessService.recoveryRequests(request.studentId)).resolves.toEqual([]);
   });
 
-  it('audit: berish va tiklash (boshqa qurilmalardan chiqarish varianti) — parolsiz, ikkala tilda tarjima bilan', async () => {
+  it('arxivdagi o\'quvchiga berish/tiklash — CONFLICT/STUDENT_ARCHIVED; ulanmagan bo\'lsa NOT_LINKED ustun (backend tartibi)', async () => {
     const id = linkedWithoutCredentials();
-    await accessService.issueCredentials(id);
+    archive(id);
+    await expect(accessService.issueCredentials(id)).rejects.toMatchObject({ code: 'CONFLICT', detail: 'STUDENT_ARCHIVED' });
+    await expect(accessService.credentials(id)).resolves.toEqual({ linked: true, credentials: null });
+    const withCredentials = linkedWithCredentials();
+    archive(withCredentials);
+    await expect(accessService.issueCredentials(withCredentials)).rejects.toMatchObject({ detail: 'STUDENT_ARCHIVED' });
+    const unlinked = unlinkedStudent();
+    archive(unlinked);
+    await expect(accessService.issueCredentials(unlinked)).rejects.toMatchObject({ detail: 'NOT_LINKED' });
+  });
+
+  it('audit (K1): `student.credential.issue` / `student.credential.reset` — parolsiz va loginsiz, ikkala tilda tarjima bilan', async () => {
+    const id = linkedWithoutCredentials();
+    const issued = await accessService.issueCredentials(id);
     await accessService.issueCredentials(id, { signOutDevices: true });
     await accessService.issueCredentials(id, { signOutDevices: false });
-    const entries = getTables().audit.filter((a) => a.action.startsWith('student.credentials.'));
-    expect(entries.map((a) => [a.action, a.params?.variant])).toEqual([
-      ['student.credentials.issue', undefined],
-      ['student.credentials.reset', 'signOut'],
-      ['student.credentials.reset', undefined],
+    const entries = getTables().audit.filter((a) => a.action.startsWith('student.credential'));
+    // Backend'da variant yo'q: ikkala tiklash bir xil amal.
+    expect(entries.map((a) => [a.action, a.module, Object.keys(a.params ?? {}).join()])).toEqual([
+      ['student.credential.issue', 'STUDENTS', 'name'],
+      ['student.credential.reset', 'STUDENTS', 'name'],
+      ['student.credential.reset', 'STUDENTS', 'name'],
     ]);
     const name = entries[0]!.params!.name as string;
     expect(auditText(uz, entries[0]!)).toBe(`${name}: Parvoz kirish maʼlumotlari berildi`);
-    expect(auditText(ru, entries[1]!)).toBe(`${name}: пароль для входа восстановлен, выполнен выход на других устройствах`);
-    expect(auditText(ru, entries[2]!)).toBe(`${name}: пароль для входа восстановлен`);
+    expect(auditText(uz, entries[1]!)).toBe(`${name}: kirish maʼlumotlari qayta tiklandi (yangi vaqtinchalik parol)`);
+    expect(auditText(ru, entries[0]!)).toBe(`${name}: выданы данные для входа в Parvoz`);
+    expect(auditText(ru, entries[2]!)).toBe(`${name}: данные для входа восстановлены (новый временный пароль)`);
     for (const e of entries) {
       expect(e.before).toBeNull();
       expect(e.after).toBeNull();
+      expect(JSON.stringify(e)).not.toContain(issued.login);
     }
   });
 
@@ -192,6 +224,20 @@ describe('accessService: parol tiklash so\'rovlari', () => {
     await expect(accessService.rejectRecovery(request.studentId, request.id)).rejects.toMatchObject({ code: 'CONFLICT', detail: 'ALREADY_RESOLVED' });
   });
 
+  it('rad etish va tiklash hal bo\'lgan so\'rovning xodim bildirishnomasini o\'chiradi (K1 §5)', async () => {
+    const [first, second] = getTables().access.recoveryRequests.filter((r) => r.status === 'RECEIVED');
+    const noteIds = () => getTables().notifications.filter((n) => n.kind === 'CHILD_RECOVERY_REQUEST').map((n) => n.id);
+    expect(noteIds()).toEqual(expect.arrayContaining([accessNotificationId('CHILD_RECOVERY_REQUEST', first!.id), accessNotificationId('CHILD_RECOVERY_REQUEST', second!.id)]));
+    await accessService.rejectRecovery(first!.studentId, first!.id);
+    expect(noteIds()).toEqual([accessNotificationId('CHILD_RECOVERY_REQUEST', second!.id)]);
+    await accessService.issueCredentials(second!.studentId);
+    expect(noteIds()).toEqual([]);
+  });
+
+  it('ulanmagan o\'quvchi — rad etish CONFLICT/NOT_LINKED (backend: avval ulanish tekshiriladi)', async () => {
+    await expect(accessService.rejectRecovery(unlinkedStudent(), 'rec-1')).rejects.toMatchObject({ code: 'CONFLICT', detail: 'NOT_LINKED' });
+  });
+
   it('boshqa o\'quvchining so\'rovi yoki noma\'lum id — NOT_FOUND', async () => {
     const [a, b] = getTables().access.recoveryRequests.filter((r) => r.status === 'RECEIVED');
     await expect(accessService.rejectRecovery(a!.studentId, b!.id)).rejects.toMatchObject({ code: 'NOT_FOUND', detail: 'REQUEST_NOT_FOUND' });
@@ -217,8 +263,8 @@ describe('accessService: 6 xonali taklif kodi', () => {
     await expect(accessService.inviteCode(id)).resolves.toBeNull();
     const created = await accessService.generateInviteCode(id);
     expect(created.code).toMatch(/^\d{6}$/);
-    expect(created.student).toEqual({ used: false, usedAt: null });
-    expect(created.parent).toEqual({ used: false, usedAt: null });
+    expect(created.student).toEqual({ status: 'FREE', usedAt: null });
+    expect(created.parent).toEqual({ status: 'FREE', usedAt: null });
     const lifetime = Date.parse(created.expiresAt) - clockNow().getTime();
     expect(Math.abs(lifetime - 24 * 3_600_000)).toBeLessThan(10_000);
     await expect(accessService.inviteCode(id)).resolves.toEqual(created);
@@ -235,18 +281,28 @@ describe('accessService: 6 xonali taklif kodi', () => {
     expect(mine.find((c) => c.code === first.code && c.closedAt !== null)).toBeDefined();
   });
 
-  it('seed: o\'quvchi o\'rni ishlatilgan faol kod ko\'rinadi; ikkala o\'rin ishlatilgan kod yopiq — faol kod yo\'q', async () => {
+  it('seed: bola kiritgan faol kod — o\'quvchi o\'rni UNDER_REVIEW, ota-ona o\'rni FREE; ikkala o\'rin band kod yopiq — faol kod yo\'q', async () => {
     const review = getTables().access.linkRequests.filter((r) => r.kind === 'REVIEW');
-    expect(review.some((r) => r.parentUsed)).toBe(true);
+    expect(review.some((r) => r.parentLinked)).toBe(true);
     for (const r of review) {
       const invite = await accessService.inviteCode(r.studentId);
-      if (r.parentUsed) {
+      if (r.parentLinked) {
         expect(invite).toBeNull();
       } else {
-        expect(invite?.student.used).toBe(true);
-        expect(invite?.parent.used).toBe(false);
+        expect(invite?.student.status).toBe('UNDER_REVIEW');
+        expect(invite?.student.usedAt).toBe(r.createdAt);
+        expect(invite?.parent).toEqual({ status: 'FREE', usedAt: null });
       }
     }
+  });
+
+  it('arxivdagi o\'quvchi: kod o\'qiladi, lekin yangi kod yaratib bo\'lmaydi — CONFLICT/STUDENT_ARCHIVED', async () => {
+    const id = linkedWithoutCredentials();
+    const created = await accessService.generateInviteCode(id);
+    archive(id);
+    await expect(accessService.inviteCode(id)).resolves.toEqual(created);
+    await expect(accessService.generateInviteCode(id)).rejects.toMatchObject({ code: 'CONFLICT', detail: 'STUDENT_ARCHIVED' });
+    expect(getTables().access.inviteCodes.filter((c) => c.studentId === id && c.closedAt === null)).toHaveLength(1);
   });
 
   it('muddati o\'tgan kod — faol emas (null)', async () => {
@@ -274,10 +330,12 @@ describe('accessService: 6 xonali taklif kodi', () => {
   it('audit kodni o\'zini yozmaydi', async () => {
     const created = await accessService.generateInviteCode(linkedWithoutCredentials());
     const entry = getTables().audit.at(-1)!;
-    expect(entry).toMatchObject({ action: 'student.inviteCode.create', module: 'GUARDIANS' });
+    // K2 §8: `student.inviteCode` (modul GUARDIANS), params `{ name }` — kod yozilmaydi.
+    expect(entry).toMatchObject({ action: 'student.inviteCode', module: 'GUARDIANS' });
+    expect(Object.keys(entry.params ?? {})).toEqual(['name']);
     expect(JSON.stringify(entry)).not.toContain(created.code);
-    expect(auditText(uz, entry)).toMatch(/maktab taklif kodi yaratildi$/);
-    expect(auditText(ru, entry)).toMatch(/создан код приглашения в школу$/);
+    expect(auditText(uz, entry)).toMatch(/oʻquvchi kodi yaratildi$/);
+    expect(auditText(ru, entry)).toMatch(/создан код ученика$/);
   });
 });
 
@@ -290,13 +348,15 @@ describe('xodim bildirishnomalari (kirish)', () => {
     return buildFeed(getTables(), currentActor(), NOW).filter((i) => ['CHILD_RECOVERY_REQUEST', 'LINK_REVIEW', 'LINK_CORRECTION'].includes(i.kind));
   };
 
-  it('admin hammasini ko\'radi; direktor va navbatchi — yo\'q; sinf rahbari faqat o\'z sinfining ulanish bildirishnomalarini', () => {
-    expect(kinds('ADMIN')).toHaveLength(7);
-    expect(kinds('DIRECTOR')).toHaveLength(0);
+  it('qabul qiluvchilar — ish qila oladigan xodimlar: direktor va admin hammasini, sinf rahbari faqat o\'z sinfining ulanish bildirishnomalarini; navbatchi/psixolog — yo\'q', () => {
+    const admin = kinds('ADMIN');
+    expect(admin).toHaveLength(7);
+    // Direktor ham `students.manage` va `guardians.link` egasi — endi u ham oladi (kontrakt K1 §5 / K2 §7).
+    expect(kinds('DIRECTOR').map((i) => i.id).sort()).toEqual(admin.map((i) => i.id).sort());
     expect(kinds('DUTY')).toHaveLength(0);
+    expect(kinds('PSYCHOLOGIST')).toHaveLength(0);
     const homeroom = kinds('HOMEROOM');
-    expect(homeroom.length).toBeGreaterThan(0);
-    expect(homeroom.length).toBeLessThan(7);
+    expect(homeroom).toHaveLength(3);
     expect(new Set(homeroom.map((i) => i.params.className))).toEqual(new Set(['7-A']));
   });
 
@@ -306,16 +366,16 @@ describe('xodim bildirishnomalari (kirish)', () => {
     expect(homeroom.some((i) => i.kind === 'CHILD_RECOVERY_REQUEST')).toBe(false);
     // Ulanish so'rovlarini (`guardians.link`) hal qila oladi — ular keladi.
     expect(new Set(homeroom.map((i) => i.kind))).toEqual(new Set(['LINK_REVIEW', 'LINK_CORRECTION']));
-    // Admin (`students.manage` bor) tiklash so'rovlarini oladi.
+    // Admin va direktor (`students.manage` bor) tiklash so'rovlarini oladi.
     expect(kinds('ADMIN').filter((i) => i.kind === 'CHILD_RECOVERY_REQUEST')).toHaveLength(2);
+    expect(kinds('DIRECTOR').filter((i) => i.kind === 'CHILD_RECOVERY_REQUEST')).toHaveLength(2);
   });
 
-  it('ohang: parol tiklash va tuzatish — ogohlantirish, tekshiruv — ma\'lumot; params faqat ism va sinf', () => {
+  it('ohang (K1 §5, K2 §7): uchala tur ham `warning`; params faqat ism va sinf', () => {
     const items = kinds('ADMIN');
-    const tone = (kind: string) => items.find((i) => i.kind === kind)?.tone;
-    expect(tone('CHILD_RECOVERY_REQUEST')).toBe('warning');
-    expect(tone('LINK_CORRECTION')).toBe('warning');
-    expect(tone('LINK_REVIEW')).toBe('info');
+    for (const kind of ['CHILD_RECOVERY_REQUEST', 'LINK_REVIEW', 'LINK_CORRECTION']) {
+      expect(items.find((i) => i.kind === kind)?.tone, kind).toBe('warning');
+    }
     for (const i of items) expect(Object.keys(i.params).filter((k) => k !== 'count').sort()).toEqual(['className', 'studentName']);
   });
 

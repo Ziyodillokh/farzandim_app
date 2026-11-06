@@ -1,16 +1,17 @@
 'use client';
 
-import { CircleCheck, Clock, Copy, Printer, RefreshCw, Ticket } from 'lucide-react';
+import { CircleCheck, Clock, Copy, Hourglass, type LucideIcon, Printer, RefreshCw, Ticket } from 'lucide-react';
+import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
 import { SectionCard } from '@/components/common/section-card';
-import { Badge } from '@/components/ui/badge';
+import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { InviteSlot } from '@/data/contracts';
+import type { InviteCode } from '@/data/contracts';
 import { clockNow } from '@/data/mock/clock';
 import { INNER_TILE } from '@/features/classes/styles';
 import { useClockNow } from '@/features/engine/use-clock';
@@ -27,13 +28,27 @@ import { PrintOnly } from './print-only';
 /** Qolgan vaqt yangilanish davri: daqiqa aniqligi yetarli. */
 const TICK_MS = 30_000;
 
-function SlotChip({ slot, label }: { slot: InviteSlot; label: string }) {
+type SlotView = { variant: NonNullable<BadgeProps['variant']>; icon: LucideIcon; state: 'pending' | 'review' | 'confirmed' | 'used' };
+
+/** O'quvchi o'rni uch holatli (K2 §2): kiritilmagan / kiritdi, tasdiq kutilmoqda / tasdiqlangan. */
+const STUDENT_SLOT: Readonly<Record<InviteCode['student']['status'], SlotView>> = {
+  FREE: { variant: 'warning', icon: Clock, state: 'pending' },
+  UNDER_REVIEW: { variant: 'info', icon: Hourglass, state: 'review' },
+  CONFIRMED: { variant: 'success', icon: CircleCheck, state: 'confirmed' },
+};
+
+const PARENT_SLOT: Readonly<Record<InviteCode['parent']['status'], SlotView>> = {
+  FREE: { variant: 'warning', icon: Clock, state: 'pending' },
+  USED: { variant: 'success', icon: CircleCheck, state: 'used' },
+};
+
+function SlotChip({ view, label, testId }: { view: SlotView; label: string; testId: string }) {
   const { t } = useI18n();
-  const Icon = slot.used ? CircleCheck : Clock;
+  const Icon = view.icon;
   return (
-    <Badge variant={slot.used ? 'success' : 'warning'} className="gap-1.5">
+    <Badge variant={view.variant} className="gap-1.5" data-testid={testId} data-state={view.state}>
       <Icon className="h-3.5 w-3.5" aria-hidden />
-      {label}: {t(slot.used ? 'access.invite.slotState.used' : 'access.invite.slotState.pending')}
+      {label}: {t(`access.invite.slotState.${view.state}`)}
     </Badge>
   );
 }
@@ -42,7 +57,7 @@ function SlotChip({ slot, label }: { slot: InviteSlot; label: string }) {
  * «Taklif kodi» (`guardians.link`): faol 6 xonali kod (3+3), muddat sanog'i, ikki o'rin (o'quvchi / ota-ona),
  * yangilash (tasdiq bilan) va chop etiladigan karta.
  */
-export function InviteCodeCard({ studentId, studentName, className }: { studentId: string; studentName: string; className: string }) {
+export function InviteCodeCard({ studentId, studentName, className, archived = false }: { studentId: string; studentName: string; className: string; archived?: boolean }) {
   const { t, formatDate } = useI18n();
   const copy = useCopy();
   const school = useSchool();
@@ -94,13 +109,15 @@ export function InviteCodeCard({ studentId, studentName, className }: { studentI
         <EmptyState
           icon={<Ticket />}
           title={invite ? t('access.invite.expired') : t('access.invite.none.title')}
-          description={t('access.invite.none.text')}
+          description={archived ? t('access.archived.invite') : t('access.invite.none.text')}
           className="py-6"
           action={
-            <Button onClick={create} loading={generate.isPending}>
-              <Ticket />
-              {t('access.invite.create')}
-            </Button>
+            archived ? undefined : (
+              <Button onClick={create} loading={generate.isPending}>
+                <Ticket />
+                {t('access.invite.create')}
+              </Button>
+            )
           }
         />
       ) : (
@@ -123,30 +140,45 @@ export function InviteCodeCard({ studentId, studentName, className }: { studentI
           </p>
           <ul aria-label={t('access.invite.slotsLabel')} className="flex flex-wrap gap-2">
             <li>
-              <SlotChip slot={invite.student} label={t('access.invite.slot.student')} />
+              <SlotChip view={STUDENT_SLOT[invite.student.status]} label={t('access.invite.slot.student')} testId="invite-slot-student" />
             </li>
             <li>
-              <SlotChip slot={invite.parent} label={t('access.invite.slot.parent')} />
+              <SlotChip view={PARENT_SLOT[invite.parent.status]} label={t('access.invite.slot.parent')} testId="invite-slot-parent" />
             </li>
           </ul>
+          {invite.student.status === 'UNDER_REVIEW' && (
+            <p className="text-sm" data-testid="invite-under-review">
+              {t('access.invite.underReview')}{' '}
+              <Link href="/students/link-requests" className="font-medium text-primary hover:underline focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                {t('access.invite.openRequests')}
+              </Link>
+            </p>
+          )}
           <p className="text-xs leading-relaxed text-muted-foreground">{t('access.invite.review')}</p>
+          {archived && (
+            <p className="text-xs leading-relaxed text-muted-foreground" data-testid="invite-archived">
+              {t('access.archived.invite')}
+            </p>
+          )}
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={() => setPrintJob((n) => n + 1)}>
               <Printer />
               {t('access.invite.print')}
             </Button>
-            <Button
-              type="button"
-              variant="soft"
-              onClick={() => {
-                focus.remember();
-                setConfirmOpen(true);
-              }}
-              loading={generate.isPending}
-            >
-              <RefreshCw />
-              {t('access.invite.regenerate')}
-            </Button>
+            {!archived && (
+              <Button
+                type="button"
+                variant="soft"
+                onClick={() => {
+                  focus.remember();
+                  setConfirmOpen(true);
+                }}
+                loading={generate.isPending}
+              >
+                <RefreshCw />
+                {t('access.invite.regenerate')}
+              </Button>
+            )}
           </div>
         </div>
       )}

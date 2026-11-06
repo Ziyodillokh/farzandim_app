@@ -13,22 +13,11 @@ import type { LinkRequest } from '@/data/contracts';
 import { useFocusReturn } from '@/features/access/lib/use-focus-return';
 import { RequestSection } from '@/features/link-requests/components/request-section';
 import { type LinkDecision, useDecideLinkRequest, useLinkRequests } from '@/features/link-requests/hooks';
+import { LINK_ACTIONS } from '@/features/link-requests/lib/decisions';
 import { GlassCallout } from '@/features/messages/components/glass-callout';
-import { type TKey, useI18n } from '@/i18n';
+import { useI18n } from '@/i18n';
 
 type Pending = { request: LinkRequest; decision: LinkDecision };
-
-/** Tasdiq oynasi matnlari: (tur, qaror) → sarlavha, matn, tugma. */
-const DIALOG: Record<LinkRequest['kind'], Record<LinkDecision, { title: TKey; text: TKey; confirm: TKey }>> = {
-  REVIEW: {
-    confirm: { title: 'linkRequests.review.confirmTitle', text: 'linkRequests.review.confirmText', confirm: 'linkRequests.review.confirm' },
-    reject: { title: 'linkRequests.review.rejectTitle', text: 'linkRequests.review.rejectText', confirm: 'linkRequests.review.reject' },
-  },
-  CORRECTION: {
-    confirm: { title: 'linkRequests.correction.keepTitle', text: 'linkRequests.correction.keepText', confirm: 'linkRequests.correction.keep' },
-    reject: { title: 'linkRequests.correction.unlinkTitle', text: 'linkRequests.correction.unlinkText', confirm: 'linkRequests.correction.unlink' },
-  },
-};
 
 function ListSkeleton() {
   return (
@@ -98,7 +87,7 @@ export default function LinkRequestsPage() {
   // Qaror qabul qilingach qator yo'qoladi — fokus belgilangan sahifa hududiga qaytadi.
   const region = useRef<HTMLDivElement>(null);
   const focus = useFocusReturn(() => region.current);
-  const dialog = pending ? DIALOG[pending.request.kind][pending.decision] : null;
+  const action = pending ? LINK_ACTIONS[pending.request.kind][pending.decision] : null;
 
   const ask = (request: LinkRequest, decision: LinkDecision) => {
     focus.remember();
@@ -119,10 +108,18 @@ export default function LinkRequestsPage() {
       <ConfirmDialog
         open={open}
         onOpenChange={setOpen}
-        title={dialog ? t(dialog.title) : ''}
-        description={pending && dialog ? t(dialog.text, { name: pending.request.studentName, className: pending.request.className }) : undefined}
-        confirmLabel={dialog ? t(dialog.confirm) : undefined}
-        destructive={pending?.decision === 'reject'}
+        title={action ? t(action.dialog.title) : ''}
+        description={
+          pending && action
+            ? t(action.dialog.text, {
+                name: pending.request.student.fullName,
+                className: pending.request.student.className || '—',
+                child: pending.request.child.name,
+              })
+            : undefined
+        }
+        confirmLabel={action ? t(action.label) : undefined}
+        destructive={action?.destructive}
         loading={decide.isPending}
         onConfirm={() => {
           if (!pending) return;

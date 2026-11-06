@@ -20,7 +20,8 @@ export type AuditModule =
 export type AuditLog = {
   id: Id;
   at: IsoDateTime;
-  actorId: Id;
+  /** Bola / ota-ona ilovasi nomidagi amallarda (`student.linkRequested`, `guardian.linked` …) `null` — faqat `actorName` bor. */
+  actorId: Id | null;
   actorName: string;
   module: AuditModule;
   action: string; // "student.create"

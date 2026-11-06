@@ -246,7 +246,8 @@ export const auditService = {
     const actor = currentActor();
     assertCan(actor, 'audit.view');
     const seen = new Map<string, string>();
-    for (const a of visibleAudit(actor)) seen.set(a.actorId, a.actorName);
+    // Bola / ota-ona ilovasi nomidagi yozuvlarda (`actorId: null`) xodim yo'q — filtr ro'yxatiga kirmaydi.
+    for (const a of visibleAudit(actor)) if (a.actorId) seen.set(a.actorId, a.actorName);
     return [...seen.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, 'uz'));
   },
 };

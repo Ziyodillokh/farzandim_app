@@ -3,8 +3,9 @@ import { expect, type Page, test } from '@playwright/test';
 import { access as uzAccess } from '../src/i18n/uz/access';
 import { access as ruAccess } from '../src/i18n/ru/access';
 import { common as uzCommon } from '../src/i18n/uz/common';
+import { linkRequests as uzLink } from '../src/i18n/uz/linkRequests';
 import { errors as uzErrors } from '../src/i18n/uz/errors';
-import { collectConsole, findStudent, printCalls, readDb, stubPrint } from './access-helpers';
+import { archiveStudentInOtherTab, collectConsole, findStudent, printCalls, readDb, stubPrint } from './access-helpers';
 import { login, trackErrors, url } from './helpers';
 
 const SCHOOL_NAME = 'Parvoz namunaviy maktabi';
@@ -109,7 +110,7 @@ test.describe('Kirish ma\'lumotlari', () => {
 
     // Audit: parolsiz.
     const audit = (await readDb(page)).tables as unknown as { audit: Array<{ action: string; summary: string }> };
-    expect(audit.audit.filter((a) => a.action.startsWith('student.credentials.')).map((a) => a.action)).toEqual(['student.credentials.issue', 'student.credentials.reset']);
+    expect(audit.audit.filter((a) => a.action.startsWith('student.credential.')).map((a) => a.action)).toEqual(['student.credential.issue', 'student.credential.reset']);
     expect(JSON.stringify(audit.audit)).not.toContain(resetPassword);
     expect(errors).toEqual([]);
   });
@@ -325,8 +326,8 @@ test.describe('Kirish ma\'lumotlari', () => {
     // Backend birinchi berishni tiklash deb hisobladi, ammo `signOutDevices: false` yuborilgani uchun hech kim chiqarib yuborilmadi
     // (standart `true` ota-ona juftlagan qurilmani ham uzib yuborardi): audit'da «chiqarildi» varianti yo'q.
     const audit = (await readDb(page)).tables as unknown as { audit: Array<{ action: string; params?: { variant?: string } }> };
-    const entry = audit.audit.filter((a) => a.action.startsWith('student.credentials.')).at(-1);
-    expect(entry?.action).toBe('student.credentials.reset');
+    const entry = audit.audit.filter((a) => a.action.startsWith('student.credential.')).at(-1);
+    expect(entry?.action).toBe('student.credential.reset');
     expect(entry?.params?.variant).toBeUndefined();
   });
 
@@ -457,16 +458,143 @@ test.describe('Taklif kodi', () => {
     await expect(page.getByRole('main')).toContainText(uzErrors.FORBIDDEN);
   });
 
-  test('tekshiruv kutayotgan o\'quvchi: kodda «Oʻquvchi: foydalanildi», «Ota-ona: kutilmoqda»', async ({ page }) => {
+  test('tekshiruv kutayotgan o\'quvchi: kodda «Oʻquvchi: tekshiruvda», «Ota-ona: kutilmoqda» va so\'rovlar sahifasiga havola', async ({ page }) => {
     await login(page, 'admin', 'Admin2026');
     const { tables } = await readDb(page);
     // Ota-ona o'rni ham ishlatilgan kod yopiladi (kontrakt) — faol kod faqat ota-ona o'rni bo'sh bo'lganda.
     const open = tables.access.inviteCodes.find((c) => c.closedAt === null && c.studentUsedAt && tables.access.linkRequests.some((r) => r.studentId === c.studentId));
     expect(open).toBeTruthy();
     await openAccessTab(page, open?.studentId ?? '');
-    const slots = page.getByRole('main').getByRole('list', { name: uzAccess.invite.slotsLabel });
-    await expect(slots).toContainText(`${uzAccess.invite.slot.student}: ${uzAccess.invite.slotState.used}`);
+    const main = page.getByRole('main');
+    const slots = main.getByRole('list', { name: uzAccess.invite.slotsLabel });
+    await expect(slots).toContainText(`${uzAccess.invite.slot.student}: ${uzAccess.invite.slotState.review}`);
     await expect(slots).toContainText(`${uzAccess.invite.slot.parent}: ${uzAccess.invite.slotState.pending}`);
+    await expect(main.getByTestId('invite-slot-student')).toHaveAttribute('data-state', 'review');
+    await expect(main.getByTestId('invite-under-review')).toContainText(uzAccess.invite.underReview);
+    await expect(main.getByRole('link', { name: uzAccess.invite.openRequests })).toHaveAttribute('href', /\/students\/link-requests\/?$/);
+  });
+
+  test('o\'quvchi o\'rni uch holatli: kutilmoqda → tekshiruvda → (xodim tasdiqlaydi) → tasdiqlandi; kod hali faol, ota-ona o\'rni bo\'sh', async ({ page }) => {
+    await login(page, 'admin', 'Admin2026');
+    const { tables } = await readDb(page);
+    const open = tables.access.inviteCodes.find((c) => c.closedAt === null && c.studentUsedAt && !c.studentConfirmedAt && tables.access.linkRequests.some((r) => r.studentId === c.studentId && r.status === 'OPEN'));
+    expect(open).toBeTruthy();
+    const studentId = open?.studentId ?? '';
+    await openAccessTab(page, studentId);
+    const main = page.getByRole('main');
+    await expect(main.getByTestId('invite-slot-student')).toHaveAttribute('data-state', 'review');
+
+    // Havola orqali so'rovlar sahifasiga o'tib, aynan shu o'quvchining so'rovini tasdiqlaymiz.
+    await main.getByRole('link', { name: uzAccess.invite.openRequests }).click();
+    await expect(page).toHaveURL(/\/students\/link-requests\/?$/);
+    const card = page.getByTestId('link-request').filter({ has: page.locator(`a[href$="id=${studentId}"]`) });
+    await expect(card).toHaveCount(1);
+    await card.getByRole('button', { name: uzLink.review.confirm, exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: uzLink.review.confirm, exact: true }).click();
+    await expect(page.getByText(uzLink.toast.confirmed).first()).toBeVisible();
+    await expect(card).toHaveCount(0);
+
+    await openAccessTab(page, studentId);
+    await expect(main.getByTestId('invite-slot-student')).toHaveAttribute('data-state', 'confirmed');
+    await expect(main.getByRole('list', { name: uzAccess.invite.slotsLabel })).toContainText(`${uzAccess.invite.slot.student}: ${uzAccess.invite.slotState.confirmed}`);
+    await expect(main.getByTestId('invite-slot-parent')).toHaveAttribute('data-state', 'pending');
+    await expect(main.getByTestId('invite-under-review')).toHaveCount(0);
+  });
+});
+
+test.describe('Arxivdagi o\'quvchi (K1: STUDENT_ARCHIVED, K2: arxivda kod yaratib bo\'lmaydi)', () => {
+  test('arxivga olinsa: yangi kod va kirish ma\'lumotlari tugmalari yo\'qoladi, izoh ko\'rinadi; mavjud kod va login o\'qiladi', async ({ page }) => {
+    await login(page, 'admin', 'Admin2026');
+    const student = await findStudent(page, 'linkedWithCredentials');
+    await openAccessTab(page, student.id);
+    const main = page.getByRole('main');
+    await main.getByRole('button', { name: uzAccess.invite.create, exact: true }).click();
+    await expect(main.getByTestId('invite-code')).toBeVisible();
+    const code = (await main.getByTestId('invite-code').innerText()).trim();
+    await expect(main.getByRole('button', { name: uzAccess.invite.regenerate, exact: true })).toBeVisible();
+    await expect(main.getByRole('button', { name: uzAccess.credentials.reset, exact: true })).toBeVisible();
+
+    await archiveStudentInOtherTab(page, url('/dashboard'), student.id);
+
+    await expect(main.getByRole('button', { name: uzAccess.invite.regenerate, exact: true })).toHaveCount(0);
+    await expect(main.getByRole('button', { name: uzAccess.credentials.reset, exact: true })).toHaveCount(0);
+    await expect(main.getByTestId('invite-archived')).toHaveText(uzAccess.archived.invite);
+    await expect(main.getByTestId('credentials-archived')).toHaveText(uzAccess.archived.credentials);
+    // O'qish mumkin (K1 §2, K2 §2): kod va login ko'rinadi.
+    await expect(main.getByTestId('invite-code')).toHaveText(code);
+    await expect(main.getByTestId('credentials-login')).toBeVisible();
+  });
+
+  test('STUDENT_ARCHIVED (kirish ma\'lumotlari oynasi ochiq turganda boshqa xodim arxivladi): toast, oyna yopiladi, tugmalar yo\'qoladi', async ({ page }) => {
+    await login(page, 'admin', 'Admin2026');
+    const student = await findStudent(page, 'linkedNoCredentials');
+    await openAccessTab(page, student.id);
+    const main = page.getByRole('main');
+    await main.getByRole('button', { name: uzAccess.credentials.issue, exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByRole('heading', { name: uzAccess.issueDialog.issueTitle })).toBeVisible();
+
+    await archiveStudentInOtherTab(page, url('/dashboard'), student.id);
+    await dialog.getByRole('button', { name: uzAccess.issueDialog.submitIssue, exact: true }).click();
+
+    await expect(page.getByText(uzErrors.detail.STUDENT_ARCHIVED).first()).toBeVisible();
+    await expect(dialog).toBeHidden();
+    await expect(main.getByRole('button', { name: uzAccess.credentials.issue, exact: true })).toHaveCount(0);
+    await expect(main.getByTestId('credentials-not-linked')).toHaveCount(0);
+    expect((await readDb(page)).tables.access.credentials.some((c) => c.studentId === student.id)).toBe(false);
+  });
+
+  test('STUDENT_ARCHIVED (yangi kod tasdig\'i ochiq turganda arxivlandi): toast, eski kod o\'z joyida, "Yangi kod" tugmasi yo\'qoladi', async ({ page }) => {
+    await login(page, 'admin', 'Admin2026');
+    const student = await findStudent(page, 'linkedNoCredentials');
+    await openAccessTab(page, student.id);
+    const main = page.getByRole('main');
+    await main.getByRole('button', { name: uzAccess.invite.create, exact: true }).click();
+    await expect(main.getByTestId('invite-code')).toBeVisible();
+    const code = (await main.getByTestId('invite-code').innerText()).trim();
+    await main.getByRole('button', { name: uzAccess.invite.regenerate, exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByRole('heading', { name: uzAccess.invite.confirmTitle })).toBeVisible();
+
+    await archiveStudentInOtherTab(page, url('/dashboard'), student.id);
+    await dialog.getByRole('button', { name: uzAccess.invite.confirm, exact: true }).click();
+
+    await expect(page.getByText(uzErrors.detail.STUDENT_ARCHIVED).first()).toBeVisible();
+    await expect(dialog).toBeHidden();
+    await expect(main.getByTestId('invite-code')).toHaveText(code);
+    await expect(main.getByRole('button', { name: uzAccess.invite.regenerate, exact: true })).toHaveCount(0);
+    const mine = (await readDb(page)).tables.access.inviteCodes.filter((c) => c.studentId === student.id);
+    expect(mine).toHaveLength(1);
+  });
+});
+
+test.describe('Audit jurnali (K1 / K2 amallari)', () => {
+  test('kod yaratish va kirish ma\'lumotlarini berish: o\'zbekcha va ruscha matn, amal kaliti; kod va parol yozilmaydi', async ({ page }) => {
+    await login(page, 'admin', 'Admin2026');
+    const student = await findStudent(page, 'linkedNoCredentials');
+    await openAccessTab(page, student.id);
+    const main = page.getByRole('main');
+    await main.getByRole('button', { name: uzAccess.invite.create, exact: true }).click();
+    await expect(main.getByTestId('invite-code')).toBeVisible();
+    const code = (await main.getByTestId('invite-code').innerText()).replace(/\s+/g, '');
+    await main.getByRole('button', { name: uzAccess.credentials.issue, exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: uzAccess.issueDialog.submitIssue, exact: true }).click();
+    const password = (await dialog.getByTestId('issued-password').innerText()).trim();
+    await dialog.getByRole('button', { name: uzAccess.reveal.done, exact: true }).click();
+
+    await page.goto(url('/audit'));
+    const audit = page.getByRole('main');
+    await expect(audit.getByText(`${student.name}: oʻquvchi kodi yaratildi`)).toBeVisible();
+    await expect(audit.getByText(`${student.name}: Parvoz kirish maʼlumotlari berildi`)).toBeVisible();
+    await expect(audit.locator('code', { hasText: /^student\.inviteCode$/ }).first()).toBeVisible();
+    await expect(audit.locator('code', { hasText: /^student\.credential\.issue$/ }).first()).toBeVisible();
+    await expect(audit).not.toContainText(password);
+    await expect(audit).not.toContainText(code);
+
+    await page.getByRole('button', { name: 'RU', exact: true }).click();
+    await expect(audit.getByText(`${student.name}: создан код ученика`)).toBeVisible();
+    await expect(audit.getByText(`${student.name}: выданы данные для входа в Parvoz`)).toBeVisible();
   });
 });
 
