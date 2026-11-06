@@ -49,3 +49,18 @@ describe('dars jadvali', () => {
     expect(roleHas('TEACHER', 'timetable.manage')).toBe(false);
   });
 });
+
+describe('ulanish so\'rovlari', () => {
+  it('sahifa Maktab guruhida, O\'quvchilardan keyin; `guardians.link` bilan: direktor, admin, sinf rahbari', () => {
+    const school = ROUTES.filter((r) => r.group === 'school').map((r) => r.path);
+    expect(school.indexOf('/students/link-requests')).toBe(school.indexOf('/students') + 1);
+    expect(findRoute('/students/link-requests')?.perm).toBe('guardians.link');
+    expect(findRoute('/students/link-requests/')?.badge).toBe('linkRequests');
+    // O'quvchilar ro'yxati va tafsiloti o'z ruxsatida qoladi.
+    expect(findRoute('/students')?.perm).toBe('students.view');
+    expect(findRoute('/students/view')?.perm).toBe('students.view');
+    const allowed = Object.values(ROLES).filter((r) => r.permissions.includes('guardians.link')).map((r) => r.key).sort();
+    expect(allowed).toEqual(['ADMIN', 'DIRECTOR', 'HOMEROOM']);
+    expect(roleHas('PSYCHOLOGIST', 'guardians.link')).toBe(false);
+  });
+});

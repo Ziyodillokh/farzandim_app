@@ -13,6 +13,7 @@ import {
   HeartHandshake,
   History,
   LayoutDashboard,
+  Link2,
   LogOut,
   MessageSquareHeart,
   MessagesSquare,
@@ -57,6 +58,8 @@ export type RouteDef = {
   hidden?: boolean;
   /** Yangi tabda ochiladi (kiosk). */
   external?: boolean;
+  /** Menyuda hisoblagich nishoni (masalan, ochiq so'rovlar soni). */
+  badge?: 'linkRequests';
 };
 
 export const ROUTES: readonly RouteDef[] = [
@@ -102,6 +105,7 @@ export const ROUTES: readonly RouteDef[] = [
   { path: '/classes/view', perm: 'classes.view', titleKey: 'nav.classes', icon: GraduationCap, hidden: true },
   { path: '/students', perm: 'students.view', titleKey: 'nav.students', icon: Users, group: 'school' },
   { path: '/students/view', perm: 'students.view', titleKey: 'nav.students', icon: Users, hidden: true },
+  { path: '/students/link-requests', perm: 'guardians.link', titleKey: 'nav.linkRequests', icon: Link2, group: 'school', badge: 'linkRequests' },
   { path: '/parents', perm: 'guardians.link', titleKey: 'nav.parents', icon: UsersRound, group: 'school' },
 
   { path: '/reports', perm: 'reports.view', titleKey: 'nav.reports', icon: FileCheck2, group: 'admin' },
