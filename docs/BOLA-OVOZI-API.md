@@ -258,3 +258,7 @@ Unit (`npx jest`): `care-working-time` (dam olish / bayram / ish vaqtidan tashqa
 E2E (haqiqiy Postgres, `E2E_DATABASE_URL=…/<nom>_test`): `school-care-anon` (ikki bolaning javobini hech bir API ajratmaydi, atomiklik, eski + yangi qatorlar), `school-care-thread` (idempotentlik, limitlar, bosqichlar,
 birinchi ochgan poygasi, push, izolyatsiya), `school-care-settings` (sozlamalar, contact, eskalatsiya cron, bildirishnomalar), `school-care-personal` (STUDENTS tayinlash), `school-care-deletion` (to'rt o'chirish yo'li);
 mavjud `school-care` va `school-assessments-child` kutilmalari faqat kontrakt qo'shgan maydonlarga moslandi.
+
+Natija (oxirgi to'liq ishga tushirish): unit — 79 to'plam / 852 test; E2E — 49 to'plam / 538 test; `tsc --noEmit` toza; `prisma migrate diff` — drift yo'q.
+Qo'shimcha unit: `permissions.spec` (care.settings va backend ↔ panel matritsalari bir xilligi). Qo'shimcha E2E: yozishma bola profiliga bog'liqligi (qayta bog'lash), shaxsiy natijalarning sinf rahbaridan yashirinishi, `/auth/me` da `care.settings`.
+
