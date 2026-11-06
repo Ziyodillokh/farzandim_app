@@ -1,7 +1,7 @@
 'use client';
 
 import { Save, Undo2 } from 'lucide-react';
-import { type FormEvent, useRef, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { type CareSettingsView, ServiceError } from '@/data/contracts';
@@ -24,10 +24,18 @@ export function CareSettingsForm({ settings, canEdit }: { settings: CareSettings
   const { t } = useI18n();
   const save = useUpdateCareSettings();
   const formRef = useRef<HTMLFormElement>(null);
+  const saveRef = useRef<HTMLButtonElement>(null);
   const initial = toDraft(settings);
   const [draft, setDraft] = useState<SettingsDraft>(initial);
   const [errors, setErrors] = useState<SettingsErrors>({});
   const dirty = isDraftDirty(draft, initial);
+
+  // Saqlash bajarilayotganda tugma o'chiriladi (fokus yo'qoladi) — tugagach fokus unga qaytadi.
+  const wasSaving = useRef(false);
+  useEffect(() => {
+    if (wasSaving.current && !save.isPending && save.isSuccess) saveRef.current?.focus();
+    wasSaving.current = save.isPending;
+  }, [save.isPending, save.isSuccess]);
   const disabled = !canEdit || save.isPending;
 
   const message = (key: string): string => t(formErrorKey(key), MESSAGE_VARS);
@@ -75,7 +83,7 @@ export function CareSettingsForm({ settings, canEdit }: { settings: CareSettings
         <SettingsPreview draft={draft} options={settings.staffOptions} />
         {canEdit && (
           <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" loading={save.isPending} disabled={!dirty}>
+            <Button ref={saveRef} type="submit" loading={save.isPending} aria-disabled={!dirty} className={dirty ? undefined : 'opacity-50'}>
               <Save />
               {t('care.settings.save')}
             </Button>

@@ -1,7 +1,7 @@
 'use client';
 
 import { CalendarClock, ClipboardList, ShieldAlert, ShieldCheck, SlidersHorizontal } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useCan } from '@/auth/use-session';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
@@ -31,6 +31,12 @@ export function RequestActions({ request }: { request: CareRequestDetail }) {
   const [meetingAt, setMeetingAt] = useState(toLocalInput(request.meetingAt));
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
+  const assignButtonRef = useRef<HTMLButtonElement>(null);
+  /** Oyna yopilganda fokus ochgan tugmaga qaytadi (oyna to'liq olib tashlanadi — brauzer o'zi qaytarmaydi). */
+  const onAssignOpenChange = (open: boolean) => {
+    setAssignOpen(open);
+    if (!open) setTimeout(() => assignButtonRef.current?.focus(), 0);
+  };
 
   useEffect(() => setMeetingAt(toLocalInput(request.meetingAt)), [request.meetingAt]);
 
@@ -78,7 +84,7 @@ export function RequestActions({ request }: { request: CareRequestDetail }) {
           <>
             <Separator className="bg-border/60" />
             <div className="space-y-2">
-              <Button variant="outline" className="h-auto w-full whitespace-normal py-2.5" onClick={() => setAssignOpen(true)} data-testid="assign-personal">
+              <Button ref={assignButtonRef} variant="outline" className="h-auto w-full whitespace-normal py-2.5" onClick={() => setAssignOpen(true)} data-testid="assign-personal">
                 <ClipboardList />
                 {t('care.request.personal.button')}
               </Button>
@@ -108,7 +114,7 @@ export function RequestActions({ request }: { request: CareRequestDetail }) {
       {can('assessments.manage') && assignOpen && (
         <AssignDialog
           open={assignOpen}
-          onOpenChange={setAssignOpen}
+          onOpenChange={onAssignOpenChange}
           prefill={{ studentId: request.studentId, studentName: request.studentName, classId: request.classId, careRequestId: request.id }}
         />
       )}

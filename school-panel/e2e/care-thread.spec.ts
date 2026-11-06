@@ -43,6 +43,8 @@ test('bolaga javob yozishmada ko\'rinadi; ichki eslatma bolaga ko\'rinadigan xab
   await expect(sent).toContainText(PSYCHOLOGIST);
   await expect(sent).toContainText('Bolaga yuborilgan');
   await expect(page.getByLabel('Bolaga javob', { exact: true })).toHaveValue('');
+  // Yuborgach fokus yozish maydonida qoladi — keyingi xabarni yozish davom etadi.
+  await expect(page.getByLabel('Bolaga javob', { exact: true })).toBeFocused();
 
   // Ichki eslatma: tarixda "Bola koʻrmaydi" nishoni bilan; yozishmaga TUSHMAYDI.
   await page.locator('#care-note').fill('FAQAT-ICHKI: sinf rahbari bilan gaplashaman.');

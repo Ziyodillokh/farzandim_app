@@ -52,6 +52,7 @@ export function RequestThread({ request }: { request: CareRequestDetail }) {
   const reply = useReplyToRequest();
   const [draft, setDraft] = useState('');
   const logRef = useRef<HTMLOListElement>(null);
+  const replyRef = useRef<HTMLTextAreaElement>(null);
   const closed = request.status === 'RESOLVED';
   const text = draft.trim();
   const count = request.messages.length;
@@ -64,7 +65,16 @@ export function RequestThread({ request }: { request: CareRequestDetail }) {
 
   const send = () => {
     if (!text || closed || reply.isPending) return;
-    reply.mutate({ id: request.id, text }, { onSuccess: () => setDraft('') });
+    reply.mutate(
+      { id: request.id, text },
+      {
+        onSuccess: () => {
+          setDraft('');
+          // Yuborish tugmasi bajarilayotganda o'chiriladi — fokus yo'qolmasin, keyingi xabarni yozish davom etsin.
+          replyRef.current?.focus();
+        },
+      },
+    );
   };
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
@@ -108,6 +118,7 @@ export function RequestThread({ request }: { request: CareRequestDetail }) {
             </p>
             <Textarea
               id="care-reply"
+              ref={replyRef}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={onKeyDown}

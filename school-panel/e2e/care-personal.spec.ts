@@ -55,6 +55,8 @@ test('murojaatdan shaxsiy so\'rov: o\'quvchi va murojaat bog\'langan, rozilik ma
   await dialog.getByTestId('assign-submit').click();
   await expect(dialog).toBeHidden();
   await expect(page.getByText('Test tayinlandi')).toBeVisible();
+  // Oyna yopilgach fokus ochgan tugmaga qaytadi (klaviatura foydalanuvchisi adashmasin).
+  await expect(page.getByTestId('assign-personal')).toBeFocused();
 
   // Tayinlashlar: faqat «Alohida o'quvchilar» (butun sinf emas); ism ko'rsatilmaydi.
   await page.goto(url('/assessments?tab=assignments'));

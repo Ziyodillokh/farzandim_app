@@ -34,6 +34,7 @@ test('psixolog sozlamalarni saqlaydi: bola ko\'radigan ism, ish kunlari va vaqti
   await page.getByRole('button', { name: 'Saqlash' }).click();
   await expect(page.getByText('Sozlamalar saqlandi')).toBeVisible();
   await expect(page.getByText('Hammasi saqlangan')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Saqlash' })).toBeFocused();
 
   // Qayta yuklash: qiymatlar saqlangan.
   await page.reload();

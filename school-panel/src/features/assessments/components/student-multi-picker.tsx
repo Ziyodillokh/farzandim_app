@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TILE } from '@/features/dashboard/lib/tile';
 import { useI18n } from '@/i18n';
+import { errorKey } from '@/lib/errors';
 import { useDebounced } from '@/lib/use-debounced';
 import { cn, initials } from '@/lib/utils';
 import { STUDENT_PICK_MIN_QUERY, useStudentPick } from '../hooks';
@@ -75,7 +76,12 @@ export function StudentMultiPicker({
         {!ready ? t('assessments.assign.studentPickTestFirst') : full ? t('assessments.assign.studentsMax', { max }) : t('assessments.assign.studentHint')}
       </p>
 
-      {ready && searching && !full && (
+      {ready && searching && !full && search.isError && (
+        <p role="alert" className="text-xs font-medium text-destructive">
+          {t(errorKey(search.error))}
+        </p>
+      )}
+      {ready && searching && !full && !search.isError && (
         <ul aria-label={t('assessments.assign.studentsResults')} className="max-h-48 divide-y divide-border/60 overflow-y-auto rounded-xl bg-white/50 ring-1 ring-inset ring-border/60 dark:bg-white/[0.03]">
           {search.isLoading && !items ? (
             Array.from({ length: 3 }, (_, i) => (

@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Bell,
   Brain,
   HeartPulse,
   LogOut,
@@ -44,7 +45,8 @@ type NotificationRowProps = {
 /** Bitta bildirishnoma: ohang belgisi, sarlavha, mavzu, nisbiy vaqt, o'qilmagan nuqta. */
 export function NotificationRow({ item, unread, onOpen }: NotificationRowProps) {
   const { t, locale, formatRelative } = useI18n();
-  const Icon = ICONS[item.kind];
+  // Backend panelda hali tanilmagan bildirishnoma turini yuborsa ham ro'yxat yiqilmasin.
+  const Icon = ICONS[item.kind] ?? Bell;
   const title = t(`notifications.kind.${item.kind}`, item.params);
   const subject = item.subject?.[locale] ?? (item.kind === 'SAFETY_SIGNAL' ? t('notifications.safetyHint') : null);
 
@@ -58,7 +60,7 @@ export function NotificationRow({ item, unread, onOpen }: NotificationRowProps) 
           unread && 'bg-primary/[0.035] dark:bg-white/[0.025]',
         )}
       >
-        <span className={cn('mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset [&_svg]:size-4', TILE[item.tone])}>
+        <span className={cn('mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset [&_svg]:size-4', TILE[item.tone] ?? TILE.info)}>
           <Icon aria-hidden />
         </span>
         <span className="min-w-0 flex-1">
