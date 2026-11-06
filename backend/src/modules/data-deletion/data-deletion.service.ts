@@ -2,11 +2,14 @@
 // ota-ona hamda (bola maktabga bog'langan bo'lsa) maktab rahbariyati xabardor qilinadi.
 // Takroriy so'rov: oxirgi 30 kunda RECEIVED so'rov bor bo'lsa — o'shani qaytaradi (yangi qator va xabar yo'q).
 // Parallel so'rovlar bola qatorini qulflash orqali ketma-ketlashtiriladi.
+// Maktab rahbariyatiga saqlangan bildirishnoma so'rov bilan BIR tranzaksiyada yoziladi (yo'qolmaydi) va takroriy
+// so'rovda idempotent qayta yoziladi; ota-onaga push va audit esa best-effort.
 
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ChildDataDeletionRequest } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { DataDeletionNotifyService } from './data-deletion-notify.service';
+import { upsertDeletionStaffNotification } from './data-deletion-staff';
 
 /** Shu muddat ichidagi RECEIVED so'rov takroriy so'rovga javob bo'ladi. */
 export const DELETION_REQUEST_REUSE_DAYS = 30;
@@ -33,7 +36,6 @@ export class DataDeletionService {
   async create(
     childId: string,
     userId: string,
-    request?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
     now: Date = new Date(),
   ): Promise<{ created: boolean; request: DeletionRequestView }> {
     const child = await this.prisma.child.findUnique({ where: { id: childId }, select: { id: true, parentId: true, childUserId: true } });
@@ -47,18 +49,18 @@ export class DataDeletionService {
         where: { childId, status: 'RECEIVED', createdAt: { gte: new Date(now.getTime() - DELETION_REQUEST_REUSE_DAYS * DAY_MS) } },
         orderBy: { createdAt: 'desc' },
       });
-      if (existing) return { created: false, row: existing };
-      return { created: true, row: await tx.childDataDeletionRequest.create({ data: { childId } }) };
+      const row = existing ?? (await tx.childDataDeletionRequest.create({ data: { childId } }));
+      // Idempotent: takroriy so'rovda ham qayta bajariladi — avval yo'qolgan bildirishnoma tiklanadi.
+      await upsertDeletionStaffNotification(tx, row);
+      return { created: !existing, row };
     });
 
     if (outcome.created) {
       await this.notify.afterCreate({
         requestId: outcome.row.id,
-        createdAt: outcome.row.createdAt,
         childId,
         parentId: child.parentId,
         actorUserId: userId,
-        request,
       });
     }
     return { created: outcome.created, request: toDeletionRequestView(outcome.row) };

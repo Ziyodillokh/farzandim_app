@@ -82,12 +82,22 @@ describe('Men notify: ma\'lumot o\'chirish so\'rovi', () => {
       expect(deletionPushes()[0]?.body).toBe('Ваш ребёнок попросил удалить свои данные');
     });
 
-    it('writes an audit entry without personal data', async () => {
-      const res = await create();
+    it('writes an audit entry without personal data (no IP, no user agent)', async () => {
+      const res = await t.app.inject({
+        method: 'POST',
+        url: `/api${url()}`,
+        headers: { authorization: `Bearer ${w.child.token}`, 'user-agent': 'e2e-agent/1.0' },
+      });
 
       const rows = await t.prisma.auditLog.findMany({ where: { resourceId: res.json().id } });
       expect(rows).toHaveLength(1);
-      expect(rows[0]).toMatchObject({ userId: w.child.userId, resourceType: 'child', action: 'CHILD_DATA_DELETION_REQUEST' });
+      expect(rows[0]).toMatchObject({
+        userId: w.child.userId,
+        resourceType: 'child',
+        action: 'CHILD_DATA_DELETION_REQUEST',
+        ipAddress: null,
+        userAgent: null,
+      });
       expect(rows[0]?.data).toEqual({ childId: w.child.childId });
     });
 
@@ -135,19 +145,54 @@ describe('Men notify: ma\'lumot o\'chirish so\'rovi', () => {
       expect(t.fcm.pushesTo(parent.userId).filter((p) => p.data?.type === 'DATA_DELETION_REQUEST')).toHaveLength(1);
     });
 
-    it('still succeeds when the push and the staff notification fail (best effort)', async () => {
+    it('still succeeds when the parent push fails (best effort); the staff notification is already stored', async () => {
       const spy = jest.spyOn(t.fcm, 'sendPushToUser').mockRejectedValue(new Error('fcm down'));
-      const notify = jest.spyOn(t.prisma.schoolStaffNotification, 'upsert').mockRejectedValue(new Error('db hiccup'));
 
       try {
         const res = await create();
         expect(res.statusCode).toBe(201);
       } finally {
         spy.mockRestore();
-        notify.mockRestore();
       }
 
       expect(await t.prisma.childDataDeletionRequest.count({ where: { childId: w.child.childId } })).toBe(1);
+      expect(await t.prisma.schoolStaffNotification.count({ where: { kind: 'DATA_DELETION_REQUEST' } })).toBe(1);
+    });
+
+    it('stores the staff notification in the SAME transaction: if it cannot be written, no request is left behind', async () => {
+      // Yozuvni bazaning o'zi rad etadi (tranzaksiya ichidagi klient mock qilinmaydi).
+      await t.prisma.$executeRawUnsafe(
+        `ALTER TABLE school_staff_notifications ADD CONSTRAINT e2e_no_deletion_kind CHECK (kind <> 'DATA_DELETION_REQUEST')`,
+      );
+      try {
+        const res = await create();
+        expect(res.statusCode).toBe(500);
+      } finally {
+        await t.prisma.$executeRawUnsafe(`ALTER TABLE school_staff_notifications DROP CONSTRAINT e2e_no_deletion_kind`);
+      }
+
+      expect(await t.prisma.childDataDeletionRequest.count()).toBe(0);
+      expect(deletionPushes()).toHaveLength(0);
+
+      // Keyingi urinish to'liq o'tadi.
+      expect((await create()).statusCode).toBe(201);
+      expect(await t.prisma.schoolStaffNotification.count({ where: { kind: 'DATA_DELETION_REQUEST' } })).toBe(1);
+    });
+
+    it('restores a lost staff notification on a repeated request, without any duplicate side effects', async () => {
+      const first = await create();
+      await t.prisma.schoolStaffNotification.deleteMany({ where: { kind: 'DATA_DELETION_REQUEST' } });
+      t.fcm.reset();
+
+      const again = await create();
+
+      expect(again.statusCode).toBe(200);
+      expect(again.json()).toEqual(first.json());
+      const stored = await t.prisma.schoolStaffNotification.findMany({ where: { kind: 'DATA_DELETION_REQUEST' } });
+      expect(stored).toHaveLength(1);
+      expect(stored[0]).toMatchObject({ id: `data-deletion:${first.json().id}`, params: { studentName: 'Aliyev Vali', className: '7-A' } });
+      expect(deletionPushes()).toHaveLength(0);
+      expect(await t.prisma.auditLog.count({ where: { action: 'CHILD_DATA_DELETION_REQUEST' } })).toBe(1);
     });
 
     describe('idempotency', () => {

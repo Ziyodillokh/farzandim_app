@@ -1,9 +1,10 @@
-// E'lon yuborilganda (`audience.includeStudents = true`) ilovasi ulangan bolalarga push. Har (e'lon, bola) uchun
+// E'lon yuborilganda (`audience.includeStudents = true`) ilovasi ulangan bolalarga NEYTRAL push. Har (e'lon, bola) uchun
 // BIR marta (`child_push_dedupe`): qayta urinish / qayta chaqirish dublikat yubormaydi. Hech qachon e'lonni yuborishni
 // yiqitmaydi; token yo'q bola jim o'tkaziladi; logda e'lon matni va bola ma'lumoti yo'q.
 
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
+import { mapLimit } from '../../common/helpers/map-limit';
 import { ChildPushDedupeService } from '../../common/notification-prefs/child-push-dedupe.service';
 import { errorLabel } from '../../common/notification-prefs/error-label';
 import {
@@ -12,7 +13,7 @@ import {
   selectRecipients,
   SCHOOL_ANNOUNCEMENT_DEDUPE_KIND,
 } from './announcement-child-push';
-import { CommsPushService, mapLimit } from './comms-push.service';
+import { CommsPushService } from './comms-push.service';
 import { toAudience } from './comms-roster';
 
 const PUSH_CONCURRENCY = 8;
@@ -46,7 +47,7 @@ export class AnnouncementChildPushService {
       where,
       select: {
         childId: true,
-        child: { select: { childUserId: true, notificationPreference: { select: { schoolAnnouncements: true, hideText: true } } } },
+        child: { select: { childUserId: true, notificationPreference: { select: { schoolAnnouncements: true } } } },
       },
     });
     const recipients = selectRecipients(rows);
@@ -54,9 +55,8 @@ export class AnnouncementChildPushService {
     const claimed = new Set(await this.dedupe.claim(recipients.map((r) => r.childId), SCHOOL_ANNOUNCEMENT_DEDUPE_KIND, a.id));
     const targets = recipients.filter((r) => claimed.has(r.childId));
     if (targets.length === 0) return 0;
-    const school = targets.some((t) => !t.hideText) ? await this.push.schoolLabel(a.schoolId) : '';
     const delivered = await mapLimit(targets, PUSH_CONCURRENCY, (t) =>
-      this.push.sendOne(t.childUserId, (lang) => announcementChildPush(lang, { id: a.id, school, title: a.title, hideText: t.hideText })),
+      this.push.sendOne(t.childUserId, (lang) => announcementChildPush(lang, { id: a.id })),
     );
     return delivered.filter(Boolean).length;
   }

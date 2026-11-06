@@ -2,13 +2,14 @@
 // eslatmasi (17:00) va maktab e'loni -> bolalar. Hammasi bir marta (qayta ishga tushirish dublikat bermaydi),
 // push xatosi asosiy amalni yiqitmaydi.
 
+import { DailyReminderService } from '../../src/modules/nudges/daily-reminder.service';
 import { NudgeService } from '../../src/modules/nudges/nudge.service';
 import { AnnouncementChildPushService } from '../../src/school/comms/announcement-child-push.service';
 import { AnnouncementDeliveryService } from '../../src/school/comms/announcement-delivery.service';
 import { CommsDispatcherService } from '../../src/school/comms/comms-dispatcher.service';
 import { HomeworkReminderService } from '../../src/school/learning/homework-reminder.service';
 import { resetDb } from './db';
-import { TestChild } from './factories';
+import { createChild, TestChild } from './factories';
 import { seedWorld, World } from './school-attendance-fixtures';
 import { appReq, linkNewChild, schoolReq, unlinkedChild } from './school-child-fixtures';
 import { createTestApp, TestApp } from './test-app';
@@ -20,11 +21,11 @@ const AT_1700 = new Date('2026-11-06T12:00:00Z');
 describe('Men notify: kunlik eslatma', () => {
   let t: TestApp;
   let w: World;
-  let nudge: NudgeService;
+  let daily: DailyReminderService;
 
   beforeAll(async () => {
     t = await createTestApp();
-    nudge = t.app.get(NudgeService);
+    daily = t.app.get(DailyReminderService);
   });
 
   beforeEach(async () => {
@@ -44,22 +45,51 @@ describe('Men notify: kunlik eslatma', () => {
     });
 
   it('sends the study nudge at 18:00 by default (children without settings) exactly once', async () => {
-    expect(await nudge.tickDailyReminder(new Date('2026-11-06T12:59:00Z'))).toBe(0);
+    expect(await daily.run(new Date('2026-11-06T12:59:00Z'))).toBe(0);
 
-    expect(await nudge.tickDailyReminder(AT_1800)).toBe(1);
-    expect(await nudge.tickDailyReminder(new Date('2026-11-06T13:01:00Z'))).toBe(0);
+    expect(await daily.run(AT_1800)).toBe(1);
+    expect(await daily.run(new Date('2026-11-06T13:01:00Z'))).toBe(0);
 
     expect(studyPushes()).toHaveLength(1);
     expect(studyPushes()[0]).toMatchObject({ title: 'Parvoz', data: { type: 'study_nudge', childId: w.child.childId } });
     expect(await t.prisma.notification.count({ where: { childId: w.child.childId, type: 'STUDY_NUDGE' } })).toBe(1);
+    expect(await t.prisma.childPushDedupe.findMany({ where: { childId: w.child.childId }, select: { kind: true, refKey: true } })).toEqual([
+      { kind: 'STUDY_NUDGE', refKey: '2026-11-06' },
+    ]);
+    expect((await t.prisma.notificationPreference.findUniqueOrThrow({ where: { childId: w.child.childId } })).lastStudyNudgeAt).toEqual(AT_1800);
+  });
+
+  it('is atomic: parallel runs (several server instances) and repeated ticks inside the window send exactly one push', async () => {
+    const runs = await Promise.all([daily.run(AT_1800), daily.run(AT_1800), daily.run(new Date('2026-11-06T13:01:00Z'))]);
+    await daily.run(new Date('2026-11-06T13:04:00Z'));
+
+    expect(runs.reduce((n, r) => n + r, 0)).toBe(1);
+    expect(studyPushes()).toHaveLength(1);
+  });
+
+  it('sends again the next day (the once-a-day claim is per Tashkent day)', async () => {
+    await daily.run(AT_1800);
+    await daily.run(new Date('2026-11-07T13:00:00Z'));
+
+    expect(studyPushes()).toHaveLength(2);
+  });
+
+  it('reaches many children in one run (bounded concurrency) and each exactly once', async () => {
+    for (let i = 0; i < 12; i++) await createChild(t.prisma, w.parent, { name: `Bola ${i}` });
+
+    const sent = await daily.run(AT_1800);
+    await daily.run(new Date('2026-11-06T13:02:00Z'));
+
+    expect(sent).toBe(13);
+    expect(t.fcm.sent.filter((p) => p.payload.data?.type === 'study_nudge')).toHaveLength(13);
   });
 
   it('sends at the time the child chose instead of the fixed time', async () => {
     expect((await setPrefs({ dailyReminderTime: '19:30' })).statusCode).toBe(200);
 
-    expect(await nudge.tickDailyReminder(AT_1800)).toBe(0);
-    expect(await nudge.tickDailyReminder(new Date('2026-11-06T14:29:00Z'))).toBe(0);
-    expect(await nudge.tickDailyReminder(new Date('2026-11-06T14:30:00Z'))).toBe(1);
+    expect(await daily.run(AT_1800)).toBe(0);
+    expect(await daily.run(new Date('2026-11-06T14:29:00Z'))).toBe(0);
+    expect(await daily.run(new Date('2026-11-06T14:30:00Z'))).toBe(1);
 
     expect(studyPushes()).toHaveLength(1);
   });
@@ -67,36 +97,50 @@ describe('Men notify: kunlik eslatma', () => {
   it('is not sent when the child turned the daily reminder off', async () => {
     await setPrefs({ dailyReminder: false });
 
-    expect(await nudge.tickDailyReminder(AT_1800)).toBe(0);
+    expect(await daily.run(AT_1800)).toBe(0);
     expect(studyPushes()).toHaveLength(0);
   });
 
   it('is not sent when the parent turned the study nudge off', async () => {
     await setPrefs({ studyNudge: false }, w.parent.token);
 
-    expect(await nudge.tickDailyReminder(AT_1800)).toBe(0);
+    expect(await daily.run(AT_1800)).toBe(0);
   });
 
-  it('is not sent to a child who already completed a daily test today (Tashkent day)', async () => {
+  it('is not sent to a child who already completed a daily test today (Tashkent day), and is not re-checked afterwards', async () => {
     await completedAttempt(new Date('2026-11-06T04:00:00Z')); // 09:00 Toshkent, bugun
 
-    expect(await nudge.tickDailyReminder(AT_1800)).toBe(0);
+    expect(await daily.run(AT_1800)).toBe(0);
+    expect(await daily.run(new Date('2026-11-06T13:01:00Z'))).toBe(0);
+
+    expect(studyPushes()).toHaveLength(0);
+    expect(await t.prisma.childPushDedupe.count({ where: { childId: w.child.childId, kind: 'STUDY_NUDGE' } })).toBe(1);
+  });
+
+  it('is not sent to a child who started an olympiad attempt today', async () => {
+    const olympiad = await t.prisma.olympiad.create({
+      data: { title: 'Sinov', subject: 'Matematika', ageFrom: 6, ageTo: 16, startTime: new Date('2026-11-01T00:00:00Z'), endTime: new Date('2026-11-30T00:00:00Z') },
+    });
+    await t.prisma.olympiadAttempt.create({ data: { childId: w.child.childId, olympiadId: olympiad.id, startedAt: new Date('2026-11-06T05:00:00Z') } });
+
+    expect(await daily.run(AT_1800)).toBe(0);
   });
 
   it('still sends when the only completed test was yesterday in Tashkent', async () => {
     await completedAttempt(new Date('2026-11-05T18:00:00Z')); // 23:00 Toshkent, kecha
 
-    expect(await nudge.tickDailyReminder(AT_1800)).toBe(1);
+    expect(await daily.run(AT_1800)).toBe(1);
   });
 
-  it('respects the child quiet hours', async () => {
+  it('respects the child quiet hours (and does not use up the day)', async () => {
     await setPrefs({ quietFrom: '17:30', quietTo: '19:00' });
 
-    expect(await nudge.tickDailyReminder(AT_1800)).toBe(0);
+    expect(await daily.run(AT_1800)).toBe(0);
+    expect(await t.prisma.childPushDedupe.count({ where: { kind: 'STUDY_NUDGE' } })).toBe(0);
   });
 
   it('no longer sends anything from the hourly tick at the old fixed 16:00', async () => {
-    const res = await nudge.tick(new Date('2026-11-06T11:00:00Z'));
+    const res = await t.app.get(NudgeService).tick(new Date('2026-11-06T11:00:00Z'));
 
     expect(res).toEqual({ kind: null, sent: 0 });
     expect(studyPushes()).toHaveLength(0);
@@ -262,6 +306,10 @@ describe('Men notify: ertangi topshiriq eslatmasi', () => {
       await appReq(t, w.child.token, 'PUT', `/children/${w.child.childId}/notification-preferences`, { quietFrom: '16:00', quietTo: '18:00' });
 
       expect(await reminder.remindDue(AT_1700)).toBe(0);
+      // Tinch soatda kun "sarflanmaydi": tinch soat tugagach (17:30 dagi zaxira urinish) yuboriladi.
+      expect(await t.prisma.childPushDedupe.count({ where: { kind: 'HOMEWORK_DUE' } })).toBe(0);
+      await appReq(t, w.child.token, 'PUT', `/children/${w.child.childId}/notification-preferences`, { quietFrom: '16:00', quietTo: '17:10' });
+      expect(await reminder.remindDue(new Date('2026-11-06T12:30:00Z'))).toBe(1);
     });
   });
 
@@ -328,9 +376,7 @@ describe('Men notify: maktab e\'loni -> bolalar', () => {
   const announcementPushes = (userId: string) => t.fcm.pushesTo(userId).filter((p) => p.data?.type === 'SCHOOL_ANNOUNCEMENT');
   const setPrefs = (child: TestChild, body: object) => appReq(t, child.token, 'PUT', `/children/${child.childId}/notification-preferences`, body);
 
-  it('whole school + includeStudents: pushes a neutral message to every linked child with hideText on (and nobody else)', async () => {
-    await setPrefs(w.child, { hideText: true });
-    await setPrefs(bek, { hideText: true });
+  it('whole school + includeStudents: pushes a neutral message to every linked child (and nobody else)', async () => {
     const a = await send(audience('SCHOOL', { includeStudents: true }));
 
     for (const child of [w.child, bek]) {
@@ -368,18 +414,17 @@ describe('Men notify: maktab e\'loni -> bolalar', () => {
     expect(announcementPushes(bek.userId)).toHaveLength(1);
   });
 
-  it('shows the school name and the announcement title (not the body) by default, neutral for a child with hideText on', async () => {
+  it('is always neutral: title, body and school never reach the lock screen, whatever hideText says', async () => {
+    await setPrefs(w.child, { hideText: false });
     await setPrefs(bek, { hideText: true });
 
-    await send(audience('SCHOOL', { includeStudents: true }), 'A'.repeat(120));
+    await send(audience('SCHOOL', { includeStudents: true }), 'Maxfiy sarlavha');
 
-    const [push] = announcementPushes(w.child.userId);
-    expect(push?.title).toBe('Test maktab');
-    expect([...push!.body]).toHaveLength(80);
-    expect(push?.body.endsWith('…')).toBe(true);
-    expect(push?.body).not.toContain('zalda');
-    // hideText yoqilgan bola neytral oladi.
-    expect(announcementPushes(bek.userId)[0]).toMatchObject({ title: 'Parvoz', body: 'Maktabdan yangi eʼlon' });
+    for (const child of [w.child, bek]) {
+      expect(announcementPushes(child.userId)[0]).toMatchObject({ title: 'Parvoz', body: 'Maktabdan yangi e\u02bclon' });
+      expect(JSON.stringify(announcementPushes(child.userId))).not.toContain('Maxfiy');
+      expect(JSON.stringify(announcementPushes(child.userId))).not.toContain('Test maktab');
+    }
   });
 
   it('skips archived students and children whose device account was removed', async () => {

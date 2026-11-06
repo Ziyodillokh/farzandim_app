@@ -85,11 +85,13 @@ describe('HomeworkReminderService', () => {
       studentRow(2, { homeworkReminder: true, quietFrom: '16:00', quietTo: '18:00' }),
       studentRow(3, { homeworkReminder: true, quietFrom: '22:00', quietTo: '08:00' }),
     ];
-    const { service, sent } = setup({ students });
+    const { service, sent, dedupe } = setup({ students });
 
     await service.remindDue(NOW);
 
     expect(sent.map((s) => s.userId)).toEqual(['cu-3']);
+    // Tinch soatdagi / o'chirgan bola uchun kun "sarflanmaydi": faqat yuboriladigan bola egallanadi.
+    expect(dedupe.claim).toHaveBeenCalledWith(['ch-3'], 'HOMEWORK_DUE', '2026-11-06');
   });
 
   it('does nothing when no assignment is due tomorrow', async () => {

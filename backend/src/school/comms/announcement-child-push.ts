@@ -10,8 +10,6 @@ import type { Audience } from './comms.schemas';
 /** `child_push_dedupe.kind` — kalit: e'lon id. */
 export const SCHOOL_ANNOUNCEMENT_DEDUPE_KIND = 'SCHOOL_ANNOUNCEMENT';
 export const SCHOOL_ANNOUNCEMENT_PUSH_TYPE = 'SCHOOL_ANNOUNCEMENT';
-/** Yashirilmagan push'da e'lon sarlavhasi shuncha belgigacha ("…" bilan, jami ≤ 80). */
-export const ANNOUNCEMENT_PUSH_TITLE_MAX = 80;
 
 /**
  * E'longa tushadigan o'quvchilar sharti; `null` — bolalarga umuman yuborilmaydi (`includeStudents` yo'q,
@@ -34,45 +32,37 @@ export interface RecipientRow {
   childId: string | null;
   child: {
     childUserId: string | null;
-    notificationPreference: { schoolAnnouncements: boolean; hideText: boolean } | null;
+    notificationPreference: { schoolAnnouncements: boolean } | null;
   } | null;
 }
 
 export interface ChildRecipient {
   childId: string;
   childUserId: string;
-  hideText: boolean;
 }
 
-/** Sozlamasi "maktab e'lonlari" ni o'chirmagan bolalar (yozuv yo'q — standart: yoqilgan, matn yashirilmagan). Takrorlar olib tashlanadi. */
+/** Sozlamasi "maktab e'lonlari" ni o'chirmagan bolalar (yozuv yo'q — standart: yoqilgan). Takrorlar olib tashlanadi. */
 export function selectRecipients(rows: readonly RecipientRow[]): ChildRecipient[] {
   const seen = new Set<string>();
   const result: ChildRecipient[] = [];
   for (const row of rows) {
     const childUserId = row.child?.childUserId;
     if (!row.childId || !childUserId || seen.has(row.childId)) continue;
-    const pref = row.child?.notificationPreference;
-    if (pref && !pref.schoolAnnouncements) continue;
+    if (row.child?.notificationPreference?.schoolAnnouncements === false) continue;
     seen.add(row.childId);
-    result.push({ childId: row.childId, childUserId, hideText: pref?.hideText ?? false });
+    result.push({ childId: row.childId, childUserId });
   }
   return result;
 }
 
-/** Kod nuqtalari bo'yicha qisqartirish (emoji o'rtasidan kesilmaydi); natija `max` belgidan oshmaydi. */
-export function truncateTitle(title: string, max = ANNOUNCEMENT_PUSH_TITLE_MAX): string {
-  const chars = [...title.replace(/\s+/g, ' ').trim()];
-  return chars.length <= max ? chars.join('') : `${chars.slice(0, max - 1).join('').trimEnd()}…`;
-}
-
-/** `hideText` — "Parvoz" / "Maktabdan yangi eʼlon"; aks holda sarlavha: maktab nomi, matn: e'lon sarlavhasi (≤ 80). */
-export function announcementChildPush(
-  lang: NotifLang,
-  a: { id: string; school: string; title: string; hideText: boolean },
-): PushPayload {
-  const data = { type: SCHOOL_ANNOUNCEMENT_PUSH_TYPE, id: a.id };
-  if (a.hideText) {
-    return { title: tr(lang, 'push.neutralTitle'), body: tr(lang, 'schoolAnnouncement.hiddenBody'), data };
-  }
-  return { title: a.school || tr(lang, 'push.neutralTitle'), body: truncateTitle(a.title), data };
+/**
+ * Bolaga e'lon push'i HAR DOIM neytral: "Parvoz" / "Maktabdan yangi eʼlon" — e'lon sarlavhasi, matni va maktab nomisiz
+ * (`hideText` hozircha e'tiborga olinmaydi: lock-screen'da maktab xabari ko'rinmasin). Mazmun ilova ichida, e'lonlar lentasida.
+ */
+export function announcementChildPush(lang: NotifLang, a: { id: string }): PushPayload {
+  return {
+    title: tr(lang, 'push.neutralTitle'),
+    body: tr(lang, 'schoolAnnouncement.hiddenBody'),
+    data: { type: SCHOOL_ANNOUNCEMENT_PUSH_TYPE, id: a.id },
+  };
 }

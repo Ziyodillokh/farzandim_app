@@ -1,4 +1,4 @@
-import { ChildPushDedupeService, DEDUPE_RETENTION_DAYS } from './child-push-dedupe.service';
+import { ChildPushDedupeService, DAILY_DEDUPE_RETENTION_DAYS, DEDUPE_RETENTION_DAYS } from './child-push-dedupe.service';
 
 describe('ChildPushDedupeService', () => {
   function setup(inserted: string[] = []) {
@@ -37,14 +37,31 @@ describe('ChildPushDedupeService', () => {
     expect(prisma.childPushDedupe.createManyAndReturn.mock.calls[0][0].data).toHaveLength(1);
   });
 
-  it('prunes rows older than the retention window', async () => {
+  it('claims big lists in batches and returns everyone that was newly inserted', async () => {
+    const { prisma, service } = setup();
+    const ids = Array.from({ length: 2500 }, (_, i) => `ch-${i}`);
+    prisma.childPushDedupe.createManyAndReturn.mockImplementation(async ({ data }: { data: Array<{ childId: string }> }) =>
+      data.map((d) => ({ childId: d.childId })),
+    );
+
+    const claimed = await service.claim(ids, 'STUDY_NUDGE', '2026-11-06');
+
+    expect(prisma.childPushDedupe.createManyAndReturn).toHaveBeenCalledTimes(3);
+    expect(claimed).toHaveLength(2500);
+  });
+
+  it('prunes rows older than the retention window, and the per-day kinds sooner', async () => {
     const { prisma, service } = setup();
     const now = new Date('2026-11-06T12:00:00Z');
+    const day = 24 * 60 * 60 * 1000;
 
     const removed = await service.prune(now);
 
-    const cutoff = (prisma.childPushDedupe.deleteMany.mock.calls[0][0] as { where: { createdAt: { lt: Date } } }).where.createdAt.lt;
-    expect(now.getTime() - cutoff.getTime()).toBe(DEDUPE_RETENTION_DAYS * 24 * 60 * 60 * 1000);
-    expect(removed).toBe(3);
+    const [old, daily] = prisma.childPushDedupe.deleteMany.mock.calls.map((c) => c[0] as { where: { createdAt: { lt: Date }; kind?: { in: string[] } } });
+    expect(now.getTime() - old!.where.createdAt.lt.getTime()).toBe(DEDUPE_RETENTION_DAYS * day);
+    expect(old!.where.kind).toBeUndefined();
+    expect(daily!.where.kind).toEqual({ in: ['STUDY_NUDGE'] });
+    expect(now.getTime() - daily!.where.createdAt.lt.getTime()).toBe(DAILY_DEDUPE_RETENTION_DAYS * day);
+    expect(removed).toBe(6);
   });
 });

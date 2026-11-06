@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { FastifyReply } from 'fastify';
@@ -28,10 +28,9 @@ export class DataDeletionController {
   async create(
     @Param('childId') childId: string,
     @CurrentUser() user: JwtPayload,
-    @Req() req: { ip?: string; headers?: Record<string, string | string[] | undefined> },
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
-    const { created, request } = await this.service.create(childId, user.userId, { ip: req.ip, headers: req.headers });
+    const { created, request } = await this.service.create(childId, user.userId);
     reply.status(created ? 201 : 200);
     return request;
   }

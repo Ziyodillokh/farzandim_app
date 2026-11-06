@@ -1,7 +1,7 @@
 # Men (I07 + I09): bildirishnoma sozlamalari va ma'lumot o'chirish so'rovi — backend kontrakti
 
 Branch: `feat/men-notify-api` (origin/main `512b8357`'dan). Migratsiya: **`20261108100000_men_notify`**
-(FAQAT qo'shuvchi: `notification_preferences`ga 6 ta default'li ustun, 2 ta yangi jadval
+(FAQAT qo'shuvchi: `notification_preferences`ga 6 ta default'li ustun va `daily_reminder_time` indeksi, 2 ta yangi jadval
 `child_data_deletion_requests` va `child_push_dedupe`, 1 ta enum `ChildDeletionRequestStatus`; mavjud qatorlarga tegilmaydi,
 UPDATE/DELETE yo'q). Hamma yo'l `/api` prefiksi bilan. Bu hujjat Part 2 (2A + 2B) — DON/nishon/haftalik faollik (Part 1) bu yerda yo'q.
 
@@ -69,8 +69,7 @@ Xatolar:
 | Oila xabari, `hideText=false` (standart) | — | avvalgidek: yuboruvchi ismi / qisqa mazmun | `{ type, messageId, senderId }` |
 | Kunlik o'qish eslatmasi | `studyNudge` va `dailyReminder` | avvalgi matn ("Bugun bitta test yechib ko'rchi 📚") | `{ type: "study_nudge", childId, relatedRoute }` |
 | Ertangi topshiriq | `homeworkReminder` | `Parvoz` / `Ertaga topshiriq muddati` (ru `Завтра срок задания`) | `{ type: "HOMEWORK_DUE" }` |
-| Maktab e'loni (`audience.includeStudents=true`) | `schoolAnnouncements`; `hideText=true` → neytral | `Parvoz` / `Maktabdan yangi eʼlon` (ru `Новое объявление школы`) | `{ type: "SCHOOL_ANNOUNCEMENT", id }` |
-| Maktab e'loni, `hideText=false` (standart) | — | sarlavha: maktab nomi; matn: e'lon **sarlavhasi** (≤ 80 belgi, "…" bilan; e'lon matni emas) | `{ type: "SCHOOL_ANNOUNCEMENT", id }` |
+| Maktab e'loni (`audience.includeStudents=true`) | `schoolAnnouncements`; **`hideText`dan qat'i nazar HAR DOIM neytral** | `Parvoz` / `Maktabdan yangi eʼlon` (ru `Новое объявление школы`, en `New announcement from school`). E'lon sarlavhasi, matni va maktab nomi push'da yo'q | `{ type: "SCHOOL_ANNOUNCEMENT", id }` |
 | Psixolog javobi (`CARE_MESSAGE`) | **sozlamalarga bog'liq emas** — doim neytral | o'zgarmagan | `{ type: "CARE_MESSAGE", requestId }` |
 
 Til — bolaning `User.language` (`uz` standart; `ru`, `en`).
@@ -87,14 +86,21 @@ Til — bolaning `User.language` (`uz` standart; `ru`, `en`).
 
 - Har daqiqada tekshiriladi; bola `dailyReminderTime` (Toshkent) vaqtida, kechikib bo'lsa ham **5 daqiqagacha** yuboriladi,
   undan keyin o'sha kun uchun o'tkazib yuboriladi. Sozlamasi yo'q bola — `18:00`.
-- Avvalgi mantiq: faqat bugun test yechmagan bolaga, kuniga bir marta (`lastStudyNudgeAt`), tinch soatlarda emas.
+- Avvalgi mantiq: faqat bugun test yechmagan bolaga, kuniga bir marta, tinch soatlarda emas.
   "Bugun test yechgan" — olimpiada urinishi **yoki yakunlangan kunlik o'qish testi** (Toshkent kuni) bo'lsa.
+- **Bir martalik kafolat va masshtab:** bola uchun kun bo'yicha `child_push_dedupe` qatori (`kind=STUDY_NUDGE`, kalit — Toshkent
+  kuni) ATOMIK egallanadi: bir nechta server, takroriy tick yoki xatodan keyingi qayta urinish dublikat yubormaydi.
+  Qatorni egallagan, lekin bugun test yechgan bolaga push yuborilmaydi (qator qoladi — qayta ko'rib chiqilmaydi). So'rov
+  `daily_reminder_time` indeksi bo'yicha faqat hozirgi oynadagi, bugun ko'rib chiqilmagan/yuborilmagan bolalarni oladi;
+  sozlamasi yo'q bolalar 18:00 oynasida bir marta ko'rib chiqiladi. "Bugun test yechganmi" partiyalab tekshiriladi, push — 8 ta
+  parallellik bilan. Tinch soatdagi bola egallanmaydi (kun "sarflanmaydi").
 - **Xulq o'zgarishi:** eskirgan qat'iy 16:00 eslatma olib tashlandi; endi hamma (sozlamasi borlar va yo'qlar) `18:00` da oladi
   (standart), bola vaqtni o'zgartirishi mumkin. `healthNudge` (18:00) va `contentReminder` (shanba 11:00) o'zgarmagan.
 
 ### Ertangi topshiriq eslatmasi (17:00)
 
-- Cron: har kuni 17:00, 17:15 va 17:30 (Toshkent) — server qayta ishga tushsa o'tkazib yubormaslik uchun.
+- Cron: har kuni 17:00, 17:15 va 17:30 (Toshkent) — server qayta ishga tushsa o'tkazib yubormaslik uchun. Kun faqat
+  tinch soatda bo'lmagan va eslatmasi yoqilgan bola uchun egallanadi (tinch soat tugagach keyingi urinishda yuboriladi).
 - Kim: maktabga bog'langan (faol o'quvchi, sinfi bor, maktab faol, bola ilovasi ulangan) bola, uning HOZIRGI sinfiga
   (`/child/school/assignments` ko'rinish qoidasi) berilgan topshiriq **muddati ertaga** bo'lsa va bajarilmagan bo'lsa:
   - yozma vazifa: topshirilgan (`SUBMITTED`) yoki qabul qilingan (`ACCEPTED`) bo'lsa — hisobga olinmaydi; qaytarilgan
@@ -109,6 +115,7 @@ Til — bolaning `User.language` (`uz` standart; `ru`, `en`).
 - E'lon yuborilganda (darhol yoki rejalashtirilgan vaqti kelganda) va `audience.includeStudents=true` bo'lsa
   (faqat `SCHOOL` / `CLASSES`; `GUARDIANS` — hech qachon): auditoriyadagi **ilovasi ulangan** bolalarga (faol o'quvchi,
   sinfi bor, maktab faol). Boshqa sinf, arxivlangan o'quvchi, ilovasiz o'quvchi — yo'q.
+- Push **har doim neytral** (yuqoridagi jadval); mazmun bola ilovasidagi e'lonlar lentasida o'qiladi.
 - Har (e'lon, bola) uchun **bir marta** (`child_push_dedupe`, kalit — e'lon id): qayta urinish / qayta chaqirish / parallel
   ishga tushirish dublikat bermaydi. Ota-onalarga push (`announcementId` kaliti bilan) alohida va o'zgarmagan.
 - Push xatosi e'lonni yuborishni yiqitmaydi.
@@ -126,7 +133,8 @@ So'rov tanasi yo'q. Javob (`201`):
 { "id": "…", "status": "RECEIVED", "createdAt": "2026-11-08T09:12:00.000Z" }
 ```
 
-- Oxirgi **30 kun** ichida `RECEIVED` so'rov bor bo'lsa → `200` va o'sha so'rov (yangi qator, push, bildirishnoma, audit **yo'q**).
+- Oxirgi **30 kun** ichida `RECEIVED` so'rov bor bo'lsa → `200` va o'sha so'rov (yangi qator, push, audit **yo'q**; maktab
+  bildirishnomasi esa idempotent qayta yoziladi — avval yo'qolgan bo'lsa tiklanadi, dublikat bo'lmaydi).
   `CLOSED` yoki 30 kundan eski so'rov yangi so'rovga to'sqinlik qilmaydi. Parallel so'rovlar bola qatorini qulflash orqali
   ketma-ketlashtiriladi (bitta so'rov, bitta xabar).
 - **Limit:** foydalanuvchi boshiga sutkada **3 ta** so'rov (takroriy `200` javoblar ham sanaladi) → `429`.
@@ -143,17 +151,20 @@ Eng so'nggi so'rov (xuddi shu shakl) yoki JSON `null` (tana — `null`, status `
 
 `status` ∈ `RECEIVED | CLOSED`. Hozircha so'rovni yopish yo'li yo'q (xodim oqimi keyingi bosqich) — qator qo'lda yopilishi mumkin.
 
-### Yaratilganda (best-effort, har biri alohida; xato so'rovni yiqitmaydi)
+### Yaratilganda
 
-1. **Ota-onaga neytral push:** `Parvoz` / `Farzandingiz maʼlumotlarini oʻchirishni soʻradi`
-   (ru `Ваш ребёнок попросил удалить свои данные`, en `Your child asked to delete their data`),
-   `data: { type: "DATA_DELETION_REQUEST", childId }`. Bola ismi push'da yo'q.
-2. **Maktab xodimlariga** (bola `SchoolStudent` ga bog'langan bo'lsa): saqlangan bildirishnoma
-   (`SchoolStaffNotification`, id `data-deletion:<requestId>`), `kind: "DATA_DELETION_REQUEST"`, rollar `DIRECTOR` va `ADMIN`
-   (butun maktab, aniq xodimlar belgilanmagan), `params: { studentName: "Familiya Ism", className: "7-A" }`, `subject` va
-   `href` — `null`. Sabab, bola/so'rov id'si, boshqa ma'lumot yo'q.
-3. **Audit:** `AuditLog` — `action: "CHILD_DATA_DELETION_REQUEST"`, `resourceType: "child"`, `resourceId` = so'rov id'si,
-   `userId` = bola foydalanuvchisi, `data: { childId }`.
+1. **Maktab xodimlariga** (bola `SchoolStudent` ga bog'langan bo'lsa) — **so'rov bilan BIR tranzaksiyada** (yo'qolmaydi: yozib
+   bo'lmasa so'rovning o'zi ham yaratilmaydi, 500): saqlangan bildirishnoma (`SchoolStaffNotification`, barqaror id
+   `data-deletion:<requestId>`, upsert), `kind: "DATA_DELETION_REQUEST"`, rollar `DIRECTOR` va `ADMIN` (butun maktab, aniq
+   xodimlar belgilanmagan), `params: { studentName: "Familiya Ism", className: "7-A" }`, `subject` va `href` — `null`.
+   Sabab, bola/so'rov id'si, boshqa ma'lumot yo'q.
+2. **Best-effort (har biri alohida; xato so'rovni yiqitmaydi):**
+   - **Ota-onaga neytral push:** `Parvoz` / `Farzandingiz maʼlumotlarini oʻchirishni soʻradi`
+     (ru `Ваш ребёнок попросил удалить свои данные`, en `Your child asked to delete their data`),
+     `data: { type: "DATA_DELETION_REQUEST", childId }`. Bola ismi push'da yo'q.
+   - **Audit:** `AuditLog` — `action: "CHILD_DATA_DELETION_REQUEST"`, `resourceType: "child"`, `resourceId` = so'rov id'si,
+     `userId` = bola foydalanuvchisi, `data: { childId }`. So'rovning IP manzili va User-Agent'i **saqlanmaydi**
+     (`ipAddress`, `userAgent` — `null`).
 
 ### Xodim paneli (`GET /api/school/notifications/feed`)
 
@@ -177,11 +188,11 @@ Bola o'chganda `child_data_deletion_requests` va `child_push_dedupe` qatorlari c
 
 | Jadval | Ustunlar |
 |---|---|
-| `notification_preferences` (+6) | `homework_reminder`, `school_announcements`, `family_messages`, `daily_reminder` (bool, default `true`); `daily_reminder_time` (default `'18:00'`); `hide_text` (default `true`) |
+| `notification_preferences` (+6) | `homework_reminder`, `school_announcements`, `family_messages`, `daily_reminder` (bool, default `true`); `daily_reminder_time` (default `'18:00'`, indeks `(daily_reminder_time)`); `hide_text` (default `false`) |
 | `child_data_deletion_requests` | `id`, `child_id → children (CASCADE)`, `status` (`RECEIVED` default \| `CLOSED`), `created_at`, `closed_at?`; indeks `(child_id, created_at DESC)` |
-| `child_push_dedupe` | `id`, `child_id → children (CASCADE)`, `kind`, `ref_key`, `created_at`; `UNIQUE(child_id, kind, ref_key)`. `kind=HOMEWORK_DUE` (kalit: kun), `kind=SCHOOL_ANNOUNCEMENT` (kalit: e'lon id). 30 kundan eski qatorlar uy vazifasi cron'i tozalaydi |
+| `child_push_dedupe` | `id`, `child_id → children (CASCADE)`, `kind`, `ref_key`, `created_at`; `UNIQUE(child_id, kind, ref_key)`. `kind=HOMEWORK_DUE` (kalit: kun), `kind=SCHOOL_ANNOUNCEMENT` (kalit: e'lon id), `kind=STUDY_NUDGE` (kalit: Toshkent kuni). 30 kundan (`STUDY_NUDGE` — 3 kundan) eski qatorlarni uy vazifasi cron'i tozalaydi |
 
-Orqaga qaytarish: yangi jadvallar va enum'ni DROP qilish + qo'shilgan 6 ustunni olib tashlash (eski kod ularni ishlatmaydi).
+Orqaga qaytarish: yangi jadvallar va enum'ni DROP qilish + qo'shilgan 6 ustun va indeksni olib tashlash (eski kod ularni ishlatmaydi).
 
 ## 5. Flutter ilovalari uchun eslatmalar
 
@@ -190,19 +201,19 @@ Orqaga qaytarish: yangi jadvallar va enum'ni DROP qilish + qo'shilgan 6 ustunni 
 - Ota-ona ilovasi: `DATA_DELETION_REQUEST` + `childId` — kerakli bolaning profilini oching; holatni
   `GET …/deletion-requests/latest` bilan o'qing.
 - `GET …/deletion-requests/latest` javobi mavjud bo'lmaganda **`null`** (bo'sh tana emas).
-- Standart `hideText=false` — mavjud bolalar uchun oila xabari push'i avvalgidek (yuboruvchi ismi va matn ko'rinadi); neytral ko'rinish faqat `hideText=true` qo'yilganda. Maktab e'loni push'i standartda e'lon sarlavhasini ko'rsatadi.
+- Standart `hideText=false` — mavjud bolalar uchun oila xabari push'i avvalgidek (yuboruvchi ismi va matn ko'rinadi); neytral ko'rinish faqat `hideText=true` qo'yilganda. Maktab e'loni push'i esa `hideText`dan qat'i nazar HAR DOIM neytral.
 - Kunlik eslatma tugmasi: `dailyReminder` + `dailyReminderTime`; ota-onaning `studyNudge` o'chirgichi bilan birga amal qiladi.
 
 ## 6. Testlar
 
 - Unit: `notification-prefs.spec.ts` (vaqt tekshiruvi, oyna, tinch soat), `family-message-push.spec.ts` (`hideText` matnlari,
-  ota-onaga ta'sir qilmasligi), `nudge.service.spec.ts` (kunlik eslatma), `notification-preferences.service.spec.ts`,
+  ota-onaga ta'sir qilmasligi), `daily-reminder.service.spec.ts` (kunlik eslatma: oyna, atomik egallash, parallellik), `nudge.service.spec.ts` (soatlik), `notification-preferences.service.spec.ts`,
   `homework-reminder.spec.ts` + `homework-reminder.service.spec.ts` (ertangi topshiriq tanlovi, submitted/accepted/done
   istisnolari, dedupe), `announcement-child-push.spec.ts` + `announcement-child-push.service.spec.ts` (auditoriya → faqat ulangan
   bolalar, dedupe), `child-push-dedupe.service.spec.ts`, `user-throttler.guard.spec.ts` (3/sutka), `error-label.spec.ts`,
   `child-data-purge.service.spec.ts` (o'chirish).
-- E2E (haqiqiy Postgres): `men-notify-prefs` (23), `men-notify-schedule` (35), `men-deletion-request` (28).
-- Natija: `tsc --noEmit` toza; unit — 90 suite / 998 test (shundan yangi: 11 suite, 145 test); e2e — 52 suite / 631 test, hammasi o'tadi
+- E2E (haqiqiy Postgres): `men-notify-prefs` (23), `men-notify-schedule` (39), `men-deletion-request` (30).
+- Natija: `tsc --noEmit` toza; unit — 91 suite / 997 test (shundan yangi: 12 suite, 144 test); e2e — 52 suite / 637 test, hammasi o'tadi
   (`farzandim_mennotify_test`, `prisma migrate diff --exit-code` — farq yo'q).
 
 ## 7. Ochiq savollar

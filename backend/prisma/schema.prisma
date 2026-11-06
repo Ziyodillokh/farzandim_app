@@ -565,6 +565,8 @@ model NotificationPreference {
 
   child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
 
+  // Kunlik eslatma har daqiqada shu ustun bo'yicha tanlanadi.
+  @@index([dailyReminderTime])
   @@map("notification_preferences")
 }
 

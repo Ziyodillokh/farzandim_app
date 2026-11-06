@@ -10,7 +10,7 @@ const announcement = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
-const studentRow = (n: number, pref: { schoolAnnouncements: boolean; hideText: boolean } | null = null) => ({
+const studentRow = (n: number, pref: { schoolAnnouncements: boolean } | null = null) => ({
   childId: `ch-${n}`,
   child: { childUserId: `cu-${n}`, notificationPreference: pref },
 });
@@ -34,9 +34,8 @@ describe('AnnouncementChildPushService', () => {
     return { prisma, push, dedupe, sent, service };
   }
 
-  it('pushes to every linked child of the audience, neutral when hideText is on', async () => {
-    const hidden = { schoolAnnouncements: true, hideText: true };
-    const { service, sent, dedupe } = setup({ students: [studentRow(1, hidden), studentRow(2, hidden)] });
+  it('pushes to every linked child of the audience, always neutral', async () => {
+    const { service, sent, dedupe } = setup();
 
     const delivered = await service.notify('ann-1');
 
@@ -48,18 +47,6 @@ describe('AnnouncementChildPushService', () => {
       data: { type: 'SCHOOL_ANNOUNCEMENT', id: 'ann-1' },
     });
     expect(dedupe.claim).toHaveBeenCalledWith(['ch-1', 'ch-2'], 'SCHOOL_ANNOUNCEMENT', 'ann-1');
-  });
-
-  it('shows the school and the title when the child has no preference row (hideText defaults to off)', async () => {
-    const { service, sent } = setup({ students: [studentRow(1)] });
-
-    await service.notify('ann-1');
-
-    expect(sent[0]?.payload).toEqual({
-      title: '5-maktab',
-      body: 'Ertaga sayohat',
-      data: { type: 'SCHOOL_ANNOUNCEMENT', id: 'ann-1' },
-    });
   });
 
   it('queries only the audience students (class filter comes from the announcement audience)', async () => {
@@ -92,18 +79,23 @@ describe('AnnouncementChildPushService', () => {
     expect(sent.map((s) => s.userId)).toEqual(['cu-2']);
   });
 
-  it('skips children who turned school announcements off and shows the title for hideText=false', async () => {
-    const students = [
-      studentRow(1, { schoolAnnouncements: false, hideText: true }),
-      studentRow(2, { schoolAnnouncements: true, hideText: false }),
-    ];
+  it('skips children who turned school announcements off', async () => {
+    const students = [studentRow(1, { schoolAnnouncements: false }), studentRow(2, { schoolAnnouncements: true })];
     const { service, sent, dedupe } = setup({ students });
 
     await service.notify('ann-1');
 
     expect(dedupe.claim).toHaveBeenCalledWith(['ch-2'], 'SCHOOL_ANNOUNCEMENT', 'ann-1');
-    expect(sent).toHaveLength(1);
-    expect(sent[0]?.payload).toMatchObject({ title: '5-maktab', body: 'Ertaga sayohat' });
+    expect(sent.map((s) => s.userId)).toEqual(['cu-2']);
+  });
+
+  it('never puts the title, body or school into the push, whatever the child preferences are', async () => {
+    const { service, sent } = setup({ students: [studentRow(1, { schoolAnnouncements: true })] });
+
+    await service.notify('ann-1');
+
+    expect(JSON.stringify(sent)).not.toContain('Ertaga sayohat');
+    expect(JSON.stringify(sent)).not.toContain('5-maktab');
   });
 
   it('does nothing for a guardians-only announcement or when students are not included', async () => {

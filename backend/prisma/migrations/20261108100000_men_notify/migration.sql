@@ -1,6 +1,7 @@
 -- Men (I07 + I09): bildirishnoma sozlamalari va ma'lumot o'chirish so'rovi.
--- FAQAT qo'shuvchi: notification_preferences'ga 6 ta default'li ustun (mavjud qatorlar default oladi),
--- 2 ta yangi jadval (child_data_deletion_requests, child_push_dedupe). Mavjud qatorlarga tegilmaydi.
+-- FAQAT qo'shuvchi: notification_preferences'ga 6 ta default'li ustun (mavjud qatorlar default oladi) va
+-- daily_reminder_time indeksi, 2 ta yangi jadval (child_data_deletion_requests, child_push_dedupe).
+-- Mavjud qatorlarga tegilmaydi.
 
 -- CreateEnum
 CREATE TYPE "ChildDeletionRequestStatus" AS ENUM ('RECEIVED', 'CLOSED');
@@ -43,6 +44,9 @@ CREATE INDEX "child_push_dedupe_created_at_idx" ON "child_push_dedupe"("created_
 
 -- CreateIndex
 CREATE UNIQUE INDEX "child_push_dedupe_child_id_kind_ref_key_key" ON "child_push_dedupe"("child_id", "kind", "ref_key");
+
+-- CreateIndex
+CREATE INDEX "notification_preferences_daily_reminder_time_idx" ON "notification_preferences"("daily_reminder_time");
 
 -- AddForeignKey
 ALTER TABLE "child_data_deletion_requests" ADD CONSTRAINT "child_data_deletion_requests_child_id_fkey" FOREIGN KEY ("child_id") REFERENCES "children"("id") ON DELETE CASCADE ON UPDATE CASCADE;
