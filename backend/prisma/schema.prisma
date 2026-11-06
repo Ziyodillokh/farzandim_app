@@ -2025,6 +2025,8 @@ model School {
   careSurveys         SchoolCareSurvey[]
   careResponses       SchoolCareResponse[]
   careRequests        SchoolCareRequest[]
+  careAnonResponses   SchoolCareAnonResponse[]
+  careSettings        SchoolCareSettings?
   psychTests          SchoolPsychTest[]
   psychTemplateStates SchoolPsychTemplateState[]
   psychAssignments    SchoolPsychAssignment[]
@@ -2578,8 +2580,10 @@ model SchoolCareSurvey {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  school    School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  responses SchoolCareResponse[]
+  school        School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  responses     SchoolCareResponse[]
+  anonResponses SchoolCareAnonResponse[]
+  participation SchoolCareParticipation[]
 
   @@index([schoolId, status])
   @@map("school_care_surveys")
@@ -2604,6 +2608,40 @@ model SchoolCareResponse {
   @@map("school_care_responses")
 }
 
+/// "Kim javob berdi" — FAQAT ishtirok belgisi (javob matni va qiymati yo'q). Anonim javob
+/// qatori bilan bitta tranzaksiyada yoziladi, lekin ikkalasini bog'laydigan ustun yo'q.
+model SchoolCareParticipation {
+  id        String   @id @default(uuid())
+  surveyId  String   @map("survey_id")
+  studentId String   @map("student_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  survey SchoolCareSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@unique([surveyId, studentId])
+  @@index([studentId])
+  @@map("school_care_participation")
+}
+
+/// Haqiqiy anonim javob (shifrlangan): o'quvchi / bola identifikatori, vaqt belgisi (createdAt,
+/// updatedAt, ...) ATAYLAB YO'Q — qator hech qanday ustun orqali o'quvchiga bog'lanmaydi.
+model SchoolCareAnonResponse {
+  id         String  @id @default(uuid())
+  surveyId   String  @map("survey_id")
+  schoolId   String  @map("school_id")
+  classId    String? @map("class_id")
+  grade      Int
+  ageGroup   String  @map("age_group")
+  answersEnc String  @map("answers_enc")
+
+  school School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  survey SchoolCareSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@index([surveyId])
+  @@index([schoolId])
+  @@map("school_care_anon_responses")
+}
+
 /// Bolaning murojaati (matn va eslatmalar shifrlangan).
 model SchoolCareRequest {
   id                String    @id @default(uuid())
@@ -2617,14 +2655,66 @@ model SchoolCareRequest {
   meetingAt         DateTime? @map("meeting_at")
   notesEnc          String?   @map("notes_enc")
   protocolActivated Boolean   @default(false) @map("protocol_activated")
+  /// Bola ilovasi idempotentligi (takroriy yuborish dublikat yaratmaydi).
+  clientRequestId   String?   @map("client_request_id")
+  assignedStaffId   String?   @map("assigned_staff_id")
+  openedAt          DateTime? @map("opened_at")
+  openedByStaffId   String?   @map("opened_by_staff_id")
+  repliedAt         DateTime? @map("replied_at")
+  resolvedAt        DateTime? @map("resolved_at")
+  escalatedAt       DateTime? @map("escalated_at")
+  lastMessageAt     DateTime? @map("last_message_at")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school   School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  messages SchoolCareMessage[]
 
+  @@unique([studentId, clientRequestId])
   @@index([schoolId, status])
   @@index([studentId])
   @@map("school_care_requests")
+}
+
+/// Murojaat yozishmasi: bola <-> xodim (matn shifrlangan). Ichki eslatmalar bu yerda EMAS.
+model SchoolCareMessage {
+  id              String    @id @default(uuid())
+  requestId       String    @map("request_id")
+  /// 'CHILD' | 'STAFF'
+  author          String
+  staffId         String?   @map("staff_id")
+  bodyEnc         String    @map("body_enc")
+  clientMessageId String?   @map("client_message_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  readByChildAt   DateTime? @map("read_by_child_at")
+  readByStaffAt   DateTime? @map("read_by_staff_at")
+
+  request SchoolCareRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, clientMessageId])
+  @@index([requestId, createdAt])
+  @@map("school_care_messages")
+}
+
+/// Maktab bo'yicha: mas'ul psixolog, o'rinbosar, ish vaqti va javob muddatlari.
+model SchoolCareSettings {
+  id                      String   @id @default(uuid())
+  schoolId                String   @unique @map("school_id")
+  psychologistStaffId     String?  @map("psychologist_staff_id")
+  psychologistDisplayName String?  @map("psychologist_display_name")
+  deputyStaffId           String?  @map("deputy_staff_id")
+  deputyDisplayName       String?  @map("deputy_display_name")
+  workDays                Int[]    @default([1, 2, 3, 4, 5]) @map("work_days")
+  workStart               String   @default("09:00") @map("work_start")
+  workEnd                 String   @default("17:00") @map("work_end")
+  urgentSlaMinutes        Int      @default(60) @map("urgent_sla_minutes")
+  normalSlaHours          Int      @default(24) @map("normal_sla_hours")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+  updatedByStaffId        String?  @map("updated_by_staff_id")
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@map("school_care_settings")
 }
 
 /// Maktabning o'z / import qilingan testi (`definition` — PsychTest tanasi).
@@ -2660,19 +2750,23 @@ model SchoolPsychTemplateState {
 }
 
 model SchoolPsychAssignment {
-  id          String   @id @default(uuid())
-  schoolId    String   @map("school_id")
-  testId      String   @map("test_id")
-  testVersion Int      @map("test_version")
-  target      Json
-  classIds    String[] @map("class_ids")
-  opensAt     DateTime @map("opens_at")
-  closesAt    DateTime @map("closes_at")
-  status      String   @default("OPEN")
-  invited     Int      @default(0)
-  consent     String   @default("PARENTS_INFORMED")
-  createdBy   String   @map("created_by")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id            String   @id @default(uuid())
+  schoolId      String   @map("school_id")
+  testId        String   @map("test_id")
+  testVersion   Int      @map("test_version")
+  target        Json
+  classIds      String[] @map("class_ids")
+  opensAt       DateTime @map("opens_at")
+  closesAt      DateTime @map("closes_at")
+  status        String   @default("OPEN")
+  invited       Int      @default(0)
+  consent       String   @default("PARENTS_INFORMED")
+  createdBy     String   @map("created_by")
+  /// Shaxsiy (STUDENTS) tayinlash: shu o'quvchilarga; sinf bo'yicha tayinlashda bo'sh.
+  studentIds    String[] @default([]) @map("student_ids")
+  /// Bola ovozi murojaatidan boshlangan tayinlash (ixtiyoriy).
+  careRequestId String?  @map("care_request_id")
+  createdAt     DateTime @default(now()) @map("created_at")
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
@@ -2717,6 +2811,8 @@ model SchoolStaffNotification {
   roles    String[]
   /// Bo'sh — butun maktab; aks holda shu sinflar doirasidagilarga.
   classIds String[] @map("class_ids")
+  /// Bo'sh — rolga mos hammaga; aks holda faqat shu xodimlarga (rol sharti ham saqlanadi).
+  staffIds String[] @default([]) @map("staff_ids")
   params   Json     @default("{}")
   subject  Json?
   href     String?
