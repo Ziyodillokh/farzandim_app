@@ -9,6 +9,7 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { tashkentDay } from '../../common/time/tashkent';
 import { actorCan, allowedClassIds, assertCan, classScopeWhere, SchoolActor } from '../auth/school-actor';
 import { DATA_DELETION_NOTIFICATION_KIND } from '../../modules/data-deletion/data-deletion-purge';
+import { CHILD_RECOVERY_NOTIFICATION_KIND } from '../../modules/child-auth/child-auth.constants';
 import { CARE_TOPIC_LABELS } from '../care/care-labels';
 import { audienceTouchesScope, loadRoster, toAudience } from '../comms/comms-roster';
 
@@ -26,7 +27,8 @@ export type NotificationKind =
   | 'CARE_URGENT'
   | 'MESSAGE_SENT'
   | 'EMERGENCY'
-  | 'DATA_DELETION_REQUEST';
+  | 'DATA_DELETION_REQUEST'
+  | 'CHILD_RECOVERY_REQUEST';
 type Localized = { uz: string; ru: string };
 
 export interface NotificationItem {
@@ -49,6 +51,7 @@ export const NOTIFICATION_TONES: Record<NotificationKind, NotificationItem['tone
   MESSAGE_SENT: 'success',
   EMERGENCY: 'destructive',
   DATA_DELETION_REQUEST: 'warning',
+  CHILD_RECOVERY_REQUEST: 'warning',
 };
 
 /** Erkin matn (sabab, xabar) — ikkala tilda bir xil, qisqartirilgan. */
@@ -125,6 +128,12 @@ export class NotificationsService {
         const stored = (n.params ?? {}) as Record<string, unknown>;
         const params = { studentName: String(stored.studentName ?? ''), className: String(stored.className ?? '') };
         return item('DATA_DELETION_REQUEST', n.id, n.at, { params });
+      }
+      // Kirish maʼlumotlarini tiklash so'rovi — faqat o'quvchi ismi va sinf nomi.
+      if (n.kind === CHILD_RECOVERY_NOTIFICATION_KIND) {
+        const stored = (n.params ?? {}) as Record<string, unknown>;
+        const params = { studentName: String(stored.studentName ?? ''), className: String(stored.className ?? '') };
+        return item('CHILD_RECOVERY_REQUEST', n.id, n.at, { params });
       }
       const kind = n.kind === 'SAFETY_SIGNAL' ? 'SAFETY_SIGNAL' : 'TEST_COMPLETED';
       // Xavfsizlik signalida ism / matn HECH QACHON yo'q.

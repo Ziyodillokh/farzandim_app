@@ -27,6 +27,7 @@ import {
   toStudentRow,
 } from './student-view';
 import { StudentFilter, studentFilterSchema } from './students.schemas';
+import { toRecoveryView } from '../../modules/child-auth/child-recovery.service';
 
 @Injectable()
 export class StudentsService {
@@ -83,9 +84,9 @@ export class StudentsService {
     };
     // Psixolog uchun minimal ma'lumot (faqat ism va sinf).
     if (!actorCan(actor, 'guardians.link')) {
-      return { ...redact(row), ...extra, guardians: [], today: null, exceptions: [], deviceState: null };
+      return { ...redact(row), ...extra, guardians: [], today: null, exceptions: [], deviceState: null, recoveryRequests: [] };
     }
-    const [guardians, exceptions] = await Promise.all([
+    const [guardians, exceptions, recoveryRequests] = await Promise.all([
       this.prisma.schoolGuardian.findMany({
         where: { schoolId: actor.schoolId, students: { some: { studentId: id } } },
         orderBy: { createdAt: 'asc' },
@@ -94,6 +95,13 @@ export class StudentsService {
         where: { schoolId: actor.schoolId, studentId: id },
         orderBy: { from: 'desc' },
       }),
+      // Kirish (K1): maktab kanaliga tushgan ochiq tiklash so'rovlari (bola bog'langan bo'lsagina).
+      student.childId
+        ? this.prisma.childRecoveryRequest.findMany({
+            where: { childId: student.childId, channel: 'SCHOOL', status: 'RECEIVED' },
+            orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+          })
+        : [],
     ]);
     return {
       ...row,
@@ -102,6 +110,7 @@ export class StudentsService {
       today: today ? toRecordView(today) : null,
       exceptions: exceptions.map(toExceptionView),
       deviceState: deviceStateOf(student, student.child, now),
+      recoveryRequests: recoveryRequests.map(toRecoveryView),
     };
   }
 
