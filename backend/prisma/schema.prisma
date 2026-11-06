@@ -31,6 +31,10 @@ model User {
   language     String   @default("uz")
   isActive     Boolean  @default(true) @map("is_active")
   tokenVersion Int      @default(0) @map("token_version") // Sprint 6 P1 — logout'da increment
+  // Kirish (K1): bola foydalanuvchisi qanday yaratilgan — 'LOGIN' (login/parol bilan kirish), 'RECOVERED' (eski
+  // juftlash orqali yaratilgan, lekin juftlangan qurilma kirish maʼlumotlarini tiklashda chiqarilgan); NULL —
+  // oila kodi / QR bilan juftlash (barcha eski qatorlar): sid'siz juftlangan qurilma ASOSIY qurilma hisoblanadi.
+  createdVia   String?  @map("created_via")
   // 1-haftalik Standart demo (trial) BIR MARTA berilganmi. Akkaunt o'chirib
   // qayta ochilsa ham qayta trial olinmasligi uchun (bir foydalanuvchi = 1 trial).
   trialUsed    Boolean  @default(false) @map("trial_used")
@@ -1524,6 +1528,9 @@ model UserSession {
   deviceId      String? @map("device_id")
   kind          String?
   revokedReason String? @map("revoked_reason")
+  // ASOSIY qurilma belgisi (faqat 'LOGIN' sessiyalar): bolada hozirgi asosiy qurilma bo'lmasa, yangi sessiya
+  // ASOSIY bo'ladi. Sessiya yopilganda belgi tozalanadi.
+  isMain        Boolean @default(false) @map("is_main")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

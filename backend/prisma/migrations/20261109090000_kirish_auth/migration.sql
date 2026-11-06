@@ -1,7 +1,7 @@
--- Kirish (A01–A12), 1-qism: bola login/parol, sessiya sababi va tiklash so'rovlari.
+-- Kirish (A01–A12), 1-qism: bola login/parol, sessiya sababi, asosiy qurilma va tiklash so'rovlari.
 -- FAQAT qo'shuvchi: 3 ta yangi enum, 2 ta yangi jadval (child_credentials, child_recovery_requests),
--- `children`ga 1 ta va `user_sessions`ga 3 ta nullable ustun. Mavjud qatorlarga tegilmaydi
--- (UPDATE / DELETE yo'q); eski kodni ishlatish uchun ustunlar kerak emas.
+-- `children`ga 1 ta, `users`ga 1 ta va `user_sessions`ga 4 ta nullable / defaultli ustun. Mavjud qatorlarga
+-- tegilmaydi (UPDATE / DELETE yo'q); eski kod ustunlarni ishlatmaydi.
 
 -- CreateEnum
 CREATE TYPE "ChildCredentialIssuer" AS ENUM ('PARENT', 'SCHOOL');
@@ -17,8 +17,12 @@ ALTER TABLE "children" ADD COLUMN     "education_language" TEXT;
 
 -- AlterTable
 ALTER TABLE "user_sessions" ADD COLUMN     "device_id" TEXT,
+ADD COLUMN     "is_main" BOOLEAN NOT NULL DEFAULT false,
 ADD COLUMN     "kind" TEXT,
 ADD COLUMN     "revoked_reason" TEXT;
+
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN     "created_via" TEXT;
 
 -- CreateTable
 CREATE TABLE "child_credentials" (

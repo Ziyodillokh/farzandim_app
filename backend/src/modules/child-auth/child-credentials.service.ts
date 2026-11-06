@@ -20,6 +20,7 @@ import {
   CREDENTIAL_BCRYPT_ROUNDS,
 } from './child-auth.constants';
 import { childNotFound, loginTaken } from './child-auth.errors';
+import { CREATED_VIA_RECOVERED } from './child-device-role';
 import { findOwnedChild } from './child-ownership';
 import {
   generateTemporaryPassword,
@@ -156,6 +157,11 @@ export class ChildCredentialsService {
         closed = await closeSessions(tx, child.childUserId, 'RECOVERED', {}, now);
         // tokenVersion: eski (sid'siz) juftlangan qurilmaning yangilash tokeni ham yaroqsiz bo'ladi.
         await tx.user.update({ where: { id: child.childUserId }, data: { tokenVersion: { increment: 1 } } });
+        // Chiqarilgan juftlangan qurilma endi asosiy emas: keyingi kirgan qurilma ASOSIY bo'ladi.
+        await tx.user.updateMany({
+          where: { id: child.childUserId, createdVia: null },
+          data: { createdVia: CREATED_VIA_RECOVERED },
+        });
         // Chiqarilgan (yo'qolgan bo'lishi mumkin) qurilmaga push ketmasin.
         await tx.fcmToken.deleteMany({ where: { userId: child.childUserId } });
       }

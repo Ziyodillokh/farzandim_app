@@ -28,6 +28,7 @@ import {
 import { checkNewPassword, isValidLogin, normalizeLogin } from './child-credentials.helpers';
 import { ChildLoginAttempts } from './child-login-attempts';
 import { GhostLoginLimiter, LoginFailureState, lockRemainingSeconds } from './child-login-lock';
+import type { DeviceRole } from './child-device-role';
 import { ChildSetupTokens } from './child-setup-token';
 import { ChildSessionsService, LoginDevice } from './child-sessions.service';
 import type { ChangeChildPasswordDto, ChildLoginDto, ChildSetupDto } from './dto/child-login.dto';
@@ -42,6 +43,8 @@ export interface ChildOkBody {
   accessToken: string;
   refreshToken: string;
   sessionId: string;
+  /** MAIN — bu qurilma asosiy (nazorat shu yerda); SECONDARY — bolada asosiy qurilma bor, bu faqat akkaunt kirishi. */
+  deviceRole: DeviceRole;
   child: ChildSummary;
   user: { id: string };
 }
@@ -228,6 +231,7 @@ export class ChildLoginService implements OnModuleInit {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       sessionId: opened.sessionId,
+      deviceRole: opened.deviceRole,
       child: toSummary(child),
       user: { id: opened.user.id },
     };

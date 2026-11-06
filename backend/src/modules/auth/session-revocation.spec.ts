@@ -24,7 +24,7 @@ describe('closeSessions', () => {
     });
     expect(db.userSession.updateMany).toHaveBeenCalledWith({
       where: { id: { in: ['s1', 's2'] }, revokedAt: null },
-      data: { revokedAt: NOW, revokedReason: 'RECOVERED' },
+      data: { revokedAt: NOW, revokedReason: 'RECOVERED', isMain: false },
     });
   });
 

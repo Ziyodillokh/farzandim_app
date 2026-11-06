@@ -10,6 +10,9 @@ import { lockRemainingSeconds, registerFailure } from './child-login-lock';
 // `jose` faqat ESM — AuthService importi zanjirida keladi, test uchun kerak emas.
 jest.mock('jose', () => ({ createRemoteJWKSet: jest.fn(), jwtVerify: jest.fn() }));
 
+// Soxta xesh haqiqiy 12 raund bilan hisoblanadi (~0.3 s): parallel yuklamada ham 5 s dan oshib ketmasin.
+jest.setTimeout(30_000);
+
 const PASSWORD = 'Kitob2026';
 const T0 = new Date('2026-11-09T09:00:00.000Z');
 const DEVICE = { id: 'install-1', model: 'Redmi', platform: 'android' as const };
@@ -71,7 +74,9 @@ function setup(initial: Cred | null = credential()) {
     }),
     recordSuccess: jest.fn(async () => ({ mustChangePassword: state.cred!.mustChangePassword })),
   };
-  const sessions = { open: jest.fn().mockResolvedValue({ user: { id: 'user-1', tokenVersion: 0 }, sessionId: 'sid-1', rjti: 'rjti-1' }) };
+  const sessions = {
+    open: jest.fn().mockResolvedValue({ user: { id: 'user-1', tokenVersion: 0 }, sessionId: 'sid-1', rjti: 'rjti-1', deviceRole: 'MAIN' }),
+  };
   const auth = { issueSessionTokens: jest.fn().mockReturnValue({ accessToken: 'access', refreshToken: 'refresh' }) };
   const audit = { log: jest.fn().mockResolvedValue(undefined) };
   const realtime = { emitToUser: jest.fn() };
@@ -128,6 +133,7 @@ describe('ChildLoginService.login', () => {
       accessToken: 'access',
       refreshToken: 'refresh',
       sessionId: 'sid-1',
+      deviceRole: 'MAIN',
       child: { id: 'child-1', name: 'Aziza' },
       user: { id: 'user-1' },
     });
@@ -136,6 +142,15 @@ describe('ChildLoginService.login', () => {
       { userId: 'user-1', role: 'CHILD', tokenVersion: 0, sid: 'sid-1' },
       'rjti-1',
     );
+  });
+
+  it('passes the device role chosen by the session service through (MAIN or SECONDARY)', async () => {
+    const t = setup();
+    t.sessions.open.mockResolvedValue({ user: { id: 'user-1', tokenVersion: 0 }, sessionId: 'sid-2', rjti: 'rjti-2', deviceRole: 'SECONDARY' });
+
+    const res = await login(t.service);
+
+    expect(res).toMatchObject({ status: 'OK', sessionId: 'sid-2', deviceRole: 'SECONDARY' });
   });
 
   it('is case- and whitespace-insensitive for the login', async () => {
@@ -280,7 +295,7 @@ describe('ChildLoginService.setup', () => {
 
     const res = await t.service.setup(dto(t));
 
-    expect(res).toMatchObject({ status: 'OK', sessionId: 'sid-1', child: { id: 'child-1' } });
+    expect(res).toMatchObject({ status: 'OK', sessionId: 'sid-1', deviceRole: 'MAIN', child: { id: 'child-1' } });
     expect(t.prisma.childCredential.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { childId: 'child-1', passwordHash: HASH, mustChangePassword: true },

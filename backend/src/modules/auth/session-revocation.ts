@@ -36,7 +36,8 @@ export async function closeSessions(
   const ids = rows.map((r) => r.id);
   await db.userSession.updateMany({
     where: { id: { in: ids }, revokedAt: null },
-    data: { revokedAt: now, revokedReason: reason },
+    // `isMain: false` — yopilgan sessiya asosiy qurilma bo'lib qolmaydi (rol bo'shaydi).
+    data: { revokedAt: now, revokedReason: reason, isMain: false },
   });
   return ids;
 }
