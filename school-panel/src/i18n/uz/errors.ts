@@ -21,5 +21,8 @@ export const errors = {
     deputySame: 'Oʻrinbosar masʼul psixologdan boshqa xodim boʻlishi kerak',
     duplicateDay: 'Kun takrorlangan',
     staffInvalid: 'Faqat faol psixolog xodimni tanlash mumkin',
+    invalidStaff: 'Faqat faol psixolog xodimni tanlash mumkin',
+    duplicate: 'Qiymat takrorlangan',
+    outOfRange: 'Qiymat ruxsat etilgan oraliqdan tashqarida',
   },
 };

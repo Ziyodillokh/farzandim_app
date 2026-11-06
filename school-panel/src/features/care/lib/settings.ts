@@ -111,8 +111,23 @@ export function isDraftDirty(a: SettingsDraft, b: SettingsDraft): boolean {
 export const SLA_MINUTES_RANGE = CARE_SETTINGS_LIMITS.urgentSlaMinutes;
 export const SLA_HOURS_RANGE = CARE_SETTINGS_LIMITS.normalSlaHours;
 
+/**
+ * Backend umumiy kalit yuboradi (`duplicate`, `outOfRange`, `invalidStaff`) — maydonga qarab
+ * aniqroq panel xabariga aylantiriladi.
+ */
+const FIELD_KEY_ALIASES: Record<string, string> = {
+  'deputyStaffId:errors.form.duplicate': 'errors.form.deputySame',
+  'workDays:errors.form.duplicate': 'errors.form.duplicateDay',
+  'urgentSlaMinutes:errors.form.outOfRange': 'errors.form.slaMinutesRange',
+  'normalSlaHours:errors.form.outOfRange': 'errors.form.slaHoursRange',
+};
+
 /** Backend/servis xatosi `maydon: errors.form.kalit` ko'rinishida bo'lsa — maydon va kalit. */
 export function parseFieldError(message: string): { field: string; key: string } | null {
-  const [field, key] = message.split(': ');
-  return field && key?.startsWith('errors.form.') ? { field, key } : null;
+  const [rawField, key] = message.split(': ');
+  if (!rawField || !key?.startsWith('errors.form.')) return null;
+  // `workDays.2` → `workDays` (massiv elementi xatosi butun maydonda ko'rsatiladi).
+  const field = rawField.split('.')[0];
+  const alias = FIELD_KEY_ALIASES[`${field}:${key}`] ?? (key === 'errors.form.invalidStaff' ? 'errors.form.staffInvalid' : key);
+  return { field, key: alias };
 }

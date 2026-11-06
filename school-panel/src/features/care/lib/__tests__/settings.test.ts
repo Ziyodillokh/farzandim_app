@@ -81,6 +81,13 @@ describe('servis xatosidan maydon', () => {
   it('`maydon: errors.form.kalit` ajratiladi; boshqa xabar — null', () => {
     expect(parseFieldError('workEnd: errors.form.endBeforeStart')).toEqual({ field: 'workEnd', key: 'errors.form.endBeforeStart' });
     expect(parseFieldError('HTTP 400')).toBeNull();
+    // Backend umumiy kalitlari maydonga qarab aniq xabarga aylanadi.
+    expect(parseFieldError('deputyStaffId: errors.form.duplicate')).toEqual({ field: 'deputyStaffId', key: 'errors.form.deputySame' });
+    expect(parseFieldError('workDays: errors.form.duplicate')).toEqual({ field: 'workDays', key: 'errors.form.duplicateDay' });
+    expect(parseFieldError('workDays.1: errors.form.outOfRange')).toEqual({ field: 'workDays', key: 'errors.form.outOfRange' });
+    expect(parseFieldError('urgentSlaMinutes: errors.form.outOfRange')).toEqual({ field: 'urgentSlaMinutes', key: 'errors.form.slaMinutesRange' });
+    expect(parseFieldError('normalSlaHours: errors.form.outOfRange')).toEqual({ field: 'normalSlaHours', key: 'errors.form.slaHoursRange' });
+    expect(parseFieldError('psychologistStaffId: errors.form.invalidStaff')).toEqual({ field: 'psychologistStaffId', key: 'errors.form.staffInvalid' });
     expect(parseFieldError('urgency')).toBeNull();
   });
 });
