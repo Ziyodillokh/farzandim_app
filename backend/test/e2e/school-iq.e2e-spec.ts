@@ -104,6 +104,50 @@ describe('School IQ (parvoz-iq)', () => {
     expect((await api()(w.duty, 'GET', url)).statusCode).toBe(403);
   });
 
+  it('shaxsiy (STUDENTS) IQ tayinlovi natijasi faqat psixologga: sinf rahbari va direktor taqsimotiga chiqmaydi', async () => {
+    const [personal, classmate] = [w.kids7a[0], w.kids7a[1]];
+    const res = await api()(w.psych, 'POST', '/assignments', {
+      testId: 'parvoz-iq',
+      target: { kind: 'STUDENTS', studentIds: [personal.studentId] },
+      ...openWindow(),
+      consent: true,
+    });
+    expect(res.statusCode).toBe(201);
+    await solve(personal, 16);
+    await solve(classmate, 12);
+    const url = `/iq/results?classId=${w.classes.c7a}`;
+
+    const psych = (await api()(w.psych, 'GET', url)).json();
+    expect(psych).toMatchObject({ mode: 'INDIVIDUAL', completed: 2 });
+    const byId = (body: { rows: Array<{ studentId: string; result: unknown }> }, id: string) => body.rows.find((r) => r.studentId === id)!;
+    expect(byId(psych, personal.studentId).result).not.toBeNull();
+
+    const homeroom = (await api()(w.homeroom, 'GET', url)).json();
+    expect(homeroom).toMatchObject({ mode: 'INDIVIDUAL', completed: 1 });
+    expect(byId(homeroom, personal.studentId)).toMatchObject({ linked: true, result: null });
+    expect(byId(homeroom, classmate.studentId).result).not.toBeNull();
+
+    // Direktor (K=5 taqsimot): shaxsiy natija hisobga kirmaydi.
+    expect((await api()(w.director, 'GET', url)).json()).toMatchObject({ mode: 'AGGREGATE', completed: 1, suppressed: true, bands: null });
+  });
+
+  it('IQ natijasi shaxsiy tayinlovdan 180 kundan oldin bo\'lsa (unga bog\'lanmaydi) sinf rahbariga ko\'rinadi', async () => {
+    const kid = w.kids7a[0];
+    await solve(kid, 14);
+    // Tayinlov ochilishidan 180 kundan ko'proq oldingi natija shu tayinlovning yakuni emas.
+    await t.prisma.iqSession.updateMany({ where: { childId: kid.childId }, data: { completedAt: new Date(Date.now() - 100 * 86_400_000) } });
+    await api()(w.psych, 'POST', '/assignments', {
+      testId: 'parvoz-iq',
+      target: { kind: 'STUDENTS', studentIds: [kid.studentId] },
+      opensAt: '2027-06-01T09:00',
+      closesAt: '2027-06-10T09:00',
+      consent: true,
+    });
+
+    const homeroom = (await api()(w.homeroom, 'GET', `/iq/results?classId=${w.classes.c7a}`)).json();
+    expect(homeroom).toMatchObject({ completed: 1 });
+  });
+
   it('natija bor — yopiladi (CLOSED), yo\'q — bekor (CANCELLED)', async () => {
     const empty = (await assignIq([w.classes.c7b])).json();
     expect((await api()(w.psych, 'POST', `/assignments/${empty.id}/unassign`)).json()).toMatchObject({ status: 'CANCELLED' });

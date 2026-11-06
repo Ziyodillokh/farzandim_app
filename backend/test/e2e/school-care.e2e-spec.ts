@@ -98,19 +98,21 @@ describe('School care (Bola ovozi)', () => {
     expect(stored.answersEnc).toMatch(/^v1\./);
     expect(stored.answersEnc).not.toContain(survey.questionIds[0]);
 
-    // 4 respondent — psixologda ham kichik guruh yashirin; direktor faol so'rovnomada faqat ishtirokni ko'radi.
+    // Faol so'rovnoma: HAMMA rol (psixolog ham) faqat ishtirokni ko'radi — ko'rsatkich ham, guruh ham yo'q.
     const hidden = (await staff(psych, 'GET', `/aggregate?surveyId=${survey.id}&breakdown=CLASS`)).json();
-    expect(hidden).toMatchObject({ respondents: 4, overall: {}, groups: [{ hidden: true, respondents: 0, topicScores: null }] });
+    expect(hidden).toMatchObject({ respondents: 4, overall: {}, groups: [] });
     expect((await staff(director, 'GET', `/aggregate?surveyId=${survey.id}&breakdown=CLASS`)).json()).toMatchObject({ respondents: 4, groups: [] });
     expect((await staff(director, 'GET', '/surveys/options')).json()[0]).toMatchObject({ id: survey.id, ready: false });
 
     await child(kids[4]!, 'POST', `/survey/${survey.id}/responses`, { answers });
-    // Faol so'rovnoma: direktor faqat ishtirokni ko'radi (har yangi javobdagi o'zgarish
-    // shu bolani ochib qo'ymasin); psixolog — jonli natijani.
+    // Faol so'rovnoma: hamma rol (direktor ham, psixolog ham) faqat ishtirokni ko'radi — har yangi
+    // javobdagi o'zgarish shu bolaning javobini ochib qo'ymasin; ko'rsatkichlar yopilgandan keyin.
     const live = (await staff(director, 'GET', `/aggregate?surveyId=${survey.id}&breakdown=SCHOOL`)).json();
     expect(live).toMatchObject({ respondents: 5, overall: {}, groups: [] });
     expect((await staff(director, 'GET', '/surveys/options')).json()[0].ready).toBe(false);
-    expect(Object.keys((await staff(psych, 'GET', `/aggregate?surveyId=${survey.id}&breakdown=SCHOOL`)).json().overall).length).toBeGreaterThan(0);
+    const livePsych = (await staff(psych, 'GET', `/aggregate?surveyId=${survey.id}&breakdown=SCHOOL`)).json();
+    expect(livePsych).toMatchObject({ respondents: 5, overall: {}, groups: [], weeklyTrend: [] });
+    expect((await staff(psych, 'GET', '/surveys/options')).json()[0]).toMatchObject({ id: survey.id, status: 'ACTIVE', ready: false });
     await staff(psych, 'POST', `/surveys/${survey.id}/close`);
     const shown = (await staff(director, 'GET', `/aggregate?breakdown=SCHOOL`)).json();
     expect(shown).toMatchObject({ surveyId: survey.id, respondents: 5, invited: 6, participationRate: 83 });

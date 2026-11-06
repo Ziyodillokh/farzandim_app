@@ -91,10 +91,10 @@ export class AssessmentsResultsService {
   /** Taklif qilinganlar: tayinlash sinflari (yoki test parallellari) ∩ filtr ∩ xodim doirasi. */
   private async participation(actor: SchoolActor, test: PsychTest, f: ResultsFilter, classes: readonly ClassRow[], completed: number, bandsOnly: boolean) {
     const a = f.assignmentId
-      ? await this.prisma.schoolPsychAssignment.findFirst({ where: { id: f.assignmentId, schoolId: actor.schoolId }, select: { classIds: true, studentIds: true } })
+      ? await this.prisma.schoolPsychAssignment.findFirst({ where: { id: f.assignmentId, schoolId: actor.schoolId }, select: { classIds: true, studentIds: true, target: true } })
       : null;
     // Shaxsiy tayinlash: taklif qilinganlar — tanlangan o'quvchilar (sinf bo'yicha emas).
-    if (a && a.studentIds.length > 0) return { invited: bandsOnly ? 0 : a.studentIds.length, completed };
+    if (a && (a.target as { kind?: string } | null)?.kind === 'STUDENTS') return { invited: bandsOnly ? 0 : a.studentIds.length, completed };
     const allowed = allowedClassIds(actor);
     const classIds = classes
       .filter((c) => (a ? a.classIds.includes(c.id) : test.grades.includes(c.grade)))

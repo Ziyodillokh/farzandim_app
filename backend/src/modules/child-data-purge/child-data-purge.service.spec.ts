@@ -41,7 +41,11 @@ describe('ChildDataPurgeService', () => {
       schoolCareParticipation: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
       schoolCareAnonResponse: { deleteMany: jest.fn() },
       schoolStaffNotification: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
-      schoolPsychAssignment: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
+      schoolPsychAssignment: {
+        updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+        findMany: jest.fn().mockResolvedValue([]),
+        update: jest.fn().mockResolvedValue({}),
+      },
       kelajakSession: { deleteMany: jest.fn().mockResolvedValue({ count: 2 }) },
       voiceMessage: {
         findMany: jest
@@ -179,6 +183,29 @@ describe('ChildDataPurgeService', () => {
       });
       expect(prisma.schoolPsychAssignment.updateMany).toHaveBeenCalledWith({ where: { careRequestId: { in: ['req-1'] } }, data: { careRequestId: null } });
       expect(prisma.schoolCareAnonResponse.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it("removes the student from personal assignments' studentIds and target.studentIds (assignment itself stays)", async () => {
+      prisma.schoolPsychAssignment.findMany.mockResolvedValue([
+        { id: 'a-1', studentIds: ['student-1', 'student-2'], target: { kind: 'STUDENTS', studentIds: ['student-1', 'student-2'] } },
+        { id: 'a-2', studentIds: ['student-1'], target: { kind: 'STUDENTS', studentIds: ['student-1'] } },
+      ]);
+
+      await service.deleteChildAccount(CHILD_USER);
+
+      expect(prisma.schoolPsychAssignment.findMany).toHaveBeenCalledWith({
+        where: { studentIds: { hasSome: ['student-1'] } },
+        select: { id: true, studentIds: true, target: true },
+      });
+      expect(prisma.schoolPsychAssignment.update).toHaveBeenCalledWith({
+        where: { id: 'a-1' },
+        data: { studentIds: ['student-2'], target: { kind: 'STUDENTS', studentIds: ['student-2'] } },
+      });
+      // Bo'shab qolgan tayinlash o'chirilmaydi va shaxsiy (`kind: STUDENTS`) bo'lib qoladi.
+      expect(prisma.schoolPsychAssignment.update).toHaveBeenCalledWith({
+        where: { id: 'a-2' },
+        data: { studentIds: [], target: { kind: 'STUDENTS', studentIds: [] } },
+      });
     });
 
     it('notifies the parent with a push and a notification record', async () => {

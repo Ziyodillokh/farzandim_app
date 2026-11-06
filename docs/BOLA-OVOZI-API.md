@@ -2,7 +2,7 @@
 
 Branch: `feat/child-voice-api` (origin/main `5bf570ee`'dan). Migratsiya: **`20261107090000_child_voice`**
 (faqat qo'shuvchi: 4 yangi jadval — `school_care_participation`, `school_care_anon_responses`,
-`school_care_messages`, `school_care_settings`; `school_care_requests`ga 9 ta nullable ustun;
+`school_care_messages`, `school_care_settings`; `school_care_requests`ga 9 ta nullable ustun; `school_care_settings.created_at` (eskalatsiya navbatini cheklash uchun);
 `school_psych_assignments`ga `student_ids` (default `[]`) va `care_request_id`;
 `school_staff_notifications`ga `staff_ids` (default `[]`)). Mavjud qatorlarga tegilmaydi.
 
@@ -40,7 +40,8 @@ Avval `SchoolCareResponse` o'quvchi id'sini saqlardi (anonim emas). Endi (eski j
 Ikkala qator **bitta tranzaksiyada** yoziladi (biri yozilmasa ikkinchisi ham qolmaydi), lekin ularni bog'laydigan ustun
 (umumiy id, vaqt belgisi) yo'q. Anonim qatorlar o'qilganda tasodifiy `id` bo'yicha tartiblanadi (kiritilish tartibi
 chiqmaydi). Umumlashtirish (`CareStore.responses()`, respondentlar soni, hisobotlar) eski va anonim qatorlarni bir xil o'qiydi;
-K=5 yashirish va "faol so'rovnomada direktor faqat ishtirokni ko'radi" qoidalari o'zgarmagan.
+K=5 yashirish o'zgarmagan. **Faol so'rovnomada HAMMA rol (psixolog ham) faqat ishtirokni ko'radi** — `respondents` / `invited` / `participationRate`; `overall: {}`, `groups: []`,
+`weeklyTrend` faol so'rovnomani o'z ichiga olmaydi, `surveys/options` da `ready: false`. Ko'rsatkichlar so'rovnoma YOPILGANDAN keyin paydo bo'ladi (ayirish hujumidan himoya: har yangi javobdan keyingi o'zgarish, ayniqsa bola ismli murojaat bilan bir vaqtda, shu bolaning javobini ochib qo'ymasin).
 
 ### `GET /api/child/school/care/survey`
 
@@ -75,14 +76,17 @@ So'rovnoma holati tranzaksiya ichida `FOR SHARE` bilan qayta tekshiriladi: yopis
 `openedByStaffId`, `repliedAt`, `resolvedAt`, `escalatedAt`, `lastMessageAt`. Yangi `SchoolCareMessage`
 (`requestId` cascade, `author` `CHILD|STAFF`, `staffId?`, `bodyEnc`, `clientMessageId?`, `createdAt`, `readByChildAt?`, `readByStaffAt?`,
 `UNIQUE(requestId, clientMessageId)`). Murojaat yaratilganda birinchi `CHILD` xabari ham yoziladi. Eski (xabarsiz) murojaat uchun
-yozishma `messageEnc`dan id `"initial"` bo'lgan sintetik xabar bilan tuziladi (haqiqiy xabarlar qo'shilgandan keyin ham asl matn boshida qoladi).
+XODIM tomonida yozishma `messageEnc`dan id `"initial"` bo'lgan sintetik xabar bilan tuziladi (haqiqiy xabarlar qo'shilgandan keyin ham asl matn boshida qoladi); BOLA tomonida eski murojaatlar matnsiz (pastda "Eski murojaatlar").
 
 **Bosqich (`stage`):** `RECEIVED` (hali ochilmagan) → `OPENED` (ochilgan, xodim xabari yo'q) → `REPLIED` (≥1 xodim xabari) →
 `CLOSED` (`status = RESOLVED`). Xodim holatini (`NEW` dan boshqaga) o'zgartirgan eski murojaat `openedAt`siz ham `OPENED` hisoblanadi.
 **`handler`:** `escalatedAt` bor va o'rinbosar faol bo'lsa — o'rinbosar (`isDeputy: true`); aks holda mas'ul psixolog (`isDeputy: false`); aks holda `null`.
 Ichki eslatmalar (`notesEnc`) bolaga HECH QACHON qaytmaydi.
 **Egalik:** bola murojaatni o'quvchi yozuvi VA `childId` (yozgan bola profili) bo'yicha ko'radi. O'quvchi yozuvi boshqa bola profiliga (masalan aka-uka) qayta bog'lansa,
-avvalgi yozishma yangisiga ko'rinmaydi (`404`), xodim javobining push'i ham asl bolaga ketadi; eski qatorlarda (`childId = null`) faqat o'quvchi yozuvi tekshiriladi.
+avvalgi yozishma yangisiga ko'rinmaydi (`404`), xodim javobining push'i ham asl bolaga ketadi.
+**Eski murojaatlar** (`childId = null` — migratsiyadan oldingi, kimniki ekani noma'lum; ma'lumot ko'chirilmaydi / to'ldirilmaydi): bola ro'yxatida faqat holat ko'rinadi (`unread: 0`);
+`GET /requests/:id` metama'lumot qaytaradi, lekin `messages: []` (na boshlang'ich matn, na xodim javoblari); `POST …/messages` → `404 REQUEST_NOT_FOUND`; xodim javob yozsa saqlanadi,
+lekin bolaga push YUBORILMAYDI. Qayta bog'langan bola ham eski matnni o'qiy olmaydi. Xodim tomonida eski murojaat avvalgidek ko'rinadi.
 
 ### Bola
 
@@ -168,7 +172,8 @@ Shart: `status = NEW`, `openedAt = null`, `escalatedAt = null`, muddat o'tgan va
 boshlab **ish vaqtida**: `URGENT` = `urgentSlaMinutes`, `NORMAL` = `normalSlaHours * 60` daqiqa. Ish vaqti: `workDays` kunlarida `[workStart, workEnd)`, bayramlar yopiq,
 yaratilgan payt ish vaqtidan tashqarida bo'lsa hisob keyingi ish oynasi boshidan boshlanadi (sof funksiya `care-working-time.ts`: `addWorkingMinutes`, `nextWorkingStart`, `isWorkingAt`).
 Natija: `assignedStaffId = o'rinbosar`, `escalatedAt = hozir`; o'rinbosarga nishonlangan saqlangan bildirishnoma; `URGENT` bo'lsa direktorga ismsiz xavfsizlik signali;
-audit `care.request.escalate` (tizim, matnsiz). Shartli `UPDATE` — parallel nusxalarda ham bir murojaat ikki marta o'tmaydi. Bola `handler`da o'rinbosarni ko'radi.
+audit `care.request.escalate` (tizim, matnsiz). **Eski navbat ko'chmaydi:** faqat maktab sozlamalari qatori BIRINCHI yaratilgan paytdan (`SchoolCareSettings.createdAt`) keyin yaratilgan murojaatlar ko'rib chiqiladi —
+o'rinbosar sozlanganda eski `NEW` murojaatlar birdaniga o'tmaydi (qator keyin o'zgarsa ham bu vaqt saqlanadi; o'rinbosar sozlamalar yaratilgandan KEYIN qo'shilsa, oradagi murojaatlar ham ko'rib chiqiladi). Shartli `UPDATE` — parallel nusxalarda ham bir murojaat ikki marta o'tmaydi. Bola `handler`da o'rinbosarni ko'radi.
 
 ## D. Mutaxassis tayinlagan shaxsiy test (H10)
 
@@ -182,7 +187,9 @@ audit `care.request.escalate` (tizim, matnsiz). Shartli `UPDATE` — parallel nu
 bo'lishi shart (`careRequestId: errors.form.invalid`); `target` ichida ham qabul qilinadi, lekin saqlanadigan `target`ga kirmaydi. Parvoz IQ ham shaxsiy tayinlanadi.
 Qator: `classIds: []`, `studentIds`, `careRequestId`, `invited = studentIds.length`; ro'yxat va natijalarda taklif qilinganlar / yakunlaganlar shu o'quvchilar bo'yicha.
 **Natijalar maxfiyligi:** shaxsiy tayinlash natijalari faqat psixologga (`assessments.manage`) testlar bo'limida ko'rinadi; sinf rahbariga (`GET /tests/:id/results`, `taklif qilinganlar` ham 0)
-va rivojlanish indeksiga / profillariga (`AssessmentsStore.scoredResults`) kirmaydi.
+va rivojlanish indeksiga / profillariga (`AssessmentsStore.scoredResults`) kirmaydi. Parvoz IQ: shaxsiy IQ tayinlovi bor o'quvchining natijasi (`GET /school/assessments/iq/results`)
+sinf rahbari ko'rinishida (`result: null`) va direktor taqsimotida hisobga olinmaydi — natija tayinlov ochilishidan 180 kun oldingidan keyin yakunlangan bo'lsa (`childDone` qoidasi).
+Shaxsiy tayinlash `target.kind = "STUDENTS"` bilan aniqlanadi (o'quvchi o'chirilib ro'yxat bo'shab qolsa ham).
 
 Bola ko'rinishi: `classIds has student.classId` YOKI `studentIds has student.id`. `GET /api/child/school/assessments` qatorlariga qo'shildi (mavjud maydonlar saqlangan):
 ```json
@@ -207,7 +214,8 @@ Bola ko'rinishi: `classIds has student.classId` YOKI `studentIds has student.id`
 To'rt yo'lda ham (bola o'z akkauntini o'chirsa — `ChildDataPurgeService.deleteChildAccount`; ota-ona bola profilini o'chirsa — `purgeChildProfile`; ota-ona o'z akkauntini —
 `UsersService.deleteAccount`; admin foydalanuvchini — `AdminUsersService.deleteUser`) shu bolaga bog'langan o'quvchining **murojaatlari (xabarlar cascade)**, ularga bog'liq
 saqlangan xodim bildirishnomalari va **so'rovnoma ishtirok belgilari** o'chadi; o'quvchi qatori qoladi. O'chirish child o'chirilishidan OLDIN bajariladi (`childId` bog'lanishi `SetNull` bo'ladi).
-Shaxsiy test tayinlashidagi shu murojaatga havola (`careRequestId`) `null` qilinadi (tayinlashning o'zi qoladi). Qulf tartibi javob / eskalatsiya bilan bir xil (avval murojaat, keyin bildirishnomalar).
+Shaxsiy test tayinlashidagi shu murojaatga havola (`careRequestId`) `null` qilinadi va o'quvchi id'si tayinlashning `studentIds` hamda `target.studentIds` dan olib tashlanadi
+(tayinlashning o'zi qoladi; ro'yxat bo'shab qolsa ham shaxsiy — natijalari yashirin turadi). Qulf tartibi javob / eskalatsiya bilan bir xil (avval murojaat, keyin bildirishnomalar).
 Yordamchi: `school/care/care-purge.ts` (`deleteCareOfChildren`).
 
 **Anonim javoblar O'CHIRILMAYDI** — ular o'quvchiga bog'lanmagan (shunday loyihalangan), kimniki ekanini aniqlab bo'lmaydi. Eski `school_care_responses` qatorlari ham tegilmaydi
@@ -232,7 +240,8 @@ Yordamchi: `school/care/care-purge.ts` (`deleteCareOfChildren`).
 14. **Shaxsiy test natijalari** sinf rahbari va rivojlanish ko'rinishlaridan YASHIRILGAN (mutaxassis tanlagan bola ajralib qolmasin); psixolog uchun rivojlanish profilida ham ular yo'q — faqat testlar natijalari sahifasida (mahsulot egasi tasdiqlasin).
 15. **Eskalatsiya o'rinbosari** faol `PSYCHOLOGIST` bo'lishi shart; o'rinbosar faol bo'lmasa cron murojaatni o'tkazmaydi (qayta urinadi). Ochilgandan keyin yoki bola yangi xabar yozganda qayta eskalatsiya yo'q.
 16. **Ishtirok belgisi o'chirilgach** (F bo'limi) o'quvchiga yangi bola akkaunti ulansa, u FAOL so'rovnomaga yana javob bera oladi — anonim javob o'chirilmagani uchun shu so'rovnomada bir o'quvchidan ikkita javob bo'lishi mumkin (kichik chekka holat; mahsulot egasi savoli).
-17. **Faol so'rovnomada psixolog jonli natijani ko'radi** (mavjud qaror o'zgarmadi): yangi javoblar sonining o'zgarishini murojaat vaqti bilan solishtirib, bitta bolaning javobini taxmin qilish mumkin. Faqat YOPILGANdan keyin ko'rsatish yoki yangilanishni to'plab berish tavsiya etiladi (mahsulot egasi savoli).
+17. **Faol so'rovnomada ko'rsatkichlar HAMMA rol uchun yashirin** (mahsulot egasi qarori: maxfiylik ustun). Ilgari psixolog jonli natijani ko'rardi — endi u ham faqat ishtirokni (`respondents` / `invited`) ko'radi; ko'rsatkichlar, guruhlar va trend so'rovnoma YOPILGANDAN keyin.
+    Sabab: yangi javoblar sonining o'zgarishini murojaat vaqti bilan solishtirib, bitta bolaning javobini taxmin qilish mumkin edi.
 18. **Bola xabari uchun xodimga alohida bildirishnoma yo'q** (hisoblangan lenta faqat `NEW` murojaatlarni ko'rsatadi; panel `unreadFromChild`dan foydalanadi) — mahsulot egasi savoli.
 
 ## Panel uchun yangi i18n kalitlari
@@ -249,6 +258,9 @@ Yordamchi: `school/care/care-purge.ts` (`deleteCareOfChildren`).
 - Yangi env yo'q. Cron `ScheduleModule` orqali o'zi ishga tushadi; **maktabda o'rinbosar sozlanmaguncha eskalatsiya ishlamaydi** (xavfsiz default). Bola push uchun `FIREBASE_SERVICE_ACCOUNT_BASE64` avvalgidek.
 - **Anonimlik (operatsion):** ishlab chiqarish bazasiga to'g'ridan-to'g'ri SQL kirish cheklangan bo'lsin (A bo'limidagi chegara). Ixtiyoriy kuchaytirish: so'rovnoma yopilgach `CLUSTER school_care_anon_responses USING school_care_anon_responses_pkey`
   (tasodifiy id bo'yicha qayta tartiblaydi, kiritilish tartibini yo'qotadi). `xmin` bu bilan o'chmaydi.
+- **Anonimlik (operatsion, WAL va jurnallar):** ishtirok va anonim qator bitta tranzaksiyada yozilgani uchun ular bir xil `xid` bilan WAL'da yonma-yon turadi. Shuning uchun **mantiqiy replikatsiya / CDC** (Debezium, `wal2json`, `pgoutput`, analitika oqimlari),
+  WAL arxivi va zaxira nusxalari, `pg_stat_statements` / `auto_explain` (parametrlar bilan), `log_statement = 'all'` yoki `log_min_duration_statement` jurnallari, `track_commit_timestamp = on` ikki qatorni bog'lash imkonini beradi.
+  `school_care_participation` va `school_care_anon_responses` jadvallarini analitika / CDC oqimidan chiqarib tashlang (publication'ga kiritmang), so'rovlar jurnaliga parametrlarni yozmang va bu jurnallarga kirishni DB ma'muriyati bilan cheklang.
 - Flutter: `POST …/responses` javobi 201; yangi yo'llar `NOT_ENROLLED` kodini tanishi kerak; push `data.type = CARE_MESSAGE` bilan yozishmani ochadi.
 
 ## Testlar
@@ -259,6 +271,7 @@ E2E (haqiqiy Postgres, `E2E_DATABASE_URL=…/<nom>_test`): `school-care-anon` (i
 birinchi ochgan poygasi, push, izolyatsiya), `school-care-settings` (sozlamalar, contact, eskalatsiya cron, bildirishnomalar), `school-care-personal` (STUDENTS tayinlash), `school-care-deletion` (to'rt o'chirish yo'li);
 mavjud `school-care` va `school-assessments-child` kutilmalari faqat kontrakt qo'shgan maydonlarga moslandi.
 
-Natija (oxirgi to'liq ishga tushirish): unit — 79 to'plam / 852 test; E2E — 49 to'plam / 538 test; `tsc --noEmit` toza; `prisma migrate diff` — drift yo'q.
+Natija (oxirgi to'liq ishga tushirish): unit — 79 to'plam / 853 test; E2E — 49 to'plam / 545 test; `tsc --noEmit` toza; `prisma migrate diff` — drift yo'q.
 Qo'shimcha unit: `permissions.spec` (care.settings va backend ↔ panel matritsalari bir xilligi). Qo'shimcha E2E: yozishma bola profiliga bog'liqligi (qayta bog'lash), shaxsiy natijalarning sinf rahbaridan yashirinishi, `/auth/me` da `care.settings`.
-
+Keyingi ko'rik tuzatishlari testlari: faol so'rovnomada psixolog ham ko'rsatkich ko'rmaydi (`school-care`, `school-care-anon`); eski murojaat (`childId = null`) matnsiz, xabar yozish 404, push yo'q, qayta bog'langan bola o'qiy olmaydi (`school-care-thread`);
+shaxsiy IQ natijasi sinf rahbari / direktor ko'rinishidan yashirin (`school-iq`); eskalatsiya eski navbatni o'tkazmaydi (`school-care-settings`); tayinlashdan o'quvchi id'si olib tashlanadi (`school-care-deletion`, `child-data-purge` unit).

@@ -49,9 +49,11 @@ describe('Bola ovozi — sozlamalar, contact va eskalatsiya', () => {
     normalSlaHours: 24,
     ...over,
   });
-  const configure = async (over: Record<string, unknown> = {}) => {
+  /** Sozlamani yozadi; `backdate` (default) — qator "uzoq oldin yaratilgan" (eskalatsiya eski navbatni o'tkazmaydi: L1 testlari alohida). */
+  const configure = async (over: Record<string, unknown> = {}, backdate = true) => {
     const res = await staff(w.psych, 'PUT', '/settings', settings(over));
     if (res.statusCode !== 200) throw new Error(`settings ${res.statusCode}: ${res.body}`);
+    if (backdate) await t.prisma.schoolCareSettings.updateMany({ data: { createdAt: new Date('2026-01-01T00:00:00Z') } });
   };
   const feed = async (who: Staff) => (await school(who, 'GET', '/notifications/feed')).json() as Array<{ id: string; kind: string; params: Record<string, unknown>; subject: { uz: string } | null; href: string | null }>;
   /** Eskalatsiya testlari uchun: berilgan vaqtda yaratilgan murojaat (bola API'si vaqtni boshqarib bo'lmaydi). */
@@ -322,6 +324,32 @@ describe('Bola ovozi — sozlamalar, contact va eskalatsiya', () => {
       await t.prisma.schoolStaff.update({ where: { id: deputy.id }, data: { active: false } });
       expect(await sweep(tk('2026-11-20T10:00:00'))).toBe(0);
       expect(await t.prisma.schoolCareRequest.count({ where: { escalatedAt: { not: null } } })).toBe(0);
+    });
+
+    it('o\'rinbosar sozlanganda eski navbat ko\'chmaydi: faqat sozlama qatori yaratilgandan KEYINGI murojaatlar', async () => {
+      const before = await createRequest(t, kid(), { urgency: 'URGENT', message: 'Sozlamadan oldin' });
+      await configure({}, false);
+      const after = await createRequest(t, w.kids7a[1]!, { urgency: 'URGENT', message: 'Sozlamadan keyin' });
+
+      expect(await sweep(new Date(Date.now() + 3 * 86_400_000))).toBe(1);
+      expect((await t.prisma.schoolCareRequest.findUniqueOrThrow({ where: { id: before.id } })).escalatedAt).toBeNull();
+      expect((await t.prisma.schoolCareRequest.findUniqueOrThrow({ where: { id: after.id } })).escalatedAt).not.toBeNull();
+      // Sozlama keyin o'zgarsa ham qator "birinchi yaratilgan" vaqti saqlanadi.
+      const created = (await t.prisma.schoolCareSettings.findFirstOrThrow()).createdAt.getTime();
+      await staff(w.psych, 'PUT', '/settings', settings({ normalSlaHours: 48 }));
+      expect((await t.prisma.schoolCareSettings.findFirstOrThrow()).createdAt.getTime()).toBe(created);
+      expect(await sweep(new Date(Date.now() + 9 * 86_400_000))).toBe(0);
+    });
+
+    it('sozlama qatori yaratilgan paytdan oldingi murojaat (sana bo\'yicha) o\'tkazilmaydi, undan keyingisi o\'tkaziladi', async () => {
+      await configure({}, false);
+      await t.prisma.schoolCareSettings.updateMany({ data: { createdAt: tk('2026-11-07T00:00:00') } });
+      const old = await requestAt(tk('2026-11-06T10:00:00'), { urgency: 'URGENT' });
+      const fresh = await requestAt(tk('2026-11-07T10:00:00'), { urgency: 'URGENT' });
+
+      expect(await sweep(tk('2026-11-20T10:00:00'))).toBe(1);
+      expect((await t.prisma.schoolCareRequest.findUniqueOrThrow({ where: { id: old.id } })).escalatedAt).toBeNull();
+      expect((await t.prisma.schoolCareRequest.findUniqueOrThrow({ where: { id: fresh.id } })).escalatedAt).not.toBeNull();
     });
 
     it('boshqa maktab sozlamalari bilan aralashmaydi', async () => {

@@ -195,13 +195,13 @@ export class CareRequestsService {
   }
 
   /**
-   * Push oluvchisi: murojaatni yozgan bola profili (`childId`), eski murojaatda — o'quvchiga hozir
-   * bog'langan bola. O'quvchi yozuvi boshqa bolaga qayta bog'langan bo'lsa ham javob yangisiga bormaydi.
+   * Push oluvchisi: murojaatni yozgan bola profili (`childId`). Eski murojaatda (`childId` yo'q) bola
+   * ilovasi yozishmani ko'rsatmaydi va kimniki ekani noma'lum — push YO'Q. O'quvchi yozuvi boshqa bolaga
+   * qayta bog'langan bo'lsa ham javob yangisiga bormaydi.
    */
   private async childUserOf(tx: Tx, request: SchoolCareRequest): Promise<string | null> {
-    if (request.childId) return (await tx.child.findUnique({ where: { id: request.childId }, select: { childUserId: true } }))?.childUserId ?? null;
-    const student = await tx.schoolStudent.findUnique({ where: { id: request.studentId }, select: { child: { select: { childUserId: true } } } });
-    return student?.child?.childUserId ?? null;
+    if (!request.childId) return null;
+    return (await tx.child.findUnique({ where: { id: request.childId }, select: { childUserId: true } }))?.childUserId ?? null;
   }
 
   /** Birinchi ochish: shartli UPDATE (`openedAt IS NULL`) — parallel ko'rishda faqat bittasi yozadi va audit qiladi. */

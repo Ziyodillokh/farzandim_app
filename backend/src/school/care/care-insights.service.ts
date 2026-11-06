@@ -2,16 +2,17 @@
 // so'rovnoma tanlovi, o'tkazilganlar ro'yxati va umumlashgan ko'rsatkichlar.
 // Shaxsga bog'liq maydon yo'q; kichik guruhlar K=5 atomlari bilan yashiriladi.
 //
-// Ayirish hujumidan himoya: direktor / admin ko'rsatkichlarni faqat YOPILGAN
-// so'rovnoma bo'yicha ko'radi (faol so'rovnomada har yangi javobdan keyingi
-// o'zgarish shu bolaning javobini ochib qo'yardi) — faolida faqat ishtirok.
+// Ayirish hujumidan himoya: ko'rsatkichlarni HAMMA rol (psixolog ham) faqat YOPILGAN
+// so'rovnoma bo'yicha ko'radi (faol so'rovnomada har yangi javobdan keyingi o'zgarish,
+// ayniqsa bola ismli murojaat bilan bir vaqtda, shu bolaning javobini ochib qo'yardi) —
+// faolida faqat ishtirok (respondentlar / taklif qilinganlar soni).
 // Guruhlar javoblardagi sinf / daraja nusxasidan tuziladi (`snapshotClasses`).
 
 import { Injectable } from '@nestjs/common';
 import { SchoolCareSurvey } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { addDays, isoWeekday, tashkentDay, tashkentDayStart } from '../../common/time/tashkent';
-import { actorCan, assertCan, SchoolActor } from '../auth/school-actor';
+import { assertCan, SchoolActor } from '../auth/school-actor';
 import { notFound } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
 import { computeCareAggregate, trendPoint } from './care-aggregate';
@@ -44,7 +45,7 @@ export class CareInsightsService {
         title: s.title,
         weekStart: s.weekStart,
         status: s.status,
-        ready: this.scoresVisible(actor, s) && (await this.store.respondentCount(s)) >= CARE_MIN_GROUP,
+        ready: this.scoresVisible(s) && (await this.store.respondentCount(s)) >= CARE_MIN_GROUP,
       })),
     );
   }
@@ -82,11 +83,11 @@ export class CareInsightsService {
       this.store.classes(actor.schoolId),
       this.store.questionMeta(actor.schoolId),
     ]);
-    const survey = surveyId ? surveys.find((s) => s.id === surveyId) : await this.defaultSurvey(actor, surveys);
+    const survey = surveyId ? surveys.find((s) => s.id === surveyId) : await this.defaultSurvey(surveys);
     if (!survey) throw notFound(surveyId ?? 'survey');
     const trend = [];
     const trendSurveys = surveys
-      .filter((s) => s.weekStart <= survey.weekStart && this.scoresVisible(actor, s))
+      .filter((s) => s.weekStart <= survey.weekStart && this.scoresVisible(s))
       .sort((a, b) => a.weekStart.localeCompare(b.weekStart))
       .slice(-TREND_SURVEYS);
     for (const s of trendSurveys) {
@@ -94,8 +95,8 @@ export class CareInsightsService {
       trend.push(...trendPoint(s.weekStart, responses, questions));
     }
     const requestsThisWeek = await this.requestsThisWeek(actor.schoolId);
-    if (!this.scoresVisible(actor, survey)) {
-      // Faol so'rovnoma (direktor / admin): faqat ishtirok, ko'rsatkichlarsiz.
+    if (!this.scoresVisible(survey)) {
+      // Faol so'rovnoma (hamma rol): faqat ishtirok, ko'rsatkichlarsiz.
       const respondents = await this.store.respondentCount(survey);
       return {
         surveyId: survey.id,
@@ -121,9 +122,9 @@ export class CareInsightsService {
 
   // ── Ichki ──────────────────────────────────────────────────────────
 
-  /** Ko'rsatkichlar: psixolog — faol so'rovnomada ham; boshqalar — faqat yopilganda. */
-  private scoresVisible(actor: SchoolActor, survey: SchoolCareSurvey): boolean {
-    return survey.status === 'CLOSED' || actorCan(actor, 'care.individual');
+  /** Ko'rsatkichlar HAMMA rol uchun faqat so'rovnoma YOPILGANDA (faol so'rovnomada faqat ishtirok soni). */
+  private scoresVisible(survey: SchoolCareSurvey): boolean {
+    return survey.status === 'CLOSED';
   }
 
   private async published(schoolId: string): Promise<SchoolCareSurvey[]> {
@@ -132,9 +133,9 @@ export class CareInsightsService {
   }
 
   /** Eng so'nggi ko'rsatkichi ko'rinadigan va kamida K respondentli; bo'lmasa — eng so'nggisi. */
-  private async defaultSurvey(actor: SchoolActor, surveys: SchoolCareSurvey[]): Promise<SchoolCareSurvey | undefined> {
+  private async defaultSurvey(surveys: SchoolCareSurvey[]): Promise<SchoolCareSurvey | undefined> {
     for (const s of surveys) {
-      if (this.scoresVisible(actor, s) && (await this.store.respondentCount(s)) >= CARE_MIN_GROUP) return s;
+      if (this.scoresVisible(s) && (await this.store.respondentCount(s)) >= CARE_MIN_GROUP) return s;
     }
     return surveys[0];
   }
