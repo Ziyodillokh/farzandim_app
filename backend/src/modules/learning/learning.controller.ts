@@ -21,6 +21,8 @@ import {
   StartAttemptDto,
   SubmitAnswerDto,
 } from './dto/learning.dto';
+import { OfflineAttemptDto } from './dto/offline.dto';
+import { LearningOfflineService } from './learning-offline.service';
 import { LearningTopicsService } from './learning-topics.service';
 import { LearningWeeklyService } from './learning-weekly.service';
 import { LearningService } from './learning.service';
@@ -36,7 +38,23 @@ export class LearningController {
     private readonly learning: LearningService,
     private readonly topics: LearningTopicsService,
     private readonly weekly: LearningWeeklyService,
+    private readonly offline: LearningOfflineService,
   ) {}
+
+  @Get('offline-pack')
+  @ApiOperation({ summary: "U10 · Oflayn to'plam (profil fanlari, 7 kun, imzolangan)" })
+  async offlinePack(@CurrentUser() user: JwtPayload) {
+    const childId = await this.learning.childIdForUser(user.userId);
+    return this.offline.pack(childId);
+  }
+
+  @Post('offline-attempts')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'U10 · Oflayn bajarilgan mashqni yuborish (idempotent)' })
+  async offlineAttempt(@CurrentUser() user: JwtPayload, @Body() dto: OfflineAttemptDto) {
+    const childId = await this.learning.childIdForUser(user.userId);
+    return this.offline.upload(childId, dto);
+  }
 
   @Get('profile')
   @ApiOperation({ summary: 'O\'quv profili (sinf + fanlar); tanlanmagan bo\'lsa null' })

@@ -437,7 +437,7 @@ async function schoolClassOf(tx: Prisma.TransactionClient, childId: string): Pro
 }
 
 /** Bola bo'yicha tranzaksion qulf (boshlash / yakunlash navbat bilan). */
-async function lockChild(tx: Prisma.TransactionClient, childId: string): Promise<void> {
+export async function lockChild(tx: Prisma.TransactionClient, childId: string): Promise<void> {
   await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(hashtextextended(${`learning:${childId}`}, 0))`;
 }
 
@@ -447,7 +447,7 @@ function topicTitle(topic: LearningTopic): LocalizedText {
 }
 
 /** Eng ko'p uchragan mavzu — natija sarlavhasi uchun. */
-function mainTopic(questions: LearningQuestion[]): LocalizedText | null {
+export function mainTopic(questions: LearningQuestion[]): LocalizedText | null {
   const counts = new Map<string, { topic: LocalizedText; count: number }>();
   for (const q of questions) {
     const topic = q.topic as unknown as LocalizedText;
@@ -462,6 +462,6 @@ function mainTopic(questions: LearningQuestion[]): LocalizedText | null {
   return best?.topic ?? null;
 }
 
-function isUniqueViolation(e: unknown): boolean {
+export function isUniqueViolation(e: unknown): boolean {
   return e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002';
 }
