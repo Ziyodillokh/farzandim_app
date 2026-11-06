@@ -3,6 +3,7 @@
 
 import { CareChildRequestsService } from '../../src/school/care/care-child-requests.service';
 import { CareEscalationCron } from '../../src/school/care/care-escalation.cron';
+import { directorNotificationId } from '../../src/school/care/care-notification-ids';
 import { SchoolCryptoService } from '../../src/school/common/school-crypto.service';
 import { resetDb } from './db';
 import { createTestApp, TestApp } from './test-app';
@@ -334,7 +335,9 @@ describe('Bola ovozi — sozlamalar, contact va eskalatsiya', () => {
       const forDirector = await feed(w.director);
       const signals = forDirector.filter((n) => n.id.startsWith('care-esc-dir:'));
       expect(signals).toHaveLength(1);
-      expect(signals[0]).toMatchObject({ id: `care-esc-dir:${urgent.id}`, kind: 'SAFETY_SIGNAL', params: {}, subject: null, href: null });
+      expect(signals[0]).toMatchObject({ id: directorNotificationId(urgent.id), kind: 'SAFETY_SIGNAL', params: {}, subject: null, href: null });
+      // Direktorga ketadigan id murojaat id'sini ochmaydi.
+      expect(JSON.stringify(forDirector)).not.toContain(urgent.id);
       expect(JSON.stringify(forDirector)).not.toMatch(/Alfa|7-A|matn/);
 
       const audit = await t.prisma.schoolAuditLog.findMany({ where: { action: 'care.request.escalate' } });

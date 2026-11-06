@@ -2657,6 +2657,8 @@ model SchoolCareRequest {
   protocolActivated Boolean   @default(false) @map("protocol_activated")
   /// Bola ilovasi idempotentligi (takroriy yuborish dublikat yaratmaydi).
   clientRequestId   String?   @map("client_request_id")
+  /// Murojaatni yozgan bola profili (Child.id): o'quvchi yozuvi boshqa bolaga qayta bog'lansa, eski yozishma unga ko'rinmaydi. Eski qatorlarda null.
+  childId           String?   @map("child_id")
   assignedStaffId   String?   @map("assigned_staff_id")
   openedAt          DateTime? @map("opened_at")
   openedByStaffId   String?   @map("opened_by_staff_id")

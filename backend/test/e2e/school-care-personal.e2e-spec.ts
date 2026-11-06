@@ -2,6 +2,7 @@
 // tekshiruvlar, tenant izolyatsiyasi, bola ro'yxatidagi yangi maydonlar.
 
 import { PARVOZ_IQ_TEST_ID } from '../../src/school/assessments/assessments-iq.service';
+import { AssessmentsStore } from '../../src/school/assessments/assessments-store';
 import { resetDb } from './db';
 import { createTestApp, TestApp } from './test-app';
 import { AssessWorld, buildWorld, careStaff, createRequest, Kid, psychologist } from './school-care-fixtures';
@@ -83,6 +84,27 @@ describe('Bola ovozi — shaxsiy test tayinlash (STUDENTS)', () => {
     expect(row).toMatchObject({ studentIds: [a.studentId, b.studentId], classNames: [], completed: 1, invited: 2, state: 'ACTIVE' });
     const results = (await api(w.psych, 'GET', `/tests/${testId}/results?assignmentId=${assignment.id}`)).json();
     expect(results.participation).toEqual({ invited: 2, completed: 1 });
+  });
+
+  it('shaxsiy natijalar sinf rahbariga va rivojlanish indeksiga chiqmaydi, psixologga ko\'rinadi', async () => {
+    const [a, b] = w.kids7a as [Kid, Kid];
+    const personalAssignment = (await assign(personal(a))).json();
+    const classWide = (await assign({ kind: 'CLASSES', classIds: [w.classes.c7a] })).json();
+    await child(a, 'POST', `/${personalAssignment.id}/submit`, { answers: ANSWERS });
+    await child(b, 'POST', `/${classWide.id}/submit`, { answers: ANSWERS });
+
+    const names = (res: { json: () => { rows: Array<{ studentName: string }> } }) => res.json().rows.map((r) => r.studentName).sort();
+    const forPsych = await api(w.psych, 'GET', `/tests/${testId}/results`);
+    expect(names(forPsych)).toEqual(['Alfaov Alfa0', 'Alfaov Alfa1']);
+    const forHomeroom = await api(w.homeroom, 'GET', `/tests/${testId}/results`);
+    expect(forHomeroom.statusCode).toBe(200);
+    expect(forHomeroom.body).not.toContain('Alfa0');
+    expect(forHomeroom.json().rows).toHaveLength(1);
+    const direct = await api(w.homeroom, 'GET', `/tests/${testId}/results?assignmentId=${personalAssignment.id}`);
+    expect(direct.json()).toMatchObject({ rows: [], participation: { invited: 0, completed: 0 } });
+
+    const scored = await t.app.get(AssessmentsStore).scoredResults(w.schoolId);
+    expect(scored.map((r) => r.studentId)).toEqual([b.studentId]);
   });
 
   it('sinf tayinlashi bilan birga: personal=false', async () => {

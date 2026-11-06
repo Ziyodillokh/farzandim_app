@@ -75,6 +75,12 @@ export class AssessmentsStore {
     return new Map(rows.flatMap((r) => (r.classId ? [[r.classId, r._count._all] as const] : [])));
   }
 
+  /** Shaxsiy (STUDENTS) tayinlashlar: mutaxassis tanlagan o'quvchilar — natijalari sinf rahbari va rivojlanish ko'rinishlariga chiqmaydi. */
+  async personalAssignmentIds(schoolId: string, db: Db = this.prisma): Promise<Set<string>> {
+    const rows = await db.schoolPsychAssignment.findMany({ where: { schoolId, studentIds: { isEmpty: false } }, select: { id: true } });
+    return new Set(rows.map((r) => r.id));
+  }
+
   /**
    * Maktab natijalari, o'qishda baholangan (joriy me'yorlar, `takenAt` bo'yicha eskidan
    * yangiga). Javoblar varag'i qaytmaydi. Rivojlanish bo'limi uchun umumiy o'qish nuqtasi —
@@ -90,9 +96,11 @@ export class AssessmentsStore {
       }),
     ]);
     const byId = new Map(tests.map((t) => [t.id, t]));
+    // Rivojlanish indeksi sinf / maktab kesimida ko'rsatiladi: shaxsiy tayinlash natijalari unga kirmaydi.
+    const personal = await this.personalAssignmentIds(schoolId);
     return rows.flatMap((r) => {
       const test = byId.get(r.testId);
-      return test ? [scoreStoredResult(test, r)] : [];
+      return test && !(r.assignmentId && personal.has(r.assignmentId)) ? [scoreStoredResult(test, r)] : [];
     });
   }
 

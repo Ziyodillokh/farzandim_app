@@ -82,6 +82,9 @@ export class CareChildService {
       encrypt: (value) => this.crypto.encryptJson(value),
     });
     await this.prisma.$transaction(async (tx) => {
+      // So'rovnoma qatori ulashiladi: yopish (UPDATE) shu javob yozilguncha kutadi, yopilgan bo'lsa javob qabul qilinmaydi.
+      const live = await tx.$queryRaw<{ status: string }[]>`SELECT status FROM school_care_surveys WHERE id = ${survey.id} FOR SHARE`;
+      if (live[0]?.status !== 'ACTIVE') throw new NotFoundException({ code: 'SURVEY_NOT_FOUND', message: 'Survey is not active' });
       if (await tx.schoolCareResponse.count({ where: { surveyId: survey.id, studentId: student.studentId } })) throw alreadyAnswered();
       try {
         await tx.schoolCareParticipation.create({ data: { surveyId: survey.id, studentId: student.studentId } });

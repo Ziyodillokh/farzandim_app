@@ -10,6 +10,7 @@
 
 -- AlterTable
 ALTER TABLE "school_care_requests" ADD COLUMN     "assigned_staff_id" TEXT,
+ADD COLUMN     "child_id" TEXT,
 ADD COLUMN     "client_request_id" TEXT,
 ADD COLUMN     "escalated_at" TIMESTAMP(3),
 ADD COLUMN     "last_message_at" TIMESTAMP(3),

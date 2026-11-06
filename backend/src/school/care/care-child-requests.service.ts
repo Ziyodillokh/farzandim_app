@@ -7,7 +7,7 @@ import { ConflictException, HttpException, HttpStatus, Injectable, NotFoundExcep
 import { Prisma, SchoolCareRequest } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { tashkentDay, tashkentDayStart } from '../../common/time/tashkent';
-import { findEnrolledStudent, requireEnrolledStudent } from '../common/child-student';
+import { EnrolledStudent, findEnrolledStudent, requireEnrolledStudent } from '../common/child-student';
 import { SchoolCryptoService } from '../common/school-crypto.service';
 import { parseOrThrow } from '../common/school-zod';
 import { CareNotifyService } from './care-notify.service';
@@ -23,6 +23,16 @@ export const MAX_CHILD_MESSAGES_PER_DAY = 30;
 const LIST_LIMIT = 20;
 
 type Tx = Prisma.TransactionClient;
+
+/**
+ * Bola faqat O'Z murojaatlarini ko'radi: o'quvchi yozuvi + shu bola profili (`childId`). O'quvchi yozuvi
+ * boshqa bola profiliga qayta bog'lansa, avvalgi bolaning yozishmasi yangisiga ko'rinmaydi.
+ * Eski qatorlarda (`childId` yo'q) faqat o'quvchi yozuvi tekshiriladi.
+ */
+const ownedBy = (student: Pick<EnrolledStudent, 'studentId' | 'childId'>) => ({
+  studentId: student.studentId,
+  OR: [{ childId: student.childId }, { childId: null }],
+});
 
 const tooMany = (message: string) => new HttpException({ code: 'TOO_MANY_REQUESTS', message }, HttpStatus.TOO_MANY_REQUESTS);
 const notFound = () => new NotFoundException({ code: 'REQUEST_NOT_FOUND', message: 'Request not found' });
@@ -41,11 +51,11 @@ export class CareChildRequestsService {
     const student = await requireEnrolledStudent(this.prisma, childUserId);
     const data = parseOrThrow(careRequestInputSchema, input);
     const request = await this.prisma.$transaction(async (tx) => {
-      // Bir bolaning parallel yuborishlari navbat bilan: limit va idempotentlik aniq.
-      await this.lock(tx, `care-request:${student.studentId}`);
+      // Bir bolaning parallel yuborishlari (murojaat va xabar) navbat bilan: limitlar va idempotentlik aniq.
+      await this.lock(tx, student.studentId);
       if (data.clientRequestId) {
-        const existing = await tx.schoolCareRequest.findUnique({
-          where: { studentId_clientRequestId: { studentId: student.studentId, clientRequestId: data.clientRequestId } },
+        const existing = await tx.schoolCareRequest.findFirst({
+          where: { ...ownedBy(student), clientRequestId: data.clientRequestId },
         });
         if (existing) return existing;
       }
@@ -64,6 +74,7 @@ export class CareChildRequestsService {
           urgency: data.urgency,
           messageEnc: this.crypto.encrypt(data.message),
           clientRequestId: data.clientRequestId ?? null,
+          childId: student.childId,
           assignedStaffId: state.settings.psychologistStaffId,
           lastMessageAt: now,
           createdAt: now,
@@ -84,7 +95,7 @@ export class CareChildRequestsService {
     const student = await findEnrolledStudent(this.prisma, childUserId);
     if (!student) return [];
     const rows = await this.prisma.schoolCareRequest.findMany({
-      where: { studentId: student.studentId },
+      where: ownedBy(student),
       orderBy: { createdAt: 'desc' },
       take: LIST_LIMIT,
     });
@@ -110,7 +121,7 @@ export class CareChildRequestsService {
   /** Murojaat tafsiloti; xodim xabarlari o'qildi deb belgilanadi. Boshqa bolaning murojaati — 404. */
   async detail(childUserId: string, id: string) {
     const student = await requireEnrolledStudent(this.prisma, childUserId);
-    const request = await this.prisma.schoolCareRequest.findFirst({ where: { id, studentId: student.studentId } });
+    const request = await this.prisma.schoolCareRequest.findFirst({ where: { id, ...ownedBy(student) } });
     if (!request) throw notFound();
     await this.prisma.schoolCareMessage.updateMany({
       where: { requestId: id, author: 'STAFF', readByChildAt: null },
@@ -124,10 +135,11 @@ export class CareChildRequestsService {
     const student = await requireEnrolledStudent(this.prisma, childUserId);
     const data = parseOrThrow(careChildMessageSchema, input);
     const message = await this.prisma.$transaction(async (tx) => {
-      await this.lock(tx, `care-message:${student.studentId}`);
+      await this.lock(tx, student.studentId);
       // Murojaat qatori qulflanadi: xodim "hal qilindi" qilayotganda xabar o'tib ketmasin.
       const rows = await tx.$queryRaw<{ status: string }[]>`
-        SELECT status FROM school_care_requests WHERE id = ${id} AND student_id = ${student.studentId} FOR UPDATE`;
+        SELECT status FROM school_care_requests
+        WHERE id = ${id} AND student_id = ${student.studentId} AND (child_id = ${student.childId} OR child_id IS NULL) FOR UPDATE`;
       const request = rows[0];
       if (!request) throw notFound();
       if (data.clientMessageId) {
@@ -191,7 +203,7 @@ export class CareChildRequestsService {
     };
   }
 
-  private async lock(tx: Tx, key: string): Promise<void> {
-    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${key}, 0))`;
+  private async lock(tx: Tx, studentId: string): Promise<void> {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`care-child:${studentId}`}, 0))`;
   }
 }

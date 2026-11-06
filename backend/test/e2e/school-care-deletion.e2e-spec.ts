@@ -109,6 +109,21 @@ describe('Bola ovozi — ma\'lumotlarni o\'chirish', () => {
     expect(await t.prisma.schoolCareAnonResponse.count()).toBe(2);
   });
 
+  it('shaxsiy tayinlashdagi murojaat havolasi tozalanadi (tayinlash qoladi)', async () => {
+    const gone = w.kids7a[0]!;
+    const request = await fill(gone);
+    const assignment = await t.prisma.schoolPsychAssignment.create({
+      data: {
+        schoolId: w.schoolId, testId: 'tpl-logic', testVersion: 1, target: { kind: 'STUDENTS', studentIds: [gone.studentId] }, classIds: [], studentIds: [gone.studentId],
+        careRequestId: request.id, opensAt: new Date(), closesAt: new Date(Date.now() + 86_400_000), createdBy: w.psych.staffId,
+      },
+    });
+
+    await t.app.inject({ method: 'DELETE', url: '/api/users/me', headers: { authorization: `Bearer ${gone.token}` } });
+
+    expect(await t.prisma.schoolPsychAssignment.findUniqueOrThrow({ where: { id: assignment.id } })).toMatchObject({ careRequestId: null });
+  });
+
   it('o\'chirilgandan keyin psixolog ro\'yxatida ham murojaat qolmaydi', async () => {
     const gone = w.kids7a[0]!;
     await fill(gone);

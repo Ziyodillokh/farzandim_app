@@ -16,9 +16,13 @@ export async function deleteCareOfChildren(tx: Prisma.TransactionClient, childId
   const studentIds = students.map((s) => s.id);
   const requests = await tx.schoolCareRequest.findMany({ where: { studentId: { in: studentIds } }, select: { id: true } });
   if (requests.length > 0) {
-    // Murojaatga bog'liq saqlangan xodim bildirishnomalari (sinf / mavzu) ham ketadi.
-    await tx.schoolStaffNotification.deleteMany({ where: { id: { in: requests.flatMap((r) => careNotificationIds(r.id)) } } });
+    const requestIds = requests.map((r) => r.id);
+    // Qulf tartibi javob / eskalatsiya bilan bir xil: avval murojaat qatori, keyin bildirishnomalar (deadlock bo'lmasin).
     await tx.schoolCareRequest.deleteMany({ where: { studentId: { in: studentIds } } });
+    // Murojaatga bog'liq saqlangan xodim bildirishnomalari (sinf / mavzu) ham ketadi.
+    await tx.schoolStaffNotification.deleteMany({ where: { id: { in: requestIds.flatMap((id) => careNotificationIds(id)) } } });
+    // Shaxsiy test tayinlashidagi murojaat havolasi osilib qolmasin (tayinlashning o'zi saqlanadi).
+    await tx.schoolPsychAssignment.updateMany({ where: { careRequestId: { in: requestIds } }, data: { careRequestId: null } });
   }
   await tx.schoolCareParticipation.deleteMany({ where: { studentId: { in: studentIds } } });
 }

@@ -54,7 +54,7 @@ export class CareEscalationCron {
 
   private async sweepSchool(schoolId: string, now: Date): Promise<number> {
     const candidates = await this.prisma.schoolCareRequest.findMany({
-      where: { schoolId, status: 'NEW', openedAt: null, escalatedAt: null, createdAt: { lte: now } },
+      where: { schoolId, status: 'NEW', openedAt: null, escalatedAt: null },
       orderBy: { createdAt: 'asc' },
       take: SWEEP_BATCH,
     });

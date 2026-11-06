@@ -41,6 +41,7 @@ describe('ChildDataPurgeService', () => {
       schoolCareParticipation: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
       schoolCareAnonResponse: { deleteMany: jest.fn() },
       schoolStaffNotification: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
+      schoolPsychAssignment: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
       kelajakSession: { deleteMany: jest.fn().mockResolvedValue({ count: 2 }) },
       voiceMessage: {
         findMany: jest
@@ -174,8 +175,9 @@ describe('ChildDataPurgeService', () => {
       expect(prisma.schoolCareRequest.deleteMany).toHaveBeenCalledWith({ where: { studentId: { in: ['student-1'] } } });
       expect(prisma.schoolCareParticipation.deleteMany).toHaveBeenCalledWith({ where: { studentId: { in: ['student-1'] } } });
       expect(prisma.schoolStaffNotification.deleteMany).toHaveBeenCalledWith({
-        where: { id: { in: ['care:req-1', 'care-esc:req-1', 'care-esc-dir:req-1'] } },
+        where: { id: { in: ['care:req-1', 'care-esc:req-1', expect.stringMatching(/^care-esc-dir:[0-9a-f]{32}$/)] } },
       });
+      expect(prisma.schoolPsychAssignment.updateMany).toHaveBeenCalledWith({ where: { careRequestId: { in: ['req-1'] } }, data: { careRequestId: null } });
       expect(prisma.schoolCareAnonResponse.deleteMany).not.toHaveBeenCalled();
     });
 

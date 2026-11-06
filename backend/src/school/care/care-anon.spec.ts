@@ -75,9 +75,10 @@ describe('buildAnonRow', () => {
 describe('CareChildService.submitSurvey (anonymity of the write path)', () => {
   const STUDENT = { childId: 'child-secret', studentId: 'student-secret', schoolId: 'school-1', classId: 'class-7a', className: '7-A', grade: 7, lang: 'uz' as const };
 
-  function setup(options: { participationConflict?: boolean } = {}) {
+  function setup(options: { participationConflict?: boolean; surveyStatus?: string } = {}) {
     const calls: string[] = [];
     const tx = {
+      $queryRaw: jest.fn().mockResolvedValue([{ status: options.surveyStatus ?? 'ACTIVE' }]),
       schoolCareResponse: { count: jest.fn().mockResolvedValue(0) },
       schoolCareParticipation: {
         create: jest.fn().mockImplementation(async () => {
@@ -161,6 +162,14 @@ describe('CareChildService.submitSurvey (anonymity of the write path)', () => {
     const { service, tx } = setup({ participationConflict: true });
 
     await expect(service.submitSurvey('child-user', 'survey-1', { answers: { q1: 5 } })).rejects.toBeInstanceOf(ConflictException);
+    expect(tx.schoolCareAnonResponse.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects with 404 and writes nothing when the survey was closed meanwhile (row lock re-check)', async () => {
+    const { service, tx } = setup({ surveyStatus: 'CLOSED' });
+
+    await expect(service.submitSurvey('child-user', 'survey-1', { answers: { q1: 5 } })).rejects.toMatchObject({ response: { code: 'SURVEY_NOT_FOUND' } });
+    expect(tx.schoolCareParticipation.create).not.toHaveBeenCalled();
     expect(tx.schoolCareAnonResponse.create).not.toHaveBeenCalled();
   });
 

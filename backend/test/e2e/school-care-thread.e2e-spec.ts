@@ -5,6 +5,7 @@
 import { SchoolCryptoService } from '../../src/school/common/school-crypto.service';
 import { resetDb } from './db';
 import { createTestApp, TestApp } from './test-app';
+import { createChild } from './factories';
 import { addFcmToken, AssessWorld, buildWorld, careChild, careStaff, createRequest, psychologist, uuid } from './school-care-fixtures';
 
 describe('Bola ovozi — murojaat yozishmasi', () => {
@@ -378,6 +379,33 @@ describe('Bola ovozi — murojaat yozishmasi', () => {
         expect([res.statusCode, res.json().code]).toEqual([404, 'NOT_ENROLLED']);
       }
       expect((await child(ghost, 'GET', '/requests')).json()).toEqual([]);
+    });
+
+    it('o\'quvchi yozuvi boshqa bola profiliga qayta bog\'lansa, eski yozishma yangisiga ko\'rinmaydi', async () => {
+      const original = kid();
+      const mine = await createRequest(t, original, { message: 'Faqat menga' });
+      await staff(w.psych, 'POST', `/requests/${mine.id}/messages`, { text: 'Maxfiy javob' });
+      await addFcmToken(t, original);
+      const sibling = await createChild(t.prisma, { userId: original.parentId, token: '' }, { name: 'Aka' });
+      await addFcmToken(t, sibling);
+      await t.prisma.schoolStudent.update({ where: { id: original.studentId }, data: { childId: sibling.childId } });
+
+      expect((await child(sibling, 'GET', '/requests')).json()).toEqual([]);
+      expect((await child(sibling, 'GET', `/requests/${mine.id}`)).statusCode).toBe(404);
+      expect((await child(sibling, 'POST', `/requests/${mine.id}/messages`, { text: 'Hujum' })).statusCode).toBe(404);
+      expect(await t.prisma.schoolCareMessage.count({ where: { requestId: mine.id } })).toBe(2);
+      // Xodim javobi (yangi bog'lanishdan keyin) asl bolaning qurilmasiga boradi, yangisiga emas.
+      t.fcm.reset();
+      await staff(w.psych, 'POST', `/requests/${mine.id}/messages`, { text: 'Yana' });
+      expect(t.fcm.pushesTo(original.userId)).toHaveLength(1);
+      expect(t.fcm.pushesTo(sibling.userId)).toHaveLength(0);
+
+      // Yangi bola o'z murojaatini yoza oladi; asl bola qayta bog'lansa eskisini yana ko'radi.
+      const own = await createRequest(t, sibling, { message: 'Akaning' });
+      expect((await child(sibling, 'GET', '/requests')).json().map((r: { id: string }) => r.id)).toEqual([own.id]);
+      await t.prisma.schoolStudent.update({ where: { id: original.studentId }, data: { childId: original.childId } });
+      expect((await child(original, 'GET', `/requests/${mine.id}`)).statusCode).toBe(200);
+      expect((await child(original, 'GET', `/requests/${own.id}`)).statusCode).toBe(404);
     });
 
     it('ota-ona tokeni 403, tokensiz 401', async () => {

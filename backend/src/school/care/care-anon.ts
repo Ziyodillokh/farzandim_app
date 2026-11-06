@@ -18,7 +18,7 @@ export interface AnonRow {
 }
 
 /**
- * Anonim javob qatori. `cohort` — sinf va daraja nusxasi (guruhlash va K=5 yashirish uchun,
+ * Anonim javob qatori. Sinf va daraja — javob paytidagi NUSXA (guruhlash va K=5 yashirish uchun,
  * eski jadvaldagi kabi); o'quvchi / bola / vaqt maydonlari bu yerda yo'q va qo'shilmaydi.
  */
 export function buildAnonRow(input: {

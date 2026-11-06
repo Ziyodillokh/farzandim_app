@@ -176,8 +176,7 @@ export class CareRequestsService {
         },
       });
       await this.afterChange(tx, actor, request, REQUEST_AUDIT.reply, leavesNew);
-      const student = await tx.schoolStudent.findUnique({ where: { id: request.studentId }, select: { child: { select: { childUserId: true } } } });
-      return { message: created, childUserId: student?.child?.childUserId ?? null };
+      return { message: created, childUserId: await this.childUserOf(tx, request) };
     });
     await this.notify.notifyChildOfReply(childUserId, id);
     return toMessageView(message, { decrypt: (t) => this.crypto.decrypt(t), nameOf: () => actor.name });
@@ -193,6 +192,16 @@ export class CareRequestsService {
 
   private notesOf(request: SchoolCareRequest): CareNote[] {
     return request.notesEnc ? this.crypto.decryptJson<CareNote[]>(request.notesEnc) : [];
+  }
+
+  /**
+   * Push oluvchisi: murojaatni yozgan bola profili (`childId`), eski murojaatda — o'quvchiga hozir
+   * bog'langan bola. O'quvchi yozuvi boshqa bolaga qayta bog'langan bo'lsa ham javob yangisiga bormaydi.
+   */
+  private async childUserOf(tx: Tx, request: SchoolCareRequest): Promise<string | null> {
+    if (request.childId) return (await tx.child.findUnique({ where: { id: request.childId }, select: { childUserId: true } }))?.childUserId ?? null;
+    const student = await tx.schoolStudent.findUnique({ where: { id: request.studentId }, select: { child: { select: { childUserId: true } } } });
+    return student?.child?.childUserId ?? null;
   }
 
   /** Birinchi ochish: shartli UPDATE (`openedAt IS NULL`) — parallel ko'rishda faqat bittasi yozadi va audit qiladi. */
