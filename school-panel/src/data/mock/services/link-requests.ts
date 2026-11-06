@@ -40,6 +40,8 @@ function toView(t: Tables, r: MockLinkRequest, student: Student): LinkRequest {
       className: t.classes.find((c) => c.id === student.classId)?.name ?? '',
     },
     child: { name: r.childName },
+    // Mock'da vasiylik so'rovlari (GUARDIAN) yo'q — faqat REVIEW / CORRECTION.
+    parent: null,
     parentLinked: r.parentLinked,
     reason: r.reason,
     note: r.note,

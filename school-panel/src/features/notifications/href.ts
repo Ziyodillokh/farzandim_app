@@ -20,6 +20,7 @@ export function notificationHref(item: Pick<NotificationItem, 'kind' | 'href' | 
   switch (item.kind) {
     case 'LINK_REVIEW':
     case 'LINK_CORRECTION':
+    case 'GUARDIAN_REVIEW':
       return isPanelPath(item.href) ? item.href : LINK_REQUESTS_HREF;
     case 'CHILD_RECOVERY_REQUEST': {
       if (isPanelPath(item.href)) return item.href;

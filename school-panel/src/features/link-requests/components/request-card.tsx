@@ -19,8 +19,9 @@ import { DECISION_ORDER, LINK_ACTIONS, type LinkDecision } from '../lib/decision
  */
 export function RequestCard({ request, onDecide }: { request: LinkRequest; onDecide: (request: LinkRequest, decision: LinkDecision) => void }) {
   const { t, formatDate, formatRelative } = useI18n();
-  const { student, child } = request;
+  const { student, child, parent } = request;
   const correction = request.kind === 'CORRECTION';
+  const guardian = request.kind === 'GUARDIAN';
   // Bir xil nomli tugmalar qaysi o'quvchiga tegishli ekanini ekran o'qish dasturi ham bilsin (aria-describedby).
   // Id'da ":" bor (REVIEW: `<kod>:<bola>`) — `aria-describedby` uchun bu yaroqli, lekin CSS selektor emas.
   const whoId = `link-request-${request.id}-who`;
@@ -44,17 +45,26 @@ export function RequestCard({ request, onDecide }: { request: LinkRequest; onDec
             </Link>
             {student.className && <Badge variant="outline">{student.className}</Badge>}
           </div>
-          <p className="text-sm text-muted-foreground" data-testid="link-request-child">
-            {t('linkRequests.childName', { name: child.name })}
-          </p>
+          {guardian && parent && (
+            <p className="text-sm" data-testid="link-request-guardian">
+              {t('linkRequests.guardian.who', { name: parent.name, phone: parent.maskedPhone ?? t('linkRequests.guardian.noPhone') })}
+            </p>
+          )}
+          {child && (
+            <p className="text-sm text-muted-foreground" data-testid="link-request-child">
+              {t(guardian ? 'linkRequests.guardian.child' : 'linkRequests.childName', { name: child.name })}
+            </p>
+          )}
           <p className="text-xs text-muted-foreground">
             {t('linkRequests.requested', { time: formatRelative(request.createdAt) })} ·{' '}
             <time dateTime={request.createdAt}>{formatDate(request.createdAt, 'dd.MM.yyyy, HH:mm')}</time>
           </p>
-          <Badge variant={request.parentLinked ? 'success' : 'warning'} size="sm" className="gap-1.5" data-testid="link-request-parent">
-            {request.parentLinked ? <CircleCheck className="h-3 w-3" aria-hidden /> : <Clock className="h-3 w-3" aria-hidden />}
-            {t(request.parentLinked ? 'linkRequests.parent.linked' : 'linkRequests.parent.notLinked')}
-          </Badge>
+          {!guardian && (
+            <Badge variant={request.parentLinked ? 'success' : 'warning'} size="sm" className="gap-1.5" data-testid="link-request-parent">
+              {request.parentLinked ? <CircleCheck className="h-3 w-3" aria-hidden /> : <Clock className="h-3 w-3" aria-hidden />}
+              {t(request.parentLinked ? 'linkRequests.parent.linked' : 'linkRequests.parent.notLinked')}
+            </Badge>
+          )}
           {correction && (
             <div className="space-y-1.5">
               {request.reason && (

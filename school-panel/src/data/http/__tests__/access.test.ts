@@ -64,6 +64,18 @@ const K2_CORRECTION = {
   note: 'Men 7-B sinfdaman',
 };
 const K2_LIST = [K2_REVIEW, K2_CORRECTION];
+/** K2 §5: telefoni maktabga ma'lum bo'lmagan ota-ona (vasiylik tasdig'i). */
+const K2_GUARDIAN = {
+  id: '3c41…',
+  kind: 'GUARDIAN',
+  createdAt: '2026-11-09T10:05:00.000Z',
+  student: { id: '…', fullName: 'Karimov Aziz', classId: null, className: null },
+  child: null,
+  parent: { name: 'Karimova Malika', maskedPhone: '+998 ** *** 45 67' },
+  parentLinked: false,
+  reason: null,
+  note: null,
+};
 
 /** Backend xato tanalari (`{ statusCode, code, message }`; xabarlar backend kodidan). */
 const ERR = {
@@ -258,6 +270,7 @@ describe('toLinkRequests (K2 §5: GET /school/link-requests)', () => {
         createdAt: '2026-11-09T10:01:02.000Z',
         student: { id: '…', fullName: 'Karimov Aziz', classId: '…', className: '7-A' },
         child: { name: 'Aziz' },
+        parent: null,
         parentLinked: false,
         reason: null,
         note: null,
@@ -268,6 +281,7 @@ describe('toLinkRequests (K2 §5: GET /school/link-requests)', () => {
         createdAt: '2026-11-09T11:20:00.000Z',
         student: { id: '…', fullName: 'Rahimov Bobur', classId: '…', className: '7-A' },
         child: { name: 'Bobur' },
+        parent: null,
         parentLinked: true,
         reason: 'WRONG_SCHOOL_OR_CLASS',
         note: 'Men 7-B sinfdaman',
@@ -275,6 +289,15 @@ describe('toLinkRequests (K2 §5: GET /school/link-requests)', () => {
     ]);
     // Adapter qayta tartiblamaydi: backend tartibi — navbat tartibi.
     expect(toLinkRequests([...K2_LIST].reverse()).map((r) => r.id)).toEqual(['9b8f…', '5d3c…:7a21…']);
+  });
+
+  it('GUARDIAN: ota-ona (niqoblangan telefon), bolasiz va sinfsiz so\'rov', () => {
+    const [item] = toLinkRequests([K2_GUARDIAN]);
+    expect(item.kind).toBe('GUARDIAN');
+    expect(item.parent).toEqual({ name: 'Karimova Malika', maskedPhone: '+998 ** *** 45 67' });
+    expect(item.child).toBeNull();
+    expect(item.student.classId).toBeNull();
+    expect(item.student.className).toBe('');
   });
 
   it('REVIEW id\'si shaffof: o\'zgartirilmaydi (":" saqlanadi)', () => {
@@ -545,7 +568,7 @@ describe('linkRequestsHttp (K2 §5)', () => {
   it('list: GET /school/link-requests — hujjatdagi JSON adapterdan o\'tadi', async () => {
     const calls = mockFetch([{ status: 200, body: K2_LIST }]);
     const list = await linkRequestsHttp.list();
-    expect(list.map((r) => [r.id, r.kind, r.student.fullName, r.child.name, r.parentLinked])).toEqual([
+    expect(list.map((r) => [r.id, r.kind, r.student.fullName, r.child?.name, r.parentLinked])).toEqual([
       ['5d3c…:7a21…', 'REVIEW', 'Karimov Aziz', 'Aziz', false],
       ['9b8f…', 'CORRECTION', 'Rahimov Bobur', 'Bobur', true],
     ]);

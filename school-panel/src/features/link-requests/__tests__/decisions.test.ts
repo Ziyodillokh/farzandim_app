@@ -38,6 +38,22 @@ describe('LINK_ACTIONS: tugma → endpoint (K2 §5)', () => {
     expect([keep.destructive, unlink.destructive]).toEqual([false, true]);
   });
 
+  it('GUARDIAN: «Vasiy sifatida tasdiqlash» = confirm, «Rad etish» = reject; oyna matnida ota-ona va o\'quvchi', () => {
+    const ok = LINK_ACTIONS.GUARDIAN.confirm;
+    const no = LINK_ACTIONS.GUARDIAN.reject;
+    expect([uz(ok.label), uz(no.label)]).toEqual(['Vasiy sifatida tasdiqlash', 'Rad etish']);
+    expect([ok.decision, no.decision]).toEqual(['confirm', 'reject']);
+    expect([ok.destructive, no.destructive]).toEqual([false, true]);
+    for (const decision of DECISIONS) {
+      for (const render of [uz, ru]) {
+        const text = render(LINK_ACTIONS.GUARDIAN[decision].dialog.text);
+        for (const variable of ['{parent}', '{name}', '{className}']) expect(text, decision).toContain(variable);
+      }
+    }
+    expect(toastKeyFor({ id: 'g', kind: 'GUARDIAN', status: 'CONFIRMED' })).toBe('linkRequests.toast.guardianConfirmed');
+    expect(toastKeyFor({ id: 'g', kind: 'GUARDIAN', status: 'REJECTED' })).toBe('linkRequests.toast.guardianRejected');
+  });
+
   it('tasdiq oynasi matnlari ikkala tilda kerakli o\'zgaruvchilarni ishlatadi ({name}, {className}, {child})', () => {
     for (const kind of KINDS) {
       for (const decision of DECISIONS) {

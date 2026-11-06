@@ -33,12 +33,12 @@ describe('linkRequestsService.list (K2 §5 shakli)', () => {
     expect(byKind(items, 'REVIEW')).toHaveLength(3);
     expect(byKind(items, 'CORRECTION')).toHaveLength(2);
     for (const item of items) {
-      expect(Object.keys(item).sort()).toEqual(['child', 'createdAt', 'id', 'kind', 'note', 'parentLinked', 'reason', 'student']);
+      expect(Object.keys(item).sort()).toEqual(['child', 'createdAt', 'id', 'kind', 'note', 'parent', 'parentLinked', 'reason', 'student']);
       expect(Object.keys(item.student).sort()).toEqual(['classId', 'className', 'fullName', 'id']);
-      expect(Object.keys(item.child)).toEqual(['name']);
+      expect(Object.keys(item.child ?? {})).toEqual(['name']);
       expect(item.student.fullName).toMatch(/\S+ \S+/);
       expect(item.student.className).toMatch(/^\d+-[A-Z]$/);
-      expect(item.child.name).toBeTruthy();
+      expect(item.child?.name).toBeTruthy();
       expect(typeof item.parentLinked).toBe('boolean');
     }
     expect(byKind(items, 'REVIEW').every((i) => i.note === null && i.reason === null)).toBe(true);
@@ -60,7 +60,7 @@ describe('linkRequestsService.list (K2 §5 shakli)', () => {
     for (const item of byKind(items, 'CORRECTION')) expect(item.id).not.toContain(':');
     // Seed: bittasida bola profilidagi ism o'quvchinikiga mos emas — xodim buni ko'rib qaror qiladi.
     const students = new Map(getTables().students.map((s) => [s.id, s]));
-    const mismatched = items.filter((i) => i.child.name !== students.get(i.student.id)!.firstName);
+    const mismatched = items.filter((i) => i.child?.name !== students.get(i.student.id)!.firstName);
     expect(mismatched).toHaveLength(1);
   });
 

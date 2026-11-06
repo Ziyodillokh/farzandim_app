@@ -36,7 +36,7 @@ const CHANNELS: readonly RecoveryChannel[] = ['PARENT', 'SCHOOL'];
 const RECOVERY_STATUSES = ['RECEIVED', 'RESTORED', 'REJECTED'] as const;
 const STUDENT_SLOT_STATUSES: readonly InviteStudentStatus[] = ['FREE', 'UNDER_REVIEW', 'CONFIRMED'];
 const PARENT_SLOT_STATUSES: readonly InviteParentStatus[] = ['FREE', 'USED'];
-const LINK_KINDS: readonly LinkRequestKind[] = ['REVIEW', 'CORRECTION'];
+const LINK_KINDS: readonly LinkRequestKind[] = ['REVIEW', 'CORRECTION', 'GUARDIAN'];
 const DECISION_STATUSES: readonly LinkDecisionStatus[] = ['CONFIRMED', 'REJECTED'];
 const CORRECTION_REASONS: readonly LinkCorrectionReason[] = ['WRONG_SCHOOL_OR_CLASS'];
 const SIX_DIGITS = /^\d{6}$/;
@@ -191,12 +191,15 @@ export function toGeneratedInviteCode(raw: unknown): InviteCode {
 function toLinkRequest(raw: unknown): LinkRequest {
   const body = requiredRecord(raw, 'linkRequest');
   const student = requiredRecord(body.student, 'linkRequest.student');
-  const child = requiredRecord(body.child, 'linkRequest.child');
+  const kind = oneOf(body.kind, LINK_KINDS, 'linkRequest.kind');
+  // Bola faqat GUARDIAN'da bo'lmasligi mumkin (ota-onaning kutayotgan farzandi yo'q).
+  const child = kind === 'GUARDIAN' && body.child == null ? null : requiredRecord(body.child, 'linkRequest.child');
+  const parent = body.parent == null ? null : requiredRecord(body.parent, 'linkRequest.parent');
   const note = nullableString(body.note, 'linkRequest.note')?.trim();
   return {
     // Shaffof id: o'zgartirilmaydi (REVIEW: `<kod yozuvi>:<bola>`).
     id: requiredString(body.id, 'linkRequest.id'),
-    kind: oneOf(body.kind, LINK_KINDS, 'linkRequest.kind'),
+    kind,
     createdAt: requiredString(body.createdAt, 'linkRequest.createdAt'),
     student: {
       id: requiredString(student.id, 'linkRequest.student.id'),
@@ -205,7 +208,13 @@ function toLinkRequest(raw: unknown): LinkRequest {
       // Sinfsiz o'quvchida backend bo'sh satr beradi.
       className: nullableString(student.className, 'linkRequest.student.className') ?? '',
     },
-    child: { name: requiredString(child.name, 'linkRequest.child.name') },
+    child: child ? { name: requiredString(child.name, 'linkRequest.child.name') } : null,
+    parent: parent
+      ? {
+          name: requiredString(parent.name, 'linkRequest.parent.name'),
+          maskedPhone: nullableString(parent.maskedPhone, 'linkRequest.parent.maskedPhone'),
+        }
+      : null,
     parentLinked: requiredBool(body.parentLinked, 'linkRequest.parentLinked'),
     // Sabab — faqat ko'rsatma: kelajakdagi yangi qiymat butun ro'yxatni buzmasin.
     reason: CORRECTION_REASONS.find((r) => r === body.reason) ?? null,

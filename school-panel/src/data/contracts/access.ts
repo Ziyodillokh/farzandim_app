@@ -55,8 +55,11 @@ export type InviteCode = {
   parent: InviteParentSlot;
 };
 
-/** REVIEW — bola kodni kiritdi, xodim tasdig'ini kutmoqda; CORRECTION — bola maktab/sinf noto'g'riligini bildirdi. */
-export type LinkRequestKind = 'REVIEW' | 'CORRECTION';
+/**
+ * REVIEW — bola kodni kiritdi, xodim tasdig'ini kutmoqda; CORRECTION — bola maktab/sinf noto'g'riligini bildirdi; GUARDIAN — telefoni
+ * maktabga ma'lum bo'lmagan ota-ona 6 xonali kodni kiritdi, vasiylik xodim tasdig'ini kutmoqda (kod o'zi ishonch bermaydi).
+ */
+export type LinkRequestKind = 'REVIEW' | 'CORRECTION' | 'GUARDIAN';
 export type LinkCorrectionReason = 'WRONG_SCHOOL_OR_CLASS';
 
 /**
@@ -68,8 +71,10 @@ export type LinkRequest = {
   kind: LinkRequestKind;
   createdAt: IsoDateTime;
   student: { id: Id; fullName: string; classId: Id | null; className: string };
-  /** Ota-ona bolaga bergan ism — xodim qaror qilishi uchun. */
-  child: { name: string };
+  /** Ota-ona bolaga bergan ism — xodim qaror qilishi uchun. GUARDIAN'da shu ota-onaning kutayotgan farzandi (bo'lmasa `null`). */
+  child: { name: string } | null;
+  /** GUARDIAN: so'rov yuborgan ota-ona (niqoblangan telefon — faqat oxirgi 4 raqam); boshqa turlarda `null`. */
+  parent: { name: string; maskedPhone: string | null } | null;
   /** Bolaning O'Z ota-onasi o'quvchining ulangan vasiysi (ishonch belgisi). */
   parentLinked: boolean;
   /** CORRECTION: tuzatish sababi; REVIEW: `null`. */

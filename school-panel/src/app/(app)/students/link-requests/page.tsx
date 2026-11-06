@@ -1,6 +1,6 @@
 'use client';
 
-import { FilePenLine, Link2, ShieldCheck } from 'lucide-react';
+import { FilePenLine, Link2, ShieldCheck, UserCheck } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
@@ -44,7 +44,8 @@ function RequestsBody({ onDecide }: { onDecide: (request: LinkRequest, decision:
 
   const reviews = query.data.filter((r) => r.kind === 'REVIEW');
   const corrections = query.data.filter((r) => r.kind === 'CORRECTION');
-  if (reviews.length === 0 && corrections.length === 0) {
+  const guardians = query.data.filter((r) => r.kind === 'GUARDIAN');
+  if (reviews.length === 0 && corrections.length === 0 && guardians.length === 0) {
     return (
       <Card>
         <EmptyState icon={<Link2 />} title={t('linkRequests.empty.title')} description={t('linkRequests.empty.text')} />
@@ -60,6 +61,16 @@ function RequestsBody({ onDecide }: { onDecide: (request: LinkRequest, decision:
           title={t('linkRequests.review.title')}
           description={t('linkRequests.review.description')}
           requests={reviews}
+          onDecide={onDecide}
+        />
+      )}
+      {guardians.length > 0 && (
+        <RequestSection
+          id="link-guardian-title"
+          icon={<UserCheck aria-hidden />}
+          title={t('linkRequests.guardian.title')}
+          description={t('linkRequests.guardian.description')}
+          requests={guardians}
           onDecide={onDecide}
         />
       )}
@@ -114,7 +125,8 @@ export default function LinkRequestsPage() {
             ? t(action.dialog.text, {
                 name: pending.request.student.fullName,
                 className: pending.request.student.className || '—',
-                child: pending.request.child.name,
+                child: pending.request.child?.name ?? '—',
+                parent: pending.request.parent?.name ?? '—',
               })
             : undefined
         }

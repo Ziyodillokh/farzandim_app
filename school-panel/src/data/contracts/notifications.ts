@@ -15,7 +15,8 @@ export type StaffNotificationKind =
   | 'DATA_DELETION_REQUEST'
   | 'CHILD_RECOVERY_REQUEST'
   | 'LINK_REVIEW'
-  | 'LINK_CORRECTION';
+  | 'LINK_CORRECTION'
+  | 'GUARDIAN_REVIEW';
 export type StaffNotification = {
   id: Id;
   kind: StaffNotificationKind;

@@ -23,6 +23,7 @@ export type DecisionSpec = {
  * tugmalarini teskari bog'lab qo'yish mumkin emas (K2 §5):
  *  - REVIEW:     `confirm` = ulanishni TASDIQLASH;  `reject` = o'quvchi o'rnini bo'shatish (rad etish).
  *  - CORRECTION: `confirm` = ulanishni SAQLASH;     `reject` = ulanishni UZISH.
+ *  - GUARDIAN:   `confirm` = ota-onani VASIY qilish; `reject` = so'rovni rad etish (ota-ona o'rni bo'shaydi).
  */
 export const LINK_ACTIONS: Readonly<Record<LinkRequestKind, Readonly<Record<LinkDecision, DecisionSpec>>>> = {
   REVIEW: {
@@ -54,6 +55,22 @@ export const LINK_ACTIONS: Readonly<Record<LinkRequestKind, Readonly<Record<Link
       label: 'linkRequests.correction.unlink',
       dialog: { title: 'linkRequests.correction.unlinkTitle', text: 'linkRequests.correction.unlinkText' },
       toast: 'linkRequests.toast.unlinked',
+      destructive: true,
+    },
+  },
+  GUARDIAN: {
+    confirm: {
+      decision: 'confirm',
+      label: 'linkRequests.guardian.confirm',
+      dialog: { title: 'linkRequests.guardian.confirmTitle', text: 'linkRequests.guardian.confirmText' },
+      toast: 'linkRequests.toast.guardianConfirmed',
+      destructive: false,
+    },
+    reject: {
+      decision: 'reject',
+      label: 'linkRequests.guardian.reject',
+      dialog: { title: 'linkRequests.guardian.rejectTitle', text: 'linkRequests.guardian.rejectText' },
+      toast: 'linkRequests.toast.guardianRejected',
       destructive: true,
     },
   },
