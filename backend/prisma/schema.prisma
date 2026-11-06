@@ -70,6 +70,11 @@ model User {
 
   schoolGuardians SchoolGuardian[]
 
+  // Maktab o'quvchi kodining ota-ona o'rnini band qilgan foydalanuvchi (K2)
+  schoolInvitesAsParent SchoolStudentInvite[]
+  // 6 raqamli kod bilan ulangan, xodim tasdig'ini kutayotgan vasiylik so'rovlari (K2)
+  schoolGuardianReviews SchoolGuardianReview[]
+
   @@map("users")
 }
 
@@ -207,6 +212,8 @@ model Child {
   kelajakSessions        KelajakSession[]
   iqSessions             IqSession[]
   schoolStudents         SchoolStudent[]
+  schoolInvites          SchoolStudentInvite[]
+  schoolLinkCorrections  SchoolLinkCorrection[]
 
   // Sprint 5.4 — admin Olympiad attempts
   olympiadAttempts OlympiadAttempt[]
@@ -2087,6 +2094,9 @@ model School {
   staffNotifications  SchoolStaffNotification[]
   learningAssignments SchoolLearningAssignment[]
   timetableLessons    SchoolTimetableLesson[]
+  studentInvites      SchoolStudentInvite[]
+  linkCorrections     SchoolLinkCorrection[]
+  guardianReviews     SchoolGuardianReview[]
 
   @@map("schools")
 }
@@ -2273,6 +2283,9 @@ model SchoolStudent {
   notes               SchoolStudentNote[]
   announcementReads   SchoolAnnouncementStudentRead[]
   homeworkSubmissions SchoolHomeworkSubmission[]
+  invites             SchoolStudentInvite[]
+  linkCorrections     SchoolLinkCorrection[]
+  guardianReviews     SchoolGuardianReview[]
 
   @@unique([schoolId, studentCode])
   @@index([schoolId, classId])
@@ -2313,6 +2326,96 @@ model SchoolStudentGuardian {
   @@id([studentId, guardianId])
   @@index([guardianId])
   @@map("school_student_guardians")
+}
+
+/// O'quvchi kodi (K2): 6 raqam, 24 soat, ikki "o'rin" — o'quvchi (bola ilovasi) va ota-ona (Parvoz Parents).
+/// Bitta o'quvchida bitta FAOL (yopilmagan va muddati o'tmagan) kod; kod faol kodlar orasida yagona.
+/// Ikkala qisman unique indeks (`closed_at IS NULL`) migratsiyada qo'lda — Prisma sxemasi ularni ifodalay olmaydi.
+/// Bola o'rni: `studentChildId` + `studentUsedAt`; `studentConfirmedAt` null bo'lsa — UNDER_REVIEW
+/// (maktab ma'lumoti hali yopiq), to'lsa — CONFIRMED (`SchoolStudent.childId` o'rnatilgan).
+model SchoolStudentInvite {
+  id                 String    @id @default(uuid())
+  schoolId           String    @map("school_id")
+  studentId          String    @map("student_id")
+  /// 6 raqam, bosh nollar mumkin ("048213").
+  code               String    @db.Char(6)
+  expiresAt          DateTime  @map("expires_at")
+  studentChildId     String?   @map("student_child_id")
+  studentUsedAt      DateTime? @map("student_used_at")
+  studentConfirmedAt DateTime? @map("student_confirmed_at")
+  parentUserId       String?   @map("parent_user_id")
+  parentUsedAt       DateTime? @map("parent_used_at")
+  createdByStaffId   String    @map("created_by_staff_id")
+  closedAt           DateTime? @map("closed_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  school          School                 @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student         SchoolStudent          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentChild    Child?                 @relation(fields: [studentChildId], references: [id], onDelete: Cascade)
+  parentUser      User?                  @relation(fields: [parentUserId], references: [id], onDelete: SetNull)
+  guardianReviews SchoolGuardianReview[]
+
+  @@index([schoolId, studentId])
+  @@index([studentChildId])
+  @@index([parentUserId])
+  @@map("school_student_invites")
+}
+
+/// Bolaning "maktab yoki sinf noto'g'ri" so'rovi (A08). OPEN bo'lganda bolaning maktab ma'lumoti yopiq
+/// (`requireEnrolledStudent` — 404 UNDER_REVIEW). Xodim hal qiladi: CONFIRMED (bog'lanish qoladi) yoki
+/// REJECTED (uziladi); CANCELLED — bola boshqa o'quvchiga qayta bog'langani uchun o'z-o'zidan bekor.
+/// Bolada bitta OPEN so'rov (migratsiyadagi qisman unique indeks); `clientRequestId` — takroriy yuborish.
+model SchoolLinkCorrection {
+  id                String    @id @default(uuid())
+  schoolId          String    @map("school_id")
+  studentId         String    @map("student_id")
+  childId           String    @map("child_id")
+  reason            String
+  note              String    @default("")
+  clientRequestId   String    @map("client_request_id")
+  status            String    @default("OPEN")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  resolvedAt        DateTime? @map("resolved_at")
+  resolvedByStaffId String?   @map("resolved_by_staff_id")
+
+  school  School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student SchoolStudent @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  child   Child         @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, clientRequestId])
+  @@index([schoolId, status])
+  @@index([childId, status])
+  @@map("school_link_corrections")
+}
+
+/// 6 raqamli o'quvchi kodining ota-ona o'rnini band qilgan, lekin maktab ishonchli deb bilmagan ota-ona (K2): maktab
+/// kiritgan vasiy yozuvi telefon bo'yicha mos kelmadi. Kod O'ZI vasiylik bermaydi — xodim tasdiqlaguncha bu ota-ona
+/// vasiy EMAS (`SchoolGuardian` yozuvi yo'q) va hech qanday o'quvchi ma'lumotiga kira olmaydi. Tasdiqlansa vasiy yozuvi
+/// yaratiladi / topiladi; rad etilsa kod yozuvidagi ota-ona o'rni bo'shaydi. Ism va telefon `User` dan o'qiladi
+/// (nusxa saqlanmaydi). Bir ota-onada bitta o'quvchi uchun bitta OPEN so'rov (migratsiyadagi qisman unique indeks).
+model SchoolGuardianReview {
+  id                String    @id @default(uuid())
+  schoolId          String    @map("school_id")
+  studentId         String    @map("student_id")
+  /// Ota-ona o'rnini band qilgan kod yozuvi (rad etilsa o'rin shu yozuvda bo'shaydi; kod yozuvi o'chsa — null).
+  inviteId          String?   @map("invite_id")
+  userId            String    @map("user_id")
+  /// OPEN | CONFIRMED | REJECTED
+  status            String    @default("OPEN")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  resolvedAt        DateTime? @map("resolved_at")
+  resolvedByStaffId String?   @map("resolved_by_staff_id")
+
+  school  School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student SchoolStudent        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  invite  SchoolStudentInvite? @relation(fields: [inviteId], references: [id], onDelete: SetNull)
+  user    User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, status])
+  @@index([userId, status])
+  @@index([studentId, status])
+  @@index([inviteId])
+  @@map("school_guardian_reviews")
 }
 
 /// Xodim eslatmasi (auditga matn yozilmaydi).

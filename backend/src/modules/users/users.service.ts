@@ -19,6 +19,7 @@ import { ChildDataPurgeService } from '../child-data-purge/child-data-purge.serv
 import { deleteCareOfChildren } from '../../school/care/care-purge';
 import { deleteDeletionRequestsOfChildren } from '../data-deletion/data-deletion-purge';
 import { deleteHomeworkOfChildren, homeworkMediaOfChildren } from '../../school/homework/homework-purge';
+import { deleteGuardianReviewsOfUsers, deleteLinkDataOfChildren } from '../../school/students/link-purge';
 import {
   hashPassword,
   verifyPassword,
@@ -166,6 +167,10 @@ export class UsersService {
       await deleteHomeworkOfChildren(tx, children.map((c) => c.id));
       // Bola ovozi: murojaatlar va ishtirok belgilari (bog'lanish child o'chganda uziladi).
       await deleteCareOfChildren(tx, children.map((c) => c.id));
+      // O'quvchi kodi yozuvlari va tuzatish so'rovlari (K2) + ularga bog'liq xodim bildirishnomalari.
+      await deleteLinkDataOfChildren(tx, children.map((c) => c.id));
+      // Ota-onaning vasiylik so'rovlari (6 raqamli kod, xodim ko'rigida) va ularning xodim bildirishnomalari.
+      await deleteGuardianReviewsOfUsers(tx, [userId]);
       // Ma'lumot o'chirish so'rovlari va ularga bog'liq xodim bildirishnomalari (o'quvchi ismi shu yerda).
       await deleteDeletionRequestsOfChildren(tx, children.map((c) => c.id));
 

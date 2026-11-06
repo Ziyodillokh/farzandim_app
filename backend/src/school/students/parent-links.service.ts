@@ -9,7 +9,12 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { SchoolAuditService } from '../common/school-audit.service';
 import { parseOrThrow } from '../common/school-zod';
 import { studentFullName, studentName } from './student-view';
+import { KeyedMutex } from './keyed-mutex';
+import { settleConfirmedLink, settleUnlinkedChildren } from './link-core';
+import { acquireLinkLocks, childLock, studentLock } from './link-locks';
+import { redeemParentSlot } from './parent-student-code';
 import { FailureLimiter } from './redeem-limiter';
+import { isStudentCode } from './student-code';
 import { childLinkSchema, redeemSchema } from './students.schemas';
 
 /** Noto'g'ri kod: foydalanuvchiga 30 daqiqada 5 ta, bitta IP'ga 30 ta. */
@@ -35,6 +40,8 @@ const tooManyAttempts = () =>
 export class ParentLinksService {
   private readonly userFailures = new FailureLimiter(USER_FAILURES, FAILURE_WINDOW_MS);
   private readonly ipFailures = new FailureLimiter(IP_FAILURES, FAILURE_WINDOW_MS);
+  /** "Tekshir -> bajar -> hisobla" bo'linmasligi uchun: parallel so'rovlar limitni aylanib o'ta olmaydi. */
+  private readonly mutex = new KeyedMutex();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -42,26 +49,33 @@ export class ParentLinksService {
   ) {}
 
   /**
-   * Taklif kodi: bir martalik, 7 kun; parallel kiritishda faqat bittasi yutadi.
-   * Noto'g'ri kodlar foydalanuvchi va IP bo'yicha sanaladi (tanlab topishga qarshi).
+   * Taklif kodi: 8 belgili vasiy kodi (bir martalik, 7 kun; parallel kiritishda faqat bittasi yutadi) YOKI 6 raqamli
+   * o'quvchi kodi (ota-ona o'rni, 24 soat). Noto'g'ri kodlar foydalanuvchi va IP bo'yicha sanaladi (tanlab
+   * topishga qarshi) — ikkala turdagi kod uchun bir xil limit.
    */
   async redeem(userId: string, input: unknown, ip = 'unknown') {
     const keys = [`user:${userId}`, `ip:${ip}`];
-    if (this.userFailures.blocked(keys[0]!) || this.ipFailures.blocked(keys[1]!)) throw tooManyAttempts();
-    const { code } = parseOrThrow(redeemSchema, input);
-    try {
-      await this.redeemCode(userId, code);
-    } catch (err) {
-      if (err instanceof NotFoundException) {
-        this.userFailures.fail(keys[0]!);
-        this.ipFailures.fail(keys[1]!);
+    await this.mutex.runExclusive(keys, async () => {
+      if (this.userFailures.blocked(keys[0]!) || this.ipFailures.blocked(keys[1]!)) throw tooManyAttempts();
+      const { code } = parseOrThrow(redeemSchema, input);
+      try {
+        await this.redeemCode(userId, code);
+      } catch (err) {
+        if (err instanceof NotFoundException) {
+          this.userFailures.fail(keys[0]!);
+          this.ipFailures.fail(keys[1]!);
+        }
+        throw err;
       }
-      throw err;
-    }
+    });
     return this.links(userId);
   }
 
   private async redeemCode(userId: string, code: string): Promise<void> {
+    if (isStudentCode(code)) {
+      await this.prisma.$transaction((tx) => redeemParentSlot(tx, this.audit, userId, code));
+      return;
+    }
     await this.prisma.$transaction(async (tx) => {
       const guardian = await tx.schoolGuardian.findUnique({
         where: { inviteCode: code },
@@ -96,9 +110,13 @@ export class ParentLinksService {
     });
   }
 
-  /** Maktab bog'lanishlari va moslash uchun ota-onaning farzandlari. */
+  /**
+   * Maktab bog'lanishlari va moslash uchun ota-onaning farzandlari. `status: 'LINKED'` — vasiy; `'PENDING_REVIEW'` —
+   * 6 raqamli kod kiritilgan, lekin vasiylik xodim tasdig'ini kutmoqda: bunday element o'quvchi ma'lumotisiz
+   * (`students: []`, `guardianId: null`) — ota-ona hech narsani ko'rmaydi va qila olmaydi.
+   */
   async links(userId: string) {
-    const [guardians, children] = await Promise.all([
+    const [guardians, children, reviews] = await Promise.all([
       this.prisma.schoolGuardian.findMany({
         where: { userId, linkStatus: 'LINKED', school: { status: 'ACTIVE' } },
         include: {
@@ -115,23 +133,49 @@ export class ParentLinksService {
         orderBy: { linkedAt: 'asc' },
       }),
       this.prisma.child.findMany({ where: { parentId: userId }, select: { id: true, name: true }, orderBy: { createdAt: 'asc' } }),
+      this.prisma.schoolGuardianReview.findMany({
+        where: { userId, status: 'OPEN', school: { status: 'ACTIVE' }, student: { archived: false } },
+        select: {
+          id: true,
+          createdAt: true,
+          school: { select: { id: true, name: true, shortName: true, logo: true, city: true } },
+          user: { select: { name: true } },
+        },
+        orderBy: { createdAt: 'asc' },
+      }),
     ]);
     const mine = new Set(children.map((c) => c.id));
     return {
-      links: guardians.map((g) => ({
-        guardianId: g.id,
-        fullName: g.fullName,
-        relation: g.relation,
-        linkedAt: g.linkedAt?.toISOString() ?? null,
-        school: g.school,
-        students: g.students.map(({ student: s }) => ({
-          id: s.id,
-          fullName: studentFullName(s),
-          className: s.class?.name ?? '',
-          childId: s.childId && mine.has(s.childId) ? s.childId : null,
-          linkedBy: linkedBy(s.childId, mine),
+      links: [
+        ...guardians.map((g) => ({
+          status: 'LINKED' as const,
+          guardianId: g.id as string | null,
+          reviewId: null as string | null,
+          fullName: g.fullName,
+          relation: g.relation as string,
+          linkedAt: g.linkedAt?.toISOString() ?? null,
+          requestedAt: null as string | null,
+          school: g.school,
+          students: g.students.map(({ student: s }) => ({
+            id: s.id,
+            fullName: studentFullName(s),
+            className: s.class?.name ?? '',
+            childId: s.childId && mine.has(s.childId) ? s.childId : null,
+            linkedBy: linkedBy(s.childId, mine),
+          })),
         })),
-      })),
+        ...reviews.map((r) => ({
+          status: 'PENDING_REVIEW' as const,
+          guardianId: null as string | null,
+          reviewId: r.id as string | null,
+          fullName: r.user.name?.trim() || 'Ota-ona',
+          relation: 'OTHER',
+          linkedAt: null as string | null,
+          requestedAt: r.createdAt.toISOString() as string | null,
+          school: r.school,
+          students: [] as Array<{ id: string; fullName: string; className: string; childId: string | null; linkedBy: string }>,
+        })),
+      ],
       children,
     };
   }
@@ -140,6 +184,8 @@ export class ParentLinksService {
   async setChild(userId: string, studentId: string, input: unknown) {
     const { childId } = parseOrThrow(childLinkSchema, input);
     await this.prisma.$transaction(async (tx) => {
+      // Kod orqali bog'lanish (bola kodi, xodim tasdig'i) bilan bir xil qulflar: qulf tartibi bola -> o'quvchi.
+      await acquireLinkLocks(tx, [...(childId ? [childLock(childId)] : []), studentLock(studentId)]);
       const student = await tx.schoolStudent.findFirst({
         where: { id: studentId, archived: false, guardians: { some: { guardian: { userId, linkStatus: 'LINKED' } } } },
       });
@@ -154,6 +200,10 @@ export class ParentLinksService {
       }
       if (student.childId === childId) return;
       await tx.schoolStudent.update({ where: { id: studentId }, data: { childId } });
+      // Bog'lanish o'zgardi: uzilgan bolaning kod o'rinlari / ochiq tuzatish so'rovi tozalanadi; yangi bola tasdiqlandi —
+      // uning yozuvlari ham (UNDER_REVIEW qayta tirilmasin).
+      if (student.childId) await settleUnlinkedChildren(tx, [student.childId]);
+      if (childId) await settleConfirmedLink(tx, studentId, childId);
       const name = studentName(student);
       await this.audit.writeExternal(
         student.schoolId,
@@ -184,15 +234,17 @@ export class ParentLinksService {
         data: { userId: null, linkStatus: 'NOT_INVITED', linkedAt: null },
       });
       const children = await tx.child.findMany({ where: { parentId: userId }, select: { id: true } });
+      await acquireLinkLocks(tx, children.map((c) => childLock(c.id)));
       // Shu oila boshqa vasiy yozuvi orqali ham bog'langan o'quvchida moslash qoladi.
-      await tx.schoolStudent.updateMany({
-        where: {
-          id: { in: guardian.students.map((s) => s.studentId) },
-          childId: { in: children.map((c) => c.id) },
-          guardians: { none: { guardian: { userId, linkStatus: 'LINKED' } } },
-        },
-        data: { childId: null },
-      });
+      const unlinkWhere: Prisma.SchoolStudentWhereInput = {
+        id: { in: guardian.students.map((s) => s.studentId) },
+        childId: { in: children.map((c) => c.id) },
+        guardians: { none: { guardian: { userId, linkStatus: 'LINKED' } } },
+      };
+      const affected = await tx.schoolStudent.findMany({ where: unlinkWhere, select: { childId: true } });
+      await tx.schoolStudent.updateMany({ where: unlinkWhere, data: { childId: null } });
+      // Uzilgan bolalarning kod o'rinlari bo'shaydi, ochiq tuzatish so'rovlari bekor qilinadi.
+      await settleUnlinkedChildren(tx, affected.flatMap((a) => (a.childId ? [a.childId] : [])));
       await this.audit.writeExternal(
         guardian.schoolId,
         `Ota-ona: ${guardian.fullName}`,

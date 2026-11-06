@@ -15,6 +15,7 @@ import { Actor, SchoolAuth } from '../auth/decorators';
 import { SchoolActor } from '../auth/school-actor';
 import { GuardiansService } from './guardians.service';
 import { Student360Service } from './student-360.service';
+import { StudentInvitesService } from './student-invites.service';
 import { StudentsWriteService } from './students-write.service';
 import { StudentsService } from './students.service';
 
@@ -27,6 +28,7 @@ export class StudentsController {
     private readonly write: StudentsWriteService,
     private readonly card: Student360Service,
     private readonly guardians: GuardiansService,
+    private readonly invites: StudentInvitesService,
   ) {}
 
   @Get('class-options')
@@ -76,6 +78,18 @@ export class StudentsController {
   @Post(':id/guardians')
   addGuardian(@Actor() actor: SchoolActor, @Param('id') id: string, @Body() body: unknown) {
     return this.guardians.addToStudent(actor, id, body);
+  }
+
+  @Post(':id/invite-code')
+  @ApiOperation({ summary: "O'quvchi kodi (6 raqam, 24 soat): yangisi oldingisini yopadi" })
+  generateInviteCode(@Actor() actor: SchoolActor, @Param('id') id: string) {
+    return this.invites.generate(actor, id);
+  }
+
+  @Get(':id/invite-code')
+  @ApiOperation({ summary: "Faol o'quvchi kodi va ikki o'rin holati (yo'q bo'lsa null)" })
+  inviteCode(@Actor() actor: SchoolActor, @Param('id') id: string) {
+    return this.invites.current(actor, id);
   }
 
   @Get(':id/history')

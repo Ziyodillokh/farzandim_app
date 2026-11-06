@@ -18,6 +18,8 @@ import { SchoolAuditService } from '../common/school-audit.service';
 import { conflict, forbidden, notFound } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
 import { INVITE_TTL_MS, uniqueInviteCode } from './invite-code';
+import { settleUnlinkedChildren } from './link-core';
+import { acquireLinkLocks, childLock } from './link-locks';
 import { bestLink, studentName, toGuardianView } from './student-view';
 import { bulkInviteSchema, GuardianFilter, guardianFilterSchema, guardianInputSchema } from './students.schemas';
 
@@ -228,14 +230,16 @@ export class GuardiansService {
         tx.schoolStudentGuardian.findMany({ where: { guardianId }, select: { studentId: true } }),
         tx.child.findMany({ where: { parentId: userId }, select: { id: true } }),
       ]);
-      await tx.schoolStudent.updateMany({
-        where: {
-          id: { in: links.map((l) => l.studentId) },
-          childId: { in: children.map((c) => c.id) },
-          guardians: { none: { guardian: { userId, linkStatus: 'LINKED' } } },
-        },
-        data: { childId: null },
-      });
+      await acquireLinkLocks(tx, children.map((c) => childLock(c.id)));
+      const unlinkWhere: Prisma.SchoolStudentWhereInput = {
+        id: { in: links.map((l) => l.studentId) },
+        childId: { in: children.map((c) => c.id) },
+        guardians: { none: { guardian: { userId, linkStatus: 'LINKED' } } },
+      };
+      const affected = await tx.schoolStudent.findMany({ where: unlinkWhere, select: { childId: true } });
+      await tx.schoolStudent.updateMany({ where: unlinkWhere, data: { childId: null } });
+      // Uzilgan bolalarning kod o'rinlari bo'shaydi, ochiq tuzatish so'rovlari bekor qilinadi.
+      await settleUnlinkedChildren(tx, affected.flatMap((a) => (a.childId ? [a.childId] : [])));
       await this.audit.write(
         actor,
         {

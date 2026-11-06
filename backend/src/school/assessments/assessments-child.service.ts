@@ -9,6 +9,7 @@ import { Prisma, SchoolPsychAssignment } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { tashkentDay, tashkentDayRange } from '../../common/time/tashkent';
 import { CareSettingsService } from '../care/care-settings.service';
+import { openCorrectionArgs } from '../common/child-student';
 import { estimatedMinutes } from '../common/estimated-minutes';
 import { SchoolCryptoService } from '../common/school-crypto.service';
 import { parseOrThrow } from '../common/school-zod';
@@ -206,9 +207,19 @@ export class AssessmentsChildService {
     if (!child) return null;
     const s = await this.prisma.schoolStudent.findUnique({
       where: { childId: child.id },
-      select: { id: true, schoolId: true, classId: true, archived: true, birthDate: true, class: { select: { grade: true } }, school: { select: { status: true } } },
+      select: {
+        id: true,
+        schoolId: true,
+        classId: true,
+        archived: true,
+        birthDate: true,
+        class: { select: { grade: true } },
+        school: { select: { status: true } },
+        linkCorrections: openCorrectionArgs(child.id),
+      },
     });
-    if (!s || s.archived || !s.classId || !s.class || s.school.status !== 'ACTIVE') return null;
+    // Ochiq "maktab / sinf noto'g'ri" so'rovi (A08): bolaning maktab ma'lumoti yopiq.
+    if (!s || s.archived || !s.classId || !s.class || s.school.status !== 'ACTIVE' || s.linkCorrections.length > 0) return null;
     return { id: s.id, childId: child.id, schoolId: s.schoolId, classId: s.classId, grade: s.class.grade, birthDate: s.birthDate, lang: childLang(child.childUser?.language) };
   }
 }

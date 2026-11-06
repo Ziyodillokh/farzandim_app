@@ -6,6 +6,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { tashkentDay } from '../../common/time/tashkent';
+import { openCorrectionArgs } from '../common/child-student';
 import { parseOrThrow } from '../common/school-zod';
 import { AttendanceArrivalService } from './attendance-arrival.service';
 import { CheckInError, KioskTokenService } from './attendance-kiosk-token';
@@ -43,10 +44,11 @@ export class AttendanceChildService {
     const schoolId = await this.tokens.verify(token, now);
     const student = await this.prisma.schoolStudent.findFirst({
       where: { childId, schoolId, archived: false },
-      include: enrolledInclude,
+      include: { ...enrolledInclude, linkCorrections: openCorrectionArgs(childId) },
     });
     const cls = student?.class;
-    if (!student || !cls) throw new CheckInError('NOT_ENROLLED');
+    // Ochiq "maktab / sinf noto'g'ri" so'rovi (A08): bolaning maktab ma'lumoti yopiq.
+    if (!student || !cls || student.linkCorrections.length > 0) throw new CheckInError('NOT_ENROLLED');
     await this.assertSchoolHours(schoolId, cls.shift, now);
     const ctx = { schoolId, studentId: student.id, classId: cls.id, source: 'QR' as const, now };
     const existing = await this.prisma.schoolAttendance.findUnique({
@@ -80,10 +82,12 @@ export class AttendanceChildService {
     const student = child
       ? await this.prisma.schoolStudent.findFirst({
           where: { childId: child.id, archived: false, classId: { not: null }, school: { status: 'ACTIVE' } },
-          include: enrolledInclude,
+          include: { ...enrolledInclude, linkCorrections: openCorrectionArgs(child.id) },
         })
       : null;
-    return { today: student ? await this.todayView(student, this.clock.now()) : null };
+    // Ochiq tuzatish so'rovi (A08) bo'lsa — bog'lanmagan bola kabi `null`.
+    const open = !!student && student.linkCorrections.length > 0;
+    return { today: student && !open ? await this.todayView(student, this.clock.now()) : null };
   }
 
   private async assertSchoolHours(schoolId: string, shift: { start: string; end: string; weekdays: number[] }, now: Date) {

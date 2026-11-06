@@ -10,6 +10,7 @@ import { tr } from '../../common/i18n/notification-i18n';
 import { deleteDeletionRequestsOfChildren } from '../data-deletion/data-deletion-purge';
 import { deleteCareOfChildren } from '../../school/care/care-purge';
 import { deleteHomeworkOfChildren, homeworkMediaOfChildren } from '../../school/homework/homework-purge';
+import { deleteLinkDataOfChildren } from '../../school/students/link-purge';
 
 export interface MediaObject {
   bucket: BucketName;
@@ -94,6 +95,8 @@ export class ChildDataPurgeService {
         await deleteHomeworkOfChildren(tx, [child.id]);
         // Bola ovozi: murojaatlar (yozishma cascade) va so'rovnoma ishtirok belgilari.
         await deleteCareOfChildren(tx, [child.id]);
+        // O'quvchi kodi yozuvlari va tuzatish so'rovlari (K2): profil qoladi, shuning uchun cascade ishlamaydi.
+        await deleteLinkDataOfChildren(tx, [child.id]);
         // Ma'lumot o'chirish so'rovlari (profil qoladi, shuning uchun cascade ishlamaydi).
         await deleteDeletionRequestsOfChildren(tx, [child.id]);
         // Kelajak: bolaning o'z javoblari (farovonlik, ochiq matn) va natijalari —
@@ -131,6 +134,7 @@ export class ChildDataPurgeService {
       // O'quvchi bog'lanishi (childId) child.delete'dan keyin SetNull bo'ladi — avval o'chiramiz.
       await deleteHomeworkOfChildren(tx, [child.id]);
       await deleteCareOfChildren(tx, [child.id]);
+      await deleteLinkDataOfChildren(tx, [child.id]);
       await deleteDeletionRequestsOfChildren(tx, [child.id]);
       // Cascade: lokatsiya, jadval, foto so'rovlar, AI suhbat va h.k.
       await tx.child.delete({ where: { id: child.id } });

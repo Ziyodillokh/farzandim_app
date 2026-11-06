@@ -7,6 +7,7 @@ import { Injectable } from '@nestjs/common';
 import { SchoolLearningAssignment } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { tashkentDay } from '../../common/time/tashkent';
+import { openCorrectionArgs } from '../common/child-student';
 import { toSubmissionSummary } from '../homework/homework-view';
 import { childAssignmentWhere } from './assignment-visibility';
 import { loadCatalog, Material, testSubjectOf } from './school-learning-catalog';
@@ -23,10 +24,18 @@ export class SchoolLearningChildService {
     const student = child
       ? await this.prisma.schoolStudent.findUnique({
           where: { childId: child.id },
-          select: { id: true, schoolId: true, classId: true, archived: true, school: { select: { status: true } } },
+          select: {
+            id: true,
+            schoolId: true,
+            classId: true,
+            archived: true,
+            school: { select: { status: true } },
+            linkCorrections: openCorrectionArgs(child.id),
+          },
         })
       : null;
-    if (!child || !student || student.archived || !student.classId || student.school.status !== 'ACTIVE') return [];
+    // Ochiq "maktab / sinf noto'g'ri" so'rovi (A08): bolaning maktab ma'lumoti yopiq.
+    if (!child || !student || student.archived || !student.classId || student.school.status !== 'ACTIVE' || student.linkCorrections.length > 0) return [];
     const today = tashkentDay();
     const [rows, catalog] = await Promise.all([
       this.prisma.schoolLearningAssignment.findMany({

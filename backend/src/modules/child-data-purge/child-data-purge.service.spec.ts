@@ -47,6 +47,14 @@ describe('ChildDataPurgeService', () => {
         update: jest.fn().mockResolvedValue({}),
       },
       kelajakSession: { deleteMany: jest.fn().mockResolvedValue({ count: 2 }) },
+      schoolStudentInvite: {
+        findMany: jest.fn().mockResolvedValue([{ id: 'invite-1' }]),
+        deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+      schoolLinkCorrection: {
+        findMany: jest.fn().mockResolvedValue([{ id: 'corr-1' }]),
+        deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
       childDataDeletionRequest: {
         findMany: jest.fn().mockResolvedValue([{ id: 'dr-1' }]),
         deleteMany: jest.fn().mockResolvedValue({ count: 1 }),

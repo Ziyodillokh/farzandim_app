@@ -18,6 +18,7 @@ import { StorageService } from '../../common/storage/storage.service';
 import { deleteCareOfChildren } from '../../school/care/care-purge';
 import { deleteDeletionRequestsOfChildren } from '../../modules/data-deletion/data-deletion-purge';
 import { deleteHomeworkObjects, deleteHomeworkOfChildren, homeworkKeysOf } from '../../school/homework/homework-purge';
+import { deleteGuardianReviewsOfUsers, deleteLinkDataOfChildren } from '../../school/students/link-purge';
 import { AdminAuditService } from '../../common/audit/admin-audit.service';
 import { tr } from '../../common/i18n/notification-i18n';
 import { GrantSubscriptionDto } from './dto/grant-subscription.dto';
@@ -625,6 +626,8 @@ export class AdminUsersService {
       await this.prisma.$transaction(async (tx) => {
         await deleteHomeworkOfChildren(tx, childIds);
         await deleteCareOfChildren(tx, childIds);
+        await deleteLinkDataOfChildren(tx, childIds);
+        await deleteGuardianReviewsOfUsers(tx, [id]);
         await deleteDeletionRequestsOfChildren(tx, childIds);
         await tx.user.delete({ where: { id } });
       });
