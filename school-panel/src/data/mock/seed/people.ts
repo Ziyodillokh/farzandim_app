@@ -12,6 +12,8 @@ export const FIXED_STAFF = {
   admin: 'stf-admin',
   homeroom7a: 'stf-homeroom-7a',
   psychologist: 'stf-psychologist',
+  /** Ikkinchi psixolog — «navbatchi o'rinbosar» sifatida tanlanadi (demo hisobi yo'q). */
+  psychologistDeputy: 'stf-psychologist-2',
   duty: 'stf-duty',
 } as const;
 
@@ -203,5 +205,25 @@ export function buildPeople(classes: SchoolClass[], academicYear: number, baseIs
     }
   }
 
+  staff.push(buildDeputyPsychologist());
+
   return { staff, students, guardians, families };
+}
+
+/**
+ * Ikkinchi psixolog. RNG ishlatilmaydi (seed determinizmi o'zgarmasin) va ro'yxat oxiriga qo'shiladi —
+ * qolgan xodimlar, o'quvchilar va portretlar avvalgidek qoladi.
+ */
+export function buildDeputyPsychologist(): Staff {
+  return {
+    id: FIXED_STAFF.psychologistDeputy,
+    fullName: 'Karimova Kamola Rustamovna',
+    position: 'Maktab psixologi (o\'rinbosar)',
+    role: 'PSYCHOLOGIST',
+    phone: '+998 90 555 01 02',
+    email: 'psychologist-2@pnm.demo.uz',
+    classIds: [],
+    username: null,
+    active: true,
+  };
 }

@@ -32,6 +32,7 @@ import {
   GraduationCap,
   Radio,
   ListChecks,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 import type { TKey } from '@/i18n';
@@ -66,6 +67,7 @@ export const ROUTES: readonly RouteDef[] = [
   { path: '/care/requests', perm: 'care.individual', titleKey: 'nav.careRequests', icon: MessageSquareHeart, parent: '/care' },
   { path: '/care/requests/view', perm: 'care.individual', titleKey: 'nav.careRequests', icon: MessageSquareHeart, hidden: true },
   { path: '/care/surveys', perm: 'care.surveys', titleKey: 'nav.careSurveys', icon: ListChecks, parent: '/care' },
+  { path: '/care/settings', perm: 'care.aggregate', titleKey: 'nav.careSettings', icon: SlidersHorizontal, parent: '/care' },
   { path: '/assessments', perm: 'assessments.manage', titleKey: 'nav.assessments', icon: Brain, group: 'wellbeing' },
   { path: '/assessments/view', perm: 'assessments.manage', titleKey: 'nav.assessments', icon: Brain, hidden: true },
   { path: '/development', perm: 'development.view', titleKey: 'nav.development', icon: Sprout, group: 'wellbeing' },

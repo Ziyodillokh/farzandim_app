@@ -8,6 +8,8 @@ import { ICON_CHIP, TILE } from '@/features/dashboard/lib/tile';
 import { useI18n } from '@/i18n';
 import { CARE_MIN_GROUP } from '@/lib/k-anon';
 import { cn } from '@/lib/utils';
+import { useCareSettings } from '../hooks';
+import { formatWorkHours, isSettingsConfigured } from '../lib/settings';
 
 function Point({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
@@ -18,6 +20,18 @@ function Point({ icon, children }: { icon: ReactNode; children: ReactNode }) {
       <span className="text-[0.8125rem] leading-relaxed text-foreground/80">{children}</span>
     </li>
   );
+}
+
+/**
+ * Psixolog ish vaqti jumlasi: sozlamadan; sozlama saqlanmagan (yoki o'qib bo'lmadi) bo'lsa — «belgilanmagan».
+ * Yuklanayotganda hech narsa ko'rsatilmaydi (yolg'on «belgilanmagan» miltillamasin).
+ */
+function WorkHours() {
+  const { t } = useI18n();
+  const settings = useCareSettings();
+  if (settings.isLoading) return null;
+  const configured = settings.data && isSettingsConfigured(settings.data);
+  return <span data-testid="privacy-hours"> {configured ? t('care.privacy.hours', { hours: formatWorkHours(t, settings.data) }) : t('care.privacy.hoursUnset')}</span>;
 }
 
 /** Bola ovozi maxfiylik banneri: anonim, k ≥ 5, tashxis yo'q, favqulodda xizmat emas. */
@@ -40,7 +54,10 @@ export function PrivacyBanner() {
           <Point icon={<EyeOff />}>{t('care.privacy.anonymous')}</Point>
           <Point icon={<Users />}>{t('care.privacy.kAnon', { k: CARE_MIN_GROUP })}</Point>
           <Point icon={<Stethoscope />}>{t('care.privacy.noDiagnosis')}</Point>
-          <Point icon={<Clock3 />}>{t('care.privacy.notEmergency')}</Point>
+          <Point icon={<Clock3 />}>
+            {t('care.privacy.notEmergency')}
+            <WorkHours />
+          </Point>
         </ul>
       </div>
     </Card>

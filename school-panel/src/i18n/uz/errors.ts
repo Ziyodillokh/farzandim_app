@@ -16,5 +16,10 @@ export const errors = {
     endBeforeStart: 'Tugash vaqti boshlanishdan keyin bo\'lishi kerak',
     selectAtLeastOne: 'Kamida bittasini tanlang',
     minutesRange: 'Vaqt 1 dan 240 daqiqagacha boʻlishi kerak',
+    slaMinutesRange: 'Muddat 15 dan 1440 daqiqagacha boʻlishi kerak',
+    slaHoursRange: 'Muddat 1 dan 168 soatgacha boʻlishi kerak',
+    deputySame: 'Oʻrinbosar masʼul psixologdan boshqa xodim boʻlishi kerak',
+    duplicateDay: 'Kun takrorlangan',
+    staffInvalid: 'Faqat faol psixolog xodimni tanlash mumkin',
   },
 };

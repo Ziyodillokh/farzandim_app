@@ -29,6 +29,7 @@ import { buildIndexes, studentName } from '../lookups';
 import { pushNotification } from '../notify';
 import type { Tables } from '../tables';
 import { compareSurveysByRecency, computeCareAggregate, defaultSurvey, isSurveyReady, surveyRespondentCount } from './care-aggregate';
+import { careSettingsService } from './care-settings';
 import { careSurveysService } from './care-surveys';
 
 /**
@@ -260,5 +261,6 @@ export const careService = {
     });
   },
 
+  ...careSettingsService,
   ...careSurveysService,
 };

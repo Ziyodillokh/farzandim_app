@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { api } from '@/data/api';
 import type { CareRequestStatus } from '@/data/contracts';
 import type { CareRequestFilter } from '@/data/mock/services/care';
-import type { CareAggregateQuery, CareQuestionInput, CareSurveyInput } from '@/data/schemas/care';
+import type { CareAggregateQuery, CareQuestionInput, CareSettingsInput, CareSurveyInput } from '@/data/schemas/care';
 import { type TKey, useI18n } from '@/i18n';
 import { errorKey } from '@/lib/errors';
 
@@ -19,6 +19,7 @@ export const careKeys = {
   request: (id: string) => ['care', 'request', id] as const,
   surveys: ['care', 'surveys'] as const,
   questions: ['care', 'questions'] as const,
+  settings: ['care', 'settings'] as const,
 };
 
 export function useCareSurveyOptions() {
@@ -50,6 +51,11 @@ export function useCareRequests(filter: CareRequestFilter, enabled = true) {
 
 export function useCareRequest(id: string | null) {
   return useQuery({ queryKey: careKeys.request(id ?? ''), queryFn: () => api.care.getRequest(id ?? ''), enabled: Boolean(id) });
+}
+
+/** Sozlamalar (ish vaqti, mas'ul xodimlar) — `care.aggregate` yoki `care.individual`. */
+export function useCareSettings(enabled = true) {
+  return useQuery({ queryKey: careKeys.settings, queryFn: () => api.care.getSettings(), enabled });
 }
 
 export function useCareSurveys() {
@@ -94,6 +100,10 @@ export function useScheduleMeeting() {
 
 export function useActivateProtocol() {
   return useCareMutation((id: string) => api.care.activateProtocol(id), 'care.request.protocol.activated');
+}
+
+export function useUpdateCareSettings() {
+  return useCareMutation((input: CareSettingsInput) => api.care.updateSettings(input), 'care.settings.saved');
 }
 
 export function useCreateSurvey() {

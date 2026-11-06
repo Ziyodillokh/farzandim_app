@@ -1,7 +1,8 @@
 import type { CareAggregate, CareQuestion, CareRequest, CareSurvey } from '@/data/contracts';
 import type { careService } from '@/data/mock/services/care';
-import type { CareAggregateQuery, CareQuestionInput, CareSurveyInput } from '@/data/schemas/care';
+import type { CareAggregateQuery, CareQuestionInput, CareSettingsInput, CareSurveyInput } from '@/data/schemas/care';
 import { http } from '../client';
+import { toCareSettingsBody, toCareSettingsView } from './care-adapters';
 
 type Care = typeof careService;
 type Result<K extends keyof Care> = Awaited<ReturnType<Care[K]>>;
@@ -18,6 +19,12 @@ export const careHttp: Care = {
   addRequestNote: (requestId, text) => http<CareRequest>('POST', `${BASE}/requests/${id(requestId)}/notes`, { body: { text } }),
   scheduleMeeting: (requestId, meetingAt) => http<CareRequest>('PUT', `${BASE}/requests/${id(requestId)}/meeting`, { body: { meetingAt } }),
   activateProtocol: (requestId) => http<CareRequest>('POST', `${BASE}/requests/${id(requestId)}/protocol`),
+  getSettings: async () => toCareSettingsView(await http<unknown>('GET', `${BASE}/settings`)),
+  /** PUT javobi kontraktda aniqlanmagan — saqlagach GET bilan o'qiladi (javob shakliga tayanmaymiz). */
+  updateSettings: async (input: CareSettingsInput) => {
+    await http<unknown>('PUT', `${BASE}/settings`, { body: toCareSettingsBody(input) });
+    return careHttp.getSettings();
+  },
   listSurveys: () => http<Result<'listSurveys'>>('GET', `${BASE}/surveys`),
   createSurvey: (input: CareSurveyInput) => http<CareSurvey>('POST', `${BASE}/surveys`, { body: input }),
   updateSurvey: (surveyId, input: CareSurveyInput) => http<CareSurvey>('PUT', `${BASE}/surveys/${id(surveyId)}`, { body: input }),

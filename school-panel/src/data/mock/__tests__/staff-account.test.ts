@@ -36,7 +36,7 @@ describe('xodim: xato xabarlari', () => {
 
   it('409 bo\'lmagan xatolar — umumiy xarita (errorKey)', () => {
     expect(staffErrorKey(new ServiceError('FORBIDDEN', 'staff.manage'))).toBe('errors.FORBIDDEN');
-    expect(staffErrorKey(new ServiceError('VALIDATION', 'username: errors.form.invalid'))).toBe('errors.form.invalid');
+    expect(staffErrorKey(new ServiceError('VALIDATION', 'username: errors.form.invalidDate'))).toBe('errors.form.invalidDate');
     expect(staffErrorKey(new Error('boom'))).toBe('errors.UNKNOWN');
   });
 });

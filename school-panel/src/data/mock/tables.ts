@@ -5,6 +5,7 @@ import type {
   AuditLog,
   CareQuestion,
   CareRequest,
+  CareSettings,
   CareResponse,
   CareSurvey,
   ClassActivity,
@@ -67,6 +68,8 @@ export type Tables = {
   careSurveys: CareSurvey[];
   careResponses: CareResponse[];
   careRequests: CareRequest[];
+  /** Bola ovozi sozlamalari; `null` — saqlanmagan (standart qiymatlar). */
+  careSettings: CareSettings | null;
   materials: LearningMaterial[];
   assignments: LearningAssignment[];
   /** Yozma vazifalar bo'yicha o'quvchilar topshirgan ishlar. */

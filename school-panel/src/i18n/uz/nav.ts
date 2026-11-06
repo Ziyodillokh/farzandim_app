@@ -32,6 +32,7 @@ export const nav = {
   careOverview: 'Umumiy natija',
   careRequests: 'Murojaatlar',
   careSurveys: 'So\'rovnomalar',
+  careSettings: 'Sozlamalar',
   assessments: 'Psixologik testlar',
   development: 'Rivojlanish',
   learning: 'Growth Learning',

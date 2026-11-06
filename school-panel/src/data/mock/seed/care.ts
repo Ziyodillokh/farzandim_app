@@ -3,6 +3,7 @@ import type {
   CareQuestion,
   CareRequest,
   CareResponse,
+  CareSettings,
   CareSurvey,
   CareTopic,
   SchoolClass,
@@ -138,4 +139,23 @@ export function buildCareRequests(students: Student[], baseIso: string): CareReq
   return spec
     .filter((entry): entry is [Student, Omit<CareRequest, 'id' | 'studentId' | 'classId'>] => Boolean(entry[0]))
     .map(([student, rest], i) => ({ id: `care-${i + 1}`, studentId: student.id, classId: student.classId, ...rest }));
+}
+
+/**
+ * Demo sozlamalar: mas'ul psixolog + o'rinbosar, Du–Ju 08:30–16:30 (avval banner matnida qattiq yozilgan
+ * vaqt) va javob muddatlari. `updatedAt` — seed sanasi (sozlama «saqlangan»).
+ */
+export function buildCareSettings(baseIso: string): CareSettings {
+  return {
+    psychologistStaffId: FIXED_STAFF.psychologist,
+    psychologistDisplayName: 'Lola opa',
+    deputyStaffId: FIXED_STAFF.psychologistDeputy,
+    deputyDisplayName: 'Kamola opa',
+    workDays: [1, 2, 3, 4, 5],
+    workStart: '08:30',
+    workEnd: '16:30',
+    urgentSlaMinutes: 60,
+    normalSlaHours: 24,
+    updatedAt: `${baseIso}T08:00:00`,
+  };
 }

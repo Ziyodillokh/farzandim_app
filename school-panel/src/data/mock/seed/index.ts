@@ -3,7 +3,7 @@ import { toIsoDate } from '../calendar';
 import { buildPsychSeed } from '../psych/seed';
 import type { Tables } from '../tables';
 import { buildAudit, buildEarlyExits } from './audit';
-import { buildCareRequests, buildQuestions, buildSurveys } from './care';
+import { buildCareRequests, buildCareSettings, buildQuestions, buildSurveys } from './care';
 import { buildAnnouncements, buildPayments, buildReminders, buildVerifications } from './comms';
 import { buildSubmissions, buildWrittenAssignments } from './homework';
 import { buildActivity, buildAssignments, buildMaterials } from './learning';
@@ -58,6 +58,7 @@ export function generateSeed(seed: number, now: Date): Tables {
     careSurveys: surveys,
     careResponses: responses,
     careRequests,
+    careSettings: buildCareSettings(baseIso),
     materials: buildMaterials(),
     assignments,
     submissions: buildSubmissions(assignments, people.students, baseIso),

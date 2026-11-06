@@ -19,5 +19,10 @@ export const errors: DeepString<typeof uz> = {
     endBeforeStart: 'Время окончания должно быть позже начала',
     selectAtLeastOne: 'Выберите хотя бы один вариант',
     minutesRange: 'Время — от 1 до 240 минут',
+    slaMinutesRange: 'Срок — от 15 до 1440 минут',
+    slaHoursRange: 'Срок — от 1 до 168 часов',
+    deputySame: 'Заместитель должен отличаться от ответственного психолога',
+    duplicateDay: 'День повторяется',
+    staffInvalid: 'Можно выбрать только активного психолога',
   },
 };

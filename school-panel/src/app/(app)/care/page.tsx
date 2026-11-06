@@ -1,6 +1,7 @@
 'use client';
 
-import { ClipboardList, HeartHandshake, MessageSquareHeart, Smile } from 'lucide-react';
+import { ClipboardList, HeartHandshake, MessageSquareHeart, SlidersHorizontal, Smile } from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
 
 import { useCan } from '@/auth/use-session';
@@ -9,6 +10,7 @@ import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
 import { StatCard } from '@/components/common/stat-card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -136,7 +138,21 @@ export default function CareOverviewPage() {
 
   return (
     <>
-      <PageHeader title={t('care.title')} subtitle={t('care.subtitle')} actions={surveySelect} />
+      <PageHeader
+        title={t('care.title')}
+        subtitle={t('care.subtitle')}
+        actions={
+          <>
+            {surveySelect}
+            <Button asChild variant="outline">
+              <Link href="/care/settings">
+                <SlidersHorizontal />
+                {t('care.settings.link')}
+              </Link>
+            </Button>
+          </>
+        }
+      />
       <PrivacyBanner />
       {can('care.individual') && <PsychologistLinks />}
       {body()}

@@ -1,4 +1,4 @@
-import type { Id, IsoDate, IsoDateTime } from './common';
+import type { HhMm, Id, IsoDate, IsoDateTime } from './common';
 
 export type AgeGroup = 'G1_4' | 'G5_8' | 'G9_11';
 export type CareTopic = 'WELLBEING' | 'LEARNING' | 'PEERS' | 'SAFETY' | 'SUPPORT' | 'FEEDBACK';
@@ -79,3 +79,31 @@ export type CareAggregate = {
   /** Murojaatlar — faqat haftalik umumiy son, kichik bo'lsa "<5". */
   requestsThisWeek: string;
 };
+
+/**
+ * Bola ovozi sozlamalari: mas'ul psixolog, navbatchi o'rinbosar, bolaga ko'rinadigan ismlar,
+ * ish vaqti va javob muddati (SLA, ish vaqti hisobida). Saqlangan yozuv yo'q bo'lsa — standart qiymatlar,
+ * `updatedAt: null`.
+ */
+export type CareSettings = {
+  psychologistStaffId: Id | null;
+  /** Bola ilovasida ko'rinadigan ism (masalan «Dilnoza opa»); bo'sh bo'lsa — xodimning to'liq ismi. */
+  psychologistDisplayName: string | null;
+  deputyStaffId: Id | null;
+  deputyDisplayName: string | null;
+  /** ISO hafta kunlari (1 = dushanba … 7 = yakshanba), takrorlanmaydi. */
+  workDays: number[];
+  /** "HH:MM" (Toshkent vaqti). */
+  workStart: HhMm;
+  workEnd: HhMm;
+  /** Shoshilinch murojaat: ochilish muddati, ish vaqti daqiqalarida. */
+  urgentSlaMinutes: number;
+  /** Oddiy murojaat: ochilish muddati, ish vaqti soatlarida. */
+  normalSlaHours: number;
+  /** Saqlangan yozuv yo'q (standart qiymatlar) bo'lsa — null. */
+  updatedAt: IsoDateTime | null;
+};
+
+/** Mas'ul va o'rinbosar tanlovi: faqat faol PSIXOLOG xodimlar. */
+export type CareStaffOption = { id: Id; fullName: string };
+export type CareSettingsView = CareSettings & { staffOptions: CareStaffOption[] };

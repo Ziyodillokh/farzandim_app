@@ -4,6 +4,8 @@ import { toIsoDate } from './calendar';
 import { clockNow } from './clock';
 import { buildPsychSeed } from './psych/seed';
 import { generateSeed } from './seed';
+import { buildCareSettings } from './seed/care';
+import { buildDeputyPsychologist } from './seed/people';
 import { buildActivity, CLOSED_WEEKS } from './seed/learning';
 import { buildSubmissions, buildWrittenAssignments } from './seed/homework';
 import { buildNotifications } from './seed/notifications';
@@ -105,7 +107,26 @@ function withHomework(db: DbSnapshot): DbSnapshot {
   return { ...db, tables: { ...db.tables, assignments, submissions: buildSubmissions(assignments, db.tables.students, db.baseDate) } };
 }
 
-const MIGRATIONS: readonly Migration[] = [withPortraits, withAssessments, withStaffTables, withActivityWeeks, withTimetables, withHomework];
+/**
+ * Bola ovozi sozlamalari: avval saqlangan bazada demo sozlamalar va ikkinchi psixolog (o'rinbosar) qo'shiladi.
+ * Foydalanuvchi sozlamani o'zi saqlagan bo'lsa (`careSettings !== undefined`) tegilmaydi.
+ */
+function withCareSettings(db: DbSnapshot): DbSnapshot {
+  if (db.tables.careSettings !== undefined) return db;
+  const deputy = buildDeputyPsychologist();
+  const staff = db.tables.staff.some((s) => s.id === deputy.id) ? db.tables.staff : assignAllPortraits([...db.tables.staff, deputy]);
+  return { ...db, tables: { ...db.tables, staff, careSettings: buildCareSettings(db.baseDate) } };
+}
+
+const MIGRATIONS: readonly Migration[] = [
+  withPortraits,
+  withAssessments,
+  withStaffTables,
+  withActivityWeeks,
+  withTimetables,
+  withHomework,
+  withCareSettings,
+];
 
 export function migrate(db: DbSnapshot): DbSnapshot {
   return MIGRATIONS.reduce((current, step) => step(current), db);
