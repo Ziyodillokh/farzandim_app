@@ -44,6 +44,19 @@ export class UnlockRequestsController {
     return this.service.listForParent(user.userId, query.status);
   }
 
+  @Get('mine')
+  @ApiOperation({ summary: "Bola o'zining so'nggi qo'shimcha vaqt so'rovlari (24 soat)" })
+  mine(@CurrentUser() user: JwtPayload) {
+    return this.service.listMine(user.userId);
+  }
+
+  @Post(':id/cancel')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Bola javob kutayotgan so'rovini bekor qiladi" })
+  cancel(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return this.service.cancel(id, user.userId);
+  }
+
   @Get('active')
   @ApiOperation({ summary: 'Child lists its currently active (approved) grants' })
   active(@CurrentUser() user: JwtPayload) {

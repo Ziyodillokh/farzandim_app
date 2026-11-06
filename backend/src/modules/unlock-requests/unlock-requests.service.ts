@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -27,6 +28,9 @@ import { tr } from '../../common/i18n/notification-i18n';
  * oladigan qo'shimcha vaqtga bu konstanta ta'sir qilmaydi.
  */
 const REQUEST_TTL_MS = 60 * 60 * 1000;
+
+/** Bolaning «mening so'rovlarim» oynasi (F04). */
+const MINE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class UnlockRequestsService {
@@ -219,6 +223,68 @@ export class UnlockRequestsService {
       grants: grants.map((r) => this.serialize(r)),
       count: grants.length,
     };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  GET /unlock-requests/mine — BOLA o'zining so'nggi so'rovlari (F04)  */
+  /* ------------------------------------------------------------------ */
+  /** Oxirgi 24 soat, yangisi birinchi — «Javob kutilmoqda» holati qayta ochilganda ham ko'rinsin. */
+  async listMine(userId: string) {
+    const child = await this.prisma.child.findFirst({
+      where: { childUserId: userId },
+      select: { id: true },
+    });
+    if (!child) throw new ForbiddenException('Only a paired child device');
+    await this.expireStale();
+    const requests = await this.prisma.unlockRequest.findMany({
+      where: {
+        childId: child.id,
+        requestedAt: { gte: new Date(Date.now() - MINE_WINDOW_MS) },
+      },
+      orderBy: { requestedAt: 'desc' },
+      take: 20,
+    });
+    return {
+      requests: requests.map((r) => this.serialize(r)),
+      count: requests.length,
+    };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  POST /unlock-requests/:id/cancel — BOLA javob kutayotgan so'rovini  */
+  /*  bekor qiladi (F04). Faqat PENDING; takroriy bekor qilish — o'sha    */
+  /*  javob (idempotent).                                                */
+  /* ------------------------------------------------------------------ */
+  async cancel(id: string, userId: string) {
+    const child = await this.prisma.child.findFirst({
+      where: { childUserId: userId },
+      select: { id: true, parentId: true },
+    });
+    if (!child) throw new ForbiddenException('Only a paired child device');
+    const request = await this.prisma.unlockRequest.findFirst({
+      where: { id, childId: child.id },
+    });
+    if (!request) throw new NotFoundException('Unlock request not found');
+    if (request.status === 'CANCELLED') return this.serialize(request);
+
+    // Shartli yangilash: ota-ona shu payt qaror bergan bo'lsa — qaror ustun.
+    const res = await this.prisma.unlockRequest.updateMany({
+      where: { id, status: 'PENDING', expiresAt: { gt: new Date() } },
+      data: { status: 'CANCELLED', decidedAt: new Date() },
+    });
+    if (res.count === 0) {
+      throw new ConflictException({
+        code: 'ALREADY_DECIDED',
+        message: 'Request is no longer pending',
+      });
+    }
+    const updated = await this.prisma.unlockRequest.findUniqueOrThrow({
+      where: { id },
+    });
+    const payload = this.serialize(updated);
+    this.realtime.emitToChild(child.id, 'unlock_request:cancelled', payload);
+    this.realtime.emitToUser(child.parentId, 'unlock_request:cancelled', payload);
+    return payload;
   }
 
   /* ------------------------------------------------------------------ */
