@@ -22,6 +22,7 @@ import {
   SubmitAnswerDto,
 } from './dto/learning.dto';
 import { LearningTopicsService } from './learning-topics.service';
+import { LearningWeeklyService } from './learning-weekly.service';
 import { LearningService } from './learning.service';
 
 /** Bola ilovasi: kunlik testlar (Growth). */
@@ -34,6 +35,7 @@ export class LearningController {
   constructor(
     private readonly learning: LearningService,
     private readonly topics: LearningTopicsService,
+    private readonly weekly: LearningWeeklyService,
   ) {}
 
   @Get('profile')
@@ -107,6 +109,13 @@ export class LearningController {
   async review(@CurrentUser() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
     const childId = await this.learning.childIdForUser(user.userId);
     return this.learning.review(childId, id);
+  }
+
+  @Get('weekly')
+  @ApiOperation({ summary: 'Haftalik faollik: joriy va oldingi ISO hafta (Toshkent)' })
+  async weeklyActivity(@CurrentUser() user: JwtPayload) {
+    const childId = await this.learning.childIdForUser(user.userId);
+    return this.weekly.weekly(childId);
   }
 
   @Get('results')

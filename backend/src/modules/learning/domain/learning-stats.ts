@@ -47,15 +47,22 @@ function percent(results: readonly StatResult[]): number | null {
   return total === 0 ? null : percentOf(results.reduce((s, r) => s + r.correct, 0), total);
 }
 
-export function learningStreak(results: readonly StatResult[], today: DayKey): number {
-  const days = new Set(results.map((r) => r.day));
-  let day = days.has(today) ? today : addDays(today, -1);
+/**
+ * [asOf] kunigacha ketma-ket test yechilgan kunlar: [asOf] (yoki u hali yechilmagan
+ * bo'lsa — kecha)dan orqaga. [asOf]dan keyingi kunlar hisobga olinmaydi.
+ */
+export function streakFromDays(days: ReadonlySet<DayKey>, asOf: DayKey): number {
+  let day = days.has(asOf) ? asOf : addDays(asOf, -1);
   let streak = 0;
   while (days.has(day)) {
     streak++;
     day = addDays(day, -1);
   }
   return streak;
+}
+
+export function learningStreak(results: readonly StatResult[], today: DayKey): number {
+  return streakFromDays(new Set(results.map((r) => r.day)), today);
 }
 
 /**
