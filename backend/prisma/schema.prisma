@@ -198,6 +198,8 @@ model Child {
   unlockRequests         UnlockRequest[]
   categoryBlocks         CategoryBlock[]
   notificationPreference NotificationPreference?
+  dataDeletionRequests   ChildDataDeletionRequest[]
+  pushDedupe             ChildPushDedupe[]
   aiMessages             AiMessage[]
   learningProfile        LearningProfile?
   learningAttempts       LearningAttempt[]
@@ -548,12 +550,57 @@ model NotificationPreference {
   lastStudyNudgeAt      DateTime? @map("last_study_nudge_at")
   lastHealthNudgeAt     DateTime? @map("last_health_nudge_at")
   lastContentReminderAt DateTime? @map("last_content_reminder_at")
+  // Men (I07): bola o'zi boshqaradigan sozlamalar.
+  homeworkReminder      Boolean   @default(true) @map("homework_reminder")
+  schoolAnnouncements   Boolean   @default(true) @map("school_announcements")
+  familyMessages        Boolean   @default(true) @map("family_messages")
+  dailyReminder         Boolean   @default(true) @map("daily_reminder")
+  // Kunlik eslatma vaqti "HH:MM" (Asia/Tashkent), 06:00–21:00.
+  dailyReminderTime     String    @default("18:00") @map("daily_reminder_time")
+  // true — push lock-screen'da neytral ("Parvoz" / "Yangi xabar"), mazmun va yuboruvchisiz.
+  hideText              Boolean   @default(true) @map("hide_text")
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
 
   child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
 
   @@map("notification_preferences")
+}
+
+enum ChildDeletionRequestStatus {
+  RECEIVED
+  CLOSED
+}
+
+/// Bolaning ma'lumotlarini o'chirish so'rovi (I09). Hech narsa avtomatik o'chmaydi —
+/// ota-ona va maktab xodimlari xabardor qilinadi.
+model ChildDataDeletionRequest {
+  id        String                     @id @default(uuid())
+  childId   String                     @map("child_id")
+  status    ChildDeletionRequestStatus @default(RECEIVED)
+  createdAt DateTime                   @default(now()) @map("created_at")
+  closedAt  DateTime?                  @map("closed_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([childId, createdAt(sort: Desc)])
+  @@map("child_data_deletion_requests")
+}
+
+/// Bolaga push'ni "bir marta" yuborish kafolati: (bola, tur, kalit) bo'yicha yagona qator
+/// (uy vazifasi eslatmasi — kun; maktab e'loni — e'lon id). Qayta urinish / takroriy cron dublikat yubormaydi.
+model ChildPushDedupe {
+  id        String   @id @default(uuid())
+  childId   String   @map("child_id")
+  kind      String
+  refKey    String   @map("ref_key")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, kind, refKey])
+  @@index([createdAt])
+  @@map("child_push_dedupe")
 }
 
 // ============================================

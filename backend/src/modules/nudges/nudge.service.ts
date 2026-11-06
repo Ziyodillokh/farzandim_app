@@ -1,12 +1,25 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { NotificationType, Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { FcmService } from '../../common/fcm/fcm.service';
 import { tr } from '../../common/i18n/notification-i18n';
+import { errorLabel } from '../../common/notification-prefs/error-label';
+import {
+  DEFAULT_REMINDER_TIME,
+  dueReminderTimes,
+  isQuietAt,
+  isValidReminderTime,
+  reminderDueNow,
+  tashkentMinutesOfDay,
+} from '../../common/notification-prefs/notification-prefs';
+import { TASHKENT_OFFSET_MS } from '../../common/time/tashkent';
 
-/** Asia/Tashkent (UTC+5, DST yo'q) — barcha vaqtlar shu mintaqada hisoblanadi. */
-const TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1000;
+/**
+ * Kunlik eslatma: belgilangan vaqtdan keyin shuncha daqiqagacha (server qisqa to'xtab qolgan bo'lsa ham)
+ * yuboriladi; undan keyin o'sha kun uchun o'tkazib yuboriladi.
+ */
+export const DAILY_REMINDER_CATCH_UP_MINUTES = 5;
 
 /** Health: shu qadamdan kam bo'lsa "harakat qil" eslatmasi (faol bo'lsa jim). */
 const HEALTH_STEPS_THRESHOLD = 3000;
@@ -21,6 +34,8 @@ interface NudgeChild {
     studyNudge: boolean;
     healthNudge: boolean;
     contentReminder: boolean;
+    dailyReminder: boolean;
+    dailyReminderTime: string;
     quietFrom: string | null;
     quietTo: string | null;
     lastStudyNudgeAt: Date | null;
@@ -53,9 +68,30 @@ const NUDGE_COPY: Record<
   },
 };
 
+const NUDGE_CHILD_SELECT = {
+  id: true,
+  name: true,
+  childUserId: true,
+  notificationPreference: {
+    select: {
+      studyNudge: true,
+      healthNudge: true,
+      contentReminder: true,
+      dailyReminder: true,
+      dailyReminderTime: true,
+      quietFrom: true,
+      quietTo: true,
+      lastStudyNudgeAt: true,
+      lastHealthNudgeAt: true,
+      lastContentReminderAt: true,
+    },
+  },
+} satisfies Prisma.ChildSelect;
+
 @Injectable()
 export class NudgeService {
   private readonly logger = new Logger(NudgeService.name);
+  private dailyReminderRunning = false;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -71,9 +107,65 @@ export class NudgeService {
     }
   }
 
+  /** Har daqiqada: kunlik o'qish eslatmasi vaqti (bola sozlagan, Toshkent) kelganlarga. */
+  @Cron(CronExpression.EVERY_MINUTE, { name: 'daily-reminder' })
+  async dailyReminderCron(): Promise<void> {
+    if (this.dailyReminderRunning) return;
+    this.dailyReminderRunning = true;
+    try {
+      const sent = await this.tickDailyReminder(new Date());
+      if (sent > 0) this.logger.log(`daily reminder: sent ${sent}`);
+    } catch (err) {
+      this.logger.error(`daily reminder xatosi: ${errorLabel(err)}`);
+    } finally {
+      this.dailyReminderRunning = false;
+    }
+  }
+
   /**
-   * Soatlik tekshiruv (test uchun `nowReal` beriladi). STUDY 16:00, HEALTH
-   * 18:00, CONTENT shanba 11:00 (Tashkent). Boshqa soatlarda darhol chiqadi.
+   * Kunlik o'qish eslatmasi (STUDY): har bolaga o'zining `dailyReminderTime` (standart 18:00, Toshkent)
+   * vaqtida; avvalgi "bugun test yechmagan bo'lsa" mantiqi o'zgarmagan. `studyNudge` (ota-ona) VA
+   * `dailyReminder` (bola) ikkalasi yoqilgan bo'lsa yuboriladi. Test uchun `nowReal` beriladi.
+   */
+  async tickDailyReminder(nowReal: Date): Promise<number> {
+    const t = new Date(nowReal.getTime() + TASHKENT_OFFSET_MS);
+    const minutes = tashkentMinutesOfDay(nowReal);
+    // Saqlanishi mumkin bo'lgan vaqtlar faqat 06:00–21:00 — tunda bazaga umuman murojaat qilinmaydi.
+    const times = dueReminderTimes(minutes, DAILY_REMINDER_CATCH_UP_MINUTES).filter(isValidReminderTime);
+    if (times.length === 0) return 0;
+    // Yozuvi yo'q bolalar standart vaqtda (18:00) eslatma oladi.
+    const includeDefault = times.includes(DEFAULT_REMINDER_TIME);
+    const children = (await this.prisma.child.findMany({
+      where: {
+        childUserId: { not: null },
+        OR: [
+          {
+            notificationPreference: {
+              is: { studyNudge: true, dailyReminder: true, dailyReminderTime: { in: times } },
+            },
+          },
+          ...(includeDefault ? [{ notificationPreference: { is: null } }] : []),
+        ],
+      },
+      select: NUDGE_CHILD_SELECT,
+    })) as NudgeChild[];
+
+    let sent = 0;
+    for (const child of children) {
+      const at = child.notificationPreference?.dailyReminderTime ?? DEFAULT_REMINDER_TIME;
+      if (!reminderDueNow(at, minutes, DAILY_REMINDER_CATCH_UP_MINUTES)) continue;
+      try {
+        if (await this.maybeSend('STUDY', child, t, nowReal)) sent++;
+      } catch (err) {
+        this.logger.warn(`daily reminder yuborilmadi: ${errorLabel(err)}`);
+      }
+    }
+    return sent;
+  }
+
+  /**
+   * Soatlik tekshiruv (test uchun `nowReal` beriladi). HEALTH 18:00, CONTENT shanba 11:00
+   * (Tashkent). Boshqa soatlarda darhol chiqadi. STUDY — `tickDailyReminder` (bola belgilagan vaqtda).
    */
   async tick(nowReal: Date): Promise<{ kind: NudgeKind | null; sent: number }> {
     const t = new Date(nowReal.getTime() + TASHKENT_OFFSET_MS);
@@ -81,34 +173,16 @@ export class NudgeService {
     const weekday = t.getUTCDay(); // 0=Yakshanba .. 6=Shanba
 
     const kind: NudgeKind | null =
-      hour === 16
-        ? 'STUDY'
-        : hour === 18
-          ? 'HEALTH'
-          : hour === 11 && weekday === 6
-            ? 'CONTENT'
-            : null;
+      hour === 18
+        ? 'HEALTH'
+        : hour === 11 && weekday === 6
+          ? 'CONTENT'
+          : null;
     if (!kind) return { kind: null, sent: 0 };
 
     const children = (await this.prisma.child.findMany({
       where: { childUserId: { not: null } },
-      select: {
-        id: true,
-        name: true,
-        childUserId: true,
-        notificationPreference: {
-          select: {
-            studyNudge: true,
-            healthNudge: true,
-            contentReminder: true,
-            quietFrom: true,
-            quietTo: true,
-            lastStudyNudgeAt: true,
-            lastHealthNudgeAt: true,
-            lastContentReminderAt: true,
-          },
-        },
-      },
+      select: NUDGE_CHILD_SELECT,
     })) as NudgeChild[];
 
     let sent = 0;
@@ -132,7 +206,7 @@ export class NudgeService {
     const pref = child.notificationPreference;
 
     // Preference (default true) — o'chirilgan bo'lsa jim.
-    if (kind === 'STUDY' && pref && !pref.studyNudge) return false;
+    if (kind === 'STUDY' && pref && !(pref.studyNudge && pref.dailyReminder)) return false;
     if (kind === 'HEALTH' && pref && !pref.healthNudge) return false;
     if (kind === 'CONTENT' && pref && !pref.contentReminder) return false;
 
@@ -221,23 +295,8 @@ export class NudgeService {
     pref: NudgeChild['notificationPreference'],
     tash: Date,
   ): boolean {
-    const from = this.parseHhMm(pref?.quietFrom);
-    const to = this.parseHhMm(pref?.quietTo);
-    if (from === null || to === null || from === to) return false;
-    const cur = tash.getUTCHours() * 60 + tash.getUTCMinutes();
-    return from < to
-      ? cur >= from && cur < to
-      : cur >= from || cur < to; // tun (22:00–08:00) wrap
-  }
-
-  private parseHhMm(v: string | null | undefined): number | null {
-    if (!v) return null;
-    const m = /^(\d{1,2}):(\d{2})$/.exec(v);
-    if (!m) return null;
-    const h = Number(m[1]);
-    const min = Number(m[2]);
-    if (h > 23 || min > 59) return null;
-    return h * 60 + min;
+    const minutes = tash.getUTCHours() * 60 + tash.getUTCMinutes();
+    return isQuietAt(pref?.quietFrom, pref?.quietTo, minutes);
   }
 
   /** `d` Tashkent kuni `tash` bilan bir xilmi (kuniga-bir guard). */
@@ -261,12 +320,18 @@ export class NudgeService {
     return new Date(wall - TASHKENT_OFFSET_MS);
   }
 
-  /** Bugun test yechganmi (olimpiada urinishi). */
+  /** Bugun test yechganmi (olimpiada urinishi yoki yakunlangan kunlik o'qish testi). */
   private async studiedToday(childId: string, tash: Date): Promise<boolean> {
-    const n = await this.prisma.olympiadAttempt.count({
-      where: { childId, startedAt: { gte: this.todayStartUtc(tash) } },
-    });
-    return n > 0;
+    const since = this.todayStartUtc(tash);
+    const [olympiad, learning] = await Promise.all([
+      this.prisma.olympiadAttempt.count({
+        where: { childId, startedAt: { gte: since } },
+      }),
+      this.prisma.learningAttempt.count({
+        where: { childId, status: 'COMPLETED', completedAt: { gte: since } },
+      }),
+    ]);
+    return olympiad + learning > 0;
   }
 
   /** Bugun yetarli harakat qilganmi (qadam). */

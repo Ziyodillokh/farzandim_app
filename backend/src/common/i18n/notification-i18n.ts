@@ -155,6 +155,33 @@ const T: Record<string, Record<NotifLang, string>> = {
     en: 'New videos are waiting for you 🎬',
   },
 
+  // ── Men: neytral push'lar (lock-screen'da mazmun va yuboruvchi ko'rinmaydi) ──
+  'push.neutralTitle': { uz: 'Parvoz', ru: 'Parvoz', en: 'Parvoz' },
+  // Oila xabari (bolaga, `hideText = true`): matn ham, yuboruvchi ham yo'q.
+  'familyMessage.body': {
+    uz: 'Yangi xabar',
+    ru: 'Новое сообщение',
+    en: 'New message',
+  },
+  // Maktab e'loni (bolaga, `hideText = true`).
+  'schoolAnnouncement.hiddenBody': {
+    uz: 'Maktabdan yangi e\u02bclon',
+    ru: 'Новое объявление школы',
+    en: 'New announcement from school',
+  },
+  // Ertaga muddati tugaydigan topshiriq (bolaga).
+  'homeworkDue.body': {
+    uz: 'Ertaga topshiriq muddati',
+    ru: 'Завтра срок задания',
+    en: 'An assignment is due tomorrow',
+  },
+  // Bola ma'lumotlarini o'chirishni so'radi (ota-onaga). Bola ismi push'da yo'q.
+  'dataDeletion.body': {
+    uz: 'Farzandingiz ma\u02bclumotlarini o\u02bbchirishni so\u02bbradi',
+    ru: 'Ваш ребёнок попросил удалить свои данные',
+    en: 'Your child asked to delete their data',
+  },
+
   // ── Vaqt qo'shish (unlock) qarori (bolaga) ──
   'unlock.approved': {
     uz: "Ota-onangiz {minutes} daqiqa qo'shimcha vaqt berdi.",
