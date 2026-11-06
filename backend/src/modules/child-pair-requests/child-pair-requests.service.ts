@@ -7,6 +7,10 @@ import {
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
+import {
+  announceSessionsClosed,
+  closeSessions,
+} from '../auth/session-revocation';
 import { PairRequestStatus } from './dto/list-pair-requests.dto';
 
 @Injectable()
@@ -77,7 +81,18 @@ export class ChildPairRequestsService {
 
     // Transactional re-pair
     const result = await this.prisma.$transaction(async (tx) => {
-      const oldChildUserId = pairReq.child.childUserId;
+      // Qulf tartibi `ChildSessionsService.open` va kirish maʼlumotlarini tiklash bilan bir xil: bola qatori -> foydalanuvchi
+      // qatori -> sessiyalar. Aks holda bir vaqtdagi login (yangi sessiya ochish) bilan o'zaro qulf (deadlock) bo'lishi mumkin.
+      await tx.$queryRaw`SELECT id FROM children WHERE id = ${childId} FOR UPDATE`;
+      // Qulf ostida qayta o'qiladi: login bola foydalanuvchisini orada yaratgan / almashtirgan bo'lishi mumkin.
+      const current = await tx.child.findUnique({
+        where: { id: childId },
+        select: { childUserId: true },
+      });
+      const oldChildUserId = current ? current.childUserId : pairReq.child.childUserId;
+      if (oldChildUserId) {
+        await tx.$queryRaw`SELECT id FROM users WHERE id = ${oldChildUserId} FOR UPDATE`;
+      }
 
       // "Bir bola = bir qurilma" qoidasi: eski qurilmani majburan chiqarish.
       //   - userSession revoke → barcha aktiv refresh tokenlar bekor
@@ -85,11 +100,14 @@ export class ChildPairRequestsService {
       //     darhol ishlamaydi (access token 15 daqiqada o'ladi)
       //   - isActive=false → keyingi login/refresh urinishlari rad etiladi
       //   - fcmToken o'chirildi → eski qurilmaga push xabarlar bormaydi
+      let closedSessions: string[] = [];
       if (oldChildUserId) {
-        await tx.userSession.updateMany({
-          where: { userId: oldChildUserId, revokedAt: null },
-          data: { revokedAt: new Date() },
-        });
+        // Sabab saqlanadi (A12 "sessiya yopildi"): login/parol bilan kirgan qurilmalar ham chiqadi.
+        closedSessions = await closeSessions(
+          tx,
+          oldChildUserId,
+          'PERMISSIONS_CHANGED',
+        );
         await tx.user.update({
           where: { id: oldChildUserId },
           data: {
@@ -137,8 +155,17 @@ export class ChildPairRequestsService {
         },
       });
 
-      return { newUser, oldChildUserId };
+      return { newUser, oldChildUserId, closedSessions };
     });
+
+    if (result.oldChildUserId) {
+      announceSessionsClosed(
+        this.realtime,
+        result.oldChildUserId,
+        result.closedSessions,
+        'PERMISSIONS_CHANGED',
+      );
+    }
 
     await this.audit.log(
       userId,

@@ -31,6 +31,10 @@ model User {
   language     String   @default("uz")
   isActive     Boolean  @default(true) @map("is_active")
   tokenVersion Int      @default(0) @map("token_version") // Sprint 6 P1 — logout'da increment
+  // Kirish (K1): bola foydalanuvchisi qanday yaratilgan — 'LOGIN' (login/parol bilan kirish), 'RECOVERED' (eski
+  // juftlash orqali yaratilgan, lekin juftlangan qurilma kirish maʼlumotlarini tiklashda chiqarilgan); NULL —
+  // oila kodi / QR bilan juftlash (barcha eski qatorlar): sid'siz juftlangan qurilma ASOSIY qurilma hisoblanadi.
+  createdVia   String?  @map("created_via")
   // 1-haftalik Standart demo (trial) BIR MARTA berilganmi. Akkaunt o'chirib
   // qayta ochilsa ham qayta trial olinmasligi uchun (bir foydalanuvchi = 1 trial).
   trialUsed    Boolean  @default(false) @map("trial_used")
@@ -97,6 +101,8 @@ model Child {
   // yasamasligi kerak, bo'sh ko'rsatadi.
   birthDate                DateTime? @map("birth_date") @db.Date
   gender                   String?
+  // Ta'lim tili (A06 profil): 'uz' | 'ru' | 'kaa'. NULL — hali tanlanmagan.
+  educationLanguage        String?   @map("education_language")
   region                   String?
   // SOS "Qo'ng'iroq" uchun bola telefon raqami (ota-ona kiritadi).
   phoneNumber              String?   @map("phone_number")
@@ -195,6 +201,9 @@ model Child {
   appLimits              AppLimit[]
   appPermissions         AppPermissionPolicy[]
   pairRequests           ChildPairRequest[]
+  // Kirish (K1): bola login/parol va tiklash so'rovlari
+  credential             ChildCredential?
+  recoveryRequests       ChildRecoveryRequest[]
   unlockRequests         UnlockRequest[]
   categoryBlocks         CategoryBlock[]
   notificationPreference NotificationPreference?
@@ -1513,11 +1522,89 @@ model UserSession {
   createdAt   DateTime  @default(now()) @map("created_at")
   lastSeenAt  DateTime  @default(now()) @map("last_seen_at")
   revokedAt   DateTime? @map("revoked_at")
+  // Kirish (K1): ilova o'rnatish identifikatori (qurilma), sessiya turi ('LOGIN' — login/parol bilan
+  // kirish; NULL — eski kirishlar) va yopilish sababi (RECOVERED | SIGNED_IN_ELSEWHERE | SIGNED_OUT |
+  // PERMISSIONS_CHANGED).
+  deviceId      String? @map("device_id")
+  kind          String?
+  revokedReason String? @map("revoked_reason")
+  // ASOSIY qurilma belgisi (faqat 'LOGIN' sessiyalar): bolada hozirgi asosiy qurilma bo'lmasa, yangi sessiya
+  // ASOSIY bo'ladi. Sessiya yopilganda belgi tozalanadi.
+  isMain        Boolean @default(false) @map("is_main")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, revokedAt])
   @@map("user_sessions")
+}
+
+// ============================================
+// KIRISH (K1) — bola login/parol va tiklash so'rovlari
+// ============================================
+// Credential'ni ota-ona yoki (bola maktab o'quvchisiga bog'langan bo'lsa) maktab beradi. Parol FAQAT
+// bcrypt xeshi sifatida saqlanadi; vaqtinchalik parol berilgan javobdan boshqa joyda yo'q.
+
+enum ChildCredentialIssuer {
+  PARENT
+  SCHOOL
+}
+
+model ChildCredential {
+  childId               String                @id @map("child_id")
+  /// Kichik harf, `^[a-z][a-z0-9._]{3,23}$`.
+  login                 String                @unique
+  passwordHash          String                @map("password_hash")
+  mustChangePassword    Boolean               @default(true) @map("must_change_password")
+  failedLogins          Int                   @default(0) @map("failed_logins")
+  /// Joriy xatolar oynasining boshlanishi (15 daqiqada 5 xato -> blok).
+  failedWindowStartedAt DateTime?             @map("failed_window_started_at")
+  lockedUntil           DateTime?             @map("locked_until")
+  issuedBy              ChildCredentialIssuer @map("issued_by")
+  issuedByUserId        String?               @map("issued_by_user_id")
+  issuedByStaffId       String?               @map("issued_by_staff_id")
+  issuedAt              DateTime              @default(now()) @map("issued_at")
+  passwordChangedAt     DateTime?             @map("password_changed_at")
+  lastLoginAt           DateTime?             @map("last_login_at")
+  createdAt             DateTime              @default(now()) @map("created_at")
+  updatedAt             DateTime              @updatedAt @map("updated_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("child_credentials")
+}
+
+enum ChildRecoveryChannel {
+  PARENT
+  SCHOOL
+}
+
+enum ChildRecoveryStatus {
+  RECEIVED
+  RESTORED
+  REJECTED
+}
+
+/// Bola "kirish maʼlumotlarini tiklash" so'rovi. `childId` NULL — mavjud bo'lmagan login uchun "o'lik"
+/// so'rov (hech qachon yechilmaydi; mavjudlik fosh bo'lmasin). Poll tokenning faqat xeshi saqlanadi.
+model ChildRecoveryRequest {
+  id               String               @id @default(uuid())
+  childId          String?              @map("child_id")
+  /// Samarali kanal (kimga yetkazildi): bola maktabga bog'lanmagan bo'lsa SCHOOL so'rovi PARENT'ga tushadi.
+  channel          ChildRecoveryChannel
+  /// Bola so'ragan kanal. Ommaviy poll AYNAN shuni qaytaradi (samarali kanal login mavjudligini fosh qilardi).
+  requestedChannel ChildRecoveryChannel @map("requested_channel")
+  status           ChildRecoveryStatus  @default(RECEIVED)
+  pollTokenHash    String               @map("poll_token_hash")
+  createdAt        DateTime             @default(now()) @map("created_at")
+  restoredAt       DateTime?            @map("restored_at")
+  signedOutAt      DateTime?            @map("signed_out_at")
+  rejectedAt       DateTime?            @map("rejected_at")
+
+  child Child? @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([childId, status])
+  @@index([createdAt])
+  @@map("child_recovery_requests")
 }
 
 // ============================================

@@ -5,10 +5,20 @@ import {
   MinLength,
   MaxLength,
   IsInt,
+  IsIn,
   Min,
   Max,
   Matches,
+  ValidateIf,
 } from 'class-validator';
+import {
+  EDUCATION_LANGUAGES,
+  EducationLanguage,
+} from '../../child-auth/child-auth.constants';
+
+/** Jins: `create-child.dto` / `update-child.dto` bilan bir xil qiymatlar. */
+export const MY_PROFILE_GENDERS = ['male', 'female'] as const;
+export type MyProfileGender = (typeof MY_PROFILE_GENDERS)[number];
 
 /**
  * Bola O'ZINI tahrirlaydigan maydonlar (CHILD JWT, `PUT /children/me`).
@@ -48,4 +58,19 @@ export class UpdateMyProfileDto {
   @IsString()
   @MaxLength(100)
   region?: string;
+
+  /**
+   * Jins (A06 profil): 'male' | 'female'. `null` qabul qilinmaydi (`@IsOptional` uni "yo'q" deb o'tkazib
+   * yuborardi va maydonni tozalab qo'yardi) — faqat berilmagan (undefined) bo'lsa o'zgarmaydi.
+   */
+  @ApiPropertyOptional({ enum: MY_PROFILE_GENDERS, example: 'female' })
+  @ValidateIf((_dto, value) => value !== undefined)
+  @IsIn(MY_PROFILE_GENDERS)
+  gender?: MyProfileGender;
+
+  /** Ta'lim tili (A06 profil): 'uz' | 'ru' | 'kaa' (`null` qabul qilinmaydi — yuqoridagi sabab). */
+  @ApiPropertyOptional({ enum: EDUCATION_LANGUAGES, example: 'uz' })
+  @ValidateIf((_dto, value) => value !== undefined)
+  @IsIn(EDUCATION_LANGUAGES)
+  educationLanguage?: EducationLanguage;
 }

@@ -24,9 +24,14 @@ export const THROTTLER_NAMES = {
   schoolLogin: 'schoolLogin',
   schoolLink: 'schoolLink',
   dataDeletion: 'dataDeletion',
+  childRecoveryLogin: 'childRecoveryLogin',
+  childRecoveryIp: 'childRecoveryIp',
+  childPasswordChange: 'childPasswordChange',
+  childCredentialIssue: 'childCredentialIssue',
 } as const;
 
 const TEN_MINUTES_MS = 600_000;
+const FIFTEEN_MINUTES_MS = 900_000;
 const ONE_DAY_MS = 86_400_000;
 
 /** child-pair: bitta (haqiqiy) IP'dan 10 daqiqada max urinishlar. */
@@ -61,6 +66,23 @@ export const SCHOOL_LINK_LIMIT = { limit: 30, ttl: TEN_MINUTES_MS };
  */
 export const DATA_DELETION_LIMIT = { limit: 3, ttl: ONE_DAY_MS };
 
+// Bola kirishi (child-login / child-setup) uchun IP limiti bu yerda EMAS: u faqat XATO urinishlarni sanaydi (10 daqiqada 30 ta,
+// muvaffaqiyatli kirish limitni yemaydi) va `modules/child-auth/child-ip-limits.ts` da. Hisob darajasidagi himoya alohida:
+// 15 daqiqada 5 xato -> blok (`ChildLoginService`).
+
+/** Kirish maʼlumotlarini tiklash so'rovi: bitta LOGIN (matn, mavjudligidan qat'i nazar) uchun sutkada 3 ta. */
+export const CHILD_RECOVERY_LOGIN_LIMIT = { limit: 3, ttl: ONE_DAY_MS };
+/**
+ * Bola parolini almashtirish (`POST /auth/child/password`): foydalanuvchi boshiga 15 daqiqada 10 ta. O'g'irlangan access token
+ * bilan joriy parolni parallel taxmin qilib bo'lmasin (har urinish bcrypt) — blok hisobi alohida (`ChildLoginAttempts`).
+ */
+export const CHILD_PASSWORD_CHANGE_LIMIT = { limit: 10, ttl: FIFTEEN_MINUTES_MS };
+/** Ota-onaning bola kirish maʼlumotini berishi / tiklashi: foydalanuvchi boshiga 10 daqiqada 20 ta (loginlarni sinab ko'rishga qarshi). */
+export const CHILD_CREDENTIAL_ISSUE_LIMIT = { limit: 20, ttl: TEN_MINUTES_MS };
+
+/** Kirish maʼlumotlarini tiklash so'rovi: bitta IP'dan sutkada 30 ta (maktab Wi-Fi'si ortidagi ko'p bola). */
+export const CHILD_RECOVERY_IP_LIMIT = { limit: 30, ttl: ONE_DAY_MS };
+
 const THROTTLER_LIMIT_KEY = 'THROTTLER:LIMIT';
 const reflector = new Reflector();
 
@@ -81,6 +103,16 @@ export function familyCodeTracker(req: Record<string, any>): string {
   const raw = (req as { body?: { familyCode?: unknown } }).body?.familyCode;
   const code = typeof raw === 'string' ? raw.trim().slice(0, 16) : '';
   return code ? `family:${code}` : `ip:${String(req.ip ?? 'unknown')}`;
+}
+
+/**
+ * Tiklash so'rovi tanasidagi login bo'yicha kuzatuv (bo'lmasa IP). Login MATNI sanaladi — u mavjudmi yoki
+ * yo'qligidan qat'i nazar, shuning uchun 429 login mavjudligini fosh qilmaydi.
+ */
+export function loginTracker(req: Record<string, any>): string {
+  const raw = (req as { body?: { login?: unknown } }).body?.login;
+  const login = typeof raw === 'string' ? raw.trim().toLowerCase().slice(0, 64) : '';
+  return login ? `login:${login}` : `ip:${String(req.ip ?? 'unknown')}`;
 }
 
 function onlyWhereDeclared(name: string): ThrottlerOptions['skipIf'] {
@@ -137,6 +169,27 @@ export function buildThrottlers(): ThrottlerOptions[] {
       name: THROTTLER_NAMES.dataDeletion,
       ...DATA_DELETION_LIMIT,
       skipIf: onlyWhereDeclared(THROTTLER_NAMES.dataDeletion),
+    },
+    {
+      name: THROTTLER_NAMES.childRecoveryLogin,
+      ...CHILD_RECOVERY_LOGIN_LIMIT,
+      getTracker: loginTracker,
+      skipIf: onlyWhereDeclared(THROTTLER_NAMES.childRecoveryLogin),
+    },
+    {
+      name: THROTTLER_NAMES.childRecoveryIp,
+      ...CHILD_RECOVERY_IP_LIMIT,
+      skipIf: onlyWhereDeclared(THROTTLER_NAMES.childRecoveryIp),
+    },
+    {
+      name: THROTTLER_NAMES.childPasswordChange,
+      ...CHILD_PASSWORD_CHANGE_LIMIT,
+      skipIf: onlyWhereDeclared(THROTTLER_NAMES.childPasswordChange),
+    },
+    {
+      name: THROTTLER_NAMES.childCredentialIssue,
+      ...CHILD_CREDENTIAL_ISSUE_LIMIT,
+      skipIf: onlyWhereDeclared(THROTTLER_NAMES.childCredentialIssue),
     },
   ];
 }

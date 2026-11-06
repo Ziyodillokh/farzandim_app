@@ -51,6 +51,12 @@ describe('ChildDataPurgeService', () => {
         findMany: jest.fn().mockResolvedValue([{ id: 'dr-1' }]),
         deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
+      // Kirish (K1): tiklash so'rovlari va login/parol
+      childRecoveryRequest: {
+        findMany: jest.fn().mockResolvedValue([{ id: 'rr-1' }]),
+        deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+      childCredential: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
       voiceMessage: {
         findMany: jest
           .fn()
@@ -204,6 +210,20 @@ describe('ChildDataPurgeService', () => {
       });
     });
 
+    it("deletes the child's login credentials, recovery requests and their staff notifications (the profile stays, so no cascade)", async () => {
+      await service.deleteChildAccount(CHILD_USER);
+
+      expect(prisma.childRecoveryRequest.findMany).toHaveBeenCalledWith({
+        where: { childId: { in: [CHILD_ID] } },
+        select: { id: true },
+      });
+      expect(prisma.schoolStaffNotification.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ['child-recovery:rr-1'] } },
+      });
+      expect(prisma.childRecoveryRequest.deleteMany).toHaveBeenCalledWith({ where: { childId: { in: [CHILD_ID] } } });
+      expect(prisma.childCredential.deleteMany).toHaveBeenCalledWith({ where: { childId: { in: [CHILD_ID] } } });
+    });
+
     it("removes the student from personal assignments' studentIds and target.studentIds (assignment itself stays)", async () => {
       prisma.schoolPsychAssignment.findMany.mockResolvedValue([
         { id: 'a-1', studentIds: ['student-1', 'student-2'], target: { kind: 'STUDENTS', studentIds: ['student-1', 'student-2'] } },
@@ -346,6 +366,26 @@ describe('ChildDataPurgeService', () => {
       expect(prisma.schoolStaffNotification.deleteMany).toHaveBeenCalledWith({
         where: { id: { in: ['data-deletion:dr-1'] } },
       });
+    });
+
+    it('deletes login credentials, recovery requests and their staff notifications BEFORE the profile', async () => {
+      const order: string[] = [];
+      prisma.childCredential.deleteMany.mockImplementation(async () => {
+        order.push('credentials');
+        return { count: 1 };
+      });
+      prisma.child.delete.mockImplementation(async () => {
+        order.push('child');
+        return {};
+      });
+
+      await service.purgeChildProfile({ id: CHILD_ID, parentId: PARENT, name: 'Ali', childUserId: CHILD_USER, photoPath: null });
+
+      expect(order).toEqual(['credentials', 'child']);
+      expect(prisma.schoolStaffNotification.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ['child-recovery:rr-1'] } },
+      });
+      expect(prisma.childRecoveryRequest.deleteMany).toHaveBeenCalledWith({ where: { childId: { in: [CHILD_ID] } } });
     });
 
     it('works for a profile that was never paired', async () => {

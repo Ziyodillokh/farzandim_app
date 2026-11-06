@@ -8,6 +8,7 @@ import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { BUCKETS, BucketName } from '../../common/storage/storage.constants';
 import { tr } from '../../common/i18n/notification-i18n';
 import { deleteDeletionRequestsOfChildren } from '../data-deletion/data-deletion-purge';
+import { deleteChildAuthOfChildren } from '../child-auth/child-auth-purge';
 import { deleteCareOfChildren } from '../../school/care/care-purge';
 import { deleteHomeworkOfChildren, homeworkMediaOfChildren } from '../../school/homework/homework-purge';
 
@@ -96,6 +97,8 @@ export class ChildDataPurgeService {
         await deleteCareOfChildren(tx, [child.id]);
         // Ma'lumot o'chirish so'rovlari (profil qoladi, shuning uchun cascade ishlamaydi).
         await deleteDeletionRequestsOfChildren(tx, [child.id]);
+        // Kirish maʼlumotlari (login/parol) va tiklash so'rovlari — profil qoladi, shuning uchun aniq o'chiriladi.
+        await deleteChildAuthOfChildren(tx, [child.id]);
         // Kelajak: bolaning o'z javoblari (farovonlik, ochiq matn) va natijalari —
         // javoblar sessiya bilan cascade o'chadi; keyingi qurilma ularni ko'rmaydi.
         await tx.kelajakSession.deleteMany({ where: { childId: child.id } });
@@ -132,6 +135,8 @@ export class ChildDataPurgeService {
       await deleteHomeworkOfChildren(tx, [child.id]);
       await deleteCareOfChildren(tx, [child.id]);
       await deleteDeletionRequestsOfChildren(tx, [child.id]);
+      // Kirish maʼlumotlari va tiklash so'rovlari (xodim bildirishnomalari FK'siz — avval).
+      await deleteChildAuthOfChildren(tx, [child.id]);
       // Cascade: lokatsiya, jadval, foto so'rovlar, AI suhbat va h.k.
       await tx.child.delete({ where: { id: child.id } });
       if (childUserId) {
