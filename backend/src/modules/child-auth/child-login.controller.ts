@@ -1,11 +1,12 @@
-import { Body, Controller, Get, Header, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Header, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import { Request } from 'express';
 import { CurrentUser, Public, Roles } from '../../common/decorators';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
-import { StructuredThrottlerGuard } from '../../common/throttle/structured-throttler.guard';
-import { CHILD_LOGIN_IP_LIMIT, THROTTLER_NAMES } from '../../common/throttle/throttle.config';
+import { StructuredUserThrottlerGuard } from '../../common/throttle/structured-throttler.guard';
+import { CHILD_PASSWORD_CHANGE_LIMIT, THROTTLER_NAMES } from '../../common/throttle/throttle.config';
 import {
   ChildLoginService,
   ChildOkBody,
@@ -24,41 +25,41 @@ export class ChildLoginController {
     private readonly sessions: ChildSessionsService,
   ) {}
 
+  // IP limiti (faqat XATO urinishlar, 10 daqiqada 30 ta) servis ichida — `ChildAuthIpLimits`.
   @Post('child-login')
   @Public()
-  @UseGuards(StructuredThrottlerGuard)
-  @Throttle({ [THROTTLER_NAMES.childLogin]: CHILD_LOGIN_IP_LIMIT })
   @HttpCode(HttpStatus.OK)
   @Header('Cache-Control', 'no-store')
   @ApiOperation({ summary: 'Bola login + parol bilan kiradi (yoki parol o\'rnatish talab etiladi)' })
   @ApiResponse({ status: 200, description: '{ status: OK, tokens… } yoki { status: SETUP_REQUIRED, setupToken }' })
-  @ApiResponse({ status: 401, description: 'INVALID_CREDENTIALS (noto\'g\'ri login yoki parol — bir xil)' })
-  @ApiResponse({ status: 429, description: 'LOCKED (15 daqiqada 5 xato) yoki RATE_LIMITED (IP)' })
-  childLogin(@Body() dto: ChildLoginDto): Promise<ChildOkBody | ChildSetupRequiredBody> {
-    return this.login.login(dto);
+  @ApiResponse({ status: 401, description: 'INVALID_CREDENTIALS (noto\'g\'ri login yoki parol — bir xil) | TEMP_PASSWORD_EXPIRED' })
+  @ApiResponse({ status: 429, description: 'LOCKED (15 daqiqada 5 xato) yoki RATE_LIMITED (IP: 10 daqiqada 30 xato)' })
+  childLogin(@Body() dto: ChildLoginDto, @Req() req: Request): Promise<ChildOkBody | ChildSetupRequiredBody> {
+    return this.login.login(dto, req.ip);
   }
 
   @Post('child-setup')
   @Public()
-  @UseGuards(StructuredThrottlerGuard)
-  @Throttle({ [THROTTLER_NAMES.childLogin]: CHILD_LOGIN_IP_LIMIT })
   @HttpCode(HttpStatus.OK)
   @Header('Cache-Control', 'no-store')
   @ApiOperation({ summary: 'Birinchi kirish: setupToken bilan o\'z parolini o\'rnatadi va kiradi' })
-  @ApiResponse({ status: 401, description: 'SETUP_TOKEN_INVALID (muddati tugagan / ishlatilgan / yaroqsiz)' })
+  @ApiResponse({ status: 401, description: 'SETUP_TOKEN_INVALID (muddati tugagan / ishlatilgan / yaroqsiz) | TEMP_PASSWORD_EXPIRED' })
   @ApiResponse({ status: 400, description: 'WEAK_PASSWORD' })
-  childSetup(@Body() dto: ChildSetupDto): Promise<ChildOkBody> {
-    return this.login.setup(dto);
+  @ApiResponse({ status: 429, description: 'RATE_LIMITED (IP: 10 daqiqada 30 ta SETUP_TOKEN_INVALID)' })
+  childSetup(@Body() dto: ChildSetupDto, @Req() req: Request): Promise<ChildOkBody> {
+    return this.login.setup(dto, req.ip);
   }
 
   @Post('child/password')
   @Roles('CHILD')
+  @UseGuards(StructuredUserThrottlerGuard)
+  @Throttle({ [THROTTLER_NAMES.childPasswordChange]: CHILD_PASSWORD_CHANGE_LIMIT })
   @ApiBearerAuth('consumer-jwt')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Bola parolini almashtiradi; boshqa LOGIN sessiyalar yopiladi' })
   @ApiResponse({ status: 400, description: 'WRONG_PASSWORD | WEAK_PASSWORD' })
   @ApiResponse({ status: 404, description: 'NO_CREDENTIAL (oila kodi bilan juftlangan, login berilmagan)' })
-  @ApiResponse({ status: 429, description: 'LOCKED' })
+  @ApiResponse({ status: 429, description: 'LOCKED | RATE_LIMITED (foydalanuvchi boshiga 15 daqiqada 10 ta)' })
   async changePassword(@CurrentUser() user: JwtPayload, @Body() dto: ChangeChildPasswordDto): Promise<void> {
     await this.login.changePassword(user, dto);
   }

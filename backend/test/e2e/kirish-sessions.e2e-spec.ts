@@ -272,6 +272,80 @@ describe('Kirish K1: bola sessiyalari', () => {
       expect((await childLogin(t, cred.login, OWN_PASSWORD)).statusCode).toBe(429);
     });
 
+    /** `bcrypt.compare` parolni tekshirib bo'lgach darvozada kutadi: parallel o'zgarish aynan shu oynada bo'ladi. */
+    function gateCompare() {
+      const bcrypt = jest.requireActual<typeof import('bcryptjs')>('bcryptjs');
+      const realCompare = bcrypt.compare.bind(bcrypt) as (...args: unknown[]) => Promise<boolean>;
+      let reached!: () => void;
+      let open!: () => void;
+      const atGate = new Promise<void>((resolve) => (reached = resolve));
+      const gate = new Promise<void>((resolve) => (open = resolve));
+      jest.spyOn(bcrypt, 'compare').mockImplementation((async (...args: unknown[]) => {
+        const ok = await realCompare(...args);
+        reached();
+        await gate;
+        return ok;
+      }) as never);
+      return { atGate, open, restore: () => jest.restoreAllMocks() };
+    }
+
+    it('re-checks the lock after the slow comparison: a correct guess that finishes after the lock is refused (429 LOCKED)', async () => {
+      const a = await loginThroughSetup(t, cred);
+      const gate = gateCompare();
+
+      const pending = change(a.accessToken, OWN_PASSWORD, 'Yangi-parol-77');
+      await gate.atGate;
+      await t.prisma.childCredential.update({
+        where: { childId: child.childId },
+        data: { failedLogins: 5, failedWindowStartedAt: new Date(), lockedUntil: new Date(Date.now() + 600_000) },
+      });
+      gate.open();
+      const res = await pending;
+      gate.restore();
+
+      expect(res.statusCode).toBe(429);
+      expect(res.json()).toMatchObject({ statusCode: 429, code: 'LOCKED' });
+      await t.prisma.childCredential.update({
+        where: { childId: child.childId },
+        data: { failedLogins: 0, failedWindowStartedAt: null, lockedUntil: null },
+      });
+      expect((await childLogin(t, cred.login, OWN_PASSWORD)).statusCode).toBe(200); // parol o'zgarmagan
+      expect((await childLogin(t, cred.login, 'Yangi-parol-77')).statusCode).toBe(401);
+    });
+
+    it('refuses with 409 PASSWORD_CHANGED when a credential reset lands while the password is being verified', async () => {
+      const a = await loginThroughSetup(t, cred);
+      const gate = gateCompare();
+
+      const pending = change(a.accessToken, OWN_PASSWORD, 'Yangi-parol-77');
+      await gate.atGate;
+      const next = await issueAsParent(t, parent, child.childId, { signOutDevices: false });
+      gate.open();
+      const res = await pending;
+      gate.restore();
+
+      expect(res.statusCode).toBe(409);
+      expect(res.json()).toMatchObject({ statusCode: 409, code: 'PASSWORD_CHANGED' });
+      const fresh = await childLogin(t, next.login, next.temporaryPassword);
+      expect(fresh.json().status).toBe('SETUP_REQUIRED'); // yangi vaqtinchalik parol buzilmagan
+    });
+
+    it('limits the attempts to 10 per 15 minutes per user (structured 429 RATE_LIMITED); other children are unaffected', async () => {
+      const a = await loginThroughSetup(t, cred);
+      const statuses: number[] = [];
+
+      // To'g'ri joriy parol + zaif yangi parol: blokka sanalmaydi, lekin har urinish bcrypt (CPU) — throttle kerak.
+      for (let i = 0; i < 11; i++) statuses.push((await change(a.accessToken, OWN_PASSWORD, 'Ab1')).statusCode);
+
+      expect(statuses).toEqual([...Array<number>(10).fill(400), 429]);
+      const blocked = await change(a.accessToken, OWN_PASSWORD, 'Ab1');
+      expect(blocked.json()).toEqual({ statusCode: 429, code: 'RATE_LIMITED', message: 'Too many requests', retryAfterSeconds: expect.any(Number) });
+      const other = await familyOf(t, 'Bobur Aliyev');
+      const otherCred = await issueAsParent(t, other.parent, other.child.childId);
+      const own = await loginThroughSetup(t, otherCred);
+      expect((await change(own.accessToken, OWN_PASSWORD, 'Yangi-parol-77')).statusCode).toBe(204);
+    }, 120_000);
+
     it.each([
       ['too short', 'Ab1', 'TOO_SHORT'],
       ['same as the current password', OWN_PASSWORD, 'SAME_AS_CURRENT'],

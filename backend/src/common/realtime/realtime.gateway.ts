@@ -51,6 +51,13 @@ export class RealtimeGateway
         secret: this.config.get('JWT_ACCESS_SECRET', { infer: true }),
       });
 
+      // Yopilgan sessiya / bekor qilingan token bilan ulanish yo'q (tiklash, chiqarilgan qurilma qayta ulanib
+      // `user:<id>` hodisalarini tinglab turmasin).
+      if (await this.isRevoked(payload)) {
+        client.disconnect();
+        return;
+      }
+
       client.data.userId = payload.userId;
       client.data.role = payload.role;
 
@@ -62,6 +69,33 @@ export class RealtimeGateway
       );
     } catch {
       client.disconnect();
+    }
+  }
+
+  /**
+   * Token bekor qilinganmi: `sid`li token — sessiya yopilgan/yo'q bo'lsa; `tokenVersion` mos kelmasa yoki foydalanuvchi
+   * nofaol bo'lsa. Infratuzilma xatosi (DB) ulanishni to'smaydi: avvalgidek JWT imzosi yetarli.
+   */
+  private async isRevoked(payload: JwtPayload): Promise<boolean> {
+    try {
+      if (payload.sid) {
+        const session = await this.prisma.userSession.findUnique({
+          where: { id: payload.sid },
+          select: { userId: true, revokedAt: true },
+        });
+        if (!session || session.userId !== payload.userId || session.revokedAt) return true;
+      }
+      if (payload.tokenVersion !== undefined) {
+        const user = await this.prisma.user.findUnique({
+          where: { id: payload.userId },
+          select: { tokenVersion: true, isActive: true },
+        });
+        if (!user || !user.isActive || user.tokenVersion !== payload.tokenVersion) return true;
+      }
+      return false;
+    } catch (err) {
+      this.logger.warn(`socket token tekshiruvi bajarilmadi: ${err instanceof Error ? err.name : 'noma\'lum xato'}`);
+      return false;
     }
   }
 
@@ -126,6 +160,22 @@ export class RealtimeGateway
    */
   emitToUser(userId: string, event: string, payload: unknown): void {
     this.server.to(`user:${userId}`).emit(event, payload);
+  }
+
+  /**
+   * Foydalanuvchining barcha ochiq socketlarini uzadi (masalan, kirish maʼlumotlari tiklanganda yo'qolgan qurilma
+   * tinglab turmasin). Oldin yuborilgan `session:closed` yetib borishi uchun biroz kechiktiriladi; mijoz qayta
+   * ulansa, tokeni {@link isRevoked} tekshiruvidan o'tmaydi.
+   */
+  disconnectUser(userId: string, afterMs = 1500): void {
+    const timer = setTimeout(() => {
+      try {
+        this.server.in(`user:${userId}`).disconnectSockets(true);
+      } catch {
+        // WebSocket server to'xtagan bo'lishi mumkin.
+      }
+    }, afterMs);
+    timer.unref();
   }
 
   /**

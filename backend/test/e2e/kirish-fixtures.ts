@@ -18,12 +18,20 @@ export interface DeviceBody {
   id: string;
   model?: string;
   platform: 'android' | 'ios';
+  /** `false` — qurilma boshqa bolaning nazoratini yuritadi: yangi sessiya ASOSIY bo'lmaydi (yuborilmasa standart true). */
+  hostsControl?: boolean;
 }
 
-export const device = (id = 'install-1', platform: 'android' | 'ios' = 'android', model = 'Redmi Note 12S'): DeviceBody => ({
+export const device = (
+  id = 'install-1',
+  platform: 'android' | 'ios' = 'android',
+  model = 'Redmi Note 12S',
+  hostsControl?: boolean,
+): DeviceBody => ({
   id,
   model,
   platform,
+  ...(hostsControl !== undefined && { hostsControl }),
 });
 
 let ipSeq = 0;
@@ -44,7 +52,13 @@ export interface IssuedCredential {
   login: string;
   temporaryPassword: string;
   issuedAt: string;
+  /** `issuedAt` + 14 kun: shundan keyin vaqtinchalik parol TEMP_PASSWORD_EXPIRED beradi. */
+  temporaryPasswordExpiresAt: string;
 }
+
+/** Vaqtinchalik parol amal qilish muddati (kun) — kontrakt. */
+export const TEMP_PASSWORD_TTL_DAYS = 14;
+export const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Ota-ona bolaga kirish maʼlumotlarini beradi (yoki qayta tiklaydi). */
 export async function issueAsParent(

@@ -15,6 +15,20 @@ import type { PasswordIssue } from './child-credentials.helpers';
 export const invalidCredentials = () =>
   new UnauthorizedException({ code: 'INVALID_CREDENTIALS', message: 'Invalid credentials' });
 
+/**
+ * To'g'ri, lekin muddati (14 kun) o'tgan vaqtinchalik parol: setupToken berilmaydi. Parolni bilmaydigan odamga hech
+ * narsa ochmaydi (noto'g'ri parol baribir INVALID_CREDENTIALS). Tiklash so'rovi bilan yangisi olinadi.
+ */
+export const tempPasswordExpired = () =>
+  new UnauthorizedException({ code: 'TEMP_PASSWORD_EXPIRED', message: 'Temporary password has expired' });
+
+/** Bitta IP'dan juda ko'p XATO urinish (muvaffaqiyatli kirish sanalmaydi). */
+export const ipRateLimited = (retryAfterSeconds: number) =>
+  new HttpException(
+    { code: 'RATE_LIMITED', message: 'Too many requests', retryAfterSeconds },
+    HttpStatus.TOO_MANY_REQUESTS,
+  );
+
 /** Blok: login (yoki xotiradagi "soya" hisob) 15 daqiqaga bloklangan. */
 export const lockedError = (retryAfterSeconds: number) =>
   new HttpException(

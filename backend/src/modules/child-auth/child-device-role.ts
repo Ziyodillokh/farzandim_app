@@ -7,6 +7,10 @@
 //   (b) yopilmagan LOGIN sessiyasi asosiy deb belgilangan (`UserSession.isMain`).
 // Aks holda yangi sessiya ASOSIY bo'ladi. Asosiy sessiya yopilsa rol bo'shaydi; sessiyalarni chiqaradigan
 // tiklash (`signOutDevices`) juftlangan qurilmani ham asosiylikdan chiqaradi (`createdVia = 'RECOVERED'`).
+//
+// `device.hostsControl = false` (bu qurilma boshqa bolaning nazoratini yuritadi, shu bolaniki ishlamaydi): YANGI sessiya
+// hech qachon ASOSIY bo'lmaydi. Istisno: shu qurilmadagi hozirgi ASOSIY sessiyani almashtiradigan qayta kirish ASOSIY
+// qoladi — egasi qayta kirganda pasaytirilmaydi.
 
 export const DEVICE_ROLES = ['MAIN', 'SECONDARY'] as const;
 export type DeviceRole = (typeof DEVICE_ROLES)[number];
@@ -19,6 +23,17 @@ export const CREATED_VIA_RECOVERED = 'RECOVERED';
 /** Eski juftlash (oila kodi / QR) bilan yaratilgan foydalanuvchimi (eski qatorlarda `createdVia` NULL). */
 export const isLegacyPairedUser = (user: { createdVia: string | null }): boolean => user.createdVia === null;
 
-export function decideDeviceRole(current: { legacyPairedMain: boolean; activeLoginMain: boolean }): DeviceRole {
-  return current.legacyPairedMain || current.activeLoginMain ? 'SECONDARY' : 'MAIN';
+export interface DeviceRoleInput {
+  legacyPairedMain: boolean;
+  activeLoginMain: boolean;
+  /** `device.hostsControl` (standart `true`): `false` bo'lsa yangi sessiya ASOSIY bo'lmaydi. */
+  hostsControl?: boolean;
+  /** Shu qurilmadagi, hozir almashtirilgan sessiya ASOSIY edi (egasining qayta kirishi). */
+  replacesMainOnSameDevice?: boolean;
+}
+
+export function decideDeviceRole(current: DeviceRoleInput): DeviceRole {
+  if (current.legacyPairedMain || current.activeLoginMain) return 'SECONDARY';
+  if (current.hostsControl === false && !current.replacesMainOnSameDevice) return 'SECONDARY';
+  return 'MAIN';
 }

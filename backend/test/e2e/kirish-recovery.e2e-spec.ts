@@ -80,6 +80,7 @@ describe('Kirish K1: tiklash so\'rovi (bola tomoni)', () => {
       expect(row).toMatchObject({
         childId: w.child.childId,
         channel: 'PARENT',
+        requestedChannel: 'PARENT',
         status: 'RECEIVED',
         restoredAt: null,
         signedOutAt: null,
@@ -181,7 +182,7 @@ describe('Kirish K1: tiklash so\'rovi (bola tomoni)', () => {
       expect(t.fcm.sent.every((p) => p.userId === w.parent.userId)).toBe(true);
     });
 
-    it('SCHOOL falls back to the parent when the child is not linked to a school', async () => {
+    it('SCHOOL falls back to the parent when the child is not linked to a school (the poll still reports the REQUESTED channel)', async () => {
       const lone = await createParent(t.prisma);
       const loneChild = await createChild(t.prisma, lone, { name: 'Yolgiz Bola' });
       const loneCred = await issueAsParent(t, lone, loneChild.childId);
@@ -190,8 +191,26 @@ describe('Kirish K1: tiklash so\'rovi (bola tomoni)', () => {
 
       expect(t.fcm.pushesTo(lone.userId).filter((p) => p.data?.type === 'CHILD_RECOVERY_REQUEST')).toHaveLength(1);
       expect(await stored()).toEqual([]);
-      expect((await poll(r)).json()).toMatchObject({ channel: 'PARENT', status: 'RECEIVED' });
-      expect((await t.prisma.childRecoveryRequest.findUniqueOrThrow({ where: { id: r.requestId } })).channel).toBe('PARENT');
+      // Poll bola SO'RAGAN kanalni qaytaradi: samarali kanal ("PARENT") login mavjudligini fosh qilardi.
+      expect((await poll(r)).json()).toMatchObject({ channel: 'SCHOOL', status: 'RECEIVED' });
+      expect(await t.prisma.childRecoveryRequest.findUniqueOrThrow({ where: { id: r.requestId } })).toMatchObject({
+        channel: 'PARENT',
+        requestedChannel: 'SCHOOL',
+      });
+    });
+
+    it('the poll of an existing but unlinked child is indistinguishable from the poll of an unknown login (no existence oracle)', async () => {
+      const lone = await createParent(t.prisma);
+      const loneChild = await createChild(t.prisma, lone, { name: 'Yolgiz Bola' });
+      const loneCred = await issueAsParent(t, lone, loneChild.childId);
+
+      const existing = (await poll(await requested(loneCred.login, 'SCHOOL'))).json();
+      const unknown = (await poll(await requested(unknownLogin(), 'SCHOOL'))).json();
+
+      for (const answer of [existing, unknown]) {
+        expect(answer).toMatchObject({ status: 'RECEIVED', channel: 'SCHOOL', restoredAt: null, signedOutAt: null });
+      }
+      expect(Object.keys(existing).sort()).toEqual(Object.keys(unknown).sort());
     });
 
     it.each([
@@ -204,7 +223,8 @@ describe('Kirish K1: tiklash so\'rovi (bola tomoni)', () => {
 
       expect(recoveryPushes()).toHaveLength(1);
       expect(await stored()).toEqual([]);
-      expect((await poll(r)).json().channel).toBe('PARENT');
+      expect((await poll(r)).json().channel).toBe('SCHOOL');
+      expect((await t.prisma.childRecoveryRequest.findUniqueOrThrow({ where: { id: r.requestId } })).channel).toBe('PARENT');
     });
   });
 
@@ -299,19 +319,27 @@ describe('Kirish K1: tiklash so\'rovi (bola tomoni)', () => {
       expect((await sequence(unknownLogin())).map((x) => x.status)).toEqual([202, 202, 202, 429, 429]);
     });
 
-    it('allows 10 requests per day per IP and then answers 429', async () => {
+    it('allows 30 requests per day per IP (a school Wi-Fi) and then answers 429 RATE_LIMITED', async () => {
       const ip = '198.51.100.20';
       const statuses: number[] = [];
-      for (let i = 0; i < 11; i++) statuses.push((await request(unknownLogin(), 'PARENT', ip)).statusCode);
+      for (let i = 0; i < 31; i++) statuses.push((await request(unknownLogin(), 'PARENT', ip)).statusCode);
 
-      expect(statuses).toEqual([...Array<number>(10).fill(202), 429]);
+      expect(statuses).toEqual([...Array<number>(30).fill(202), 429]);
+      const blocked = await request(unknownLogin(), 'PARENT', ip);
+      expect(blocked.json()).toMatchObject({ statusCode: 429, code: 'RATE_LIMITED', retryAfterSeconds: expect.any(Number) });
       expect((await request(unknownLogin(), 'PARENT', '198.51.100.21')).statusCode).toBe(202);
-    });
+    }, 60_000);
 
     it('stops sending notifications after 3 requests for the same child in a day, but still answers 202 (the cap survives a restart)', async () => {
       for (let i = 0; i < 3; i++) {
         await t.prisma.childRecoveryRequest.create({
-          data: { childId: w.child.childId, channel: 'PARENT', pollTokenHash: `h${i}`, createdAt: new Date(Date.now() - i * 1000) },
+          data: {
+            childId: w.child.childId,
+            channel: 'PARENT',
+            requestedChannel: 'PARENT',
+            pollTokenHash: `h${i}`,
+            createdAt: new Date(Date.now() - i * 1000),
+          },
         });
       }
 
@@ -325,7 +353,13 @@ describe('Kirish K1: tiklash so\'rovi (bola tomoni)', () => {
     it('does not count requests older than a day toward that cap', async () => {
       for (let i = 0; i < 3; i++) {
         await t.prisma.childRecoveryRequest.create({
-          data: { childId: w.child.childId, channel: 'PARENT', pollTokenHash: `h${i}`, createdAt: new Date(Date.now() - DAY - 60_000) },
+          data: {
+            childId: w.child.childId,
+            channel: 'PARENT',
+            requestedChannel: 'PARENT',
+            pollTokenHash: `h${i}`,
+            createdAt: new Date(Date.now() - DAY - 60_000),
+          },
         });
       }
 

@@ -1,10 +1,12 @@
 // Kirish (K1): SCHOOL kanalidagi tiklash so'rovi maktab xodimlariga saqlangan bildirishnoma sifatida boradi — FAQAT ish qila
 // oladiganlarga: o'quvchining maktabidagi FAOL xodimlar, `students.manage` ruxsatiga ega va doirasi o'quvchini qamraydi
 // (DIRECTOR, ADMIN; sinf rahbari — faqat unga `students.manage` berilgan bo'lsa). Hech kim mos kelmasa — direktor(lar)ga.
+// Lenta elementi `href` bilan aniq o'quvchi kartasining «Kirish» bo'limini ochadi (bir xil ismli o'quvchilar adashmaydi).
 
 import { SchoolStaffRole } from '@prisma/client';
 import { ChildRecoveryService } from '../../src/modules/child-auth/child-recovery.service';
 import { resetDb } from './db';
+import { createChild } from './factories';
 import { api, issueAsParent, IssuedCredential, patchRolePermissions, restoreClock } from './kirish-fixtures';
 import { seedWorld, staffSession, World } from './school-attendance-fixtures';
 import { schoolReq } from './school-child-fixtures';
@@ -54,6 +56,8 @@ describe('Kirish K1: tiklash so\'rovi — maktab xodimlariga bildirishnoma', () 
   };
   const detail = (s: World['director'], studentId = w.vali) => schoolReq(t, s, 'GET', `/students/${studentId}`);
   const sorted = (values: readonly string[]) => [...values].sort();
+  /** Panelga nisbatan yo'l (boshqa lenta turlari kabi `/school` prefiksisiz). */
+  const accessHref = (studentId: string) => `/students/view?id=${studentId}&tab=access`;
 
   it('stores one notification for the staff who hold students.manage (DIRECTOR and ADMIN), with only the student name and class', async () => {
     const r = await requestSchool();
@@ -67,7 +71,7 @@ describe('Kirish K1: tiklash so\'rovi — maktab xodimlariga bildirishnoma', () 
       classIds: [w.classA],
       params: { studentName: 'Aliyev Vali', className: '7-A' },
       subject: null,
-      href: null,
+      href: accessHref(w.vali),
     });
     expect(sorted(rows[0]!.roles)).toEqual(['ADMIN', 'DIRECTOR']);
     expect(sorted(rows[0]!.staffIds)).toEqual(sorted([w.director.staffId, w.admin.staffId]));
@@ -77,14 +81,45 @@ describe('Kirish K1: tiklash so\'rovi — maktab xodimlariga bildirishnoma', () 
     expect(t.fcm.sent.filter((p) => p.payload.data?.type === 'CHILD_RECOVERY_REQUEST')).toEqual([]);
   });
 
-  it('shows up in the feed of the director and the administrator, with the warning tone and no extra fields', async () => {
+  it('shows up in the feed of the director and the administrator, with the warning tone and the student card link', async () => {
     await requestSchool();
 
     for (const session of [w.director, w.admin]) {
       const items = await feed(session);
       expect(items).toHaveLength(1);
-      expect(items[0]).toMatchObject({ params: { studentName: 'Aliyev Vali', className: '7-A' }, subject: null, href: null, tone: 'warning' });
+      expect(items[0]).toMatchObject({
+        params: { studentName: 'Aliyev Vali', className: '7-A' },
+        subject: null,
+        href: `/students/view?id=${w.vali}&tab=access`,
+        tone: 'warning',
+      });
+      expect(Object.keys(items[0]!.params).sort()).toEqual(['className', 'studentName']);
     }
+  });
+
+  it('the link names the exact student: a second student with the same name and class gets a different link', async () => {
+    const twin = await t.prisma.schoolStudent.create({
+      data: {
+        schoolId: w.schoolId,
+        classId: w.classA,
+        lastName: 'Aliyev',
+        firstName: 'Vali',
+        gender: 'MALE',
+        birthDate: '2014-03-03',
+        studentCode: 'P-9999',
+        enrolledAt: '2026-09-01',
+      },
+    });
+    const twinChild = await createChild(t.prisma, w.parent, { name: 'Aliyev Vali' });
+    await t.prisma.schoolStudent.update({ where: { id: twin.id }, data: { childId: twinChild.childId } });
+    const twinCred = await issueAsParent(t, w.parent, twinChild.childId, { login: `twin.t${testSeq}` });
+
+    await requestSchool();
+    await requestSchool(twinCred.login);
+
+    const items = await feed(w.director);
+    expect(items.map((n) => n.href).sort()).toEqual([accessHref(w.vali), accessHref(twin.id)].sort());
+    for (const n of items) expect(n.params).toEqual({ studentName: 'Aliyev Vali', className: '7-A' });
   });
 
   it("a homeroom teacher WITHOUT students.manage gets nothing (not even for their own class)", async () => {

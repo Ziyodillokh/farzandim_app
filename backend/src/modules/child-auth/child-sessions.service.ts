@@ -10,7 +10,8 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { announceSessionsClosed, closeSessions } from '../auth/session-revocation';
 import { LOGIN_SESSION_KIND, MAX_LOGIN_SESSIONS } from './child-auth.constants';
-import { childNotFound } from './child-auth.errors';
+import { childNotFound, invalidCredentials, lockedError } from './child-auth.errors';
+import { lockRemainingSeconds } from './child-login-lock';
 import {
   CREATED_VIA_LOGIN,
   decideDeviceRole,
@@ -23,6 +24,8 @@ export interface LoginDevice {
   id: string;
   model?: string;
   platform: ChildPlatform;
+  /** `false` — bu qurilma boshqa bolaning nazoratini yuritadi: yangi sessiya ASOSIY bo'lmaydi (standart `true`). */
+  hostsControl?: boolean;
 }
 
 export interface OpenedSession {
@@ -65,12 +68,25 @@ export class ChildSessionsService {
    * (`SIGNED_IN_ELSEWHERE`). Yopilganlarga WebSocket `session:closed` tranzaksiyadan keyin ketadi.
    * Qurilma roli (`deviceRole`) yopishlardan KEYIN belgilanadi: asosiy sessiya yopilgan bo'lsa rol bo'shaydi.
    */
-  async open(childId: string, device: LoginDevice, now: Date): Promise<OpenedSession> {
+  async open(
+    childId: string,
+    device: LoginDevice,
+    now: Date,
+    expect?: { passwordHash: string },
+  ): Promise<OpenedSession> {
     const opened = await this.prisma.$transaction(async (tx) => {
       const user = await this.ensureChildUser(tx, childId);
+      // Bola qatori qulflangan: parol tekshirilgandan keyin tiklash (parol almashdi) yoki blok kirib qolgan bo'lsa,
+      // eski parol bilan YANGI sessiya ochilmaydi (tiklash chiqarib yuborgan qurilmalar orasiga qaytib kirib olmasin).
+      if (expect) await this.assertCredentialStill(tx, childId, expect.passwordHash, now);
       // Bir foydalanuvchining parallel kirishlari navbat bilan (sessiya soni aniq hisoblansin).
       await tx.$queryRaw`SELECT id FROM users WHERE id = ${user.id} FOR UPDATE`;
 
+      // Shu qurilmadagi almashtiriladigan sessiya ASOSIY edimi (yopish `isMain`ni o'chiradi, shuning uchun OLDIN o'qiladi).
+      const replacesMainOnSameDevice =
+        (await tx.userSession.count({
+          where: { userId: user.id, kind: LOGIN_SESSION_KIND, deviceId: device.id, isMain: true, revokedAt: null },
+        })) > 0;
       const sameDevice = await closeSessions(
         tx,
         user.id,
@@ -96,6 +112,8 @@ export class ChildSessionsService {
           (await tx.userSession.count({
             where: { userId: user.id, kind: LOGIN_SESSION_KIND, isMain: true, revokedAt: null },
           })) > 0,
+        hostsControl: device.hostsControl,
+        replacesMainOnSameDevice,
       });
 
       const rjti = randomUUID();
@@ -164,6 +182,16 @@ export class ChildSessionsService {
       });
     }
     return items;
+  }
+
+  private async assertCredentialStill(tx: Tx, childId: string, passwordHash: string, now: Date): Promise<void> {
+    const cred = await tx.childCredential.findUnique({
+      where: { childId },
+      select: { passwordHash: true, lockedUntil: true },
+    });
+    if (!cred || cred.passwordHash !== passwordHash) throw invalidCredentials();
+    const remaining = lockRemainingSeconds(cred, now);
+    if (remaining > 0) throw lockedError(remaining);
   }
 
   /** Faol bola foydalanuvchisi; yo'q yoki nofaol bo'lsa yangisi yaratilib bola profiliga bog'lanadi. */

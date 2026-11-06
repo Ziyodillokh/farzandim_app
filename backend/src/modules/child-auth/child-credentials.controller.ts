@@ -1,9 +1,12 @@
 import { Body, Controller, Get, Header, HttpCode, HttpStatus, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
+import { Throttle } from '@nestjs/throttler';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
+import { StructuredUserThrottlerGuard } from '../../common/throttle/structured-throttler.guard';
+import { CHILD_CREDENTIAL_ISSUE_LIMIT, THROTTLER_NAMES } from '../../common/throttle/throttle.config';
 import {
   ChildCredentialsService,
   CredentialView,
@@ -32,6 +35,8 @@ export class ChildCredentialsController {
   }
 
   @Post('credentials')
+  @UseGuards(StructuredUserThrottlerGuard)
+  @Throttle({ [THROTTLER_NAMES.childCredentialIssue]: CHILD_CREDENTIAL_ISSUE_LIMIT })
   @HttpCode(HttpStatus.CREATED)
   @Header('Cache-Control', 'no-store')
   @ApiOperation({ summary: 'Kirish maʼlumotlarini berish / qayta tiklash (vaqtinchalik parol BIR MARTA qaytadi)' })

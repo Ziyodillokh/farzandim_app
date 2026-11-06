@@ -3,6 +3,8 @@ import { FcmModule } from '../../common/fcm/fcm.module';
 import { RealtimeModule } from '../../common/realtime/realtime.module';
 import { AuthModule } from '../auth/auth.module';
 import { ChildAuthClock } from './child-auth-clock';
+import { ChildAuthEffects } from './child-auth-effects';
+import { ChildAuthIpLimits } from './child-ip-limits';
 import { ChildCredentialsController } from './child-credentials.controller';
 import { ChildCredentialsService } from './child-credentials.service';
 import { ChildLoginAttempts } from './child-login-attempts';
@@ -22,6 +24,8 @@ import { ChildSetupTokens } from './child-setup-token';
   controllers: [ChildLoginController, ChildRecoveryController, ChildCredentialsController],
   providers: [
     ChildAuthClock,
+    ChildAuthEffects,
+    ChildAuthIpLimits,
     ChildSetupTokens,
     ChildLoginAttempts,
     ChildSessionsService,
@@ -29,6 +33,6 @@ import { ChildSetupTokens } from './child-setup-token';
     ChildCredentialsService,
     ChildRecoveryService,
   ],
-  exports: [ChildCredentialsService, ChildRecoveryService, ChildAuthClock],
+  exports: [ChildCredentialsService, ChildRecoveryService, ChildAuthClock, ChildAuthEffects],
 })
 export class ChildAuthModule {}

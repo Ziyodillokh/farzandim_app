@@ -9,6 +9,7 @@ import {
   PASSWORD_MIN_LENGTH,
   TEMP_PASSWORD_ALPHABET,
   TEMP_PASSWORD_LENGTH,
+  TEMP_PASSWORD_TTL_DAYS,
 } from './child-auth.constants';
 
 type RandomInt = (max: number) => number;
@@ -82,6 +83,14 @@ export function generateTemporaryPassword(random: RandomInt = randomInt): string
   for (let i = 0; i < TEMP_PASSWORD_LENGTH; i++) out += TEMP_PASSWORD_ALPHABET[random(TEMP_PASSWORD_ALPHABET.length)];
   return out;
 }
+
+/** Vaqtinchalik parol amal qilish muddati (berilgan vaqt + 14 kun). */
+export const tempPasswordExpiresAt = (issuedAt: Date): Date =>
+  new Date(issuedAt.getTime() + TEMP_PASSWORD_TTL_DAYS * 24 * 60 * 60 * 1000);
+
+/** Muddat tugagan lahzada ham (>=) eskirgan hisoblanadi. */
+export const isTempPasswordExpired = (issuedAt: Date, now: Date): boolean =>
+  now.getTime() >= tempPasswordExpiresAt(issuedAt).getTime();
 
 // ── Parol siyosati ──────────────────────────────────────────────────
 

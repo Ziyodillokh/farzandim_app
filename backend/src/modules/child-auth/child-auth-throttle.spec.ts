@@ -4,7 +4,6 @@ import { ThrottlerStorageService } from '@nestjs/throttler';
 import { StructuredThrottlerGuard } from '../../common/throttle/structured-throttler.guard';
 import {
   buildThrottlers,
-  CHILD_LOGIN_IP_LIMIT,
   CHILD_RECOVERY_IP_LIMIT,
   CHILD_RECOVERY_LOGIN_LIMIT,
   isThrottlerDeclared,
@@ -29,7 +28,7 @@ const contextFor = (controller: Ctor, handler: string, req: Req): ExecutionConte
   } as unknown as ExecutionContext;
 };
 
-describe('child auth rate limits', () => {
+describe('child auth rate limits (recovery)', () => {
   let storage: ThrottlerStorageService;
   let guard: StructuredThrottlerGuard;
 
@@ -54,49 +53,23 @@ describe('child auth rate limits', () => {
     return results;
   }
 
-  it('declares each limit only on the routes that use it', () => {
+  it('declares the recovery limits only on the request route; child-login / child-setup have NO throttler (their IP limit counts failures only)', () => {
     const ctx = (c: Ctor, h: string) => contextFor(c, h, { ip: '1.1.1.1', body: {}, headers: {} });
 
-    expect(isThrottlerDeclared(ctx(ChildLoginController, 'childLogin'), THROTTLER_NAMES.childLogin)).toBe(true);
-    expect(isThrottlerDeclared(ctx(ChildLoginController, 'childSetup'), THROTTLER_NAMES.childLogin)).toBe(true);
-    expect(isThrottlerDeclared(ctx(ChildLoginController, 'devices'), THROTTLER_NAMES.childLogin)).toBe(false);
-    expect(isThrottlerDeclared(ctx(ChildLoginController, 'changePassword'), THROTTLER_NAMES.childLogin)).toBe(false);
+    for (const handler of ['childLogin', 'childSetup', 'devices']) {
+      for (const name of Object.values(THROTTLER_NAMES)) {
+        expect(isThrottlerDeclared(ctx(ChildLoginController, handler), name)).toBe(false);
+      }
+    }
+    // Parolni almashtirish — foydalanuvchi boshiga o'z limiti (faqat shu nom).
+    for (const name of Object.values(THROTTLER_NAMES)) {
+      expect(isThrottlerDeclared(ctx(ChildLoginController, 'changePassword'), name)).toBe(name === THROTTLER_NAMES.childPasswordChange);
+    }
     expect(isThrottlerDeclared(ctx(ChildRecoveryController, 'request'), THROTTLER_NAMES.childRecoveryLogin)).toBe(true);
     expect(isThrottlerDeclared(ctx(ChildRecoveryController, 'request'), THROTTLER_NAMES.childRecoveryIp)).toBe(true);
-    expect(isThrottlerDeclared(ctx(ChildRecoveryController, 'request'), THROTTLER_NAMES.childLogin)).toBe(false);
     expect(isThrottlerDeclared(ctx(ChildRecoveryController, 'status'), THROTTLER_NAMES.childRecoveryIp)).toBe(false);
-    expect(isThrottlerDeclared(ctx(ChildLoginController, 'childLogin'), THROTTLER_NAMES.childRecoveryIp)).toBe(false);
-  });
-
-  it('allows 30 child-login requests per IP in 10 minutes, then answers a structured 429', async () => {
-    const results = await outcomes(ChildLoginController, 'childLogin', CHILD_LOGIN_IP_LIMIT.limit + 2, (i) => ({
-      ip: '10.0.0.1',
-      body: { login: `user.${i}` },
-      headers: {},
-    }));
-
-    expect(CHILD_LOGIN_IP_LIMIT).toEqual({ limit: 30, ttl: 600_000 });
-    expect(results.slice(0, 30).every((r) => r === 'ok')).toBe(true);
-    const blocked = results[30] as HttpException;
-    expect(blocked.getStatus()).toBe(429);
-    expect(blocked.getResponse()).toMatchObject({ code: 'RATE_LIMITED', retryAfterSeconds: expect.any(Number) });
-    expect((blocked.getResponse() as { retryAfterSeconds: number }).retryAfterSeconds).toBeGreaterThan(0);
-  });
-
-  it('does not let one IP exhaust another IP', async () => {
-    await outcomes(ChildLoginController, 'childLogin', 40, () => ({ ip: '10.0.0.2', body: {}, headers: {} }));
-
-    const other = await outcomes(ChildLoginController, 'childLogin', 1, () => ({ ip: '10.0.0.3', body: {}, headers: {} }));
-
-    expect(other).toEqual(['ok']);
-  });
-
-  it('keeps child-login and child-setup counters apart', async () => {
-    await outcomes(ChildLoginController, 'childLogin', 31, () => ({ ip: '10.0.0.4', body: {}, headers: {} }));
-
-    const setup = await outcomes(ChildLoginController, 'childSetup', 1, () => ({ ip: '10.0.0.4', body: {}, headers: {} }));
-
-    expect(setup).toEqual(['ok']);
+    expect(isThrottlerDeclared(ctx(ChildRecoveryController, 'status'), THROTTLER_NAMES.childRecoveryLogin)).toBe(false);
+    expect(Object.keys(THROTTLER_NAMES)).not.toContain('childLogin');
   });
 
   it('limits recovery requests to 3 per day per login text, whatever the IP and whether the login exists', async () => {
@@ -108,6 +81,9 @@ describe('child auth rate limits', () => {
 
     expect(CHILD_RECOVERY_LOGIN_LIMIT).toEqual({ limit: 3, ttl: 86_400_000 });
     expect(results.map((r) => (r === 'ok' ? 'ok' : r.getStatus()))).toEqual(['ok', 'ok', 'ok', 429, 429]);
+    const blocked = results[3] as HttpException;
+    expect(blocked.getResponse()).toMatchObject({ code: 'RATE_LIMITED', retryAfterSeconds: expect.any(Number) });
+    expect((blocked.getResponse() as { retryAfterSeconds: number }).retryAfterSeconds).toBeGreaterThan(0);
     // Boshqa login shu IP'lardan hanuz o'tadi.
     const other = await outcomes(ChildRecoveryController, 'request', 1, () => ({
       ip: '10.1.0.9',
@@ -117,19 +93,18 @@ describe('child auth rate limits', () => {
     expect(other).toEqual(['ok']);
   });
 
-  it('limits recovery requests to 10 per day per IP across different logins', async () => {
-    const results = await outcomes(ChildRecoveryController, 'request', 12, (i) => ({
+  it('limits recovery requests to 30 per day per IP across different logins (raised from 10 for school networks)', async () => {
+    const results = await outcomes(ChildRecoveryController, 'request', 32, (i) => ({
       ip: '10.2.0.1',
       body: { login: `kimdir.${i}` },
       headers: {},
     }));
 
-    expect(CHILD_RECOVERY_IP_LIMIT).toEqual({ limit: 10, ttl: 86_400_000 });
-    expect(results.map((r) => (r === 'ok' ? 'ok' : r.getStatus()))).toEqual([
-      ...Array<string>(10).fill('ok'),
-      429,
-      429,
-    ]);
+    expect(CHILD_RECOVERY_IP_LIMIT).toEqual({ limit: 30, ttl: 86_400_000 });
+    expect(results.map((r) => (r === 'ok' ? 'ok' : r.getStatus()))).toEqual([...Array<string>(30).fill('ok'), 429, 429]);
+    // Boshqa IP ta'sirlanmaydi.
+    const other = await outcomes(ChildRecoveryController, 'request', 1, () => ({ ip: '10.2.0.2', body: { login: 'yangi.y11' }, headers: {} }));
+    expect(other).toEqual(['ok']);
   });
 
   it('answers the same 429 for existing and unknown logins (the key is the text, not the account)', async () => {

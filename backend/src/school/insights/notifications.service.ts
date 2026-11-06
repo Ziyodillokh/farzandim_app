@@ -129,11 +129,11 @@ export class NotificationsService {
         const params = { studentName: String(stored.studentName ?? ''), className: String(stored.className ?? '') };
         return item('DATA_DELETION_REQUEST', n.id, n.at, { params });
       }
-      // Kirish maʼlumotlarini tiklash so'rovi — faqat o'quvchi ismi va sinf nomi.
+      // Kirish maʼlumotlarini tiklash so'rovi — faqat o'quvchi ismi va sinf nomi; `href` — shu o'quvchi kartasining «Kirish» bo'limi.
       if (n.kind === CHILD_RECOVERY_NOTIFICATION_KIND) {
         const stored = (n.params ?? {}) as Record<string, unknown>;
         const params = { studentName: String(stored.studentName ?? ''), className: String(stored.className ?? '') };
-        return item('CHILD_RECOVERY_REQUEST', n.id, n.at, { params });
+        return item('CHILD_RECOVERY_REQUEST', n.id, n.at, { params, href: n.href });
       }
       const kind = n.kind === 'SAFETY_SIGNAL' ? 'SAFETY_SIGNAL' : 'TEST_COMPLETED';
       // Xavfsizlik signalida ism / matn HECH QACHON yo'q.

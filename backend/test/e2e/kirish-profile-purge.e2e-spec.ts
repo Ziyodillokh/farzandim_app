@@ -208,7 +208,7 @@ describe('Kirish K1: bola ma\'lumotlari o\'chirilganda kirish maʼlumotlari ham 
     const dead = await api(t, 'POST', '/auth/child-recovery', { payload: { login: `nobody.purge${seq}`, channel: 'PARENT' } });
     expect(dead.statusCode).toBe(202);
     await t.prisma.childRecoveryRequest.create({
-      data: { childId: other.child.childId, channel: 'PARENT', pollTokenHash: 'bystander' },
+      data: { childId: other.child.childId, channel: 'PARENT', requestedChannel: 'PARENT', pollTokenHash: 'bystander' },
     });
     return { other, cred };
   }

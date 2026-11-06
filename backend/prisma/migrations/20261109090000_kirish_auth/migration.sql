@@ -50,6 +50,7 @@ CREATE TABLE "child_recovery_requests" (
     "id" TEXT NOT NULL,
     "child_id" TEXT,
     "channel" "ChildRecoveryChannel" NOT NULL,
+    "requested_channel" "ChildRecoveryChannel" NOT NULL,
     "status" "ChildRecoveryStatus" NOT NULL DEFAULT 'RECEIVED',
     "poll_token_hash" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

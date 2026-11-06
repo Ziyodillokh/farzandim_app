@@ -81,7 +81,18 @@ export class ChildPairRequestsService {
 
     // Transactional re-pair
     const result = await this.prisma.$transaction(async (tx) => {
-      const oldChildUserId = pairReq.child.childUserId;
+      // Qulf tartibi `ChildSessionsService.open` va kirish maʼlumotlarini tiklash bilan bir xil: bola qatori -> foydalanuvchi
+      // qatori -> sessiyalar. Aks holda bir vaqtdagi login (yangi sessiya ochish) bilan o'zaro qulf (deadlock) bo'lishi mumkin.
+      await tx.$queryRaw`SELECT id FROM children WHERE id = ${childId} FOR UPDATE`;
+      // Qulf ostida qayta o'qiladi: login bola foydalanuvchisini orada yaratgan / almashtirgan bo'lishi mumkin.
+      const current = await tx.child.findUnique({
+        where: { id: childId },
+        select: { childUserId: true },
+      });
+      const oldChildUserId = current ? current.childUserId : pairReq.child.childUserId;
+      if (oldChildUserId) {
+        await tx.$queryRaw`SELECT id FROM users WHERE id = ${oldChildUserId} FOR UPDATE`;
+      }
 
       // "Bir bola = bir qurilma" qoidasi: eski qurilmani majburan chiqarish.
       //   - userSession revoke → barcha aktiv refresh tokenlar bekor

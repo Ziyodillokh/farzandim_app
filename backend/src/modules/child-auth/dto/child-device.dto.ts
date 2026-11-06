@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
 export const CHILD_PLATFORMS = ['android', 'ios'] as const;
 export type ChildPlatform = (typeof CHILD_PLATFORMS)[number];
@@ -22,4 +22,14 @@ export class ChildDeviceDto {
   @ApiProperty({ enum: CHILD_PLATFORMS })
   @IsIn(CHILD_PLATFORMS)
   platform!: ChildPlatform;
+
+  @ApiPropertyOptional({
+    default: true,
+    description:
+      "Bu qurilma shu bolaning ota-ona nazoratini bajara oladimi (standart true). `false` — qurilma boshqa bolaning nazoratini " +
+      "yuritadi: YANGI sessiya hech qachon ASOSIY bo'lmaydi (bu qurilmadagi joriy ASOSIY sessiyani almashtiruvchi qayta kirish bundan mustasno).",
+  })
+  @IsOptional()
+  @IsBoolean()
+  hostsControl?: boolean;
 }

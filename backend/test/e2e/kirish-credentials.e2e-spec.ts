@@ -3,6 +3,7 @@
 // (sessiyalar, tokenVersion, WebSocket, push tokenlar, tiklash so'rovlari). Maktab tomoni:
 // `kirish-credentials-school.e2e-spec.ts`.
 
+import { RealtimeGateway } from '../../src/common/realtime/realtime.gateway';
 import { resetDb } from './db';
 import { createParent, TestChild, TestParent } from './factories';
 import {
@@ -10,6 +11,7 @@ import {
   captureRealtime,
   childLogin,
   controlClock,
+  DAY_MS,
   dbContains,
   familyOf,
   issueAsParent,
@@ -18,6 +20,7 @@ import {
   loginThroughSetup,
   OWN_PASSWORD,
   restoreClock,
+  TEMP_PASSWORD_TTL_DAYS,
 } from './kirish-fixtures';
 import { createTestApp, TestApp } from './test-app';
 
@@ -66,10 +69,12 @@ describe('Kirish K1: kirish maʼlumotlarini berish va tiklash', () => {
 
       expect(res.statusCode).toBe(201);
       const body = res.json();
-      expect(Object.keys(body).sort()).toEqual(['issuedAt', 'login', 'temporaryPassword']);
+      expect(Object.keys(body).sort()).toEqual(['issuedAt', 'login', 'temporaryPassword', 'temporaryPasswordExpiresAt']);
       expect(body.login).toMatch(/^vali\.\d{2}$/);
       expect(body.temporaryPassword).toMatch(TEMP_PASSWORD);
       expect(new Date(body.issuedAt).toISOString()).toBe(body.issuedAt);
+      expect(new Date(body.temporaryPasswordExpiresAt).toISOString()).toBe(body.temporaryPasswordExpiresAt);
+      expect(Date.parse(body.temporaryPasswordExpiresAt) - Date.parse(body.issuedAt)).toBe(TEMP_PASSWORD_TTL_DAYS * DAY_MS);
       expect(res.headers['cache-control']).toBe('no-store');
     });
 
@@ -126,7 +131,7 @@ describe('Kirish K1: kirish maʼlumotlarini berish va tiklash', () => {
       expect(JSON.stringify(rows)).not.toContain(cred.login);
     });
 
-    it('GET shows login, issuer, issuance time, temporary flag and last login — never the hash or password', async () => {
+    it('GET shows login, issuer, issuance time, temporary flag, its expiry and last login — never the hash or password', async () => {
       const cred = await issueAsParent(t, w.parent, w.child.childId);
 
       const res = await get();
@@ -137,10 +142,20 @@ describe('Kirish K1: kirish maʼlumotlarini berish va tiklash', () => {
         issuedBy: 'PARENT',
         issuedAt: cred.issuedAt,
         mustChangePassword: true,
+        temporaryPasswordExpiresAt: cred.temporaryPasswordExpiresAt,
         lastLoginAt: null,
       });
       expect(res.body).not.toContain('passwordHash');
       expect(res.body).not.toContain(cred.temporaryPassword);
+    });
+
+    it('GET shows temporaryPasswordExpiresAt: null once the child has its own password', async () => {
+      const cred = await issueAsParent(t, w.parent, w.child.childId);
+      await loginThroughSetup(t, cred);
+
+      const view = (await get()).json();
+
+      expect(view).toMatchObject({ mustChangePassword: false, temporaryPasswordExpiresAt: null, lastLoginAt: expect.any(String) });
     });
 
     it('uses a requested login when it is valid and free (normalized to lower case)', async () => {
@@ -213,6 +228,21 @@ describe('Kirish K1: kirish maʼlumotlarini berish va tiklash', () => {
       expect(again.json().status).toBe('SETUP_REQUIRED');
     });
 
+    it('a reset renews the temporary password expiry (a fresh 14 days from the reset)', async () => {
+      const first = await issueAsParent(t, w.parent, w.child.childId);
+      const clock = controlClock(t, new Date(Date.parse(first.temporaryPasswordExpiresAt) + DAY_MS));
+
+      const second = await issueAsParent(t, w.parent, w.child.childId);
+
+      expect(second.issuedAt).toBe(clock.now().toISOString());
+      expect(Date.parse(second.temporaryPasswordExpiresAt)).toBe(clock.now().getTime() + TEMP_PASSWORD_TTL_DAYS * DAY_MS);
+      expect((await get()).json()).toMatchObject({
+        issuedAt: second.issuedAt,
+        mustChangePassword: true,
+        temporaryPasswordExpiresAt: second.temporaryPasswordExpiresAt,
+      });
+    });
+
     it('audits a reset separately from the first issue', async () => {
       await issueAsParent(t, w.parent, w.child.childId);
       const second = await issueAsParent(t, w.parent, w.child.childId);
@@ -224,8 +254,10 @@ describe('Kirish K1: kirish maʼlumotlarini berish va tiklash', () => {
 
     it('the first issue never signs anybody out (the already paired device keeps working)', async () => {
       const before = await t.prisma.user.findUniqueOrThrow({ where: { id: w.child.userId } });
+      const disconnect = jest.spyOn(t.app.get(RealtimeGateway), 'disconnectUser');
 
       await issueAsParent(t, w.parent, w.child.childId, { signOutDevices: true });
+      expect(disconnect).not.toHaveBeenCalled();
 
       const after = await t.prisma.user.findUniqueOrThrow({ where: { id: w.child.userId } });
       expect(after.tokenVersion).toBe(before.tokenVersion);
@@ -271,6 +303,17 @@ describe('Kirish K1: kirish maʼlumotlarini berish va tiklash', () => {
         expect(closed).toHaveLength(1);
         expect(closed[0]!.payload.reason).toBe('RECOVERED');
         expect([...(closed[0]!.payload.sessionIds as string[])].sort()).toEqual([session.sessionId, second.sessionId].sort());
+      });
+
+      it('cuts the live sockets of the child (they must reconnect with a valid token) — only when devices were signed out', async () => {
+        const disconnect = jest.spyOn(t.app.get(RealtimeGateway), 'disconnectUser').mockImplementation(() => undefined);
+
+        await issueAsParent(t, w.parent, w.child.childId, { signOutDevices: false });
+        expect(disconnect).not.toHaveBeenCalled();
+        await issueAsParent(t, w.parent, w.child.childId);
+
+        expect(disconnect).toHaveBeenCalledTimes(1);
+        expect(disconnect).toHaveBeenCalledWith(w.child.userId);
       });
 
       it('refresh with a revoked session answers 401 SESSION_REVOKED + reason (so the app can show A12 without the socket)', async () => {
@@ -367,6 +410,18 @@ describe('Kirish K1: kirish maʼlumotlarini berish va tiklash', () => {
       expect(row.login).toBe(cred.login);
       expect((await childLogin(t, cred.login, cred.temporaryPassword)).statusCode).toBe(200);
     });
+
+    it('limits issuing / resetting to 20 per 10 minutes per parent (no login probing), other parents are unaffected', async () => {
+      const statuses: number[] = [];
+      for (let i = 0; i < 21; i++) statuses.push((await post({ login: `probe.login${i}` })).statusCode);
+
+      expect(statuses).toEqual([...Array<number>(20).fill(201), 429]);
+      const blocked = await post({ login: 'probe.login-final' });
+      expect(blocked.statusCode).toBe(429);
+      expect(blocked.json()).toEqual({ statusCode: 429, code: 'RATE_LIMITED', message: 'Too many requests', retryAfterSeconds: expect.any(Number) });
+      const { parent: other, child: otherChild } = await familyOf(t, 'Bobur');
+      expect((await post({}, other.token, otherChild.childId)).statusCode).toBe(201);
+    }, 120_000);
 
     it('an unknown child answers 404', async () => {
       const missing = '00000000-0000-4000-8000-000000000000';

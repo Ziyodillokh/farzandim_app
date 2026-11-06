@@ -1,4 +1,5 @@
 import { ChildAuthClock } from './child-auth-clock';
+import { ChildAuthEffects } from './child-auth-effects';
 import { ChildRecoveryService } from './child-recovery.service';
 
 const T0 = new Date('2026-11-09T09:00:00.000Z');
@@ -6,6 +7,7 @@ const SCHOOL_TARGET = {
   child: { id: 'child-1', parentId: 'parent-1' },
 };
 const STUDENT = {
+  id: 'student-1',
   schoolId: 'school-1',
   classId: 'class-a',
   archived: false,
@@ -41,7 +43,7 @@ function setup(over: { credential?: unknown; student?: unknown; staff?: unknown[
   const audit = { log: jest.fn().mockResolvedValue(undefined) };
   const clock = new ChildAuthClock();
   clock.now = () => T0;
-  const service = new ChildRecoveryService(prisma as never, fcm as never, audit as never, clock);
+  const service = new ChildRecoveryService(prisma as never, fcm as never, audit as never, clock, new ChildAuthEffects());
   return { service, prisma, fcm, audit, calls };
 }
 
@@ -68,6 +70,8 @@ describe('ChildRecoveryService.request: the school notification goes only to sta
       staffIds: ['director', 'admin'],
       classIds: ['class-a'],
       params: { studentName: 'Aliyev Vali', className: '7-A' },
+      // Bir xil ismli o'quvchilar adashmasin: aniq o'quvchi kartasining «Kirish» bo'limi (panelga nisbatan, `/school` yo'q).
+      href: '/students/view?id=student-1&tab=access',
     });
     expect(t.fcm.sendPushToUser).not.toHaveBeenCalled();
   });
@@ -155,7 +159,7 @@ describe('ChildRecoveryService.request: no enumeration', () => {
 
     expect(Object.keys(res).sort()).toEqual(['pollToken', 'requestId']);
     expect(unknown.prisma.childRecoveryRequest.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ childId: null, channel: 'PARENT' }) }),
+      expect.objectContaining({ data: expect.objectContaining({ childId: null, channel: 'PARENT', requestedChannel: 'PARENT' }) }),
     );
     expect(unknown.fcm.sendPushToUser).not.toHaveBeenCalled();
     expect(unknown.prisma.schoolStaffNotification.upsert).not.toHaveBeenCalled();
@@ -198,11 +202,64 @@ describe('ChildRecoveryService.request: no enumeration', () => {
       await request(t.service, 'vali.k24', 'SCHOOL');
       await t.service.drainEffects();
 
+      // Yetkazish kanali PARENT, lekin bola SO'RAGAN kanal (poll uchun) SCHOOL qoladi.
       expect(t.prisma.childRecoveryRequest.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ childId: 'child-1', channel: 'PARENT' }) }),
+        expect.objectContaining({ data: expect.objectContaining({ childId: 'child-1', channel: 'PARENT', requestedChannel: 'SCHOOL' }) }),
       );
       expect(t.fcm.sendPushToUser).toHaveBeenCalledTimes(1);
       expect(t.prisma.schoolStaffNotification.upsert).not.toHaveBeenCalled();
+    }
+  });
+});
+
+describe('ChildRecoveryService.status: the poll shows the channel the child REQUESTED (no existence leak)', () => {
+  const row = (over: Record<string, unknown> = {}) => ({
+    id: 'req-1',
+    childId: 'child-1',
+    channel: 'PARENT',
+    requestedChannel: 'SCHOOL',
+    status: 'RECEIVED',
+    pollTokenHash: require('node:crypto').createHash('sha256').update('secret-token').digest('hex'),
+    createdAt: T0,
+    restoredAt: null,
+    signedOutAt: null,
+    rejectedAt: null,
+    ...over,
+  });
+
+  it('returns the requested channel even when the effective (delivery) channel fell back to PARENT', async () => {
+    const t = setup();
+    (t.prisma.childRecoveryRequest as unknown as { findUnique: jest.Mock }).findUnique = jest.fn().mockResolvedValue(row());
+
+    const view = await t.service.status('req-1', 'secret-token');
+
+    expect(view).toEqual({ status: 'RECEIVED', channel: 'SCHOOL', createdAt: T0.toISOString(), restoredAt: null, signedOutAt: null });
+  });
+
+  it('a dead request (unknown login) and an existing-but-unlinked one look identical to the poller', async () => {
+    const dead = setup();
+    const real = setup();
+    (dead.prisma.childRecoveryRequest as unknown as { findUnique: jest.Mock }).findUnique = jest.fn().mockResolvedValue(row({ childId: null, channel: 'SCHOOL' }));
+    (real.prisma.childRecoveryRequest as unknown as { findUnique: jest.Mock }).findUnique = jest.fn().mockResolvedValue(row());
+
+    expect(await dead.service.status('req-1', 'secret-token')).toEqual(await real.service.status('req-1', 'secret-token'));
+  });
+
+  it('answers the same 404 for a wrong token, a missing token and an unknown request', async () => {
+    const t = setup();
+    (t.prisma.childRecoveryRequest as unknown as { findUnique: jest.Mock }).findUnique = jest.fn(async ({ where }: { where: { id: string } }) =>
+      where.id === 'req-1' ? row() : null,
+    );
+
+    const errors = [
+      await t.service.status('req-1', 'wrong').catch((e: unknown) => e),
+      await t.service.status('req-1', undefined).catch((e: unknown) => e),
+      await t.service.status('req-2', 'secret-token').catch((e: unknown) => e),
+    ];
+
+    for (const e of errors) {
+      expect((e as { getStatus(): number }).getStatus()).toBe(404);
+      expect((e as { getResponse(): unknown }).getResponse()).toEqual({ code: 'NOT_FOUND', message: 'Request not found' });
     }
   });
 });

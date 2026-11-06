@@ -344,6 +344,18 @@ describe('Kirish K1: mavjud oqimlar buzilmasligi (regressiya)', () => {
       expect((await parentLogin(parent.email, 'Phone C')).statusCode).toBe(409);
     });
 
+    it('only a parent can create a QR link: a child session cannot mint a kind-less session that escapes the 3-session cap', async () => {
+      const parent = await passwordParent();
+      const created = await createChildVia(parent.token);
+      const cred = await issueAsParent(t, { userId: parent.user.id, token: parent.token }, created.id);
+      const session = await loginThroughSetup(t, cred, device('dev-a'));
+
+      const res = await api(t, 'POST', '/auth/device-link/create', { token: session.accessToken });
+
+      expect(res.statusCode).toBe(403);
+      expect(await t.prisma.userSession.count({ where: { userId: session.userId, revokedAt: null } })).toBe(1);
+    });
+
     it('the 2-device QR link keeps the owner and signs the other device out (reason SIGNED_IN_ELSEWHERE)', async () => {
       const parent = await passwordParent();
       const owner = (await parentLogin(parent.email, 'Owner')).json();

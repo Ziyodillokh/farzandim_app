@@ -16,9 +16,11 @@ import { tr } from '../../common/i18n/notification-i18n';
 import { errorLabel } from '../../common/notification-prefs/error-label';
 import { staffWithPermission } from '../../school/common/staff-recipients';
 import { ChildAuthClock } from './child-auth-clock';
+import { ChildAuthEffects } from './child-auth-effects';
 import {
   CHILD_RECOVERY_NOTIFICATION_KIND,
   CHILD_RECOVERY_PUSH_TYPE,
+  childRecoveryNotificationHref,
   childRecoveryNotificationId,
   DAY_MS,
   RECOVERY_EFFECTS_PER_CHILD_PER_DAY,
@@ -31,6 +33,7 @@ import type { ChildRecoveryRequestDto } from './dto/child-recovery.dto';
 
 export interface RecoveryStatusView {
   status: ChildRecoveryRequest['status'];
+  /** Bola so'ragan kanal (poll uchun; yetkazish kanali emas). */
   channel: ChildRecoveryChannel;
   createdAt: string;
   restoredAt: string | null;
@@ -59,7 +62,7 @@ interface RecoveryTarget {
   parentId: string;
   channel: ChildRecoveryChannel;
   /** Maktab kanali uchun: xodim bildirishnomasi mazmuni. */
-  school: { schoolId: string; classId: string | null; studentName: string; className: string } | null;
+  school: { schoolId: string; studentId: string; classId: string | null; studentName: string; className: string } | null;
 }
 
 /** Mavjud bo'lmagan bola uchun "bir xil sondagi so'rovlar" (vaqt tartibi mos kelsin) — hech narsa topilmaydi. */
@@ -72,13 +75,13 @@ const MISSING_HASH = hashToken('child-recovery:missing');
 @Injectable()
 export class ChildRecoveryService {
   private readonly logger = new Logger(ChildRecoveryService.name);
-  private readonly effects = new Set<Promise<void>>();
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly fcm: FcmService,
     private readonly audit: AuditService,
     private readonly clock: ChildAuthClock,
+    private readonly effects: ChildAuthEffects,
   ) {}
 
   // ── Ommaviy ────────────────────────────────────────────────────────
@@ -98,14 +101,16 @@ export class ChildRecoveryService {
     const row = await this.prisma.childRecoveryRequest.create({
       data: {
         childId: target?.childId ?? null,
+        // Samarali kanal (yetkazish va ro'yxatlar uchun) va bola so'ragan kanal (poll uchun) alohida.
         channel: target?.channel ?? dto.channel,
+        requestedChannel: dto.channel,
         pollTokenHash: hashToken(pollToken),
         createdAt: now,
       },
       select: { id: true },
     });
     if (target && recent < RECOVERY_EFFECTS_PER_CHILD_PER_DAY) {
-      this.track(this.deliver(target, row.id, now));
+      this.effects.track(this.deliver(target, row.id, now), 'tiklash so\'rovi ta\'siri');
     }
     return { requestId: row.id, pollToken };
   }
@@ -121,7 +126,8 @@ export class ChildRecoveryService {
     if (!row || !tokenOk) throw new NotFoundException({ code: 'NOT_FOUND', message: 'Request not found' });
     return {
       status: row.status,
-      channel: row.channel,
+      // Bola SO'RAGAN kanal: samarali kanal (bola maktabga bog'lanmagan bo'lsa PARENT) login mavjudligini fosh qilardi.
+      channel: row.requestedChannel,
       createdAt: row.createdAt.toISOString(),
       restoredAt: row.restoredAt?.toISOString() ?? null,
       signedOutAt: row.signedOutAt?.toISOString() ?? null,
@@ -179,7 +185,7 @@ export class ChildRecoveryService {
 
   /** Fonda ketayotgan ta'sirlar tugashini kutadi (testlar va to'xtatish). */
   async drainEffects(): Promise<void> {
-    await Promise.allSettled([...this.effects]);
+    await this.effects.drain();
   }
 
   /** Eskirgan so'rovlar (va ularning xodim bildirishnomalari) saqlash muddatidan keyin o'chiriladi. */
@@ -225,6 +231,7 @@ export class ChildRecoveryService {
       const student = await this.prisma.schoolStudent.findUnique({
         where: { childId },
         select: {
+          id: true,
           schoolId: true,
           classId: true,
           archived: true,
@@ -241,6 +248,7 @@ export class ChildRecoveryService {
           channel: 'SCHOOL',
           school: {
             schoolId: student.schoolId,
+            studentId: student.id,
             classId: student.classId,
             studentName: `${student.lastName} ${student.firstName}`,
             className: student.class?.name ?? '',
@@ -285,6 +293,8 @@ export class ChildRecoveryService {
       classIds: school.classId ? [school.classId] : [],
       staffIds: recipients.map((r) => r.id),
       params: { studentName: school.studentName, className: school.className },
+      // Bir xil ismli o'quvchilar adashmasin: panel aynan shu o'quvchining «Kirish» bo'limini ochadi.
+      href: childRecoveryNotificationHref(school.studentId),
     };
     await this.prisma.schoolStaffNotification.upsert({ where: { id }, create: { id, ...data }, update: data });
   }
@@ -305,12 +315,5 @@ export class ChildRecoveryService {
     } catch (err) {
       this.logger.warn(`tiklash so'rovi: ${step} bajarilmadi: ${errorLabel(err)}`);
     }
-  }
-
-  private track(work: Promise<void>): void {
-    const tracked: Promise<void> = work
-      .catch((err) => this.logger.warn(`tiklash so'rovi: ta'sir bajarilmadi: ${errorLabel(err)}`))
-      .finally(() => this.effects.delete(tracked));
-    this.effects.add(tracked);
   }
 }

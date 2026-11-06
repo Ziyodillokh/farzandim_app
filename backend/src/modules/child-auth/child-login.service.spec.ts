@@ -4,6 +4,7 @@ import * as bcrypt from 'bcryptjs';
 import { ChildAuthClock } from './child-auth-clock';
 import { FAILURE_WINDOW_MS, LOCK_MS, MAX_FAILED_LOGINS } from './child-auth.constants';
 import { ChildLoginService } from './child-login.service';
+import { ChildAuthIpLimits } from './child-ip-limits';
 import { ChildSetupTokens } from './child-setup-token';
 import { lockRemainingSeconds, registerFailure } from './child-login-lock';
 
@@ -25,10 +26,11 @@ interface Cred {
   login: string;
   passwordHash: string;
   mustChangePassword: boolean;
+  issuedAt: Date;
   failedLogins: number;
   failedWindowStartedAt: Date | null;
   lockedUntil: Date | null;
-  child: { id: string; name: string };
+  child: { id: string; name: string; parentId: string };
 }
 
 const credential = (over: Partial<Cred> = {}): Cred => ({
@@ -36,10 +38,11 @@ const credential = (over: Partial<Cred> = {}): Cred => ({
   login: 'aziza.k24',
   passwordHash: HASH,
   mustChangePassword: false,
+  issuedAt: new Date(T0.getTime() - 60_000),
   failedLogins: 0,
   failedWindowStartedAt: null,
   lockedUntil: null,
-  child: { id: 'child-1', name: 'Aziza' },
+  child: { id: 'child-1', name: 'Aziza', parentId: 'parent-1' },
   ...over,
 });
 
@@ -62,7 +65,9 @@ function setup(initial: Cred | null = credential()) {
     child: { findUnique: jest.fn() },
   };
   const attempts = {
-    recordFailure: jest.fn(async () => {
+    recordFailure: jest.fn(async (childId: string) => {
+      // Boshqa (soxta, tasodifiy) id uchun qator yo'q — hech narsa yozilmaydi (haqiqiy implementatsiyadagidek).
+      if (childId !== state.cred?.childId) return { state: { failedLogins: 0, failedWindowStartedAt: null, lockedUntil: null }, justLocked: false };
       const before = {
         failedLogins: state.cred!.failedLogins,
         failedWindowStartedAt: state.cred!.failedWindowStartedAt,
@@ -73,6 +78,7 @@ function setup(initial: Cred | null = credential()) {
       return { state: next, justLocked: lockRemainingSeconds(before, now) === 0 && lockRemainingSeconds(next, now) > 0 };
     }),
     recordSuccess: jest.fn(async () => ({ mustChangePassword: state.cred!.mustChangePassword })),
+    confirm: jest.fn(async () => ({ ok: true as const, mustChangePassword: false })),
   };
   const sessions = {
     open: jest.fn().mockResolvedValue({ user: { id: 'user-1', tokenVersion: 0 }, sessionId: 'sid-1', rjti: 'rjti-1', deviceRole: 'MAIN' }),
@@ -82,6 +88,7 @@ function setup(initial: Cred | null = credential()) {
   const realtime = { emitToUser: jest.fn() };
   const config = { get: jest.fn().mockReturnValue('unit-access-secret-'.padEnd(48, 'a')) };
   const setupTokens = new ChildSetupTokens(new JwtService({}), config as unknown as ConfigService<never, true>);
+  const ipLimits = new ChildAuthIpLimits(clock);
   const service = new ChildLoginService(
     prisma as never,
     auth as never,
@@ -91,9 +98,11 @@ function setup(initial: Cred | null = credential()) {
     audit as never,
     realtime as never,
     clock,
+    ipLimits,
   );
   return {
     service,
+    ipLimits,
     prisma,
     attempts,
     sessions,
@@ -134,14 +143,33 @@ describe('ChildLoginService.login', () => {
       refreshToken: 'refresh',
       sessionId: 'sid-1',
       deviceRole: 'MAIN',
-      child: { id: 'child-1', name: 'Aziza' },
+      child: { id: 'child-1', name: 'Aziza', parentId: 'parent-1' },
       user: { id: 'user-1' },
     });
-    expect(t.sessions.open).toHaveBeenCalledWith('child-1', DEVICE, T0);
+    expect(t.sessions.open).toHaveBeenCalledWith('child-1', DEVICE, T0, { passwordHash: HASH });
     expect(t.auth.issueSessionTokens).toHaveBeenCalledWith(
       { userId: 'user-1', role: 'CHILD', tokenVersion: 0, sid: 'sid-1' },
       'rjti-1',
     );
+  });
+
+  it('the OK child carries exactly { id, name, parentId } (nothing else from the child row)', async () => {
+    const t = setup(credential({ child: { id: 'child-1', name: 'Aziza', parentId: 'parent-1', extra: 'x' } as Cred['child'] }));
+
+    const res = (await login(t.service)) as unknown as { child: Record<string, unknown> };
+
+    expect(res.child).toStrictEqual({ id: 'child-1', name: 'Aziza', parentId: 'parent-1' });
+  });
+
+  it('hands the device to the session service as sent, including hostsControl (true, false or absent)', async () => {
+    for (const hostsControl of [false, true, undefined]) {
+      const t = setup();
+      const device = { ...DEVICE, ...(hostsControl !== undefined && { hostsControl }) };
+
+      await login(t.service, { device });
+
+      expect(t.sessions.open).toHaveBeenCalledWith('child-1', device, T0, { passwordHash: HASH });
+    }
   });
 
   it('passes the device role chosen by the session service through (MAIN or SECONDARY)', async () => {
@@ -166,7 +194,9 @@ describe('ChildLoginService.login', () => {
 
     const res = await login(t.service);
 
-    expect(res).toMatchObject({ status: 'SETUP_REQUIRED', child: { id: 'child-1', name: 'Aziza' } });
+    // SETUP_REQUIRED hali kirish emas: bola faqat { id, name } (parentId faqat OK javobda).
+    expect(res).toMatchObject({ status: 'SETUP_REQUIRED' });
+    expect((res as { child: unknown }).child).toStrictEqual({ id: 'child-1', name: 'Aziza' });
     expect((res as { setupToken: string }).setupToken).toEqual(expect.any(String));
     expect(t.setupTokens.verify((res as { setupToken: string }).setupToken)).toEqual({
       childId: 'child-1',
@@ -196,8 +226,12 @@ describe('ChildLoginService.login', () => {
 
     expect(compare).toHaveBeenCalledTimes(3);
     for (const call of compare.mock.calls) expect(String(call[1])).toMatch(/^\$2[aby]\$\d\d\$/);
-    // Noma'lum loginlar uchun DB'da hisob yuritilmaydi (qator yo'q).
-    expect(t.attempts.recordFailure).toHaveBeenCalledTimes(1);
+    // Noma'lum loginlar uchun ham xuddi shu DB ishi (tasodifiy id bilan, hech narsa yozilmaydi) — vaqt farqi qolmasin;
+    // haqiqiy hisob faqat mavjud login uchun yuritiladi.
+    expect(t.attempts.recordFailure).toHaveBeenCalledTimes(3);
+    const ids = t.attempts.recordFailure.mock.calls.map((c) => (c as unknown as [string])[0]);
+    expect(ids.filter((id) => id === 'child-1')).toHaveLength(1);
+    expect(new Set(ids).size).toBe(3);
   });
 
   it('locks on the 5th wrong password: that attempt already answers 429 LOCKED with retryAfterSeconds', async () => {
@@ -262,7 +296,8 @@ describe('ChildLoginService.login', () => {
 
     t.advance(LOCK_MS + 1_000);
     expect(status(await caught(login(t.service, { login: 'nobody.x00' })))).toBe(401);
-    expect(t.attempts.recordFailure).not.toHaveBeenCalled();
+    // Haqiqiy hisobga hech narsa yozilmagan (faqat tasodifiy id'li soxta yozuvlar).
+    expect(t.attempts.recordFailure.mock.calls.some((c) => (c as unknown as [string])[0] === 'child-1')).toBe(false);
   });
 
   it('writes an audit entry without IP / user agent and without credentials', async () => {
@@ -295,7 +330,8 @@ describe('ChildLoginService.setup', () => {
 
     const res = await t.service.setup(dto(t));
 
-    expect(res).toMatchObject({ status: 'OK', sessionId: 'sid-1', deviceRole: 'MAIN', child: { id: 'child-1' } });
+    expect(res).toMatchObject({ status: 'OK', sessionId: 'sid-1', deviceRole: 'MAIN' });
+    expect((res as { child: unknown }).child).toStrictEqual({ id: 'child-1', name: 'Aziza', parentId: 'parent-1' });
     expect(t.prisma.childCredential.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { childId: 'child-1', passwordHash: HASH, mustChangePassword: true },
@@ -306,6 +342,15 @@ describe('ChildLoginService.setup', () => {
     expect(data.passwordHash).not.toBe(HASH);
     expect(bcrypt.compareSync('Yangi-parol7', data.passwordHash)).toBe(true);
     expect(data.passwordHash).not.toContain('Yangi-parol7');
+  });
+
+  it('hands the device (with hostsControl) to the session service as sent', async () => {
+    const t = withTemp();
+    const device = { ...DEVICE, hostsControl: false };
+
+    await t.service.setup(dto(t, { device }));
+
+    expect(t.sessions.open).toHaveBeenCalledWith('child-1', device, T0, { passwordHash: expect.any(String) });
   });
 
   it.each([
@@ -427,6 +472,156 @@ describe('ChildLoginService.changePassword', () => {
 
     expect(body(weak)).toMatchObject({ code: 'WEAK_PASSWORD', reason: 'TOO_SHORT' });
     expect(body(same)).toMatchObject({ code: 'WEAK_PASSWORD', reason: 'SAME_AS_CURRENT' });
+    expect(t.prisma.childCredential.updateMany).not.toHaveBeenCalled();
+  });
+});
+
+describe('ChildLoginService: temporary password expiry (14 days)', () => {
+  const DAY = 24 * 60 * 60 * 1000;
+  afterEach(() => jest.restoreAllMocks());
+
+  const temp = (issuedAgoMs: number) => setup(credential({ mustChangePassword: true, issuedAt: new Date(T0.getTime() - issuedAgoMs) }));
+
+  it('a correct temporary password works until the 14th day', async () => {
+    const t = temp(14 * DAY - 1_000);
+
+    const res = await login(t.service);
+
+    expect(res).toMatchObject({ status: 'SETUP_REQUIRED' });
+  });
+
+  it('a correct but expired temporary password answers 401 TEMP_PASSWORD_EXPIRED: no setupToken, no session, no counter change', async () => {
+    const t = temp(14 * DAY);
+
+    const err = await caught(login(t.service));
+
+    expect(status(err)).toBe(401);
+    expect(body(err)).toEqual({ code: 'TEMP_PASSWORD_EXPIRED', message: 'Temporary password has expired' });
+    expect(t.attempts.recordSuccess).not.toHaveBeenCalled();
+    expect(t.attempts.recordFailure).not.toHaveBeenCalled();
+    expect(t.sessions.open).not.toHaveBeenCalled();
+  });
+
+  it('a WRONG password stays INVALID_CREDENTIALS even when the temporary password is expired, and still counts toward the lock', async () => {
+    const t = temp(30 * DAY);
+
+    const err = await caught(login(t.service, { password: 'Boshqa2026' }));
+
+    expect(status(err)).toBe(401);
+    expect(body(err)).toEqual({ code: 'INVALID_CREDENTIALS', message: 'Invalid credentials' });
+    expect(t.attempts.recordFailure).toHaveBeenCalledWith('child-1', T0);
+  });
+
+  it('expiry does not apply once the own password is set (mustChangePassword = false)', async () => {
+    const t = setup(credential({ mustChangePassword: false, issuedAt: new Date(T0.getTime() - 400 * DAY) }));
+
+    const res = await login(t.service);
+
+    expect(res.status).toBe('OK');
+  });
+
+  it('setup refuses a token whose temporary password expired meanwhile', async () => {
+    const t = temp(14 * DAY + 1_000);
+    const token = t.setupTokens.sign('child-1', HASH);
+
+    const err = await caught(t.service.setup({ setupToken: token, newPassword: 'Yangi-parol7', device: DEVICE }));
+
+    expect(status(err)).toBe(401);
+    expect(body(err)).toMatchObject({ code: 'TEMP_PASSWORD_EXPIRED' });
+    expect(t.prisma.childCredential.updateMany).not.toHaveBeenCalled();
+  });
+});
+
+describe('ChildLoginService: IP limit counts failures only', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it('successful logins from one IP never consume the limit (school Wi-Fi)', async () => {
+    const t = setup();
+
+    for (let i = 0; i < 40; i++) expect((await t.service.login({ login: 'aziza.k24', password: PASSWORD, device: DEVICE }, '10.0.0.5')).status).toBe('OK');
+  });
+
+  it('30 failed attempts (wrong passwords on different logins) block the IP; the 31st is RATE_LIMITED before any work', async () => {
+    const t = setup();
+    for (let i = 0; i < 30; i++) {
+      const err = await caught(t.service.login({ login: `nobody.u${i}`, password: 'x'.repeat(8), device: DEVICE }, '10.0.0.5'));
+      expect(status(err)).toBe(401);
+    }
+    const before = t.prisma.childCredential.findUnique.mock.calls.length;
+
+    const err = await caught(t.service.login({ login: 'aziza.k24', password: PASSWORD, device: DEVICE }, '10.0.0.5'));
+
+    expect(status(err)).toBe(429);
+    expect(body(err)).toMatchObject({ code: 'RATE_LIMITED', retryAfterSeconds: expect.any(Number) });
+    expect(t.prisma.childCredential.findUnique.mock.calls.length).toBe(before);
+    expect((await t.service.login({ login: 'aziza.k24', password: PASSWORD, device: DEVICE }, '10.0.0.6')).status).toBe('OK');
+  });
+
+  it('LOCKED answers count as failures too; expired temporary passwords do not', async () => {
+    const t = setup(credential({ lockedUntil: new Date(T0.getTime() + 600_000) }));
+    for (let i = 0; i < 30; i++) expect(status(await caught(t.service.login({ login: 'aziza.k24', password: PASSWORD, device: DEVICE }, '10.0.0.7')))).toBe(429);
+    expect(body(await caught(t.service.login({ login: 'aziza.k24', password: PASSWORD, device: DEVICE }, '10.0.0.7')))).toMatchObject({ code: 'RATE_LIMITED' });
+
+    const expired = setup(credential({ mustChangePassword: true, issuedAt: new Date(T0.getTime() - 15 * 24 * 3_600_000) }));
+    for (let i = 0; i < 40; i++) expect(body(await caught(expired.service.login({ login: 'aziza.k24', password: PASSWORD, device: DEVICE }, '10.0.0.8')))).toMatchObject({ code: 'TEMP_PASSWORD_EXPIRED' });
+  });
+
+  it('the block lifts after the 10 minute window (fake clock)', async () => {
+    const t = setup();
+    for (let i = 0; i < 30; i++) await caught(t.service.login({ login: `nobody.u${i}`, password: 'x'.repeat(8), device: DEVICE }, '10.0.0.9'));
+    expect(status(await caught(t.service.login({ login: 'aziza.k24', password: PASSWORD, device: DEVICE }, '10.0.0.9')))).toBe(429);
+
+    t.advance(10 * 60_000 + 1_000);
+
+    expect((await t.service.login({ login: 'aziza.k24', password: PASSWORD, device: DEVICE }, '10.0.0.9')).status).toBe('OK');
+  });
+
+  it('child-setup counts only SETUP_TOKEN_INVALID', async () => {
+    const t = setup(credential({ mustChangePassword: true }));
+    const good = () => t.setupTokens.sign('child-1', HASH);
+    for (let i = 0; i < 35; i++) {
+      // zaif parol (400) sanalmaydi
+      expect(status(await caught(t.service.setup({ setupToken: good(), newPassword: 'abc', device: DEVICE }, '10.0.0.10')))).toBe(400);
+    }
+    for (let i = 0; i < 30; i++) expect(status(await caught(t.service.setup({ setupToken: 'garbage', newPassword: 'Yangi-parol7', device: DEVICE }, '10.0.0.10')))).toBe(401);
+
+    const err = await caught(t.service.setup({ setupToken: good(), newPassword: 'Yangi-parol7', device: DEVICE }, '10.0.0.10'));
+
+    expect(status(err)).toBe(429);
+    expect(body(err)).toMatchObject({ code: 'RATE_LIMITED' });
+  });
+});
+
+describe('ChildLoginService.changePassword: lock rechecked under the row lock', () => {
+  afterEach(() => jest.restoreAllMocks());
+  const user = { userId: 'user-1', role: 'CHILD' as const, sid: 'sid-1' };
+
+  function withChild() {
+    const t = setup();
+    t.prisma.child.findUnique.mockResolvedValue({ id: 'child-1', credential: credential() });
+    return t;
+  }
+
+  it('refuses a correct current password when the account got locked meanwhile (parallel guesses cannot slip past the lock)', async () => {
+    const t = withChild();
+    t.attempts.confirm.mockResolvedValue({ ok: false, reason: 'LOCKED', retryAfterSeconds: 600 } as never);
+
+    const err = await caught(t.service.changePassword(user, { currentPassword: PASSWORD, newPassword: 'Yangi-parol7' }));
+
+    expect(status(err)).toBe(429);
+    expect(body(err)).toMatchObject({ code: 'LOCKED', retryAfterSeconds: 600 });
+    expect(t.prisma.childCredential.updateMany).not.toHaveBeenCalled();
+    expect(t.attempts.confirm).toHaveBeenCalledWith('child-1', HASH, T0, false);
+  });
+
+  it('answers 409 PASSWORD_CHANGED when the credentials were reset between the check and the swap', async () => {
+    const t = withChild();
+    t.attempts.confirm.mockResolvedValue({ ok: false, reason: 'CHANGED' } as never);
+
+    const err = await caught(t.service.changePassword(user, { currentPassword: PASSWORD, newPassword: 'Yangi-parol7' }));
+
+    expect(status(err)).toBe(409);
+    expect(body(err)).toMatchObject({ code: 'PASSWORD_CHANGED' });
     expect(t.prisma.childCredential.updateMany).not.toHaveBeenCalled();
   });
 });

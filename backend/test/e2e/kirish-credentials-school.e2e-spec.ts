@@ -2,10 +2,11 @@
 // (`/school/students/:studentId/credentials`): ruxsat (`students.manage`), sinf doirasi, maktab izolyatsiyasi,
 // faqat Parvoz bola profiliga bog'langan o'quvchi (409 NOT_LINKED), audit (parolsiz) va oqibatlari.
 
+import { ChildAuthEffects } from '../../src/modules/child-auth/child-auth-effects';
 import { ChildRecoveryService } from '../../src/modules/child-auth/child-recovery.service';
 import { SCHOOL_ROLES } from '../../src/school/auth/permissions';
 import { resetDb } from './db';
-import { createChild } from './factories';
+import { createChild, createParent } from './factories';
 import {
   api,
   captureRealtime,
@@ -61,7 +62,8 @@ describe('Kirish K1: maktab — o\'quvchi kirish maʼlumotlari', () => {
 
       expect(issued.statusCode).toBe(201);
       const body = issued.json();
-      expect(Object.keys(body).sort()).toEqual(['issuedAt', 'login', 'temporaryPassword']);
+      expect(Object.keys(body).sort()).toEqual(['issuedAt', 'login', 'temporaryPassword', 'temporaryPasswordExpiresAt']);
+      expect(Date.parse(body.temporaryPasswordExpiresAt) - Date.parse(body.issuedAt)).toBe(14 * 24 * 60 * 60 * 1000);
       expect(body.login).toMatch(/^vali\.a\d{2}$/);
       expect(body.temporaryPassword).toMatch(TEMP_PASSWORD);
       expect(issued.headers['cache-control']).toBe('no-store');
@@ -72,6 +74,7 @@ describe('Kirish K1: maktab — o\'quvchi kirish maʼlumotlari', () => {
         issuedBy: 'SCHOOL',
         issuedAt: body.issuedAt,
         mustChangePassword: true,
+        temporaryPasswordExpiresAt: body.temporaryPasswordExpiresAt,
         lastLoginAt: null,
       });
       // Ota-ona ham xuddi shu maʼlumotni ko'radi.
@@ -173,6 +176,113 @@ describe('Kirish K1: maktab — o\'quvchi kirish maʼlumotlari', () => {
       for (const secret of [first.temporaryPassword, second.temporaryPassword, first.login]) expect(dump).not.toContain(secret);
       expect(await dbContains(t, first.temporaryPassword)).toEqual([]);
       expect(await dbContains(t, second.temporaryPassword)).toEqual([]);
+    });
+
+    describe("ota-onaga neytral push: maktab bola kirish maʼlumotini berganda ota-ona xabardor bo'ladi", () => {
+      const schoolPushes = () => t.fcm.pushesTo(w.parent.userId).filter((p) => p.data?.type === 'CHILD_CREDENTIAL_SCHOOL');
+      const settle = () => t.app.get(ChildAuthEffects).drain();
+      const parentHasDevice = () =>
+        t.prisma.fcmToken.create({ data: { userId: w.parent.userId, token: 'fcm-parent-phone', deviceType: 'android' } });
+
+      it('pushes the parent a neutral message of type CHILD_CREDENTIAL_SCHOOL when the school issues credentials', async () => {
+        await parentHasDevice();
+
+        const res = await schoolReq(t, w.director, 'POST', sUrl(), {});
+        await settle();
+
+        expect(res.statusCode).toBe(201);
+        expect(schoolPushes()).toEqual([
+          {
+            title: 'Parvoz',
+            body: 'Maktab farzandingizga kirish maʼlumotlarini berdi',
+            data: { type: 'CHILD_CREDENTIAL_SCHOOL', childId: w.child.childId },
+          },
+        ]);
+      });
+
+      it('says "renewed" on a reset, in the language of the parent', async () => {
+        await parentHasDevice();
+        await schoolReq(t, w.director, 'POST', sUrl(), {});
+        await settle();
+        t.fcm.reset();
+
+        await schoolReq(t, w.admin, 'POST', sUrl(), {});
+        await settle();
+        expect(schoolPushes().map((p) => p.body)).toEqual(['Maktab farzandingizning kirish maʼlumotlarini yangiladi']);
+
+        await t.prisma.user.update({ where: { id: w.parent.userId }, data: { language: 'ru' } });
+        t.fcm.reset();
+        await schoolReq(t, w.admin, 'POST', sUrl(), {});
+        await settle();
+        expect(schoolPushes().map((p) => p.body)).toEqual(['Школа обновила данные для входа вашего ребёнка']);
+      });
+
+      it('never puts the login, the password or the child name into the push', async () => {
+        await parentHasDevice();
+
+        const issued = (await schoolReq(t, w.director, 'POST', sUrl(), {})).json();
+        await settle();
+
+        const dump = JSON.stringify(t.fcm.sent);
+        expect(dump).not.toContain(issued.temporaryPassword);
+        expect(dump).not.toContain(issued.login);
+        expect(dump).not.toContain('Vali');
+        expect(Object.keys(schoolPushes()[0]!.data!).sort()).toEqual(['childId', 'type']);
+      });
+
+      it('sends nothing when the parent has no push token, and never to another family', async () => {
+        const stranger = await createParent(t.prisma);
+        await t.prisma.fcmToken.create({ data: { userId: stranger.userId, token: 'fcm-stranger', deviceType: 'android' } });
+
+        await schoolReq(t, w.director, 'POST', sUrl(), {});
+        await settle();
+
+        expect(t.fcm.sent).toEqual([]);
+        await parentHasDevice();
+        await schoolReq(t, w.director, 'POST', sUrl(), {});
+        await settle();
+        expect(t.fcm.pushesTo(stranger.userId)).toEqual([]);
+        expect(schoolPushes()).toHaveLength(1);
+      });
+
+      it("a parent's own issue / reset never triggers the school push", async () => {
+        await parentHasDevice();
+
+        await api(t, 'POST', url(), { token: w.parent.token, payload: {} });
+        await api(t, 'POST', url(), { token: w.parent.token, payload: {} });
+        await settle();
+
+        expect(schoolPushes()).toEqual([]);
+      });
+
+      it('a failing push does not fail the request, and a slow push does not delay it', async () => {
+        await parentHasDevice();
+        jest.spyOn(t.fcm, 'sendPushToUser').mockRejectedValueOnce(new Error('fcm down'));
+        const failed = await schoolReq(t, w.director, 'POST', sUrl(), {});
+        await settle();
+        expect(failed.statusCode).toBe(201);
+
+        jest
+          .spyOn(t.fcm, 'sendPushToUser')
+          .mockImplementation(() => new Promise((resolve) => setTimeout(() => resolve({ sent: 1, failed: 0, invalidTokens: [] }), 3_000)));
+        const start = Date.now();
+        const slow = await schoolReq(t, w.director, 'POST', sUrl(), {});
+        const elapsed = Date.now() - start;
+
+        expect(slow.statusCode).toBe(201);
+        expect(elapsed).toBeLessThan(2_500);
+        await settle();
+      });
+
+      it('a refused request (403 / 409 NOT_LINKED) sends nothing', async () => {
+        await parentHasDevice();
+
+        expect((await schoolReq(t, w.homeroom, 'POST', sUrl(), {})).statusCode).toBe(403);
+        expect((await schoolReq(t, w.director, 'POST', sUrl(w.malika), {})).statusCode).toBe(409);
+        await settle();
+
+        expect(t.fcm.sent).toEqual([]);
+      });
     });
 
     describe('sinf doirasi (ruxsat berilgan rolga o\'tkazilsa ham)', () => {

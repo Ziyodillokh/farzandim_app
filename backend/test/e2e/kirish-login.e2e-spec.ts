@@ -1,5 +1,6 @@
 // Kirish (K1): bola login/parol bilan kirishi (child-login + child-setup), noto'g'ri login / parol uchun bir xil javob,
-// brute-force himoyasi (15 daqiqada 5 xato blok, soxta soat, mavjud bo'lmagan loginlar, IP limiti).
+// brute-force himoyasi (15 daqiqada 5 xato blok, soxta soat, mavjud bo'lmagan loginlar). IP limiti:
+// `kirish-ip-limits.e2e-spec.ts`, vaqtinchalik parol muddati: `kirish-temp-password.e2e-spec.ts`.
 
 import { resetDb } from './db';
 import { TestChild, TestParent } from './factories';
@@ -82,9 +83,10 @@ describe('Kirish K1: bola kirishi (login / parol)', () => {
       expect(Object.keys(body).sort()).toEqual(['accessToken', 'child', 'deviceRole', 'refreshToken', 'sessionId', 'status', 'user']);
       expect(body).toMatchObject({
         status: 'OK',
-        child: { id: child.childId, name: 'Aziza Karimova' },
+        child: { id: child.childId, name: 'Aziza Karimova', parentId: parent.userId },
         user: { id: child.userId },
       });
+      expect(Object.keys(body.child).sort()).toEqual(['id', 'name', 'parentId']);
       expect(Object.keys(body.user)).toEqual(['id']);
       expect(await row()).toMatchObject({ mustChangePassword: false, failedLogins: 0, lockedUntil: null });
       expect((await row()).passwordChangedAt).not.toBeNull();
@@ -135,6 +137,18 @@ describe('Kirish K1: bola kirishi (login / parol)', () => {
       const reused = await refresh(session.refreshToken);
       expect(reused.statusCode).toBe(401);
       expect((await refresh(next.json().refreshToken)).statusCode).toBe(200);
+    });
+
+    it('the OK body of a later login carries the same { id, name, parentId } child (the app needs no second request)', async () => {
+      await loginThroughSetup(t, cred, device('install-a'));
+
+      const res = await childLogin(t, cred.login, OWN_PASSWORD, device('install-b'));
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json().child).toStrictEqual({ id: child.childId, name: 'Aziza Karimova', parentId: parent.userId });
+      // Bola tokeni parentId'ni GET /children/:id orqali ham o'qiy oladi (yangi ma'lumot ochilmaydi).
+      const read = await api(t, 'GET', `/children/${child.childId}`, { token: res.json().accessToken });
+      expect(read.json().parentId).toBe(parent.userId);
     });
 
     it('later logins with the own password return OK directly and keep one user for all devices', async () => {
@@ -314,19 +328,4 @@ describe('Kirish K1: bola kirishi (login / parol)', () => {
       expect(rows[0]!.ipAddress).toBeNull();
     });
   });
-
-  describe('IP limiti: 10 daqiqada 30 ta', () => {
-    it('answers a structured 429 RATE_LIMITED from the 31st request of one IP, other IPs are unaffected', async () => {
-      const ip = '203.0.113.9';
-      const results: number[] = [];
-      for (let i = 0; i < 31; i++) results.push((await wrongLogin(unknownLogin(), ip)).statusCode);
-
-      expect(results.slice(0, 30).every((s) => s === 401)).toBe(true);
-      expect(results[30]).toBe(429);
-      const blocked = await wrongLogin(unknownLogin(), ip);
-      expect(blocked.json()).toMatchObject({ statusCode: 429, code: 'RATE_LIMITED', retryAfterSeconds: expect.any(Number) });
-      expect((await wrongLogin(unknownLogin(), '203.0.113.10')).statusCode).toBe(401);
-    }, 60_000);
-  });
-
 });

@@ -1587,15 +1587,18 @@ enum ChildRecoveryStatus {
 /// Bola "kirish maʼlumotlarini tiklash" so'rovi. `childId` NULL — mavjud bo'lmagan login uchun "o'lik"
 /// so'rov (hech qachon yechilmaydi; mavjudlik fosh bo'lmasin). Poll tokenning faqat xeshi saqlanadi.
 model ChildRecoveryRequest {
-  id            String               @id @default(uuid())
-  childId       String?              @map("child_id")
-  channel       ChildRecoveryChannel
-  status        ChildRecoveryStatus  @default(RECEIVED)
-  pollTokenHash String               @map("poll_token_hash")
-  createdAt     DateTime             @default(now()) @map("created_at")
-  restoredAt    DateTime?            @map("restored_at")
-  signedOutAt   DateTime?            @map("signed_out_at")
-  rejectedAt    DateTime?            @map("rejected_at")
+  id               String               @id @default(uuid())
+  childId          String?              @map("child_id")
+  /// Samarali kanal (kimga yetkazildi): bola maktabga bog'lanmagan bo'lsa SCHOOL so'rovi PARENT'ga tushadi.
+  channel          ChildRecoveryChannel
+  /// Bola so'ragan kanal. Ommaviy poll AYNAN shuni qaytaradi (samarali kanal login mavjudligini fosh qilardi).
+  requestedChannel ChildRecoveryChannel @map("requested_channel")
+  status           ChildRecoveryStatus  @default(RECEIVED)
+  pollTokenHash    String               @map("poll_token_hash")
+  createdAt        DateTime             @default(now()) @map("created_at")
+  restoredAt       DateTime?            @map("restored_at")
+  signedOutAt      DateTime?            @map("signed_out_at")
+  rejectedAt       DateTime?            @map("rejected_at")
 
   child Child? @relation(fields: [childId], references: [id], onDelete: Cascade)
 

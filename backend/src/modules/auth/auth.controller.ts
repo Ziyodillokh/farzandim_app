@@ -46,8 +46,8 @@ import { SocialLoginDto } from './dto/social-login.dto';
 import { RedeemDeviceLinkDto } from './dto/device-link.dto';
 import { RedeemRepairTokenDto } from './dto/redeem-repair-token.dto';
 import { RequestSessionAccessDto } from './dto/request-session-access.dto';
-import { Public } from '../../common/decorators';
-import { ConsumerJwtAuthGuard } from '../../common/guards';
+import { Public, Roles } from '../../common/decorators';
+import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { CurrentUser } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 
@@ -303,7 +303,11 @@ export class AuthController {
 
   /* ──────────────── Device-link (QR 2-qurilma) ──────────────── */
 
+  // Faqat ota-ona (2-qurilma QR'i). Bola foydalanuvchisi bu yo'l bilan 3 ta sessiya chegarasi va parol almashtirishda
+  // yopilishni chetlab o'tadigan `kind`siz sessiya yarata olmasin.
   @Post('device-link/create')
+  @UseGuards(RolesGuard)
+  @Roles('PARENT')
   @ApiBearerAuth('consumer-jwt')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({

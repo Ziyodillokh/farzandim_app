@@ -5,9 +5,12 @@
 //    uchun ham bcrypt tekshiruvi bajariladi (vaqt farqi yo'q);
 //  - 15 daqiqada 5 xato -> 15 daqiqaga blok (429 LOCKED, blok paytida to'g'ri parol ham o'tmaydi);
 //    mavjud bo'lmagan loginlar uchun ham xotirada xuddi shu qoida ("soya" blok) — mavjudlik fosh bo'lmaydi;
-//  - setupToken bir martalik (parol xeshining barmoq izi + shartli UPDATE).
+//  - setupToken bir martalik (parol xeshining barmoq izi + shartli UPDATE);
+//  - IP bo'yicha faqat XATO urinishlar sanaladi (10 daqiqada 30 ta) — maktab Wi-Fi'sida muvaffaqiyatli kirish limitni yemaydi;
+//  - vaqtinchalik parol 14 kun amal qiladi (to'g'ri, lekin eskirgan -> 401 TEMP_PASSWORD_EXPIRED, setupToken yo'q).
 
 import { ConflictException, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import * as bcrypt from 'bcryptjs';
 import { AuditService } from '../../common/audit/audit.service';
 import { PrismaService } from '../../common/database/prisma.service';
@@ -22,10 +25,12 @@ import {
   lockedError,
   noCredential,
   setupTokenInvalid,
+  tempPasswordExpired,
   weakPassword,
   wrongPassword,
 } from './child-auth.errors';
-import { checkNewPassword, isValidLogin, normalizeLogin } from './child-credentials.helpers';
+import { checkNewPassword, isTempPasswordExpired, isValidLogin, normalizeLogin } from './child-credentials.helpers';
+import { ChildAuthIpLimits } from './child-ip-limits';
 import { ChildLoginAttempts } from './child-login-attempts';
 import { GhostLoginLimiter, LoginFailureState, lockRemainingSeconds } from './child-login-lock';
 import type { DeviceRole } from './child-device-role';
@@ -38,6 +43,11 @@ export interface ChildSummary {
   name: string;
 }
 
+/** `OK` javobidagi bola: ilova ota-onani alohida so'rovsiz biladi (bola tokeni `GET /children/:id` bilan ham o'qiy oladi). */
+export interface ChildOkSummary extends ChildSummary {
+  parentId: string;
+}
+
 export interface ChildOkBody {
   status: 'OK';
   accessToken: string;
@@ -45,7 +55,7 @@ export interface ChildOkBody {
   sessionId: string;
   /** MAIN — bu qurilma asosiy (nazorat shu yerda); SECONDARY — bolada asosiy qurilma bor, bu faqat akkaunt kirishi. */
   deviceRole: DeviceRole;
-  child: ChildSummary;
+  child: ChildOkSummary;
   user: { id: string };
 }
 
@@ -73,6 +83,7 @@ export class ChildLoginService implements OnModuleInit {
     private readonly audit: AuditService,
     private readonly realtime: RealtimeGateway,
     private readonly clock: ChildAuthClock,
+    private readonly ipLimits: ChildAuthIpLimits,
   ) {}
 
   onModuleInit(): void {
@@ -80,21 +91,32 @@ export class ChildLoginService implements OnModuleInit {
     void getDummyHash();
   }
 
-  async login(dto: ChildLoginDto): Promise<ChildOkBody | ChildSetupRequiredBody> {
+  /**
+   * `ip` — so'rovning haqiqiy IP'si: faqat XATO urinishlar (INVALID_CREDENTIALS, LOCKED) IP limitiga sanaladi
+   * (10 daqiqada 30 ta); muvaffaqiyatli kirish va muddati o'tgan parol sanalmaydi.
+   */
+  login(dto: ChildLoginDto, ip?: string): Promise<ChildOkBody | ChildSetupRequiredBody> {
+    return this.ipLimits.guard('login', ip, () => this.loginUnlimited(dto));
+  }
+
+  private async loginUnlimited(dto: ChildLoginDto): Promise<ChildOkBody | ChildSetupRequiredBody> {
     const now = this.clock.now();
     const login = normalizeLogin(dto.login).slice(0, LOGIN_INPUT_MAX);
-    const cred = isValidLogin(login)
-      ? await this.prisma.childCredential.findUnique({
-          where: { login },
-          include: { child: { select: { id: true, name: true } } },
-        })
-      : null;
+    // Yaroqsiz formatdagi login uchun ham xuddi shu qidiruv (hech narsa topilmaydi) — vaqt farqi qolmasin.
+    const cred = await this.prisma.childCredential.findUnique({
+      where: { login: isValidLogin(login) ? login : '' },
+      include: { child: { select: { id: true, name: true, parentId: true } } },
+    });
 
     const locked = cred ? lockRemainingSeconds(cred, now) : this.ghost.lockRemainingSeconds(login, now);
     if (locked > 0) throw lockedError(locked);
 
     const matches = await bcrypt.compare(dto.password, cred?.passwordHash ?? (await getDummyHash()));
     if (!cred || !matches) throw await this.failedAttempt(cred?.childId ?? null, login, now);
+
+    // To'g'ri, lekin 14 kunlik muddati o'tgan vaqtinchalik parol: setupToken YO'Q (parolni bilmaydiganga hech narsa
+    // ochilmaydi; noto'g'ri parol baribir INVALID_CREDENTIALS va blokka sanaladi). Hisob yangilanmaydi.
+    if (cred.mustChangePassword && isTempPasswordExpired(cred.issuedAt, now)) throw tempPasswordExpired();
 
     const { mustChangePassword } = await this.attempts.recordSuccess(cred.childId, cred.passwordHash, now);
     if (mustChangePassword) {
@@ -104,17 +126,24 @@ export class ChildLoginService implements OnModuleInit {
         child: toSummary(cred.child),
       };
     }
-    return this.completeLogin(cred.child, dto.device);
+    return this.completeLogin(cred.child, dto.device, cred.passwordHash);
   }
 
-  /** Birinchi kirish: vaqtinchalik parol o'rniga o'z parolini o'rnatadi va kiradi. */
-  async setup(dto: ChildSetupDto): Promise<ChildOkBody> {
+  /**
+   * Birinchi kirish: vaqtinchalik parol o'rniga o'z parolini o'rnatadi va kiradi. IP limitida faqat
+   * SETUP_TOKEN_INVALID xatolari sanaladi.
+   */
+  setup(dto: ChildSetupDto, ip?: string): Promise<ChildOkBody> {
+    return this.ipLimits.guard('setup', ip, () => this.setupUnlimited(dto));
+  }
+
+  private async setupUnlimited(dto: ChildSetupDto): Promise<ChildOkBody> {
     const now = this.clock.now();
     const claims = this.setupTokens.verify(dto.setupToken);
     if (!claims) throw setupTokenInvalid();
     const cred = await this.prisma.childCredential.findUnique({
       where: { childId: claims.childId },
-      include: { child: { select: { id: true, name: true } } },
+      include: { child: { select: { id: true, name: true, parentId: true } } },
     });
     if (
       !cred ||
@@ -123,6 +152,8 @@ export class ChildLoginService implements OnModuleInit {
     ) {
       throw setupTokenInvalid();
     }
+    // Token berilgandan keyin vaqtinchalik parol muddati tugagan bo'lsa ham (15 daqiqalik oyna) o'rnatilmaydi.
+    if (isTempPasswordExpired(cred.issuedAt, now)) throw tempPasswordExpired();
 
     const issue = checkNewPassword(dto.newPassword, cred.login);
     if (issue) throw weakPassword(issue);
@@ -143,7 +174,7 @@ export class ChildLoginService implements OnModuleInit {
       },
     });
     if (swapped.count === 0) throw setupTokenInvalid();
-    return this.completeLogin(cred.child, dto.device);
+    return this.completeLogin(cred.child, dto.device, passwordHash);
   }
 
   /** `POST /auth/child/password`: joriy parol bilan tasdiqlab almashtiradi; boshqa LOGIN sessiyalar yopiladi. */
@@ -162,6 +193,15 @@ export class ChildLoginService implements OnModuleInit {
       const { state } = await this.attempts.recordFailure(child.id, now);
       const remaining = lockRemainingSeconds(state, now);
       throw remaining > 0 ? lockedError(remaining) : wrongPassword();
+    }
+
+    // Parallel urinishlar blokdan oshib o'tmasin: parol tekshirilgandan keyin blok / almashtirish qator qulfi ostida qayta
+    // tekshiriladi (kirishdagi kabi) — blok qo'yilgandan keyin tugagan "to'g'ri" taxmin ham o'tmaydi.
+    const still = await this.attempts.confirm(child.id, cred.passwordHash, now, false);
+    if (!still.ok) {
+      throw still.reason === 'LOCKED'
+        ? lockedError(still.retryAfterSeconds)
+        : new ConflictException({ code: 'PASSWORD_CHANGED', message: 'Credentials were changed meanwhile' });
     }
 
     const issue = checkNewPassword(dto.newPassword, cred.login);
@@ -209,6 +249,8 @@ export class ChildLoginService implements OnModuleInit {
         this.logger.warn('bola logini vaqtincha bloklandi');
       }
     } else {
+      // Mavjud loginning xato yozuvi bilan bir xil DB ishi (hech narsa topilmaydigan qator) — vaqt farqi qolmasin.
+      await this.attempts.recordFailure(randomUUID(), now);
       state = this.ghost.recordFailure(login, now);
     }
     const remaining = lockRemainingSeconds(state, now);
@@ -216,8 +258,9 @@ export class ChildLoginService implements OnModuleInit {
   }
 
   /** Sessiya ochadi va token beradi (IP / User-Agent auditga yozilmaydi — bola ma'lumoti). */
-  private async completeLogin(child: ChildSummary, device: LoginDevice): Promise<ChildOkBody> {
-    const opened = await this.sessions.open(child.id, device, this.clock.now());
+  private async completeLogin(child: ChildOkSummary, device: LoginDevice, passwordHash: string): Promise<ChildOkBody> {
+    // `passwordHash` — tekshirilgan (yoki endi o'rnatilgan) xesh: sessiya ochilayotganda tiklash / blok kirib qolsa rad etiladi.
+    const opened = await this.sessions.open(child.id, device, this.clock.now(), { passwordHash });
     const tokens = this.auth.issueSessionTokens(
       { userId: opened.user.id, role: 'CHILD', tokenVersion: opened.user.tokenVersion, sid: opened.sessionId },
       opened.rjti,
@@ -232,10 +275,11 @@ export class ChildLoginService implements OnModuleInit {
       refreshToken: tokens.refreshToken,
       sessionId: opened.sessionId,
       deviceRole: opened.deviceRole,
-      child: toSummary(child),
+      child: toOkSummary(child),
       user: { id: opened.user.id },
     };
   }
 }
 
 const toSummary = (child: ChildSummary): ChildSummary => ({ id: child.id, name: child.name });
+const toOkSummary = (child: ChildOkSummary): ChildOkSummary => ({ id: child.id, name: child.name, parentId: child.parentId });

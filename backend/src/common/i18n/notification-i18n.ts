@@ -175,6 +175,17 @@ const T: Record<string, Record<NotifLang, string>> = {
     ru: 'Завтра срок задания',
     en: 'An assignment is due tomorrow',
   },
+  // Maktab bola kirish maʼlumotini berdi / yangiladi (ota-onaga, shaffoflik). Login, parol va bola ismi push'da yo'q.
+  'childCredentialSchool.issued': {
+    uz: 'Maktab farzandingizga kirish ma\u02bclumotlarini berdi',
+    ru: 'Школа выдала вашему ребёнку данные для входа',
+    en: 'The school gave your child sign-in details',
+  },
+  'childCredentialSchool.reset': {
+    uz: 'Maktab farzandingizning kirish ma\u02bclumotlarini yangiladi',
+    ru: 'Школа обновила данные для входа вашего ребёнка',
+    en: 'The school renewed your child\u2019s sign-in details',
+  },
   // Bola kirish maʼlumotlarini tiklashni so'radi (ota-onaga). Bola ismi push'da yo'q.
   'childRecovery.body': {
     uz: 'Farzandingiz kirish ma\u02bclumotlarini tiklashni so\u02bbradi',

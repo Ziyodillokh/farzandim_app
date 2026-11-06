@@ -4,8 +4,10 @@ import {
   generateTemporaryPassword,
   isValidLogin,
   normalizeLogin,
+  isTempPasswordExpired,
   splitChildName,
   suggestLoginCandidates,
+  tempPasswordExpiresAt,
   toAsciiSlug,
 } from './child-credentials.helpers';
 
@@ -174,5 +176,22 @@ describe('checkNewPassword', () => {
     expect(checkNewPassword('Password1', login)).toBe('TOO_COMMON');
     expect(checkNewPassword('QWERTY123', login)).toBe('TOO_COMMON');
     expect(checkNewPassword('Parvoz123', login)).toBe('TOO_COMMON');
+  });
+});
+
+describe('temporary password expiry (14 days)', () => {
+  const issued = new Date('2026-11-09T09:00:00.000Z');
+
+  it('expires exactly 14 days after issuance', () => {
+    expect(tempPasswordExpiresAt(issued).toISOString()).toBe('2026-11-23T09:00:00.000Z');
+  });
+
+  it('is valid until the last millisecond and expired from the expiry instant on', () => {
+    const expiry = tempPasswordExpiresAt(issued);
+
+    expect(isTempPasswordExpired(issued, issued)).toBe(false);
+    expect(isTempPasswordExpired(issued, new Date(expiry.getTime() - 1))).toBe(false);
+    expect(isTempPasswordExpired(issued, expiry)).toBe(true);
+    expect(isTempPasswordExpired(issued, new Date(expiry.getTime() + 86_400_000))).toBe(true);
   });
 });

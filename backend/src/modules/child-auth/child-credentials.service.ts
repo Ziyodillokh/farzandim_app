@@ -6,15 +6,19 @@
 // (standart) bolaning barcha qurilmalari chiqariladi (`signOutDevices`): sessiyalar RECOVERED sababi bilan
 // yopiladi, tokenVersion oshadi (eski, sid'siz juftlangan qurilma ham chiqadi), push tokenlari o'chadi.
 
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ChildCredential, Prisma } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { AuditService } from '../../common/audit/audit.service';
 import { PrismaService } from '../../common/database/prisma.service';
+import { FcmService } from '../../common/fcm/fcm.service';
+import { tr } from '../../common/i18n/notification-i18n';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { announceSessionsClosed, closeSessions } from '../auth/session-revocation';
 import { ChildAuthClock } from './child-auth-clock';
+import { ChildAuthEffects } from './child-auth-effects';
 import {
+  CHILD_CREDENTIAL_SCHOOL_PUSH_TYPE,
   CHILD_UNPAIRED_EVENT,
   childRecoveryNotificationId,
   CREDENTIAL_BCRYPT_ROUNDS,
@@ -28,6 +32,7 @@ import {
   normalizeLogin,
   splitChildName,
   suggestLoginCandidates,
+  tempPasswordExpiresAt,
 } from './child-credentials.helpers';
 import type { IssueChildCredentialDto } from './dto/issue-child-credential.dto';
 
@@ -42,6 +47,8 @@ export interface CredentialView {
   issuedBy: ChildCredential['issuedBy'];
   issuedAt: string;
   mustChangePassword: boolean;
+  /** Vaqtinchalik parol amal qilish muddati (`issuedAt` + 14 kun); parol allaqachon almashtirilgan bo'lsa `null`. */
+  temporaryPasswordExpiresAt: string | null;
   lastLoginAt: string | null;
 }
 
@@ -49,6 +56,8 @@ export interface IssuedCredential {
   login: string;
   temporaryPassword: string;
   issuedAt: string;
+  /** Vaqtinchalik parol amal qilish muddati (`issuedAt` + 14 kun). */
+  temporaryPasswordExpiresAt: string;
 }
 
 export interface IssueOutcome extends IssuedCredential {
@@ -64,17 +73,22 @@ export function toCredentialView(c: ChildCredential): CredentialView {
     issuedBy: c.issuedBy,
     issuedAt: c.issuedAt.toISOString(),
     mustChangePassword: c.mustChangePassword,
+    temporaryPasswordExpiresAt: c.mustChangePassword ? tempPasswordExpiresAt(c.issuedAt).toISOString() : null,
     lastLoginAt: c.lastLoginAt?.toISOString() ?? null,
   };
 }
 
 @Injectable()
 export class ChildCredentialsService {
+  private readonly logger = new Logger(ChildCredentialsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly realtime: RealtimeGateway,
     private readonly audit: AuditService,
     private readonly clock: ChildAuthClock,
+    private readonly fcm: FcmService,
+    private readonly effects: ChildAuthEffects,
   ) {}
 
   /** Bola uchun joriy kirish maʼlumotlari (parolsiz) yoki `null`. */
@@ -117,7 +131,17 @@ export class ChildCredentialsService {
       },
       reqMeta,
     );
-    return { login: outcome.login, temporaryPassword: outcome.temporaryPassword, issuedAt: outcome.issuedAt };
+    return toIssued(outcome);
+  }
+
+  // ── Maktab ─────────────────────────────────────────────────────────
+
+  /**
+   * Maktab bola kirish maʼlumotini bergan / yangilagan: ota-onaga NEYTRAL push (login, parol va bola ismi yo'q),
+   * `data: { type: 'CHILD_CREDENTIAL_SCHOOL', childId }`. Fonda va faqat ota-onada FCM token bo'lsa; xato javobga ta'sir qilmaydi.
+   */
+  notifyParentOfSchoolAction(childId: string, reset: boolean): void {
+    this.effects.track(this.pushParentOfSchoolAction(childId, reset), 'maktab kirish maʼlumoti push');
   }
 
   // ── Umumiy yadro (ota-ona + maktab) ────────────────────────────────
@@ -171,11 +195,14 @@ export class ChildCredentialsService {
     if (done.signOut && done.childUserId) {
       announceSessionsClosed(this.realtime, done.childUserId, done.closed, 'RECOVERED', true);
       this.emitUnpaired(done.childUserId, input.childId, now);
+      // Yopilgan qurilmalarning ochiq socketlari uziladi (qayta ulanishda token tekshiriladi).
+      this.realtime.disconnectUser(done.childUserId);
     }
     return {
       login: done.login,
       temporaryPassword,
       issuedAt: now.toISOString(),
+      temporaryPasswordExpiresAt: tempPasswordExpiresAt(now).toISOString(),
       reset: done.reset,
       signedOutDevices: done.signOut,
       closedSessions: done.closed.length,
@@ -235,6 +262,20 @@ export class ChildCredentialsService {
     return ids.length;
   }
 
+  private async pushParentOfSchoolAction(childId: string, reset: boolean): Promise<void> {
+    const child = await this.prisma.child.findUnique({ where: { id: childId }, select: { parentId: true } });
+    if (!child) return;
+    // Ota-onada push token yo'q bo'lsa — hech narsa yuborilmaydi.
+    if ((await this.prisma.fcmToken.count({ where: { userId: child.parentId } })) === 0) return;
+    const lang = await this.fcm.getUserLang(child.parentId);
+    await this.fcm.sendPushToUser(child.parentId, {
+      title: tr(lang, 'push.neutralTitle'),
+      body: tr(lang, reset ? 'childCredentialSchool.reset' : 'childCredentialSchool.issued'),
+      data: { type: CHILD_CREDENTIAL_SCHOOL_PUSH_TYPE, childId },
+    });
+    this.logger.log('maktab kirish maʼlumoti haqida ota-onaga push yuborildi');
+  }
+
   /** Eski (juftlangan) bola ilovasi `child:unpaired` ni mahalliy uzish sifatida qabul qiladi. */
   private emitUnpaired(childUserId: string, childId: string, at: Date): void {
     try {
@@ -261,4 +302,14 @@ function issuedFields(actor: CredentialActor, passwordHash: string, now: Date) {
     issuedByStaffId: actor.kind === 'SCHOOL' ? actor.staffId : null,
     issuedAt: now,
   } satisfies Omit<Prisma.ChildCredentialUncheckedCreateInput, 'childId' | 'login'>;
+}
+
+/** Javob: vaqtinchalik parol faqat shu yerda (bir marta). */
+export function toIssued(outcome: IssuedCredential): IssuedCredential {
+  return {
+    login: outcome.login,
+    temporaryPassword: outcome.temporaryPassword,
+    issuedAt: outcome.issuedAt,
+    temporaryPasswordExpiresAt: outcome.temporaryPasswordExpiresAt,
+  };
 }

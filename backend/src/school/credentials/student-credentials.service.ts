@@ -8,6 +8,7 @@ import {
   ChildCredentialsService,
   CredentialView,
   IssuedCredential,
+  toIssued,
 } from '../../modules/child-auth/child-credentials.service';
 import { ChildRecoveryService, RecoveryRequestView } from '../../modules/child-auth/child-recovery.service';
 import type { IssueChildCredentialDto } from '../../modules/child-auth/dto/issue-child-credential.dto';
@@ -54,7 +55,9 @@ export class StudentCredentialsService {
       entityId: studentId,
       params: { name },
     });
-    return { login: outcome.login, temporaryPassword: outcome.temporaryPassword, issuedAt: outcome.issuedAt };
+    // Shaffoflik: ota-onaga neytral push (login, parol, bola ismi yo'q) — fonda, javobni kechiktirmaydi.
+    this.credentials.notifyParentOfSchoolAction(student.childId, outcome.reset);
+    return toIssued(outcome);
   }
 
   async rejectRecovery(actor: SchoolActor, studentId: string, requestId: string): Promise<RecoveryRequestView> {

@@ -22,3 +22,15 @@ export class StructuredThrottlerGuard extends ThrottlerGuard {
     );
   }
 }
+
+/**
+ * {@link StructuredThrottlerGuard}, lekin foydalanuvchi (userId) bo'yicha hisoblaydi ({@link UserThrottlerGuard} kabi): JWT
+ * guard'i AVVAL ishlashi shart (`@UseGuards(ConsumerJwtAuthGuard, RolesGuard, StructuredUserThrottlerGuard)` tartibida).
+ */
+@Injectable()
+export class StructuredUserThrottlerGuard extends StructuredThrottlerGuard {
+  protected async getTracker(req: Record<string, any>): Promise<string> {
+    const userId = (req as { user?: { userId?: string } }).user?.userId;
+    return userId ? `user:${userId}` : `ip:${req.ip}`;
+  }
+}

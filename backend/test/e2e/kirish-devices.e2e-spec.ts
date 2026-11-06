@@ -274,6 +274,135 @@ describe('Kirish K1: bola qurilmalari', () => {
       expect((await t.prisma.user.findUniqueOrThrow({ where: { id: child.userId } })).createdVia).toBeNull();
     });
 
+    describe('device.hostsControl: false (bu qurilma boshqa bolaning nazoratini yuritadi)', () => {
+      const setupOn = async (c: IssuedCredential, dev: ReturnType<typeof device>) => {
+        const first = (await childLogin(t, c.login, c.temporaryPassword, dev)).json();
+        const res = await api(t, 'POST', '/auth/child-setup', {
+          payload: { setupToken: first.setupToken, newPassword: OWN_PASSWORD, device: dev },
+        });
+        expect(res.statusCode).toBe(200);
+        return res.json() as { deviceRole: 'MAIN' | 'SECONDARY'; sessionId: string; accessToken: string; user: { id: string } };
+      };
+      const loginOn = async (loginName: string, dev: ReturnType<typeof device>) => {
+        const res = await childLogin(t, loginName, OWN_PASSWORD, dev);
+        expect(res.statusCode).toBe(200);
+        return res.json() as { deviceRole: 'MAIN' | 'SECONDARY'; sessionId: string; accessToken: string; user: { id: string } };
+      };
+
+      it('child-setup: the first session of a child without a main device is SECONDARY and nobody is MAIN', async () => {
+        const lone = await loginOnlyChild();
+
+        const setup = await setupOn(lone.cred, device('dev-a', 'android', 'Redmi', false));
+
+        expect(setup.deviceRole).toBe('SECONDARY');
+        expect(await roleOf(setup.sessionId)).toBe(false);
+        const list = (await api(t, 'GET', '/auth/child/devices', { token: setup.accessToken })).json() as Array<{ main: boolean }>;
+        expect(list).toEqual([expect.objectContaining({ main: false })]);
+      });
+
+      it('child-login: a plain login with hostsControl:false is SECONDARY; the next one without it takes the free MAIN role', async () => {
+        const lone = await loginOnlyChild();
+        await setupOn(lone.cred, device('dev-a', 'android', 'Redmi', false));
+
+        const hosted = await loginOn(lone.cred.login, device('dev-b', 'ios', 'iPhone', false));
+        const real = await loginOn(lone.cred.login, device('dev-c', 'android', 'Samsung'));
+
+        expect(hosted.deviceRole).toBe('SECONDARY');
+        expect(real.deviceRole).toBe('MAIN');
+        expect(await t.prisma.userSession.count({ where: { userId: real.user.id, isMain: true, revokedAt: null } })).toBe(1);
+      });
+
+      it('absent and true behave exactly like before (the first login is MAIN)', async () => {
+        for (const hostsControl of [undefined, true]) {
+          const lone = await loginOnlyChild(`Bola ${String(hostsControl)}`);
+
+          const setup = await setupOn(lone.cred, device('dev-a', 'android', 'Redmi', hostsControl));
+
+          expect(setup.deviceRole).toBe('MAIN');
+        }
+      });
+
+      it('never demotes the existing MAIN: another device with hostsControl:false is SECONDARY and the main stays', async () => {
+        const lone = await loginOnlyChild();
+        const main = await setupOn(lone.cred, device('dev-a'));
+
+        const other = await loginOn(lone.cred.login, device('dev-b', 'ios', 'iPhone', false));
+
+        expect(other.deviceRole).toBe('SECONDARY');
+        expect(await roleOf(main.sessionId)).toBe(true);
+      });
+
+      it('the owner re-authenticating on the SAME device keeps MAIN even with hostsControl:false', async () => {
+        const lone = await loginOnlyChild();
+        const first = await setupOn(lone.cred, device('dev-a'));
+
+        const again = await loginOn(lone.cred.login, device('dev-a', 'android', 'Redmi Note 12S', false));
+
+        expect(again.deviceRole).toBe('MAIN');
+        expect(again.sessionId).not.toBe(first.sessionId);
+        expect((await t.prisma.userSession.findUniqueOrThrow({ where: { id: first.sessionId } })).revokedReason).toBe('SIGNED_OUT');
+        expect(await t.prisma.userSession.count({ where: { userId: again.user.id, isMain: true, revokedAt: null } })).toBe(1);
+      });
+
+      it('a SECONDARY device re-authenticating with hostsControl:false stays SECONDARY (even if the main role is free)', async () => {
+        const lone = await loginOnlyChild();
+        const main = await setupOn(lone.cred, device('dev-a'));
+        await loginOn(lone.cred.login, device('dev-b', 'ios', 'iPhone', false));
+        await api(t, 'POST', '/auth/logout', { token: main.accessToken });
+
+        const again = await loginOn(lone.cred.login, device('dev-b', 'ios', 'iPhone', false));
+
+        expect(again.deviceRole).toBe('SECONDARY');
+        expect(await t.prisma.userSession.count({ where: { userId: again.user.id, isMain: true, revokedAt: null } })).toBe(0);
+      });
+
+      it('a child with a legacy paired main device is SECONDARY whatever hostsControl says', async () => {
+        for (const hostsControl of [false, true]) {
+          const family = await familyOf(t, `Juft ${String(hostsControl)}`);
+          const familyCred = await issueAsParent(t, family.parent, family.child.childId);
+
+          const setup = await setupOn(familyCred, device('dev-a', 'android', 'Redmi', hostsControl));
+
+          expect(setup.deviceRole).toBe('SECONDARY');
+        }
+      });
+
+      it('does not store the flag anywhere (it only decides the role)', async () => {
+        const lone = await loginOnlyChild();
+
+        await setupOn(lone.cred, device('dev-a', 'android', 'Redmi', false));
+
+        const stored = JSON.stringify(await t.prisma.userSession.findMany());
+        expect(stored).not.toContain('hostsControl');
+        expect(stored).not.toContain('hosts_control');
+      });
+
+      it.each([
+        ['a string', 'false'],
+        ['a number', 0],
+        ['an object', {}],
+      ])('rejects %s with 400 (an optional BOOLEAN, unknown fields stay forbidden)', async (_name, hostsControl) => {
+        const res = await api(t, 'POST', '/auth/child-login', {
+          payload: { login: cred.login, password: cred.temporaryPassword, device: { ...device(), hostsControl } },
+        });
+
+        expect(res.statusCode).toBe(400);
+        const setup = await api(t, 'POST', '/auth/child-setup', {
+          payload: { setupToken: 'x', newPassword: OWN_PASSWORD, device: { ...device(), hostsControl } },
+        });
+        expect(setup.statusCode).toBe(400);
+        expect((await api(t, 'POST', '/auth/child-login', { payload: { login: cred.login, password: 'x', device: { ...device(), extra: 1 } } })).statusCode).toBe(400);
+      });
+
+      it('treats a null as absent (default true)', async () => {
+        const lone = await loginOnlyChild();
+
+        const setup = await setupOn(lone.cred, { ...device('dev-a'), hostsControl: null } as never);
+
+        expect(setup.deviceRole).toBe('MAIN');
+      });
+    });
+
     it('a password change keeps the current session\'s role and clears the others', async () => {
       const lone = await loginOnlyChild();
       const a = await loginThroughSetup(t, lone.cred, device('dev-a'));
