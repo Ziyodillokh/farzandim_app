@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import type { UserSession } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { SmsService } from '../../common/sms/sms.service';
@@ -46,6 +47,7 @@ import {
 } from '../../common/helpers/geo-ip';
 import { tr } from '../../common/i18n/notification-i18n';
 import { isReviewFamilyCode } from '../../common/helpers/review-family-codes';
+import { announceSessionsClosed, closeSessions } from './session-revocation';
 
 // Session access request (2-qurilma limit) — 15 daqiqa amal qiladi.
 const SESSION_ACCESS_TTL_MS = 15 * 60 * 1000;
@@ -504,6 +506,17 @@ export class AuthService {
       accessToken: this.signAccessToken(payload),
       refreshToken: this.signRefreshToken(payload, rjti),
     };
+  }
+
+  /**
+   * Bola LOGIN sessiyasi (login/parol bilan kirish, `ChildLoginService`) uchun tokenlar. `sid` + `rjti`
+   * bilan, shuning uchun keyingi aylanish va bekor qilish `refreshToken()` da boshqa sessiyalar bilan bir xil.
+   */
+  issueSessionTokens(
+    payload: JwtPayload & { sid: string },
+    rjti: string,
+  ): { accessToken: string; refreshToken: string } {
+    return this.issueTokens(payload, rjti);
   }
 
   /* ------------------------------------------------------------------ */
@@ -1106,8 +1119,9 @@ export class AuthService {
       if (toRevoke.length > 0) {
         await this.prisma.userSession.updateMany({
           where: { id: { in: toRevoke } },
-          data: { revokedAt: new Date() },
+          data: { revokedAt: new Date(), revokedReason: 'SIGNED_IN_ELSEWHERE' },
         });
+        announceSessionsClosed(this.realtime, user.id, toRevoke, 'SIGNED_IN_ELSEWHERE');
       }
     }
 
@@ -1202,10 +1216,18 @@ export class AuthService {
     // bu akkauntga kira olmaydi). "Bir bola = bir qurilma" qoidasi.
     const oldChildUserId = child.childUserId;
     if (oldChildUserId) {
-      await this.prisma.userSession.updateMany({
-        where: { userId: oldChildUserId, revokedAt: null },
-        data: { revokedAt: new Date() },
-      });
+      // Login/parol bilan kirgan (LOGIN) qurilmalar ham chiqadi: sabab saqlanadi, WebSocket xabar beradi.
+      const closedSessions = await closeSessions(
+        this.prisma,
+        oldChildUserId,
+        'PERMISSIONS_CHANGED',
+      );
+      announceSessionsClosed(
+        this.realtime,
+        oldChildUserId,
+        closedSessions,
+        'PERMISSIONS_CHANGED',
+      );
       // tokenVersion'ni oshirish refresh tokenlarni darhol bekor qiladi.
       // isActive=false → keyingi login/refresh urinishlari ham rad etiladi.
       await this.prisma.user
@@ -1317,6 +1339,24 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
+    // ── Sessiya-asosli tokenlar (sid bor): bekor qilingan sessiya SABAB bilan rad etiladi ──
+    // (A12 "sessiya yopildi" ekrani WebSocket o'tkazib yuborilsa ham sababni ko'rsatadi). Bu tekshiruv
+    // foydalanuvchi faolligi va tokenVersion'dan OLDIN: qayta tiklashda (RECOVERED) ikkalasi ham o'zgaradi.
+    // Xabar matni ('Session revoked') avvalgidek — eski klientlar faqat 401 holatiga qaraydi.
+    let session: UserSession | null = null;
+    if (payload.sid) {
+      session = await this.prisma.userSession.findUnique({
+        where: { id: payload.sid },
+      });
+      if (!session || session.userId !== payload.userId || session.revokedAt) {
+        throw new UnauthorizedException({
+          code: 'SESSION_REVOKED',
+          reason: session?.revokedReason ?? null,
+          message: 'Session revoked',
+        });
+      }
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { id: payload.userId },
     });
@@ -1329,15 +1369,9 @@ export class AuthService {
       throw new UnauthorizedException('Token revoked');
     }
 
-    // ── Sessiya-asosli tokenlar (sid bor) — revoke + rotation tekshiruvi ──
+    // ── Sessiya-asosli tokenlar (sid bor) — rotation tekshiruvi ──
     let newRjti: string | undefined;
-    if (payload.sid) {
-      const session = await this.prisma.userSession.findUnique({
-        where: { id: payload.sid },
-      });
-      if (!session || session.revokedAt) {
-        throw new UnauthorizedException('Session revoked');
-      }
+    if (session) {
       // rjti mos kelmasa — bu refresh token allaqachon rotatsiya qilingan
       // (eski nusxa).
       //
@@ -1490,7 +1524,7 @@ export class AuthService {
   private async revokeChildUser(childUserId: string): Promise<void> {
     await this.prisma.userSession.updateMany({
       where: { userId: childUserId, revokedAt: null },
-      data: { revokedAt: new Date() },
+      data: { revokedAt: new Date(), revokedReason: 'PERMISSIONS_CHANGED' },
     });
     await this.prisma.user
       .update({
@@ -1968,11 +2002,11 @@ export class AuthService {
 
   async logout(userId: string, sid?: string): Promise<{ ok: true }> {
     if (sid) {
-      // Faqat shu qurilma sessiyasini tugatamiz (boshqa qurilmalar qoladi).
-      await this.prisma.userSession.updateMany({
-        where: { id: sid, userId, revokedAt: null },
-        data: { revokedAt: new Date() },
+      // Faqat shu qurilma sessiyasini tugatamiz (boshqa qurilmalar qoladi); sabab saqlanadi.
+      const closed = await closeSessions(this.prisma, userId, 'SIGNED_OUT', {
+        id: sid,
       });
+      announceSessionsClosed(this.realtime, userId, closed, 'SIGNED_OUT');
     } else {
       // Legacy (sid yo'q token) — barcha refresh tokenlarni bekor qilamiz.
       await this.prisma.user.update({
@@ -2011,13 +2045,13 @@ export class AuthService {
     userId: string,
     sessionId: string,
   ): Promise<{ ok: true }> {
-    const result = await this.prisma.userSession.updateMany({
-      where: { id: sessionId, userId, revokedAt: null },
-      data: { revokedAt: new Date() },
+    const closed = await closeSessions(this.prisma, userId, 'SIGNED_OUT', {
+      id: sessionId,
     });
-    if (result.count === 0) {
+    if (closed.length === 0) {
       throw new NotFoundException('Sessiya topilmadi');
     }
+    announceSessionsClosed(this.realtime, userId, closed, 'SIGNED_OUT');
     return { ok: true };
   }
 
@@ -2026,14 +2060,10 @@ export class AuthService {
     userId: string,
     currentSid?: string,
   ): Promise<{ count: number }> {
-    const result = await this.prisma.userSession.updateMany({
-      where: {
-        userId,
-        revokedAt: null,
-        ...(currentSid && { id: { not: currentSid } }),
-      },
-      data: { revokedAt: new Date() },
+    const closed = await closeSessions(this.prisma, userId, 'SIGNED_OUT', {
+      ...(currentSid && { id: { not: currentSid } }),
     });
-    return { count: result.count };
+    announceSessionsClosed(this.realtime, userId, closed, 'SIGNED_OUT');
+    return { count: closed.length };
   }
 }
