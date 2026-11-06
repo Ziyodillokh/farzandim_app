@@ -3,7 +3,10 @@
 import {
   Bell,
   Brain,
+  FilePenLine,
   HeartPulse,
+  KeyRound,
+  Link2,
   LogOut,
   type LucideIcon,
   MessageSquareHeart,
@@ -29,6 +32,9 @@ const ICONS: Record<NotificationKind, LucideIcon> = {
   MESSAGE_SENT: Send,
   EMERGENCY: Siren,
   DATA_DELETION_REQUEST: Trash2,
+  CHILD_RECOVERY_REQUEST: KeyRound,
+  LINK_REVIEW: Link2,
+  LINK_CORRECTION: FilePenLine,
 };
 
 const TILE: Record<NotificationTone, string> = {

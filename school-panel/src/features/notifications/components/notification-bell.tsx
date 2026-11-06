@@ -12,6 +12,7 @@ import type { NotificationItem } from '@/data/contracts';
 import { toLocalIso } from '@/data/mock/calendar';
 import { clockNow, clockToday } from '@/data/mock/clock';
 import { useI18n } from '@/i18n';
+import { notificationHref } from '../href';
 import { useNotificationFeed, useReadState } from '../hooks';
 import { groupByDay, isUnread, markAllRead, markRead, unreadCount } from '../read-state';
 import { NotificationRow } from './notification-row';
@@ -77,9 +78,10 @@ export function NotificationBell() {
 
   const openItem = (item: NotificationItem) => {
     updateReadState((s) => markRead(s, item));
-    if (!item.href) return;
+    const href = notificationHref(item);
+    if (!href) return;
     setOpen(false);
-    router.push(item.href);
+    router.push(href);
   };
 
   return (

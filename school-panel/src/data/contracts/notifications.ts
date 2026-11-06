@@ -3,8 +3,19 @@ import type { Id, IsoDateTime } from './common';
 import type { RoleKey } from './people';
 
 /** Saqlanadigan xodim bildirishnomalari (qolganlari jadvallardan hisoblanadi). */
-/** DATA_DELETION_REQUEST — bola ma'lumotlarini o'chirishni so'radi (faqat direktor/admin; params: studentName, className). */
-export type StaffNotificationKind = 'SAFETY_SIGNAL' | 'TEST_COMPLETED' | 'DATA_DELETION_REQUEST';
+/**
+ * DATA_DELETION_REQUEST — bola ma'lumotlarini o'chirishni so'radi (faqat direktor/admin).
+ * Kirish (5-bosqich): CHILD_RECOVERY_REQUEST — bola parol tiklashni so'radi; LINK_REVIEW — bola maktab kodini kiritdi,
+ * ulanishni tekshirish kerak; LINK_CORRECTION — bola maktab/sinf noto'g'ri deb bildirdi (sinf rahbari + admin).
+ * Hammasida params: studentName, className.
+ */
+export type StaffNotificationKind =
+  | 'SAFETY_SIGNAL'
+  | 'TEST_COMPLETED'
+  | 'DATA_DELETION_REQUEST'
+  | 'CHILD_RECOVERY_REQUEST'
+  | 'LINK_REVIEW'
+  | 'LINK_CORRECTION';
 export type StaffNotification = {
   id: Id;
   kind: StaffNotificationKind;
