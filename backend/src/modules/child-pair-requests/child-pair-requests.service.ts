@@ -7,6 +7,10 @@ import {
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
+import {
+  announceSessionsClosed,
+  closeSessions,
+} from '../auth/session-revocation';
 import { PairRequestStatus } from './dto/list-pair-requests.dto';
 
 @Injectable()
@@ -85,11 +89,14 @@ export class ChildPairRequestsService {
       //     darhol ishlamaydi (access token 15 daqiqada o'ladi)
       //   - isActive=false → keyingi login/refresh urinishlari rad etiladi
       //   - fcmToken o'chirildi → eski qurilmaga push xabarlar bormaydi
+      let closedSessions: string[] = [];
       if (oldChildUserId) {
-        await tx.userSession.updateMany({
-          where: { userId: oldChildUserId, revokedAt: null },
-          data: { revokedAt: new Date() },
-        });
+        // Sabab saqlanadi (A12 "sessiya yopildi"): login/parol bilan kirgan qurilmalar ham chiqadi.
+        closedSessions = await closeSessions(
+          tx,
+          oldChildUserId,
+          'PERMISSIONS_CHANGED',
+        );
         await tx.user.update({
           where: { id: oldChildUserId },
           data: {
@@ -137,8 +144,17 @@ export class ChildPairRequestsService {
         },
       });
 
-      return { newUser, oldChildUserId };
+      return { newUser, oldChildUserId, closedSessions };
     });
+
+    if (result.oldChildUserId) {
+      announceSessionsClosed(
+        this.realtime,
+        result.oldChildUserId,
+        result.closedSessions,
+        'PERMISSIONS_CHANGED',
+      );
+    }
 
     await this.audit.log(
       userId,

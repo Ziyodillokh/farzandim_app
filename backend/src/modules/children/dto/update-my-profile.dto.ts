@@ -9,6 +9,7 @@ import {
   Min,
   Max,
   Matches,
+  ValidateIf,
 } from 'class-validator';
 import {
   EDUCATION_LANGUAGES,
@@ -58,15 +59,18 @@ export class UpdateMyProfileDto {
   @MaxLength(100)
   region?: string;
 
-  /** Jins (A06 profil): 'male' | 'female'. */
+  /**
+   * Jins (A06 profil): 'male' | 'female'. `null` qabul qilinmaydi (`@IsOptional` uni "yo'q" deb o'tkazib
+   * yuborardi va maydonni tozalab qo'yardi) — faqat berilmagan (undefined) bo'lsa o'zgarmaydi.
+   */
   @ApiPropertyOptional({ enum: MY_PROFILE_GENDERS, example: 'female' })
-  @IsOptional()
+  @ValidateIf((_dto, value) => value !== undefined)
   @IsIn(MY_PROFILE_GENDERS)
   gender?: MyProfileGender;
 
-  /** Ta'lim tili (A06 profil): 'uz' | 'ru' | 'kaa'. */
+  /** Ta'lim tili (A06 profil): 'uz' | 'ru' | 'kaa' (`null` qabul qilinmaydi — yuqoridagi sabab). */
   @ApiPropertyOptional({ enum: EDUCATION_LANGUAGES, example: 'uz' })
-  @IsOptional()
+  @ValidateIf((_dto, value) => value !== undefined)
   @IsIn(EDUCATION_LANGUAGES)
   educationLanguage?: EducationLanguage;
 }
