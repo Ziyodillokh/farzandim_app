@@ -100,20 +100,51 @@ export class CareStore {
     return this.prisma.schoolStudent.count({ where: { schoolId, archived: false, classId: { in: classIds } } });
   }
 
-  /** Distinct respondentlar (javob paytida so'rovnoma yosh guruhida bo'lganlar; shifr ochilmaydi). */
-  respondentCount(survey: SchoolCareSurvey): Promise<number> {
-    return this.prisma.schoolCareResponse.count({ where: { surveyId: survey.id } });
+  /**
+   * Respondentlar soni: eski (o'quvchiga bog'langan) javoblar + anonim javoblar. Har ikki
+   * jadvalda bitta o'quvchi so'rovnomaga ko'pi bilan bir marta javob beradi (ishtirok
+   * jadvalidagi unikal kalit va eski unikal indeks) — qatorlar soni = respondentlar soni.
+   */
+  async respondentCount(survey: SchoolCareSurvey): Promise<number> {
+    return (await this.respondentCounts([survey.id])).get(survey.id) ?? 0;
   }
 
-  /** So'rovnoma javoblari — shifr ochiladi (faqat umumlashtirish va psixolog uchun). */
+  /** So'rovnoma → respondentlar soni (eski + anonim), shifrni ochmasdan. */
+  async respondentCounts(surveyIds: readonly string[]): Promise<Map<string, number>> {
+    const where = { surveyId: { in: [...surveyIds] } };
+    const [legacy, anon] = await Promise.all([
+      this.prisma.schoolCareResponse.groupBy({ by: ['surveyId'], where, _count: { _all: true } }),
+      this.prisma.schoolCareAnonResponse.groupBy({ by: ['surveyId'], where, _count: { _all: true } }),
+    ]);
+    const counts = new Map<string, number>();
+    for (const row of [...legacy, ...anon]) counts.set(row.surveyId, (counts.get(row.surveyId) ?? 0) + row._count._all);
+    return counts;
+  }
+
+  /**
+   * So'rovnoma javoblari — shifr ochiladi (faqat umumlashtirish va psixolog uchun).
+   * Eski va anonim qatorlar bir xil shaklda; anonim qatorlar tasodifiy id bo'yicha tartiblanadi
+   * (kiritilish tartibi qoldirilmaydi). Hech qaysi qator o'quvchiga bog'lanmaydi.
+   */
   async responses(surveyId: string): Promise<ResponseRow[]> {
-    const rows = await this.prisma.schoolCareResponse.findMany({
-      where: { surveyId },
-      select: { studentId: true, classId: true, grade: true, answersEnc: true },
-    });
+    const [legacy, anon] = await Promise.all([
+      this.prisma.schoolCareResponse.findMany({
+        where: { surveyId },
+        select: { studentId: true, classId: true, grade: true, answersEnc: true },
+      }),
+      this.prisma.schoolCareAnonResponse.findMany({
+        where: { surveyId },
+        orderBy: { id: 'asc' },
+        select: { id: true, classId: true, grade: true, answersEnc: true },
+      }),
+    ]);
+    const rows = [
+      ...legacy.map((r) => ({ respondentId: r.studentId, classId: r.classId, grade: r.grade, answersEnc: r.answersEnc })),
+      ...anon.map((r) => ({ respondentId: r.id, classId: r.classId, grade: r.grade, answersEnc: r.answersEnc })),
+    ];
     return rows.flatMap((r) =>
       r.classId
-        ? [{ studentId: r.studentId, classId: r.classId, grade: r.grade, answers: this.crypto.decryptJson<Record<string, number>>(r.answersEnc) }]
+        ? [{ respondentId: r.respondentId, classId: r.classId, grade: r.grade, answers: this.crypto.decryptJson<Record<string, number>>(r.answersEnc) }]
         : [],
     );
   }

@@ -89,8 +89,10 @@ export class AssessmentsResultsService {
   /** Taklif qilinganlar: tayinlash sinflari (yoki test parallellari) ∩ filtr ∩ xodim doirasi. */
   private async participation(actor: SchoolActor, test: PsychTest, f: ResultsFilter, classes: readonly ClassRow[], completed: number) {
     const a = f.assignmentId
-      ? await this.prisma.schoolPsychAssignment.findFirst({ where: { id: f.assignmentId, schoolId: actor.schoolId }, select: { classIds: true } })
+      ? await this.prisma.schoolPsychAssignment.findFirst({ where: { id: f.assignmentId, schoolId: actor.schoolId }, select: { classIds: true, studentIds: true } })
       : null;
+    // Shaxsiy tayinlash: taklif qilinganlar — tanlangan o'quvchilar (sinf bo'yicha emas).
+    if (a && a.studentIds.length > 0) return { invited: a.studentIds.length, completed };
     const allowed = allowedClassIds(actor);
     const classIds = classes
       .filter((c) => (a ? a.classIds.includes(c.id) : test.grades.includes(c.grade)))

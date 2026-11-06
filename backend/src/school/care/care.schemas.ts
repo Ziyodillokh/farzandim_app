@@ -65,9 +65,23 @@ export const careAnswersSchema = z.object({
     .refine((a) => Object.keys(a).length <= MAX_SURVEY_QUESTIONS, msg.tooLong),
 });
 
-/** Bola ilovasi: psixologga murojaat. */
+export const CARE_MESSAGE_MAX = { child: 1000, staff: 2000 } as const;
+const INVALID_ID = 'errors.form.invalid';
+const clientId = z.string({ error: INVALID_ID }).uuid(INVALID_ID).optional();
+
+/** Bola ilovasi: psixologga murojaat (`clientRequestId` — takroriy yuborishga qarshi). */
 export const careRequestInputSchema = z.object({
-  topic: z.enum(CARE_TOPIC_TAGS),
-  message: requiredText(1000),
+  topic: z.enum(CARE_TOPIC_TAGS).default('OTHER'),
+  message: requiredText(CARE_MESSAGE_MAX.child),
   urgency: z.enum(['NORMAL', 'URGENT']).default('NORMAL'),
+  clientRequestId: clientId,
 });
+
+/** Bola ilovasi: murojaat yozishmasiga xabar. */
+export const careChildMessageSchema = z.object({
+  text: requiredText(CARE_MESSAGE_MAX.child),
+  clientMessageId: clientId,
+});
+
+/** Xodim javobi. */
+export const careStaffMessageSchema = z.object({ text: requiredText(CARE_MESSAGE_MAX.staff) });

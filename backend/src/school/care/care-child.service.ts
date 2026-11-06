@@ -1,19 +1,23 @@
-// Parvoz Growth bola ilovasi ↔ Bola ovozi: faol so'rovnoma (bolaning yosh
-// guruhi bo'yicha), javob yuborish (shifrlanadi, bir marta) va psixologga
-// murojaat (kuniga cheklangan). Bola faqat o'zi haqida yozadi.
+// Parvoz Growth bola ilovasi ↔ Bola ovozi so'rovnomasi: faol so'rovnoma (bolaning yosh
+// guruhi bo'yicha) va HAQIQIY ANONIM javob. Javob yuborilganda:
+//   - `SchoolCareParticipation` — faqat "bu bola shu so'rovnomaga javob berdi" (javobsiz);
+//   - `SchoolCareAnonResponse` — shifrlangan javoblar, o'quvchi / bola id'si va vaqt belgisisiz;
+// ikkalasi BITTA tranzaksiyada yoziladi, lekin ularni bog'laydigan ustun yo'q.
+// Psixologga murojaat (yozishma) — `care-child-requests.service.ts`.
 
 import { ConflictException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
-import { tashkentDay, tashkentDayStart } from '../../common/time/tashkent';
+import { EnrolledStudent, findEnrolledStudent, requireEnrolledStudent } from '../common/child-student';
 import { SchoolCryptoService } from '../common/school-crypto.service';
 import { parseOrThrow } from '../common/school-zod';
+import { estimatedMinutes } from '../common/estimated-minutes';
+import { buildAnonRow } from './care-anon';
 import { toQuestionView } from './care-store';
-import { ageGroupOf, careAnswersSchema, careRequestInputSchema } from './care.schemas';
+import { ageGroupOf, careAnswersSchema } from './care.schemas';
 
-/** Bitta bola kuniga ko'pi bilan shuncha murojaat yubora oladi. */
-export const MAX_REQUESTS_PER_DAY = 5;
-
-const notEnrolled = () => new NotFoundException({ code: 'NOT_ENROLLED', message: 'Child is not linked to a school' });
+const alreadyAnswered = () => new ConflictException({ code: 'ALREADY_ANSWERED', message: 'Survey already answered' });
+const invalidAnswers = (reason: string) => new HttpException({ code: 'VALIDATION', message: `answers: ${reason}` }, HttpStatus.BAD_REQUEST);
 
 @Injectable()
 export class CareChildService {
@@ -24,7 +28,7 @@ export class CareChildService {
 
   /** Faol so'rovnoma (yosh guruhiga mos savollar, bola tilida); javob bergan bo'lsa — `answered`. */
   async activeSurvey(childUserId: string) {
-    const student = await this.student(childUserId);
+    const student = await findEnrolledStudent(this.prisma, childUserId);
     if (!student) return { enrolled: false, survey: null, answered: false };
     const group = ageGroupOf(student.grade);
     const survey = await this.prisma.schoolCareSurvey.findFirst({
@@ -32,121 +36,78 @@ export class CareChildService {
       orderBy: { activatedAt: 'desc' },
     });
     if (!survey) return { enrolled: true, survey: null, answered: false };
-    const answered = (await this.prisma.schoolCareResponse.count({ where: { surveyId: survey.id, studentId: student.id } })) > 0;
-    if (answered) return { enrolled: true, survey: null, answered: true };
-    const questions = await this.prisma.schoolCareQuestion.findMany({
-      where: { schoolId: student.schoolId, id: { in: survey.questionIds }, active: true, ageGroups: { has: group } },
-    });
+    if (await this.hasAnswered(this.prisma, survey.id, student.studentId)) return { enrolled: true, survey: null, answered: true };
+    const questions = await this.eligibleQuestions(this.prisma, student, survey.questionIds);
     const order = new Map(survey.questionIds.map((id, i) => [id, i]));
+    const views = [...questions]
+      .sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))
+      .map((q) => {
+        const view = toQuestionView(q);
+        return { id: q.id, text: student.lang === 'ru' ? view.text.ru : view.text.uz };
+      });
     return {
       enrolled: true,
       answered: false,
       survey: {
         id: survey.id,
         title: survey.title,
-        questions: questions
-          .sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))
-          .map((q) => {
-            const view = toQuestionView(q);
-            return { id: q.id, text: student.lang === 'ru' ? view.text.ru : view.text.uz };
-          }),
+        activatedAt: survey.activatedAt?.toISOString() ?? null,
+        questionCount: views.length,
+        estimatedMinutes: estimatedMinutes(views.length),
+        questions: views,
       },
     };
   }
 
+  /**
+   * Anonim javob. O'tkazib yuborilgan savol umuman yuborilmaydi (0 sifatida saqlanmaydi); noma'lum
+   * savol id'si — 400; ikkinchi marta — 409. Ishtirok va anonim qator bitta tranzaksiyada.
+   */
   async submitSurvey(childUserId: string, surveyId: string, input: unknown): Promise<{ ok: true }> {
-    const student = await this.student(childUserId);
-    if (!student) throw notEnrolled();
+    const student = await requireEnrolledStudent(this.prisma, childUserId);
     const { answers } = parseOrThrow(careAnswersSchema, input);
     const group = ageGroupOf(student.grade);
     const survey = await this.prisma.schoolCareSurvey.findFirst({
       where: { id: surveyId, schoolId: student.schoolId, status: 'ACTIVE', ageGroups: { has: group } },
     });
     if (!survey) throw new NotFoundException({ code: 'SURVEY_NOT_FOUND', message: 'Survey is not active' });
-    const allowed = await this.prisma.schoolCareQuestion.findMany({
-      where: { schoolId: student.schoolId, id: { in: survey.questionIds }, active: true, ageGroups: { has: group } },
-      select: { id: true },
+    const allowed = new Set((await this.eligibleQuestions(this.prisma, student, survey.questionIds)).map((q) => q.id));
+    if (Object.keys(answers).some((id) => !allowed.has(id))) throw invalidAnswers('errors.form.invalid');
+    const row = buildAnonRow({
+      surveyId: survey.id,
+      schoolId: student.schoolId,
+      classId: student.classId,
+      grade: student.grade,
+      answers,
+      encrypt: (value) => this.crypto.encryptJson(value),
     });
-    const allowedIds = new Set(allowed.map((q) => q.id));
-    const clean = Object.fromEntries(Object.entries(answers).filter(([id]) => allowedIds.has(id)));
-    if (Object.keys(clean).length === 0) throw new HttpException({ code: 'VALIDATION', message: 'answers: errors.form.selectAtLeastOne' }, HttpStatus.BAD_REQUEST);
-    try {
-      await this.prisma.schoolCareResponse.create({
-        data: {
-          schoolId: student.schoolId,
-          surveyId: survey.id,
-          studentId: student.id,
-          classId: student.classId,
-          grade: student.grade,
-          answersEnc: this.crypto.encryptJson(clean),
-        },
-      });
-    } catch (err) {
-      if ((err as { code?: string }).code === 'P2002') {
-        throw new ConflictException({ code: 'ALREADY_ANSWERED', message: 'Survey already answered' });
+    await this.prisma.$transaction(async (tx) => {
+      if (await tx.schoolCareResponse.count({ where: { surveyId: survey.id, studentId: student.studentId } })) throw alreadyAnswered();
+      try {
+        await tx.schoolCareParticipation.create({ data: { surveyId: survey.id, studentId: student.studentId } });
+      } catch (err) {
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') throw alreadyAnswered();
+        throw err;
       }
-      throw err;
-    }
+      await tx.schoolCareAnonResponse.create({ data: row });
+    });
     return { ok: true };
   }
 
-  /** Psixologga murojaat (matn shifrlanadi); kunlik cheklov. */
-  async createRequest(childUserId: string, input: unknown) {
-    const student = await this.student(childUserId);
-    if (!student) throw notEnrolled();
-    const data = parseOrThrow(careRequestInputSchema, input);
-    const today = await this.prisma.schoolCareRequest.count({
-      where: { studentId: student.id, createdAt: { gte: tashkentDayStart(tashkentDay()) } },
-    });
-    if (today >= MAX_REQUESTS_PER_DAY) {
-      throw new HttpException({ code: 'TOO_MANY_REQUESTS', message: 'Daily request limit reached' }, HttpStatus.TOO_MANY_REQUESTS);
-    }
-    const request = await this.prisma.schoolCareRequest.create({
-      data: {
-        schoolId: student.schoolId,
-        studentId: student.id,
-        classId: student.classId,
-        topic: data.topic,
-        urgency: data.urgency,
-        messageEnc: this.crypto.encrypt(data.message),
-      },
-    });
-    return toChildRequest(request);
+  // ── Ichki ──────────────────────────────────────────────────────────
+
+  /** Eski (o'quvchiga bog'langan) javob YOKI ishtirok belgisi. */
+  private async hasAnswered(db: PrismaService, surveyId: string, studentId: string): Promise<boolean> {
+    const [participation, legacy] = await Promise.all([
+      db.schoolCareParticipation.count({ where: { surveyId, studentId } }),
+      db.schoolCareResponse.count({ where: { surveyId, studentId } }),
+    ]);
+    return participation + legacy > 0;
   }
 
-  /** Bolaning o'z murojaatlari — holati va suhbat vaqti (eslatmalarsiz). */
-  async myRequests(childUserId: string) {
-    const student = await this.student(childUserId);
-    if (!student) return [];
-    const rows = await this.prisma.schoolCareRequest.findMany({
-      where: { studentId: student.id },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
+  private eligibleQuestions(db: PrismaService, student: EnrolledStudent, questionIds: string[]) {
+    return db.schoolCareQuestion.findMany({
+      where: { schoolId: student.schoolId, id: { in: questionIds }, active: true, ageGroups: { has: ageGroupOf(student.grade) } },
     });
-    return rows.map(toChildRequest);
   }
-
-  private async student(childUserId: string) {
-    const child = await this.prisma.child.findUnique({
-      where: { childUserId },
-      select: { id: true, childUser: { select: { language: true } } },
-    });
-    if (!child) return null;
-    const student = await this.prisma.schoolStudent.findUnique({
-      where: { childId: child.id },
-      select: { id: true, schoolId: true, classId: true, archived: true, class: { select: { grade: true } }, school: { select: { status: true } } },
-    });
-    if (!student || student.archived || !student.class || student.school.status !== 'ACTIVE') return null;
-    return {
-      id: student.id,
-      schoolId: student.schoolId,
-      classId: student.classId,
-      grade: student.class.grade,
-      lang: child.childUser?.language ?? 'uz',
-    };
-  }
-}
-
-function toChildRequest(r: { id: string; topic: string; urgency: string; status: string; createdAt: Date; meetingAt: Date | null }) {
-  return { id: r.id, topic: r.topic, urgency: r.urgency, status: r.status, createdAt: r.createdAt.toISOString(), meetingAt: r.meetingAt?.toISOString() ?? null };
 }

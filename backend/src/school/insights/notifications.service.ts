@@ -8,6 +8,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { tashkentDay } from '../../common/time/tashkent';
 import { actorCan, allowedClassIds, assertCan, classScopeWhere, SchoolActor } from '../auth/school-actor';
+import { CARE_TOPIC_LABELS } from '../care/care-labels';
 import { audienceTouchesScope, loadRoster, toAudience } from '../comms/comms-roster';
 
 export const FEED_LIMIT = 30;
@@ -47,16 +48,6 @@ export const NOTIFICATION_TONES: Record<NotificationKind, NotificationItem['tone
   EMERGENCY: 'destructive',
 };
 
-const CARE_TOPIC: Record<string, Localized> = {
-  LEARNING: { uz: 'O\'qish', ru: 'Учёба' },
-  PEERS: { uz: 'Tengdoshlar', ru: 'Сверстники' },
-  BULLYING: { uz: 'Masxara / tazyiq', ru: 'Насмешки / давление' },
-  FAMILY: { uz: 'Oila', ru: 'Семья' },
-  EMOTIONS: { uz: 'Kayfiyat', ru: 'Настроение' },
-  SAFETY: { uz: 'Xavfsizlik', ru: 'Безопасность' },
-  OTHER: { uz: 'Boshqa', ru: 'Другое' },
-};
-
 /** Erkin matn (sabab, xabar) — ikkala tilda bir xil, qisqartirilgan. */
 function plain(text: string | null | undefined): Localized | null {
   const value = text?.trim();
@@ -91,8 +82,10 @@ export class NotificationsService {
       this.messages(actor, now),
       this.emergency(actor),
     ]);
-    return groups
-      .flat()
+    // Bir xil id: saqlangan (nishonlangan) bildirishnoma hisoblanganidan ustun — `groups` tartibida birinchi.
+    const unique = new Map<string, NotificationItem>();
+    for (const n of groups.flat()) if (!unique.has(n.id)) unique.set(n.id, n);
+    return [...unique.values()]
       .filter((n) => n.kind === 'EMERGENCY' || Date.parse(n.at) <= now.getTime())
       .sort((a, b) => Date.parse(b.at) - Date.parse(a.at) || a.id.localeCompare(b.id))
       .slice(0, FEED_LIMIT);
@@ -104,7 +97,11 @@ export class NotificationsService {
     return {
       schoolId: actor.schoolId,
       roles: { has: actor.role },
-      ...(allowed && { OR: [{ classIds: { isEmpty: true } }, { classIds: { hasSome: allowed } }] }),
+      // Nishonlangan xodimlar ro'yxati bo'sh — rolga mos hammaga; aks holda faqat shu xodimlarga.
+      AND: [
+        { OR: [{ staffIds: { isEmpty: true } }, { staffIds: { has: actor.staffId } }] },
+        ...(allowed ? [{ OR: [{ classIds: { isEmpty: true } }, { classIds: { hasSome: allowed } }] }] : []),
+      ],
     };
   }
 
@@ -115,6 +112,11 @@ export class NotificationsService {
       take: STORED_LIMIT,
     });
     return rows.map((n) => {
+      // Bola ovozi (shoshilinch / eskalatsiya) — ism va matnsiz: sinf nomi va mavzu yorlig'i xolos.
+      if (n.kind === 'CARE_URGENT' || n.kind === 'CARE_NEW') {
+        const params = (n.params ?? {}) as Record<string, string | number>;
+        return item(n.kind, n.id, n.at, { params, subject: (n.subject as Localized | null) ?? null, href: n.href });
+      }
       const kind = n.kind === 'SAFETY_SIGNAL' ? 'SAFETY_SIGNAL' : 'TEST_COMPLETED';
       // Xavfsizlik signalida ism / matn HECH QACHON yo'q.
       if (kind === 'SAFETY_SIGNAL') return item(kind, n.id, n.at, { href: n.href });
@@ -182,7 +184,7 @@ export class NotificationsService {
       const kind = r.urgency === 'URGENT' ? 'CARE_URGENT' : 'CARE_NEW';
       return item(kind, `care:${r.id}`, r.createdAt, {
         params: { className: (r.classId && classes.get(r.classId)) || '' },
-        subject: CARE_TOPIC[r.topic] ?? CARE_TOPIC.OTHER!,
+        subject: CARE_TOPIC_LABELS[r.topic] ?? CARE_TOPIC_LABELS.OTHER!,
         href: `/care/requests/view?id=${r.id}`,
       });
     });

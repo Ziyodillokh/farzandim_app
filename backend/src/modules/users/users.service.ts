@@ -16,6 +16,7 @@ import { MailService } from '../../common/mail/mail.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { BUCKETS, BucketName } from '../../common/storage/storage.constants';
 import { ChildDataPurgeService } from '../child-data-purge/child-data-purge.service';
+import { deleteCareOfChildren } from '../../school/care/care-purge';
 import { deleteHomeworkOfChildren, homeworkMediaOfChildren } from '../../school/homework/homework-purge';
 import {
   hashPassword,
@@ -162,6 +163,8 @@ export class UsersService {
       // Maktab yozma vazifalari: o'quvchi bog'lanishi (childId) child o'chganda SetNull
       // bo'ladi — topshiriqlar yetim qolmasligi uchun avval o'chiramiz.
       await deleteHomeworkOfChildren(tx, children.map((c) => c.id));
+      // Bola ovozi: murojaatlar va ishtirok belgilari (bog'lanish child o'chganda uziladi).
+      await deleteCareOfChildren(tx, children.map((c) => c.id));
 
       // Cascade: parent delete removes children + all related data
       await tx.user.delete({ where: { id: userId } });

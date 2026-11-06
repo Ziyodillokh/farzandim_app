@@ -8,6 +8,7 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { addDays, isoWeekday, tashkentDay, tashkentDayStart } from '../../common/time/tashkent';
 import { actorCan, assertCan, SchoolActor } from '../auth/school-actor';
 import { CareInsightsService } from '../care/care-insights.service';
+import { CareStore } from '../care/care-store';
 import { SchoolLearningService } from '../learning/school-learning.service';
 import { CARE_MIN_GROUP, maskSmallCount } from '../care/care-suppression';
 import { deviceChildSelect, deviceStateOf } from '../common/device-state';
@@ -32,6 +33,7 @@ export class ReportsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly careInsights: CareInsightsService,
+    private readonly careStore: CareStore,
     private readonly learning: SchoolLearningService,
   ) {}
 
@@ -180,11 +182,10 @@ export class ReportsService {
     const surveys = (await this.prisma.schoolCareSurvey.findMany({ where: { schoolId: actor.schoolId, status: { not: 'DRAFT' } } }))
       .filter((s) => s.weekStart.slice(0, 7) === month)
       .sort((a, b) => b.weekStart.localeCompare(a.weekStart));
-    const [respondentsBySurvey, requests] = await Promise.all([
-      this.prisma.schoolCareResponse.groupBy({ by: ['surveyId'], where: { surveyId: { in: surveys.map((s) => s.id) } }, _count: { _all: true } }),
+    const [counts, requests] = await Promise.all([
+      this.careStore.respondentCounts(surveys.map((s) => s.id)),
       this.prisma.schoolCareRequest.count({ where: { schoolId: actor.schoolId, createdAt: range } }),
     ]);
-    const counts = new Map(respondentsBySurvey.map((r) => [r.surveyId, r._count._all]));
     const respondents = surveys.reduce((n, s) => n + (counts.get(s.id) ?? 0), 0);
     const invited = surveys.reduce((n, s) => n + s.invited, 0);
     const chosen = surveys.find((s) => (counts.get(s.id) ?? 0) >= CARE_MIN_GROUP) ?? surveys[0];

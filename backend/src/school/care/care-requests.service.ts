@@ -1,9 +1,11 @@
 // Bola ovozi murojaatlari — FAQAT psixolog (`care.individual`). Matn va
 // eslatmalar bazada shifrlangan. Audit yozuvlarida bola ismi, sinfi, murojaat
 // ID'si yoki matni YO'Q (audit jurnalini direktor / admin ham ko'radi).
+// Birinchi ochgan xodim (`openedAt`) bir marta, poyga xavfsiz yoziladi; xodim javobi
+// bolaga neytral push yuboradi (xato javobni yiqitmaydi).
 
 import { Injectable } from '@nestjs/common';
-import { SchoolCareRequest } from '@prisma/client';
+import { Prisma, SchoolCareRequest } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { assertCan, SchoolActor } from '../auth/school-actor';
 import { matchesSearch } from '../common/list-query';
@@ -11,7 +13,10 @@ import { SchoolAuditService } from '../common/school-audit.service';
 import { SchoolCryptoService } from '../common/school-crypto.service';
 import { conflict, invalid, notFound } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
-import { CARE_REQUEST_STATUSES, careMeetingSchema, careNoteSchema, careRequestFilterSchema, careStatusSchema } from './care.schemas';
+import { CareNotifyService } from './care-notify.service';
+import { CareRequestRows } from './care-request-rows';
+import { toMessageView } from './care-thread';
+import { CARE_REQUEST_STATUSES, careMeetingSchema, careNoteSchema, careRequestFilterSchema, careStaffMessageSchema, careStatusSchema } from './care.schemas';
 
 export interface CareNote {
   at: string;
@@ -19,7 +24,11 @@ export interface CareNote {
   text: string;
 }
 
+type Tx = Prisma.TransactionClient;
+
 const REQUEST_AUDIT = {
+  open: ['care.request.open', 'Bola ovozi: murojaat ochildi'],
+  reply: ['care.request.reply', 'Bola ovozi: murojaatga javob yozildi'],
   status: ['care.request.status', 'Bola ovozi: murojaat holati yangilandi'],
   note: ['care.request.note', 'Bola ovozi: ichki eslatma qo\'shildi'],
   meeting: ['care.request.meeting', 'Bola ovozi: suhbat vaqti belgilandi'],
@@ -40,13 +49,15 @@ export class CareRequestsService {
     private readonly prisma: PrismaService,
     private readonly crypto: SchoolCryptoService,
     private readonly audit: SchoolAuditService,
+    private readonly rowsOf: CareRequestRows,
+    private readonly notify: CareNotifyService,
   ) {}
 
   async listRequests(actor: SchoolActor, query: unknown) {
     assertCan(actor, 'care.individual');
     const filter = parseOrThrow(careRequestFilterSchema, query);
     const requests = await this.prisma.schoolCareRequest.findMany({ where: { schoolId: actor.schoolId } });
-    const rows = (await this.rows(actor.schoolId, requests)).sort(
+    const rows = (await this.rowsOf.rows(actor.schoolId, requests)).sort(
       (a, b) => rank(a.raw) - rank(b.raw) || b.raw.createdAt.getTime() - a.raw.createdAt.getTime(),
     );
     const searched = rows.filter(
@@ -59,18 +70,27 @@ export class CareRequestsService {
     return { items, counts };
   }
 
+  /**
+   * Tafsilot. Murojaatni BIRINCHI ko'rgan `care.individual` xodimi `openedAt` / `openedByStaffId`
+   * ni yozadi (faqat bir marta — shartli UPDATE poygada bitta g'olibni beradi); bolaning xabarlari
+   * xodim tomonidan o'qilgan deb belgilanadi.
+   */
   async getRequest(actor: SchoolActor, id: string) {
     assertCan(actor, 'care.individual');
-    const request = await this.find(actor.schoolId, id);
-    const [row] = await this.rows(actor.schoolId, [request]);
-    const notes = this.notesOf(request);
-    const staff = await this.prisma.schoolStaff.findMany({
-      where: { schoolId: actor.schoolId, id: { in: notes.map((n) => n.byStaffId) } },
-      select: { id: true, fullName: true },
+    await this.find(actor.schoolId, id);
+    const request = await this.prisma.$transaction(async (tx) => {
+      await this.markOpened(tx, actor, id);
+      await tx.schoolCareMessage.updateMany({ where: { requestId: id, author: 'CHILD', readByStaffAt: null }, data: { readByStaffAt: new Date() } });
+      return tx.schoolCareRequest.findFirstOrThrow({ where: { id, schoolId: actor.schoolId } });
     });
-    const names = new Map(staff.map((s) => [s.id, s.fullName]));
+    const [row] = await this.rowsOf.rows(actor.schoolId, [request]);
+    const notes = this.notesOf(request);
+    const names = await this.rowsOf.staffNames(actor.schoolId, notes.map((n) => n.byStaffId));
     return {
       ...row!.view,
+      resolvedAt: request.resolvedAt?.toISOString() ?? null,
+      openedBy: row!.openedBy,
+      messages: await this.rowsOf.thread(actor.schoolId, request),
       notes: [...notes].sort((a, b) => Date.parse(a.at) - Date.parse(b.at)).map((n) => ({ ...n, byName: names.get(n.byStaffId) ?? '—' })),
       notified: request.protocolActivated ? await this.protocolRecipients(actor.schoolId) : [],
     };
@@ -81,7 +101,8 @@ export class CareRequestsService {
     const { status } = parseOrThrow(careStatusSchema, input);
     return this.mutate(actor, id, REQUEST_AUDIT.status, (request) => {
       if (status === 'SCHEDULED' && !request.meetingAt) throw invalid('meetingAt: errors.form.required');
-      return { status };
+      // Hal qilindi — `resolvedAt` (birinchi marta); qayta ochilsa — tozalanadi.
+      return { status, resolvedAt: status === 'RESOLVED' ? (request.resolvedAt ?? new Date()) : null };
     });
   }
 
@@ -130,6 +151,38 @@ export class CareRequestsService {
     });
   }
 
+  /**
+   * Bolaga javob. Hal qilingan murojaat — 409. Birinchi javob `repliedAt` ni, har javob
+   * `lastMessageAt` ni yozadi; `NEW` → `IN_PROGRESS`. Audit va push'da matn YO'Q; push
+   * tranzaksiyadan KEYIN yuboriladi va xatosi javobni yiqitmaydi.
+   */
+  async reply(actor: SchoolActor, id: string, input: unknown) {
+    assertCan(actor, 'care.individual');
+    const { text } = parseOrThrow(careStaffMessageSchema, input);
+    const { message, childUserId } = await this.locked(actor, id, async (request, tx) => {
+      if (request.status === 'RESOLVED') throw conflict('REQUEST_CLOSED');
+      const now = new Date();
+      const created = await tx.schoolCareMessage.create({
+        data: { requestId: id, author: 'STAFF', staffId: actor.staffId, bodyEnc: this.crypto.encrypt(text), createdAt: now, readByStaffAt: now },
+      });
+      const leavesNew = request.status === 'NEW';
+      await tx.schoolCareRequest.update({
+        where: { id },
+        data: {
+          repliedAt: request.repliedAt ?? now,
+          lastMessageAt: now,
+          ...(leavesNew && { status: 'IN_PROGRESS' }),
+          ...(!request.openedAt && { openedAt: now, openedByStaffId: actor.staffId }),
+        },
+      });
+      await this.afterChange(tx, actor, request, REQUEST_AUDIT.reply, leavesNew);
+      const student = await tx.schoolStudent.findUnique({ where: { id: request.studentId }, select: { child: { select: { childUserId: true } } } });
+      return { message: created, childUserId: student?.child?.childUserId ?? null };
+    });
+    await this.notify.notifyChildOfReply(childUserId, id);
+    return toMessageView(message, { decrypt: (t) => this.crypto.decrypt(t), nameOf: () => actor.name });
+  }
+
   // ── Ichki ──────────────────────────────────────────────────────────
 
   private async find(schoolId: string, id: string) {
@@ -142,50 +195,54 @@ export class CareRequestsService {
     return request.notesEnc ? this.crypto.decryptJson<CareNote[]>(request.notesEnc) : [];
   }
 
+  /** Birinchi ochish: shartli UPDATE (`openedAt IS NULL`) — parallel ko'rishda faqat bittasi yozadi va audit qiladi. */
+  private async markOpened(tx: Tx, actor: SchoolActor, id: string): Promise<void> {
+    const res = await tx.schoolCareRequest.updateMany({
+      where: { id, schoolId: actor.schoolId, openedAt: null },
+      data: { openedAt: new Date(), openedByStaffId: actor.staffId },
+    });
+    if (res.count === 1) await this.writeAudit(tx, actor, REQUEST_AUDIT.open);
+  }
+
+  private writeAudit(tx: Tx, actor: SchoolActor, [action, summary]: readonly [string, string]) {
+    return this.audit.write(actor, { module: 'CARE', action, summary }, tx);
+  }
+
+  /** Qator qulfi: parallel eslatma / javob / holat o'zgarishi bir-birini yo'qotmasin (o'qish-o'zgartirish-yozish). */
+  private locked<T>(actor: SchoolActor, id: string, fn: (request: SchoolCareRequest, tx: Tx) => Promise<T>): Promise<T> {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM school_care_requests WHERE id = ${id} AND school_id = ${actor.schoolId} FOR UPDATE`;
+      const request = await tx.schoolCareRequest.findFirst({ where: { id, schoolId: actor.schoolId } });
+      if (!request) throw notFound(id);
+      return fn(request, tx);
+    });
+  }
+
+  /** Audit (+ birinchi ochilish auditi) va `NEW` dan chiqqan murojaatning saqlangan bildirishnomalarini tozalash. */
+  private async afterChange(tx: Tx, actor: SchoolActor, before: SchoolCareRequest, audit: readonly [string, string], leavesNew: boolean) {
+    await this.writeAudit(tx, actor, audit);
+    if (!before.openedAt) await this.writeAudit(tx, actor, REQUEST_AUDIT.open);
+    if (leavesNew) await this.notify.clearFor(tx, before.id);
+  }
+
   private async mutate(
     actor: SchoolActor,
     id: string,
-    [action, summary]: readonly [string, string],
-    change: (request: SchoolCareRequest, tx: Parameters<Parameters<PrismaService['$transaction']>[0]>[0]) => object | Promise<object>,
+    action: readonly [string, string],
+    change: (request: SchoolCareRequest, tx: Tx) => object | Promise<object>,
   ) {
-    const updated = await this.prisma.$transaction(async (tx) => {
-      // Qator qulfi: parallel eslatma / protokol bir-birini yo'qotmasin (o'qish-o'zgartirish-yozish).
-      await tx.$queryRaw`SELECT id FROM school_care_requests WHERE id = ${id} FOR UPDATE`;
-      const request = await tx.schoolCareRequest.findFirst({ where: { id, schoolId: actor.schoolId } });
-      if (!request) throw notFound(id);
-      const next = await tx.schoolCareRequest.update({ where: { id }, data: await change(request, tx) });
-      await this.audit.write(actor, { module: 'CARE', action, summary }, tx);
+    const updated = await this.locked(actor, id, async (request, tx) => {
+      const data = await change(request, tx);
+      const next = await tx.schoolCareRequest.update({
+        where: { id },
+        // Murojaatga tegingan xodim uni ko'rgan: hali ochilmagan bo'lsa — birinchi ochgan shu.
+        data: { ...(!request.openedAt && { openedAt: new Date(), openedByStaffId: actor.staffId }), ...data },
+      });
+      await this.afterChange(tx, actor, request, action, request.status === 'NEW' && next.status !== 'NEW');
       return next;
     });
-    const [row] = await this.rows(actor.schoolId, [updated]);
-    return { ...row!.view, notes: this.notesOf(updated) };
-  }
-
-  /** Panel `CareRequestRow`: shifr ochiladi, ism va sinf qo'shiladi. */
-  private async rows(schoolId: string, requests: SchoolCareRequest[]) {
-    const [students, classes] = await Promise.all([
-      this.prisma.schoolStudent.findMany({ where: { schoolId, id: { in: requests.map((r) => r.studentId) } }, select: { id: true, lastName: true, firstName: true } }),
-      this.prisma.schoolClass.findMany({ where: { schoolId }, select: { id: true, name: true } }),
-    ]);
-    const studentName = new Map(students.map((s) => [s.id, `${s.lastName} ${s.firstName}`]));
-    const className = new Map(classes.map((c) => [c.id, c.name]));
-    return requests.map((r) => ({
-      raw: r,
-      view: {
-        id: r.id,
-        studentId: r.studentId,
-        classId: r.classId ?? '',
-        createdAt: r.createdAt.toISOString(),
-        topic: r.topic,
-        message: this.crypto.decrypt(r.messageEnc),
-        urgency: r.urgency,
-        status: r.status,
-        meetingAt: r.meetingAt?.toISOString() ?? null,
-        protocolActivated: r.protocolActivated,
-        studentName: studentName.get(r.studentId) ?? '—',
-        className: (r.classId && className.get(r.classId)) || '—',
-      },
-    }));
+    const [row] = await this.rowsOf.rows(actor.schoolId, [updated]);
+    return { ...row!.view, resolvedAt: updated.resolvedAt?.toISOString() ?? null, notes: this.notesOf(updated) };
   }
 
   /** Himoya protokolida xabardor qilinadiganlar: faol direktor va navbatchi (tafsilotsiz). */

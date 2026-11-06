@@ -56,6 +56,10 @@ describe('School assessments — bola ilovasi', () => {
           itemCount: 4,
           timeLimitMin: 10,
           closesAt: expect.any(String),
+          personal: false,
+          assignedBy: { name: 'PSYCHOLOGIST xodim' },
+          questionCount: 4,
+          estimatedMinutes: 1,
         },
       ],
     });

@@ -114,11 +114,11 @@ export class AssessmentsIqService {
   }
 
   /** IQ tayinlovlari bo'yicha yakunlaganlar soni (tayinlangan sinflarning ulangan o'quvchilari). */
-  async completedCounts(db: Db, schoolId: string, rows: ReadonlyArray<Pick<SchoolPsychAssignment, 'id' | 'classIds' | 'opensAt' | 'closesAt'>>): Promise<Map<string, number>> {
+  async completedCounts(db: Db, schoolId: string, rows: ReadonlyArray<Pick<SchoolPsychAssignment, 'id' | 'classIds' | 'studentIds' | 'opensAt' | 'closesAt'>>): Promise<Map<string, number>> {
     const counts = new Map<string, number>();
     for (const a of rows) {
       const students = await db.schoolStudent.findMany({
-        where: { schoolId, archived: false, classId: { in: a.classIds }, childId: { not: null } },
+        where: { schoolId, archived: false, OR: [{ classId: { in: a.classIds } }, { id: { in: a.studentIds } }], childId: { not: null } },
         select: { childId: true },
       });
       const childIds = students.flatMap((s) => (s.childId ? [s.childId] : []));

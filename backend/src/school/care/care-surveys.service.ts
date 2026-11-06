@@ -24,11 +24,8 @@ export class CareSurveysService {
 
   async listSurveys(actor: SchoolActor) {
     assertCan(actor, 'care.surveys');
-    const [surveys, counts] = await Promise.all([
-      this.prisma.schoolCareSurvey.findMany({ where: { schoolId: actor.schoolId }, orderBy: [{ weekStart: 'desc' }, { createdAt: 'desc' }] }),
-      this.prisma.schoolCareResponse.groupBy({ by: ['surveyId'], where: { schoolId: actor.schoolId }, _count: { _all: true } }),
-    ]);
-    const bySurvey = new Map(counts.map((c) => [c.surveyId, c._count._all]));
+    const surveys = await this.prisma.schoolCareSurvey.findMany({ where: { schoolId: actor.schoolId }, orderBy: [{ weekStart: 'desc' }, { createdAt: 'desc' }] });
+    const bySurvey = await this.store.respondentCounts(surveys.map((s) => s.id));
     return surveys.map((s) => {
       const respondents = bySurvey.get(s.id) ?? 0;
       return { ...toSurveyView(s), respondents, participationRate: percent(respondents, s.invited) };

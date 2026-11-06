@@ -33,6 +33,14 @@ describe('ChildDataPurgeService', () => {
       aiMessage: { deleteMany: jest.fn().mockResolvedValue({}) },
       schoolHomeworkPhoto: { findMany: jest.fn().mockResolvedValue([]) },
       schoolHomeworkSubmission: { deleteMany: jest.fn().mockResolvedValue({ count: 0 }) },
+      schoolStudent: { findMany: jest.fn().mockResolvedValue([{ id: 'student-1' }]) },
+      schoolCareRequest: {
+        findMany: jest.fn().mockResolvedValue([{ id: 'req-1' }]),
+        deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+      schoolCareParticipation: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
+      schoolCareAnonResponse: { deleteMany: jest.fn() },
+      schoolStaffNotification: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
       kelajakSession: { deleteMany: jest.fn().mockResolvedValue({ count: 2 }) },
       voiceMessage: {
         findMany: jest
@@ -159,6 +167,18 @@ describe('ChildDataPurgeService', () => {
       expect(result.mediaObjects).toBe(9);
     });
 
+    it("deletes the child's care requests and survey participation, never the anonymous answers", async () => {
+      await service.deleteChildAccount(CHILD_USER);
+
+      expect(prisma.schoolStudent.findMany).toHaveBeenCalledWith({ where: { childId: { in: [CHILD_ID] } }, select: { id: true } });
+      expect(prisma.schoolCareRequest.deleteMany).toHaveBeenCalledWith({ where: { studentId: { in: ['student-1'] } } });
+      expect(prisma.schoolCareParticipation.deleteMany).toHaveBeenCalledWith({ where: { studentId: { in: ['student-1'] } } });
+      expect(prisma.schoolStaffNotification.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ['care:req-1', 'care-esc:req-1', 'care-esc-dir:req-1'] } },
+      });
+      expect(prisma.schoolCareAnonResponse.deleteMany).not.toHaveBeenCalled();
+    });
+
     it('notifies the parent with a push and a notification record', async () => {
       await service.deleteChildAccount(CHILD_USER);
 
@@ -239,6 +259,26 @@ describe('ChildDataPurgeService', () => {
 
       expect(order).toEqual(['homework', 'child']);
       expect(storage.delete).toHaveBeenCalledWith(BUCKETS.schoolHomework, 'homework/s/a/st/1.jpg');
+    });
+
+    it('deletes care requests and participation BEFORE the profile (student link is SetNull)', async () => {
+      const order: string[] = [];
+      prisma.schoolCareRequest.deleteMany.mockImplementation(async () => {
+        order.push('care-requests');
+        return { count: 1 };
+      });
+      prisma.schoolCareParticipation.deleteMany.mockImplementation(async () => {
+        order.push('care-participation');
+        return { count: 1 };
+      });
+      prisma.child.delete.mockImplementation(async () => {
+        order.push('child');
+        return {};
+      });
+
+      await service.purgeChildProfile({ id: CHILD_ID, parentId: PARENT, name: 'Ali', childUserId: CHILD_USER, photoPath: null });
+
+      expect(order).toEqual(['care-requests', 'care-participation', 'child']);
     });
 
     it('works for a profile that was never paired', async () => {

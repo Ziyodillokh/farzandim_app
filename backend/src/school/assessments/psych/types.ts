@@ -65,7 +65,11 @@ export type PsychTestInputShape = Pick<
   'title' | 'description' | 'instructions' | 'kind' | 'grades' | 'timeLimitMin' | 'scales' | 'items' | 'scoring' | 'norms'
 >;
 
-export type AssignmentTarget ={ kind: 'CLASSES'; classIds: string[] } | { kind: 'GRADES'; grades: number[] };
+export type AssignmentTarget =
+  | { kind: 'CLASSES'; classIds: string[] }
+  | { kind: 'GRADES'; grades: number[] }
+  /** Shaxsiy tayinlash: mutaxassis tanlagan o'quvchilar (1..30). */
+  | { kind: 'STUDENTS'; studentIds: string[] };
 export type AssignmentStatus = 'OPEN' | 'CLOSED' | 'CANCELLED';
 export type AssignmentState = 'SCHEDULED' | 'ACTIVE' | 'ENDED' | 'CANCELLED';
 export type PsychResultOrigin = 'SEED' | 'APP' | 'IMPORT' | 'MANUAL';

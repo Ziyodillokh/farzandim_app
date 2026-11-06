@@ -8,6 +8,8 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { Prisma, SchoolPsychAssignment } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { tashkentDay, tashkentDayRange } from '../../common/time/tashkent';
+import { CareSettingsService } from '../care/care-settings.service';
+import { estimatedMinutes } from '../common/estimated-minutes';
 import { SchoolCryptoService } from '../common/school-crypto.service';
 import { parseOrThrow } from '../common/school-zod';
 import { submitInputSchema } from './assessments-inputs.schemas';
@@ -25,6 +27,11 @@ const notEnrolled = () => new NotFoundException({ code: 'NOT_ENROLLED', message:
 const notOpen = () => new NotFoundException({ code: 'ASSIGNMENT_NOT_FOUND', message: 'Assignment is not open' });
 const alreadySubmitted = () => new ConflictException({ code: 'ALREADY_SUBMITTED', message: 'Test already submitted' });
 
+/** Bolaga ko'rinish: sinfiga tayinlangan YOKI shaxsan unga tayinlangan (mutaxassis tanlovi). */
+const visibleTo = (student: Pick<Student, 'id' | 'classId'>) => ({
+  OR: [{ classIds: { has: student.classId } }, { studentIds: { has: student.id } }],
+});
+
 const isOpenAt = (a: Pick<SchoolPsychAssignment, 'opensAt' | 'closesAt'>, nowMs: number, graceMs = 0) =>
   a.opensAt.getTime() <= nowMs && nowMs <= a.closesAt.getTime() + graceMs;
 
@@ -38,6 +45,7 @@ export class AssessmentsChildService {
     private readonly store: AssessmentsStore,
     private readonly crypto: SchoolCryptoService,
     private readonly iq: AssessmentsIqService,
+    private readonly care: CareSettingsService,
   ) {}
 
   /** Bolaning sinfiga ochiq, hali yechilmagan tayinlashlar (opensAt ≤ hozir ≤ closesAt). */
@@ -47,7 +55,7 @@ export class AssessmentsChildService {
     const nowMs = Date.now();
     const now = new Date(nowMs);
     const rows = await this.prisma.schoolPsychAssignment.findMany({
-      where: { schoolId: student.schoolId, status: 'OPEN', classIds: { has: student.classId }, opensAt: { lte: now }, closesAt: { gte: now } },
+      where: { schoolId: student.schoolId, status: 'OPEN', ...visibleTo(student), opensAt: { lte: now }, closesAt: { gte: now } },
       orderBy: [{ closesAt: 'asc' }, { createdAt: 'asc' }],
     });
     const done = await this.prisma.schoolPsychResult.findMany({
@@ -55,8 +63,17 @@ export class AssessmentsChildService {
       select: { assignmentId: true },
     });
     const doneIds = new Set(done.map((d) => d.assignmentId));
+    const open = rows.filter((r) => !doneIds.has(r.id));
+    const state = await this.care.load(student.schoolId);
+    const people = await this.care.people(student.schoolId, state, open.map((r) => r.createdBy));
+    const extras = (a: SchoolPsychAssignment, itemCount: number) => ({
+      personal: (a.target as { kind?: string } | null)?.kind === 'STUDENTS',
+      assignedBy: people.nameOf(a.createdBy) ? { name: people.nameOf(a.createdBy) } : null,
+      questionCount: itemCount,
+      estimatedMinutes: estimatedMinutes(itemCount),
+    });
     const assignments = [];
-    for (const a of rows.filter((r) => !doneIds.has(r.id))) {
+    for (const a of open) {
       // Parvoz IQ — odatdagi /iq oqimida yechiladi; umumiy tarix: oynada yakunlangan bo'lsa ko'rinmaydi.
       if (a.testId === PARVOZ_IQ_TEST_ID) {
         if (await this.iq.childDone(student.childId, a.opensAt)) continue;
@@ -69,6 +86,7 @@ export class AssessmentsChildService {
           itemCount: IQ_FORM_SIZE,
           timeLimitMin: null,
           closesAt: a.closesAt.toISOString(),
+          ...extras(a, IQ_FORM_SIZE),
         });
         continue;
       }
@@ -83,6 +101,7 @@ export class AssessmentsChildService {
         itemCount: test.items.length,
         timeLimitMin: test.timeLimitMin,
         closesAt: a.closesAt.toISOString(),
+        ...extras(a, test.items.length),
       });
     }
     return { enrolled: true, assignments };
@@ -133,7 +152,7 @@ export class AssessmentsChildService {
   /** Bolaning sinfiga tayinlangan, OPEN va vaqt oynasidagi tayinlash + testi; aks holda 404. */
   private async openFor(db: Tx | PrismaService, student: Student, assignmentId: string, grace: number | ((test: PsychTest) => number)) {
     const assignment = await db.schoolPsychAssignment.findFirst({
-      where: { id: assignmentId, schoolId: student.schoolId, status: 'OPEN', classIds: { has: student.classId } },
+      where: { id: assignmentId, schoolId: student.schoolId, status: 'OPEN', ...visibleTo(student) },
     });
     if (!assignment) throw notOpen();
     const test = await this.store.findTest(student.schoolId, assignment.testId, db);
