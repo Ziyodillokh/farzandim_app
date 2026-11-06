@@ -22,6 +22,10 @@ export const notifications = {
     MESSAGE_SENT: '«{title}» — {recipients} ta oluvchiga yuborildi',
     EMERGENCY: 'Favqulodda rejim faol',
     DATA_DELETION_REQUEST: '{studentName} ({className}) maʼlumotlarini oʻchirishni soʻradi',
+    CHILD_RECOVERY_REQUEST: '{studentName} ({className}) kirish parolini tiklashni soʻradi',
+    LINK_REVIEW: '{studentName} ({className}) maktabga ulanishi tekshiruvni kutmoqda',
+    LINK_CORRECTION: '{studentName} ({className}) maktab yoki sinf notoʻgʻri ekanini bildirdi',
+    GUARDIAN_REVIEW: '{studentName} ({className}) uchun ota-ona kodni kiritdi — vasiylikni tasdiqlash kerak',
   },
   category: {
     SAFETY_SIGNAL: 'Xavfsizlik',
@@ -33,5 +37,9 @@ export const notifications = {
     MESSAGE_SENT: 'Xabar',
     EMERGENCY: 'Favqulodda',
     DATA_DELETION_REQUEST: 'Maʼlumotlar',
+    CHILD_RECOVERY_REQUEST: 'Parol tiklash',
+    LINK_REVIEW: 'Ulanish',
+    LINK_CORRECTION: 'Tuzatish',
+    GUARDIAN_REVIEW: 'Vasiy',
   },
 };

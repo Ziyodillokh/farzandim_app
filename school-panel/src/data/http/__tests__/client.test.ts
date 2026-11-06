@@ -84,6 +84,16 @@ describe('http client', () => {
     expect(toServiceError(500, { message: ['a', 'b'] })).toMatchObject({ code: 'UNKNOWN', message: 'a; b' });
   });
 
+  it('backend\'ning aniq kodi `detail` da saqlanadi (409 NOT_LINKED / LOGIN_TAKEN CONFLICT bo\'lib qoladi)', () => {
+    const notLinked = toServiceError(409, { statusCode: 409, code: 'NOT_LINKED', message: 'Student is not linked' });
+    expect(notLinked).toMatchObject({ code: 'CONFLICT', detail: 'NOT_LINKED', message: 'Student is not linked' });
+    expect(toServiceError(409, { code: 'LOGIN_TAKEN' })).toMatchObject({ code: 'CONFLICT', detail: 'LOGIN_TAKEN' });
+    expect(toServiceError(404, { code: 'NOT_FOUND' })).toMatchObject({ code: 'NOT_FOUND', detail: 'NOT_FOUND' });
+    expect(toServiceError(409, { message: 'x' }).detail).toBeNull();
+    expect(toServiceError(500, null).detail).toBeNull();
+    expect(toServiceError(409, { code: '' }).detail).toBeNull();
+  });
+
   it('tarmoq xatosi — UNKNOWN', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new TypeError('offline'))));
     await expect(http('GET', '/x')).rejects.toMatchObject({ code: 'UNKNOWN', message: 'network' });

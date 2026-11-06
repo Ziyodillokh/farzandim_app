@@ -4,6 +4,18 @@ export const errors = {
   VALIDATION: 'Ma\'lumotlar noto\'g\'ri to\'ldirilgan',
   CONFLICT: 'Bunday yozuv allaqachon mavjud',
   UNKNOWN: 'Kutilmagan xatolik. Qayta urinib ko\'ring',
+  detail: {
+    NOT_LINKED: 'Oʻquvchi hali Parvoz bola profiliga ulanmagan',
+    LOGIN_TAKEN: 'Bu login band — boshqasini tanlang',
+    ALREADY_RESOLVED: 'Soʻrov allaqachon koʻrib chiqilgan',
+    REQUEST_NOT_FOUND: 'Soʻrov topilmadi — allaqachon koʻrib chiqilgan boʻlishi mumkin',
+    STUDENT_ARCHIVED: 'Oʻquvchi arxivda — bu amalni bajarib boʻlmaydi. Avval oʻquvchini arxivdan tiklang',
+    REQUEST_STALE: 'Soʻrov allaqachon hal qilingan yoki oʻzgargan. Roʻyxat yangilandi — joriy holatni tekshiring',
+    STUDENT_LINKED_ELSEWHERE:
+      'Bu oʻquvchi boshqa oila farzandiga ulangan — tasdiqlab boʻlmaydi. Soʻrovni rad etib, oʻquvchi oʻrnini boʻshatishingiz mumkin',
+    ALREADY_ENROLLED:
+      'Bu bola allaqachon boshqa faol oʻquvchiga ulangan — tasdiqlab boʻlmaydi. Soʻrovni rad etib, oʻquvchi oʻrnini boʻshatishingiz mumkin',
+  },
   storageFull: 'Brauzer xotirasi to\'ldi — o\'zgarishlar faqat shu sessiyada saqlanadi',
   form: {
     required: 'Majburiy maydon',
@@ -25,5 +37,6 @@ export const errors = {
     duplicate: 'Qiymat takrorlangan',
     invalid: 'Qiymat notoʻgʻri',
     outOfRange: 'Qiymat ruxsat etilgan oraliqdan tashqarida',
+    invalidLogin: 'Login 4–24 belgidan iborat: kichik lotin harfi bilan boshlanadi, keyin harf, raqam, nuqta yoki pastki chiziq',
   },
 };

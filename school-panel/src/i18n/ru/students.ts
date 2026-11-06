@@ -91,6 +91,7 @@ export const students: DeepString<typeof uz> = {
     development: 'Развитие',
     history: 'История',
     notes: 'Заметки',
+    access: 'Вход',
   },
   actions: {
     messageParents: 'Написать родителям',

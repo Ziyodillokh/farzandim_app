@@ -30,6 +30,10 @@ export const NOTIFICATION_TONES: Record<NotificationKind, NotificationTone> = {
   MESSAGE_SENT: 'success',
   EMERGENCY: 'destructive',
   DATA_DELETION_REQUEST: 'warning',
+  CHILD_RECOVERY_REQUEST: 'warning',
+  LINK_REVIEW: 'warning',
+  LINK_CORRECTION: 'warning',
+  GUARDIAN_REVIEW: 'warning',
 };
 
 /** Erkin matn (sabab, xabar) — ikkala tilda bir xil, qisqartirilgan. */

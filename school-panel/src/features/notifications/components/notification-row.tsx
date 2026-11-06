@@ -1,18 +1,6 @@
 'use client';
 
-import {
-  Bell,
-  Brain,
-  HeartPulse,
-  LogOut,
-  type LucideIcon,
-  MessageSquareHeart,
-  Receipt,
-  Send,
-  ShieldAlert,
-  Siren,
-  Trash2,
-} from 'lucide-react';
+import { Bell, Brain, FilePenLine, HeartPulse, KeyRound, Link2, LogOut, MessageSquareHeart, Receipt, Send, ShieldAlert, Siren, Trash2, UserCheck, type LucideIcon } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import type { NotificationItem, NotificationKind, NotificationTone } from '@/data/contracts';
@@ -29,6 +17,10 @@ const ICONS: Record<NotificationKind, LucideIcon> = {
   MESSAGE_SENT: Send,
   EMERGENCY: Siren,
   DATA_DELETION_REQUEST: Trash2,
+  CHILD_RECOVERY_REQUEST: KeyRound,
+  LINK_REVIEW: Link2,
+  LINK_CORRECTION: FilePenLine,
+  GUARDIAN_REVIEW: UserCheck,
 };
 
 const TILE: Record<NotificationTone, string> = {

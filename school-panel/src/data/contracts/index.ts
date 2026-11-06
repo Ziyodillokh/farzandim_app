@@ -1,4 +1,5 @@
 export * from './common';
+export * from './access';
 export * from './school';
 export * from './people';
 export * from './attendance';

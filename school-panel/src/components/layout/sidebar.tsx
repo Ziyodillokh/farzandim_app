@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useCan, useSession } from '@/auth/use-session';
 import { SchoolLogo } from '@/components/common/school-logo';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useLinkRequestCount } from '@/features/link-requests/hooks';
 import { useSchool } from '@/features/school/hooks';
 import { useI18n } from '@/i18n';
 import { normalizePath } from '@/lib/base-path';
@@ -20,11 +21,40 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function NavLink({ node, pathname, onNavigate }: { node: NavNode; pathname: string; onNavigate?: () => void }) {
+/**
+ * Asosiy bo'lim faolmi: eng aniq mos keluvchi menyu bandi (masalan, `/students/link-requests` ochiqligida
+ * `/students` ham yonib turmasin). Tafsilot sahifalari (`/students/view`) menyuda yo'q — ota bo'lim faol qoladi.
+ */
+function isNodeActive(pathname: string, path: string, allPaths: readonly string[]): boolean {
+  return isActive(pathname, path) && !allPaths.some((other) => other !== path && other.startsWith(`${path}/`) && isActive(pathname, other));
+}
+
+/**
+ * Menyu hisoblagichi: ochiq ulanish so'rovlari soni (0 bo'lsa ko'rinmaydi). Oq matn `brand-600` ustida 4.5:1 (AA);
+ * `brand-400` da atigi 3.3:1 edi.
+ */
+function LinkRequestsBadge() {
+  const { t } = useI18n();
+  const count = useLinkRequestCount();
+  if (count === 0) return null;
+  return (
+    <>
+      <span
+        aria-hidden
+        className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-[0.7rem] font-bold tabular-nums leading-none text-white ring-1 ring-inset ring-white/25"
+      >
+        {count > 99 ? '99+' : count}
+      </span>
+      <span className="sr-only">{t('linkRequests.badgeLabel', { count })}</span>
+    </>
+  );
+}
+
+function NavLink({ node, pathname, allPaths, onNavigate }: { node: NavNode; pathname: string; allPaths: readonly string[]; onNavigate?: () => void }) {
   const { t } = useI18n();
   const Icon = node.icon;
   const hasChildren = node.children.length > 1;
-  const active = isActive(pathname, node.path);
+  const active = isNodeActive(pathname, node.path, allPaths);
   const [open, setOpen] = useState(active);
 
   const itemClass = (on: boolean) =>
@@ -52,6 +82,7 @@ function NavLink({ node, pathname, onNavigate }: { node: NavNode; pathname: stri
         {active && edge}
         <Icon className="h-[18px] w-[18px] shrink-0" />
         <span className="truncate">{t(node.titleKey)}</span>
+        {node.badge === 'linkRequests' && <LinkRequestsBadge />}
       </Link>
     );
   }
@@ -97,6 +128,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = normalizePath(usePathname());
   const { data } = useSchool();
   const sections = buildNav(can);
+  const allPaths = sections.flatMap((section) => section.items.map((node) => node.path));
   const school = data?.school;
 
   return (
@@ -121,7 +153,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 {t(`nav.groups.${section.group}`)}
               </p>
               {section.items.map((node) => (
-                <NavLink key={node.path} node={node} pathname={pathname} onNavigate={onNavigate} />
+                <NavLink key={node.path} node={node} pathname={pathname} allPaths={allPaths} onNavigate={onNavigate} />
               ))}
             </div>
           ))}

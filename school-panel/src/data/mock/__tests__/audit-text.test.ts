@@ -52,6 +52,41 @@ describe('auditText: tarjima va zaxira', () => {
   });
 });
 
+describe('auditText: kirish amallari (K1 §7, K2 §8) — har bir kalit ikkala tilda', () => {
+  // Backend amallari: K1 (`student.credential.*`, `student.recovery.reject`) va K2 (`student.inviteCode`, `student.link*`) + mavjud kalitlar.
+  const ACTIONS = [
+    'student.credential.issue',
+    'student.credential.reset',
+    'student.recovery.reject',
+    'student.inviteCode',
+    'student.linkRequested',
+    'student.linkRejected',
+    'student.linkCorrection',
+    'student.linkCorrectionKept',
+    'student.childLinked',
+    'student.childUnlinked',
+    'guardian.linked',
+  ] as const;
+
+  it.each(ACTIONS)('%s: o\'zbekcha va ruscha matn, o\'quvchi nomi bilan (tavsifga qaytmaydi)', (action) => {
+    const e = entry(action, 'SAQLANGAN TAVSIF', { name: 'Karimov Aziz' });
+    expect(uzAudit.actions[action.replace(/\./g, '_') as keyof typeof uzAudit.actions]).toBeTruthy();
+    for (const render of [uz, ru]) {
+      const text = auditText(render, e);
+      expect(text).not.toBe('SAQLANGAN TAVSIF');
+      expect(text).toContain('Karimov Aziz');
+    }
+    expect(auditText(ru, e)).toMatch(/[А-Яа-я]/);
+  });
+
+  it('kontraktdan oldingi (taxminiy) kalitlar olib tashlangan: faqat backend nomlari qoladi', () => {
+    const keys = Object.keys(uzAudit.actions);
+    for (const stale of ['student_credentials_issue', 'student_credentials_reset', 'student_credentials_reset_signOut', 'student_inviteCode_create', 'student_link_confirm', 'student_link_reject']) {
+      expect(keys).not.toContain(stale);
+    }
+  });
+});
+
 describe('auditText: servis yozuvlari va seed', () => {
   beforeEach(freshDb);
 

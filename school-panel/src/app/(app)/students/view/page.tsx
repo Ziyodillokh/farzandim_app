@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarDays, History, NotebookPen, Sprout, UserRound, type LucideIcon } from 'lucide-react';
+import { CalendarDays, History, KeyRound, NotebookPen, Sprout, UserRound, type LucideIcon } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 
@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AccessPanel } from '@/features/access/components/access-panel';
 import { DevelopmentTab } from '@/features/development/components/development-tab';
 import { StudentAvatar } from '@/features/students/components/student-avatar';
 import { StudentHeaderActions } from '@/features/students/components/student-header-actions';
@@ -29,6 +30,7 @@ const TAB_ICONS: Record<StudentTab, LucideIcon> = {
   development: Sprout,
   history: History,
   notes: NotebookPen,
+  access: KeyRound,
 };
 
 function DetailSkeleton() {
@@ -40,7 +42,7 @@ function DetailSkeleton() {
   );
 }
 
-/** O'quvchi 360° kartasi: `?id=&tab=profile|attendance|development|history|notes` (tablar rol bo'yicha). */
+/** O'quvchi 360° kartasi: `?id=&tab=profile|attendance|development|history|notes|access` (tablar rol bo'yicha). */
 function StudentDetailView() {
   const { t } = useI18n();
   const can = useCan();
@@ -141,6 +143,11 @@ function StudentDetailView() {
           {tabs.includes('notes') && (
             <TabsContent value="notes">
               <StudentNotes studentId={s.id} />
+            </TabsContent>
+          )}
+          {tabs.includes('access') && (
+            <TabsContent value="access">
+              <AccessPanel key={s.id} student={s} />
             </TabsContent>
           )}
         </Tabs>

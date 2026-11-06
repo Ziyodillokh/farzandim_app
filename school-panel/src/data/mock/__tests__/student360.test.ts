@@ -153,12 +153,13 @@ describe('O\'quvchi 360°: tarix', () => {
 describe('O\'quvchi 360°: rol bo\'yicha tablar', () => {
   const tabsOf = (role: RoleKey) => visibleStudentTabs((p: Permission) => roleHas(role, p));
 
-  it('psixolog — profil va rivojlanish; direktor/admin — rivojlanishsiz; sinf rahbari — hammasi', () => {
+  it('psixolog — profil va rivojlanish; direktor/admin — rivojlanishsiz; sinf rahbari — hammasi; «Kirish» ota-onaga ulash huquqi bilan', () => {
     expect(tabsOf('PSYCHOLOGIST')).toEqual(['profile', 'development']);
-    expect(tabsOf('DIRECTOR')).toEqual(['profile', 'attendance', 'history', 'notes']);
-    expect(tabsOf('ADMIN')).toEqual(['profile', 'attendance', 'history', 'notes']);
-    expect(tabsOf('HOMEROOM')).toEqual(['profile', 'attendance', 'development', 'history', 'notes']);
+    expect(tabsOf('DIRECTOR')).toEqual(['profile', 'attendance', 'history', 'notes', 'access']);
+    expect(tabsOf('ADMIN')).toEqual(['profile', 'attendance', 'history', 'notes', 'access']);
+    expect(tabsOf('HOMEROOM')).toEqual(['profile', 'attendance', 'development', 'history', 'notes', 'access']);
     expect(tabsOf('TEACHER')).toEqual(['profile']);
+    expect(tabsOf('DUTY')).toEqual(['profile']);
   });
 });
 

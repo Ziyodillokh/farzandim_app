@@ -2,6 +2,7 @@ import { assignAllPortraits } from '@/lib/staff-avatar';
 import { toIsoDate } from '../calendar';
 import { buildPsychSeed } from '../psych/seed';
 import type { Tables } from '../tables';
+import { buildAccess } from './access';
 import { buildAudit, buildEarlyExits } from './audit';
 import { buildCareRequests, buildCareSettings, buildQuestions, buildSurveys } from './care';
 import { buildAnnouncements, buildPayments, buildReminders, buildVerifications } from './comms';
@@ -33,6 +34,7 @@ export function generateSeed(seed: number, now: Date): Tables {
   const payments = buildPayments(people.families, baseIso, seed);
   const careRequests = buildCareRequests(people.students, baseIso);
   const assignments = [...buildAssignments(baseIso), ...buildWrittenAssignments(baseIso)];
+  const access = buildAccess({ students: people.students, guardians: people.guardians, classes, staff: people.staff, baseIso, seed });
 
   return {
     school,
@@ -65,7 +67,8 @@ export function generateSeed(seed: number, now: Date): Tables {
     activity: buildActivity(classes, sizes, baseIso),
     audit: buildAudit(people.staff, baseIso),
     ...buildPsychSeed({ classes, students: people.students }, baseIso, seed),
-    notifications: buildNotifications(careRequests),
+    notifications: [...buildNotifications(careRequests), ...access.notifications],
+    access: access.access,
     studentNotes: [],
     timetables: buildTimetables(classes, shifts),
     sim: { date: '', processedUntilMinute: -1 },

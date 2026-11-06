@@ -29,6 +29,7 @@ import { downloadCsv } from '@/lib/csv';
 /**
  * Chuqur havola: `/students?new=1&classId=cls-7a` — yaratish oynasi shu sinf bilan ochiladi
  * (`students.manage` bo'lsa), `classId` doiradagi sinf bo'lsa ro'yxat ham shu sinfga filtrlanadi.
+ * `/students?search=Ism Familiya` — qidiruv maydoni oldindan to'ldiriladi (bildirishnomadan o'tish).
  */
 function useCreateDeepLink(
   classIds: readonly string[] | undefined,
@@ -57,10 +58,10 @@ function useCreateDeepLink(
   return { ...state, close };
 }
 
-function StudentsView() {
+function StudentsView({ initialSearch }: { initialSearch: string | undefined }) {
   const { t, formatDate, formatNumber } = useI18n();
   const router = useRouter();
-  const [filter, setFilter] = useState<StudentFilter>({ page: 1, limit: 20, sortBy: 'name', sortDir: 'asc' });
+  const [filter, setFilter] = useState<StudentFilter>({ page: 1, limit: 20, sortBy: 'name', sortDir: 'asc', search: initialSearch });
   const [createOpen, setCreateOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const students = useStudents(filter);
@@ -231,10 +232,20 @@ function StudentsView() {
   );
 }
 
+/**
+ * `?search=` o'zgarganda ko'rinish qayta quriladi (`key`): sahifa allaqachon ochiq bo'lsa ham (bildirishnomadan
+ * `/students?search=Ism` ga o'tish) qidiruv shu ism bilan to'ldiriladi, parametr olib tashlansa — filtr tozalanadi.
+ * Qidiruv maydonini tashqaridan o'zgartirish ishonchsiz (kechiktirilgan qiymat eskisini qaytarib yozadi), shuning uchun remount.
+ */
+function StudentsRoute() {
+  const search = useSearchParams().get('search')?.trim() ?? '';
+  return <StudentsView key={search} initialSearch={search || undefined} />;
+}
+
 export default function StudentsPage() {
   return (
     <Suspense fallback={<Skeleton className="h-[600px] w-full rounded-2xl" />}>
-      <StudentsView />
+      <StudentsRoute />
     </Suspense>
   );
 }

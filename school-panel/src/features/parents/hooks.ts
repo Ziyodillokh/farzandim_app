@@ -96,16 +96,18 @@ export function useBulkInvite() {
   );
 }
 
-/** Buferga nusxa olish (xavfsiz bo'lmagan kontekstda xato — toast). */
-export function useCopy(): (text: string, successKey?: TKey) => Promise<void> {
+/** Buferga nusxa olish (xavfsiz bo'lmagan kontekstda xato — toast). Natija: nusxa olindimi (ekran o'qish dasturi uchun e'lon). */
+export function useCopy(): (text: string, successKey?: TKey) => Promise<boolean> {
   const { t } = useI18n();
   return useCallback(
     async (text: string, successKey: TKey = 'common.copied') => {
       try {
         await navigator.clipboard.writeText(text);
         toast.success(t(successKey));
+        return true;
       } catch {
         toast.error(t('parents.copyFailed'));
+        return false;
       }
     },
     [t],

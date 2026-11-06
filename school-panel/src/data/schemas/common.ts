@@ -15,6 +15,7 @@ export const msg = {
   endBeforeStart: 'errors.form.endBeforeStart',
   atLeastOne: 'errors.form.selectAtLeastOne',
   minutes: 'errors.form.minutesRange',
+  login: 'errors.form.invalidLogin',
 } as const;
 
 export const requiredText = (max = 120) =>
