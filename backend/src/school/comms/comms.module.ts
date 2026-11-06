@@ -4,7 +4,9 @@
 
 import { Module } from '@nestjs/common';
 import { FcmModule } from '../../common/fcm/fcm.module';
+import { NotificationPrefsModule } from '../../common/notification-prefs/notification-prefs.module';
 import { SchoolCoreModule } from '../school-core.module';
+import { AnnouncementChildPushService } from './announcement-child-push.service';
 import { AnnouncementDeliveryService } from './announcement-delivery.service';
 import { AnnouncementSendService } from './announcement-send.service';
 import { AnnouncementsService } from './announcements.service';
@@ -25,7 +27,7 @@ import { RemindersService } from './reminders.service';
 import { VerificationsService } from './verifications.service';
 
 @Module({
-  imports: [SchoolCoreModule, FcmModule],
+  imports: [SchoolCoreModule, FcmModule, NotificationPrefsModule],
   controllers: [
     CommsController,
     CommsAnnouncementsController,
@@ -37,6 +39,7 @@ import { VerificationsService } from './verifications.service';
   ],
   providers: [
     CommsPushService,
+    AnnouncementChildPushService,
     AnnouncementDeliveryService,
     AnnouncementsService,
     AnnouncementSendService,

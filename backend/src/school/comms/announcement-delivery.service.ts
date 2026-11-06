@@ -6,6 +6,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, SchoolAnnouncement, SchoolMessageStatus } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
+import { AnnouncementChildPushService } from './announcement-child-push.service';
 import { announcementPush } from './comms.i18n';
 import { Audience } from './comms.schemas';
 import { CommsPushService } from './comms-push.service';
@@ -33,6 +34,7 @@ export class AnnouncementDeliveryService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly push: CommsPushService,
+    private readonly childPush: AnnouncementChildPushService,
   ) {}
 
   /**
@@ -69,13 +71,17 @@ export class AnnouncementDeliveryService {
     return tx.schoolAnnouncement.findUniqueOrThrow({ where: { id: input.id } });
   }
 
-  /** Ilovasi bor vasiylarga push; FCM qabul qilganlar — `deliveredAt`. Xato yutilmaydi — log. */
+  /**
+   * Ilovasi bor vasiylarga push; FCM qabul qilganlar — `deliveredAt`. Xato yutilmaydi — log.
+   * So'ng (`includeStudents` bo'lsa) ilovasi ulangan bolalarga push — bir-biriga bog'liq emas, har biri alohida yutiladi.
+   */
   async pushPending(announcementId: string, now: Date): Promise<void> {
     try {
       await this.pushOrThrow(announcementId, now);
     } catch (err) {
       this.logger.error(`e'lon push xatosi (${announcementId}): ${String(err)}`);
     }
+    await this.childPush.notify(announcementId);
   }
 
   private async pushOrThrow(announcementId: string, now: Date): Promise<void> {
