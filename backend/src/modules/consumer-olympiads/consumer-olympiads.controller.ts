@@ -81,6 +81,15 @@ export class ConsumerOlympiadsController {
     );
   }
 
+  @Post('attempts/:id/finish')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Savol-savol oqimini yakunlash («Yakunlash»): berilgan javoblar qoladi",
+  })
+  finish(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return this.service.finishAttempt(user.userId, id);
+  }
+
   @Post('attempts/:id/submit')
   @ApiOperation({ summary: 'Submit attempt (batch legacy)' })
   submit(

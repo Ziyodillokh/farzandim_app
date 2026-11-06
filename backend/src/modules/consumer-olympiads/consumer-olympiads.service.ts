@@ -156,6 +156,17 @@ function questionRow(q: {
   };
 }
 
+/**
+ * Musobaqa rejimi: `hideResults` yoqilgan olimpiadada natija (to'g'ri javob,
+ * ball, sertifikat) olimpiada tugaguncha (`endTime`) ko'rsatilmaydi.
+ */
+export function resultsHidden(
+  olympiad: { hideResults: boolean; endTime: Date },
+  now: Date = new Date(),
+): boolean {
+  return olympiad.hideResults && now < olympiad.endTime;
+}
+
 @Injectable()
 export class ConsumerOlympiadsService {
   constructor(
@@ -502,6 +513,19 @@ export class ConsumerOlympiadsService {
       );
     }
 
+    // Musobaqa rejimi (`hideResults`): olimpiada tugaguncha to'g'ri javob ham,
+    // ball ham oshkor qilinmaydi — faqat javob saqlangani.
+    if (resultsHidden(attempt.olympiad)) {
+      return {
+        saved: true,
+        questionsAnswered: nextAnswers.length,
+        questionsTotal: updated.questionsTotal,
+        isLastQuestion,
+        attemptFinished: updated.status === 'finished',
+        resultsAt: attempt.olympiad.endTime.toISOString(),
+      };
+    }
+
     return {
       isCorrect,
       correctIndex: question.correctIndex,
@@ -512,6 +536,69 @@ export class ConsumerOlympiadsService {
       questionsTotal: updated.questionsTotal,
       isLastQuestion,
       attemptFinished: updated.status === 'finished',
+    };
+  }
+
+  /**
+   * Savol-savol oqimini muddatidan oldin yakunlash (U18 «Yakunlash»):
+   * berilgan javoblar qoladi, XP bir marta (idempotent). Musobaqa rejimida
+   * — faqat kvitansiya.
+   */
+  async finishAttempt(userId: string, attemptId: string) {
+    const child = await this.loadChild(userId);
+    const attempt = await this.prisma.olympiadAttempt.findUnique({
+      where: { id: attemptId },
+      include: { olympiad: true },
+    });
+    if (!attempt || attempt.childId !== child.childId) {
+      throw new NotFoundException('Attempt not found');
+    }
+    if (attempt.status !== 'finished') {
+      const limitSec = attempt.olympiad.durationMin * 60 + GRACE_SEC;
+      const elapsedSec = Math.min(
+        Math.floor((Date.now() - attempt.startedAt.getTime()) / 1000),
+        limitSec,
+      );
+      const res = await this.prisma.olympiadAttempt.updateMany({
+        where: { id: attemptId, status: { not: 'finished' } },
+        data: { status: 'finished', finishedAt: new Date(), timeSec: elapsedSec },
+      });
+      if (res.count > 0) {
+        const fresh = await this.prisma.olympiadAttempt.findUniqueOrThrow({
+          where: { id: attemptId },
+        });
+        await this.grantOlympiadXp(
+          child.childId,
+          fresh.id,
+          attempt.olympiad.xpReward,
+          fresh.correctAnswers,
+          fresh.questionsTotal,
+        );
+      }
+    }
+    const done = await this.prisma.olympiadAttempt.findUniqueOrThrow({
+      where: { id: attemptId },
+    });
+    const answered = Array.isArray(done.answers) ? done.answers.length : 0;
+    if (resultsHidden(attempt.olympiad)) {
+      return {
+        attemptId: done.id,
+        answersSaved: answered,
+        questionsTotal: done.questionsTotal,
+        timeSec: done.timeSec,
+        finishedAt: done.finishedAt?.toISOString() ?? null,
+        resultsAt: attempt.olympiad.endTime.toISOString(),
+      };
+    }
+    return {
+      attemptId: done.id,
+      answersSaved: answered,
+      score: done.score,
+      totalPoints: done.totalPoints,
+      correctAnswers: done.correctAnswers,
+      questionsTotal: done.questionsTotal,
+      timeSec: done.timeSec,
+      finishedAt: done.finishedAt?.toISOString() ?? null,
     };
   }
 
@@ -621,6 +708,18 @@ export class ConsumerOlympiadsService {
       updated.correctAnswers,
       updated.questionsTotal,
     );
+
+    // Musobaqa rejimi: kvitansiya — nechta javob saqlangani va natija sanasi.
+    if (resultsHidden(attempt.olympiad)) {
+      return {
+        attemptId: updated.id,
+        answersSaved: graded.length,
+        questionsTotal: updated.questionsTotal,
+        timeSec: updated.timeSec,
+        finishedAt: updated.finishedAt?.toISOString() ?? null,
+        resultsAt: attempt.olympiad.endTime.toISOString(),
+      };
+    }
 
     return {
       attemptId: updated.id,
@@ -792,6 +891,9 @@ export class ConsumerOlympiadsService {
     }
     if (!attempt.olympiad.certificateEnabled) {
       throw new NotFoundException('Certificate not enabled for this olympiad');
+    }
+    if (resultsHidden(attempt.olympiad)) {
+      throw new ForbiddenException('Results are not announced yet');
     }
 
     const percent = this.computePercent(attempt);
