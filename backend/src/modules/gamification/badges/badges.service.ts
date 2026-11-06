@@ -2,7 +2,7 @@
 // kechiktirilgan to'ldirish). Yutuq DON / XP bermaydi.
 
 import { Injectable } from '@nestjs/common';
-import { ChildProfile, IqSessionStatus, XpEventType } from '@prisma/client';
+import { ChildProfile, IqSessionStatus, LearningAttemptStatus, XpEventType } from '@prisma/client';
 import { PrismaService } from '../../../common/database/prisma.service';
 import { hasMasteredTopic } from '../../learning/learning-mastery.query';
 import { assertChildAccess } from '../child-access';
@@ -16,6 +16,11 @@ import {
   streakBadgesFor,
   toBadgeItems,
 } from './badge-catalog';
+import { NegativeCache } from './negative-cache';
+
+/** Mavzu o'zlashtirish tekshiruvi "yo'q" desa, shu bola uchun qancha vaqt qayta so'ralmaydi. */
+export const TOPIC_MASTER_RECHECK_MS = 60_000;
+const TOPIC_MASTER_CACHE_SIZE = 5_000;
 
 export interface UnlockResult {
   profile: ChildProfile;
@@ -25,6 +30,9 @@ export interface UnlockResult {
 
 @Injectable()
 export class BadgesService {
+  /** `topic_master` hali yo'q bolalar (voqea paytida ochish baribir ishlaydi — bu faqat backfill). */
+  private readonly noTopicMaster = new NegativeCache(TOPIC_MASTER_RECHECK_MS, TOPIC_MASTER_CACHE_SIZE);
+
   constructor(private readonly prisma: PrismaService) {}
 
   /**
@@ -85,7 +93,7 @@ export class BadgesService {
           where: { childId },
           select: { id: true },
         })) !== null,
-      topic_master: () => hasMasteredTopic(this.prisma, childId, null),
+      topic_master: () => this.probeTopicMaster(childId),
       thinker: async () =>
         (await this.prisma.iqSession.findFirst({
           where: { childId, status: IqSessionStatus.COMPLETED },
@@ -100,5 +108,22 @@ export class BadgesService {
       }),
     );
     return missing.filter((_, i) => checked[i]);
+  }
+
+  /**
+   * Backfill uchun "bironta mavzu o'zlashtirilganmi". Qimmat oyna so'rovi faqat bola
+   * kamida bitta mavzu urinishini yakunlagan bo'lsa ishlaydi; "yo'q" natija
+   * TOPIC_MASTER_RECHECK_MS davomida keshlanadi (yangi o'zlashtirish baribir urinish
+   * yakunida `LearningService` orqali darhol ochiladi).
+   */
+  private async probeTopicMaster(childId: string): Promise<boolean> {
+    if (this.noTopicMaster.has(childId)) return false;
+    const attempted = await this.prisma.learningAttempt.findFirst({
+      where: { childId, status: LearningAttemptStatus.COMPLETED, topicId: { not: null } },
+      select: { id: true },
+    });
+    const mastered = attempted !== null && (await hasMasteredTopic(this.prisma, childId, null));
+    if (!mastered) this.noTopicMaster.add(childId);
+    return mastered;
   }
 }

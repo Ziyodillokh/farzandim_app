@@ -11,6 +11,8 @@ export const MAX_ATTEMPT_MINUTES = 60;
 const SECONDS_PER_MINUTE = 60;
 const MS_PER_SECOND = 1000;
 const DAYS_PER_WEEK = 7;
+/** Streak hisobi uchun orqaga qaraladigan kunlar (chegarasiz tarixni skanerlamaslik uchun). */
+export const STREAK_LOOKBACK_DAYS = 366;
 
 export interface WeeklyAttempt {
   day: DayKey;
@@ -68,17 +70,19 @@ function summarizeWeek(
  * Joriy va oldingi ISO hafta (eskisi birinchi).
  *
  * - `attempts` — shu ikki haftadagi YAKUNLANGAN urinishlar;
- * - `completedDays` — bolaning yakunlangan urinishli BARCHA kunlari (streak uchun,
- *   `today`dan keyingisi bo'lmaydi);
+ * - `completedDays` — streak uchun yakunlangan urinishli kunlar (kamida `STREAK_LOOKBACK_DAYS`
+ *   orqaga; `today`dan keyingisi bo'lmaydi);
  * - streak — hafta oxirigacha (joriy hafta: bugungacha), `learning-stats.ts` qoidasi bilan;
- * - `firstWeek` — joriy haftadan oldin yakunlangan urinish yo'q.
+ * - `hasEarlierActivity` — joriy haftadan OLDIN yakunlangan urinish bor (`firstWeek` = yo'q).
+ *   Alohida beriladi: streak oynasi bilan cheklanmasin.
  */
 export function buildWeeklyReport(params: {
   today: DayKey;
   attempts: readonly WeeklyAttempt[];
   completedDays: ReadonlySet<DayKey>;
+  hasEarlierActivity: boolean;
 }): WeeklyReport {
-  const { today, attempts, completedDays } = params;
+  const { today, attempts, completedDays, hasEarlierActivity } = params;
   const currentStart = isoWeekStart(today);
   const previousStart = addDays(currentStart, -DAYS_PER_WEEK);
   const previousEnd = addDays(currentStart, -1);
@@ -87,6 +91,6 @@ export function buildWeeklyReport(params: {
       summarizeWeek(previousStart, previousEnd, attempts, completedDays),
       summarizeWeek(currentStart, today, attempts, completedDays),
     ],
-    firstWeek: ![...completedDays].some((day) => day < currentStart),
+    firstWeek: !hasEarlierActivity,
   };
 }

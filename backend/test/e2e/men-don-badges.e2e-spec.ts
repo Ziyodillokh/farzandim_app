@@ -3,11 +3,14 @@
 
 import { buildIqBankRows } from '../../scripts/iq/build-bank-migration';
 import { BADGE_IDS } from '../../src/modules/gamification/badges/badge-catalog';
+import { BadgesService } from '../../src/modules/gamification/badges/badges.service';
+import { NegativeCache } from '../../src/modules/gamification/badges/negative-cache';
 import { XpEventType } from '../../src/modules/gamification/dto/create-xp-event.dto';
 import { GamificationService } from '../../src/modules/gamification/gamification.service';
 import { resetDb } from './db';
 import { createChild, createParent, TestChild, TestParent } from './factories';
 import { Call, caller, setChildAge } from './kelajak-fixtures';
+import * as mastery from '../../src/modules/learning/learning-mastery.query';
 import { createQuestions, createTopic, recordAttempt } from './learning-topics-fixtures';
 import { createTestApp, TestApp } from './test-app';
 
@@ -262,6 +265,136 @@ describe('Yutuqlar (GET /children/:id/badges)', () => {
       const { body } = await badges();
       expect(earnedIds(body)).toEqual(['topic_master']);
       expect(item(body, 'topic_master').earnedAt).not.toBeNull();
+    });
+  });
+
+  describe('topic_master backfill: qimmat oyna so\'rovi cheklangan', () => {
+    let scan: jest.SpyInstance;
+
+    beforeEach(() => {
+      scan = jest.spyOn(mastery, 'hasMasteredTopic');
+    });
+    afterEach(() => scan.mockRestore());
+
+    /** Mavzu bo'yicha YAKUNLANGAN urinish; [flags] — javoblar (to'g'ri/xato). */
+    async function topicAttempt(flags: boolean[], childId = child.childId) {
+      const topic = await createTopic(t.prisma);
+      const questions = await createQuestions(t.prisma, 10, topic.id);
+      return recordAttempt(t.prisma, childId, questions, flags, { attemptTopicId: topic.id });
+    }
+    const timesScanned = () => scan.mock.calls.filter(([, id, topics]) => id === child.childId && topics === null).length;
+
+    it('mavzu urinishi yo\'q bola: so\'rov umuman ishlamaydi (takror GET ham)', async () => {
+      await badges();
+      await badges();
+      expect(timesScanned()).toBe(0);
+    });
+
+    it('mavzusiz (oddiy) yakunlangan urinish mavzu urinishi hisoblanmaydi', async () => {
+      await t.prisma.learningAttempt.create({
+        data: { childId: child.childId, subject: 'MATH', day: '2026-11-02', isDaily: true, status: 'COMPLETED', questionIds: [], total: 10, completedAt: new Date() },
+      });
+      await badges();
+      expect(timesScanned()).toBe(0);
+    });
+
+    it('yakunlanmagan mavzu urinishi so\'rovni ishga tushirmaydi', async () => {
+      const topic = await createTopic(t.prisma);
+      const questions = await createQuestions(t.prisma, 10, topic.id);
+      await recordAttempt(t.prisma, child.childId, questions, Array(10).fill(true), { attemptTopicId: topic.id, status: 'IN_PROGRESS' });
+      await badges();
+      expect(timesScanned()).toBe(0);
+    });
+
+    it('mavzu urinishi bor, o\'zlashtirilmagan: bir marta tekshiriladi, keyin 60 s davomida keshdan', async () => {
+      await topicAttempt([true, true, true, true, true, true, true, false, false, false]); // 70%
+      expect(earnedIds((await badges()).body)).toEqual([]);
+      expect(timesScanned()).toBe(1);
+      for (let i = 0; i < 5; i++) await badges();
+      expect(timesScanned()).toBe(1);
+    });
+
+    it('kesh bolalar bo\'yicha alohida: boshqa bola alohida tekshiriladi', async () => {
+      const other = await createChild(t.prisma, await createParent(t.prisma));
+      await topicAttempt([true, false, false, false, false, false]);
+      await topicAttempt([true, false, false, false, false, false], other.childId);
+      await badges();
+      await badges(other.token, other.childId);
+      expect(scan.mock.calls.map(([, id]) => id).sort()).toEqual([child.childId, other.childId].sort());
+    });
+
+    it('TTL o\'tgach qayta tekshiriladi va o\'zlashtirilgan mavzu backfill qilinadi (earnedAt null)', async () => {
+      let clock = Date.now();
+      const service = t.app.get(BadgesService) as unknown as { noTopicMaster: NegativeCache };
+      const original = service.noTopicMaster;
+      service.noTopicMaster = new NegativeCache(60_000, 100, () => clock);
+      try {
+        await topicAttempt([true, false, false, false, false, false]);
+        expect(earnedIds((await badges()).body)).toEqual([]);
+        // Voqea hooki ishlamagan holat: mastering ma'lumot to'g'ridan-to'g'ri yoziladi.
+        await topicAttempt(Array(10).fill(true));
+        expect(earnedIds((await badges()).body)).toEqual([]); // hali kesh ichida
+        expect(timesScanned()).toBe(1);
+
+        clock += 60_001;
+        const { body } = await badges();
+        expect(earnedIds(body)).toEqual(['topic_master']);
+        expect(item(body, 'topic_master').earnedAt).toBeNull();
+        expect(timesScanned()).toBe(2);
+      } finally {
+        service.noTopicMaster = original;
+      }
+    });
+
+    it('allaqachon o\'zlashtirilgan (birinchi chaqiruv): backfill darhol ishlaydi', async () => {
+      await topicAttempt(Array(10).fill(true));
+      expect(earnedIds((await badges()).body)).toEqual(['topic_master']);
+      // Ochilgach keyingi chaqiruvlar so'rovsiz
+      await badges();
+      expect(timesScanned()).toBe(1);
+    });
+
+    it('keshlangan "yo\'q" voqea bo\'yicha ochishga to\'sqinlik qilmaydi', async () => {
+      const topic = await createTopic(t.prisma, { subject: 'MATH', minGrade: 5, maxGrade: 9 });
+      await createQuestions(t.prisma, 12, topic.id);
+      await call(child.token, 'PUT', '/learning/profile', { grade: 7, subjects: ['math'] });
+      const run = async (selectedIndex: number) => {
+        const attempt = (await call(child.token, 'POST', '/learning/attempts', { subject: 'math', topicId: topic.id })).json() as {
+          id: string;
+          questions: Array<{ id: string }>;
+        };
+        for (const q of attempt.questions) {
+          await call(child.token, 'POST', `/learning/attempts/${attempt.id}/answers`, { questionId: q.id, selectedIndex });
+        }
+        await call(child.token, 'POST', `/learning/attempts/${attempt.id}/complete`);
+      };
+      await run(1);
+      expect(earnedIds((await badges()).body)).toEqual([]); // "yo'q" keshlandi
+      await t.prisma.learningAttempt.updateMany({ where: { childId: child.childId }, data: { day: '2026-01-01' } });
+      await run(0);
+      const { body } = await badges();
+      expect(earnedIds(body)).toEqual(['topic_master']);
+      expect(item(body, 'topic_master').earnedAt).not.toBeNull(); // voqea paytida ochilgan, backfill emas
+    });
+  });
+
+  describe('first_book: yutuq xatosi DON berilgach 500 bermaydi', () => {
+    it('unlockAchievement xato bersa ham audiokitob yakuni 201, DON berilgan', async () => {
+      const book = await t.prisma.audiobook.create({
+        data: { title: 'Kitob', author: 'A', audioUrl: 'http://x/a.mp3', status: 'approved', xpReward: 40 },
+      });
+      const spy = jest.spyOn(gamification, 'unlockAchievement').mockRejectedValueOnce(new Error('lock timeout'));
+      try {
+        const res = await call(child.token, 'POST', `/content/audiobooks/${book.id}/complete`);
+        expect(res.statusCode).toBe(201);
+        expect(res.json()).toEqual({ ok: true, don: 40 });
+        expect(spy).toHaveBeenCalledWith(child.childId, 'first_book');
+        expect((await profile()).donBalance).toBe(40);
+      } finally {
+        spy.mockRestore();
+      }
+      // Yutuq keyingi o'qishda ma'lumotdan to'ldiriladi (BOOK_READ yozuvi bor).
+      expect(earnedIds((await badges()).body)).toEqual(['first_book']);
     });
   });
 

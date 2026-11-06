@@ -1,10 +1,11 @@
-import { isoWeekStart, tashkentDay } from '../../../common/time/tashkent';
+import { addDays, isoWeekStart, tashkentDay } from '../../../common/time/tashkent';
 import { streakFromDays } from './learning-stats';
 import {
   attemptDurationSeconds,
   buildWeeklyReport,
   cappedMinutes,
   MAX_ATTEMPT_MINUTES,
+  STREAK_LOOKBACK_DAYS,
   WeeklyAttempt,
 } from './learning-weekly';
 
@@ -79,6 +80,18 @@ describe('streakFromDays', () => {
   });
 });
 
+type ReportParams = Omit<Parameters<typeof buildWeeklyReport>[0], 'hasEarlierActivity'> & {
+  hasEarlierActivity?: boolean;
+};
+
+/** `hasEarlierActivity` berilmasa — `completedDays` dan (servis alohida mavjudlik so'rovi bilan beradi). */
+const report = (params: ReportParams) =>
+  buildWeeklyReport({
+    ...params,
+    hasEarlierActivity:
+      params.hasEarlierActivity ?? [...params.completedDays].some((d) => d < isoWeekStart(params.today)),
+  });
+
 describe('buildWeeklyReport', () => {
   // Bugun: juma 2026-11-06 → joriy hafta 11-02..11-08, oldingi 10-26..11-01.
   const today = '2026-11-06';
@@ -98,21 +111,21 @@ describe('buildWeeklyReport', () => {
       attempt('2026-11-04', 14, 15),
     ];
     const completedDays = new Set(attempts.map((a) => a.day));
-    const report = buildWeeklyReport({ today, attempts, completedDays });
+    const result = report({ today, attempts, completedDays });
 
-    expect(report.weeks).toEqual([
+    expect(result.weeks).toEqual([
       // streak oldingi hafta oxirigacha (yakshanba 11-01 yo'q → shanba 10-31: faqat 1 kun, 10-30 yo'q)
       { weekStart: '2026-10-26', sessions: 5, minutes: 52, activeDays: 4, streak: 1 },
       // joriy hafta: bugun (11-06) yechilmagan → kechadan: 11-05 yo'q → 0
       { weekStart: '2026-11-02', sessions: 4, minutes: 44, activeDays: 3, streak: 0 },
     ]);
-    expect(report.firstWeek).toBe(false);
+    expect(result.firstWeek).toBe(false);
   });
 
   it('streak hafta oxirigacha: oldingi haftadan o\'tib davom etadigan zanjir', () => {
     const attempts = ['2026-10-30', '2026-10-31', '2026-11-01', '2026-11-02', '2026-11-03'].map((d) => attempt(d, 5));
     const completedDays = new Set(attempts.map((a) => a.day));
-    const { weeks } = buildWeeklyReport({ today: '2026-11-03', attempts, completedDays });
+    const { weeks } = report({ today: '2026-11-03', attempts, completedDays });
     expect(weeks[0].streak).toBe(3); // 10-30, 10-31, 11-01 (yakshanba)
     expect(weeks[1].streak).toBe(5); // bugungacha, hafta chegarasidan o'tadi
   });
@@ -121,9 +134,9 @@ describe('buildWeeklyReport', () => {
     const days = ['2026-11-04', '2026-11-05'];
     const attempts = days.map((d) => attempt(d, 5));
     const completedDays = new Set(days);
-    expect(buildWeeklyReport({ today: '2026-11-05', attempts, completedDays }).weeks[1].streak).toBe(2);
-    expect(buildWeeklyReport({ today: '2026-11-06', attempts, completedDays }).weeks[1].streak).toBe(2);
-    expect(buildWeeklyReport({ today: '2026-11-07', attempts, completedDays }).weeks[1].streak).toBe(0);
+    expect(report({ today: '2026-11-05', attempts, completedDays }).weeks[1].streak).toBe(2);
+    expect(report({ today: '2026-11-06', attempts, completedDays }).weeks[1].streak).toBe(2);
+    expect(report({ today: '2026-11-07', attempts, completedDays }).weeks[1].streak).toBe(0);
   });
 
   it('yakshanba: hafta yakshanbada tugaydi; dushanba — yangi hafta, oldingi hafta endi shu hafta', () => {
@@ -132,10 +145,10 @@ describe('buildWeeklyReport', () => {
     const attempts = [sunday, monday];
     const completedDays = new Set(['2026-11-08', '2026-11-09']);
 
-    const onSunday = buildWeeklyReport({ today: '2026-11-08', attempts: [sunday], completedDays: new Set(['2026-11-08']) });
+    const onSunday = report({ today: '2026-11-08', attempts: [sunday], completedDays: new Set(['2026-11-08']) });
     expect(onSunday.weeks[1]).toMatchObject({ weekStart: '2026-11-02', sessions: 1, activeDays: 1 });
 
-    const onMonday = buildWeeklyReport({ today: '2026-11-09', attempts, completedDays });
+    const onMonday = report({ today: '2026-11-09', attempts, completedDays });
     expect(onMonday.weeks[0]).toMatchObject({ weekStart: '2026-11-02', sessions: 1, streak: 1 });
     expect(onMonday.weeks[1]).toMatchObject({ weekStart: '2026-11-09', sessions: 1, streak: 2 });
   });
@@ -144,22 +157,22 @@ describe('buildWeeklyReport', () => {
     const old = attempt('2026-10-20', 30);
     const mine = attempt('2026-11-05', 5);
     const completedDays = new Set(['2026-10-20', '2026-11-05']);
-    const { weeks } = buildWeeklyReport({ today: '2026-11-06', attempts: [old, mine], completedDays });
+    const { weeks } = report({ today: '2026-11-06', attempts: [old, mine], completedDays });
     expect(weeks[0].sessions).toBe(0);
     expect(weeks[1].sessions).toBe(1);
   });
 
   it('firstWeek: joriy haftadan oldin yakunlangan urinish yo\'q', () => {
     const only = attempt('2026-11-03', 5);
-    const first = buildWeeklyReport({ today, attempts: [only], completedDays: new Set(['2026-11-03']) });
+    const first = report({ today, attempts: [only], completedDays: new Set(['2026-11-03']) });
     expect(first.firstWeek).toBe(true);
     expect(first.weeks[0]).toEqual({ weekStart: '2026-10-26', sessions: 0, minutes: 0, activeDays: 0, streak: 0 });
 
     // Hech qachon test yechmagan bola ham firstWeek = true
-    expect(buildWeeklyReport({ today, attempts: [], completedDays: new Set() }).firstWeek).toBe(true);
+    expect(report({ today, attempts: [], completedDays: new Set() }).firstWeek).toBe(true);
 
     // Oldingi haftaning oxirgi kuni (yakshanba) — endi firstWeek emas
-    const prevSunday = buildWeeklyReport({
+    const prevSunday = report({
       today,
       attempts: [attempt('2026-11-01', 5)],
       completedDays: new Set(['2026-11-01']),
@@ -167,12 +180,12 @@ describe('buildWeeklyReport', () => {
     expect(prevSunday.firstWeek).toBe(false);
 
     // Ikki hafta oldingi urinish ham "oldin" hisoblanadi
-    expect(buildWeeklyReport({ today, attempts: [], completedDays: new Set(['2026-10-01']) }).firstWeek).toBe(false);
+    expect(report({ today, attempts: [], completedDays: new Set(['2026-10-01']) }).firstWeek).toBe(false);
   });
 
   it('daqiqalar: 60 daqiqalik chek hafta ichida qo\'llanadi', () => {
     const attempts = [attempt('2026-11-02', 500), attempt('2026-11-03', 8)];
-    const { weeks } = buildWeeklyReport({
+    const { weeks } = report({
       today,
       attempts,
       completedDays: new Set(['2026-11-02', '2026-11-03']),
@@ -181,8 +194,21 @@ describe('buildWeeklyReport', () => {
     expect(weeks[1].sessions).toBe(2);
   });
 
+  it('firstWeek streak oynasiga bog\'liq emas: uzoq oldingi faollik (completedDays da yo\'q) ham hisoblanadi', () => {
+    expect(STREAK_LOOKBACK_DAYS).toBe(366);
+    const far = report({ today, attempts: [], completedDays: new Set(), hasEarlierActivity: true });
+    expect(far.firstWeek).toBe(false);
+    expect(far.weeks.every((w) => w.streak === 0)).toBe(true);
+  });
+
+  it('streak oyna ichida ishlaydi: oyna chegarasidagi zanjir to\'liq sanaladi', () => {
+    const days = Array.from({ length: STREAK_LOOKBACK_DAYS + 1 }, (_, i) => addDays(today, -i));
+    const { weeks } = report({ today, attempts: [], completedDays: new Set(days) });
+    expect(weeks[1].streak).toBe(STREAK_LOOKBACK_DAYS + 1);
+  });
+
   it('yil chegarasidan o\'tuvchi hafta', () => {
-    const { weeks } = buildWeeklyReport({ today: '2026-01-02', attempts: [], completedDays: new Set() });
+    const { weeks } = report({ today: '2026-01-02', attempts: [], completedDays: new Set() });
     expect(weeks.map((w) => w.weekStart)).toEqual(['2025-12-22', '2025-12-29']);
   });
 });

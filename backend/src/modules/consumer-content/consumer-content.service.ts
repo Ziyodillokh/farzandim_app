@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   ForbiddenException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, Video } from '@prisma/client';
@@ -38,6 +39,8 @@ interface ChildContext {
 
 @Injectable()
 export class ConsumerContentService {
+  private readonly logger = new Logger(ConsumerContentService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
@@ -585,7 +588,12 @@ export class ConsumerContentService {
     // "Birinchi kitob" yutug'i (profil badge #1). Hozircha o'qish uchun matnli
     // kitob yo'q — shuning uchun badge AUDIOKITOB yakunlanganda beriladi.
     // Idempotent: allaqachon berilgan bo'lsa qayta bermaydi.
-    await this.gamification.unlockAchievement(ctx.childId, 'first_book');
+    // Yutuq xatosi (masalan qulf kutish vaqti) berilgan DONdan keyin 500 bermasin.
+    try {
+      await this.gamification.unlockAchievement(ctx.childId, 'first_book');
+    } catch (e) {
+      this.logger.error(`first_book yutug'i berilmadi (child ${ctx.childId})`, e as Error);
+    }
     return { ok: true, don };
   }
 

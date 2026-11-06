@@ -1,5 +1,11 @@
-import { XpEventType } from '@prisma/client';
-import { baseKindFor, decodeLedgerCursor, encodeLedgerCursor, stepsItemId } from './don-ledger';
+import { Prisma, XpEventType } from '@prisma/client';
+import {
+  baseKindFor,
+  decodeLedgerCursor,
+  encodeLedgerCursor,
+  isCursorConversionError,
+  stepsItemId,
+} from './don-ledger';
 import { loadLedgerLookups, LedgerLookups, resolveEntry } from './ledger-lookups';
 import { LedgerEntry, LedgerRow } from './ledger-collector';
 
@@ -26,10 +32,19 @@ describe('baseKindFor', () => {
 });
 
 describe('ledger cursor', () => {
-  const position = { at: new Date('2026-11-05T09:12:00.123Z'), id: 'row-1' };
+  const ID = '3f2b8c1e-9a4d-4e7b-8c51-0d6f2a9b7e14';
+  const position = { at: new Date('2026-11-05T09:12:00.123Z'), id: ID };
+  const raw = (t: unknown, i: unknown) => Buffer.from(JSON.stringify({ t, i })).toString('base64url');
 
   it('kodlash → dekodlash aylanishi (millisekundgacha)', () => {
     expect(decodeLedgerCursor(encodeLedgerCursor(position))).toEqual(position);
+  });
+
+  it('UUID katta harfda ham qabul qilinadi', () => {
+    expect(decodeLedgerCursor(raw('2026-11-05T09:12:00.123Z', ID.toUpperCase()))).toEqual({
+      at: position.at,
+      id: ID.toUpperCase(),
+    });
   });
 
   it.each([
@@ -37,13 +52,43 @@ describe('ledger cursor', () => {
     ['base64 emas', '%%%'],
     ['JSON emas', Buffer.from('nope').toString('base64url')],
     ['maydonlar yo\'q', Buffer.from('{}').toString('base64url')],
-    ['sana buzuq', Buffer.from('{"t":"yaqinda","i":"x"}').toString('base64url')],
-    ['sana ISO emas', Buffer.from('{"t":"2026-11-05","i":"x"}').toString('base64url')],
-    ['id bo\'sh', Buffer.from('{"t":"2026-11-05T09:12:00.000Z","i":""}').toString('base64url')],
-    ['id son', Buffer.from('{"t":"2026-11-05T09:12:00.000Z","i":5}').toString('base64url')],
+    ['sana buzuq', raw('yaqinda', ID)],
+    ['sana ISO emas (faqat kun)', raw('2026-11-05', ID)],
+    ['millisekundsiz', raw('2026-11-05T09:12:00Z', ID)],
+    ['kichik z', raw('2026-11-05T09:12:00.123z', ID)],
+    ['Z o\'rniga siljish', raw('2026-11-05T09:12:00.123+00:00', ID)],
+    ['kengaytirilgan yil (+275760)', raw('+275760-09-13T00:00:00.000Z', ID)],
+    ['manfiy yil (-000001)', raw('-000001-01-01T00:00:00.000Z', ID)],
+    ['0000 yil (Postgres\'da yo\'q)', raw('0000-01-01T00:00:00.000Z', ID)],
+    ['2000 yildan oldin', raw('1999-12-31T23:59:59.999Z', ID)],
+    ['mavjud bo\'lmagan sana', raw('2026-02-31T00:00:00.000Z', ID)],
+    ['id bo\'sh', raw('2026-11-05T09:12:00.000Z', '')],
+    ['id son', raw('2026-11-05T09:12:00.000Z', 5)],
+    ['id UUID emas', raw('2026-11-05T09:12:00.000Z', 'row-1')],
+    ['id oxirida NUL', raw('2026-11-05T09:12:00.000Z', `${ID.slice(0, -1)}\u0000`)],
+    ['id ichida NUL', raw('2026-11-05T09:12:00.000Z', `${ID}\u0000`)],
+    ['id yangi qator bilan', raw('2026-11-05T09:12:00.000Z', `${ID}\n`)],
+    ['id SQL qismi bilan', raw('2026-11-05T09:12:00.000Z', `${ID}' OR '1'='1`)],
     ['juda uzun', 'a'.repeat(201)],
-  ])('buzilgan kursor (%s) — null', (_name, raw) => {
-    expect(decodeLedgerCursor(raw)).toBeNull();
+  ])('buzilgan kursor (%s) — null', (_name, value) => {
+    expect(decodeLedgerCursor(value)).toBeNull();
+  });
+});
+
+describe('isCursorConversionError', () => {
+  const known = (code: string) => new Prisma.PrismaClientKnownRequestError('x', { code, clientVersion: 'test' });
+
+  it('so\'rov qiymatini aylantira olmagan Prisma xatolari', () => {
+    expect(isCursorConversionError(new Prisma.PrismaClientValidationError('x', { clientVersion: 'test' }))).toBe(true);
+    expect(isCursorConversionError(known('P2023'))).toBe(true);
+    expect(isCursorConversionError(known('P2020'))).toBe(true);
+  });
+
+  it('boshqa xatolar (ulanish, noma\'lum) 400 ga o\'tkazilmaydi', () => {
+    expect(isCursorConversionError(known('P1001'))).toBe(false);
+    expect(isCursorConversionError(known('P2010'))).toBe(false);
+    expect(isCursorConversionError(new Error('boom'))).toBe(false);
+    expect(isCursorConversionError(null)).toBe(false);
   });
 });
 

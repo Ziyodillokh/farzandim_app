@@ -136,6 +136,33 @@ describe('Haftalik faollik (GET /learning/weekly)', () => {
     expect(body.weeks[1].streak).toBe(3);
   });
 
+  it('firstWeek streak oynasidan (366 kun) chekli emas: bir yil oldingi urinish ham hisoblanadi', async () => {
+    await attempt(addDays(today(), -500), 5);
+    await attempt(currentStart(), 5);
+    const { body } = await weekly();
+    expect(body.firstWeek).toBe(false);
+  });
+
+  it('streak oynasi chegaralangan: 400 kunlik zanjir 367 da to\'xtaydi (366 kun orqaga + bugun)', async () => {
+    const days = Array.from({ length: 400 }, (_, i) => addDays(today(), -i));
+    await t.prisma.learningAttempt.createMany({
+      data: days.map((day) => ({
+        childId: child.childId,
+        subject: 'MATH' as const,
+        day,
+        isDaily: false,
+        status: LearningAttemptStatus.COMPLETED,
+        questionIds: [],
+        total: 10,
+        startedAt: new Date(`${day}T05:00:00.000Z`),
+        completedAt: new Date(`${day}T05:05:00.000Z`),
+      })),
+    });
+    const { body } = await weekly();
+    expect(body.weeks[1].streak).toBe(367);
+    expect(body.firstWeek).toBe(false);
+  });
+
   it('haqiqiy oqim: kunlik test yakuni → joriy haftada 1 sessiya, firstWeek=true', async () => {
     await seedQuestionBank(t.prisma);
     expect((await call(child.token, 'PUT', '/learning/profile', { grade: 7, subjects: ['math'] })).statusCode).toBe(200);

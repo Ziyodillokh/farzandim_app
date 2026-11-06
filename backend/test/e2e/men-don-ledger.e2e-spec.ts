@@ -201,10 +201,9 @@ describe('DON daftari (GET /children/:id/don-ledger)', () => {
 
     it('bir xil createdAt (teng vaqt): id bo\'yicha aniq tartib, hech narsa yo\'qolmaydi', async () => {
       const same = '2026-11-05T09:00:00.000Z';
-      for (const id of ['id-a', 'id-b', 'id-c', 'id-d', 'id-e']) {
-        await event('BOOK_READ', 1, same, undefined, child.childId, id);
-      }
-      expect(await walk(2)).toEqual(['id-e', 'id-d', 'id-c', 'id-b', 'id-a']);
+      const ids = ['a', 'b', 'c', 'd', 'e'].map((c) => `00000000-0000-4000-8000-00000000000${c}`);
+      for (const id of ids) await event('BOOK_READ', 1, same, undefined, child.childId, id);
+      expect(await walk(2)).toEqual([...ids].reverse());
     });
 
     it('kursor yangi yozuvlar paydo bo\'lgach ham barqaror (eski sahifa siljimaydi)', async () => {
@@ -260,6 +259,35 @@ describe('DON daftari (GET /children/:id/don-ledger)', () => {
       const { res } = await ledger(child.token, '?cursor=garbage');
       expect(res.statusCode).toBe(400);
       expect(res.json()).toMatchObject({ code: 'VALIDATION', message: 'cursor: invalid' });
+    });
+
+    describe('yasalgan kursorlar (500 emas, 400 VALIDATION)', () => {
+      const ID = '3f2b8c1e-9a4d-4e7b-8c51-0d6f2a9b7e14';
+      const craft = (t: unknown, i: unknown) =>
+        encodeURIComponent(Buffer.from(JSON.stringify({ t, i })).toString('base64url'));
+
+      it.each([
+        ['kengaytirilgan yil +275760', '+275760-09-13T00:00:00.000Z', ID],
+        ['manfiy yil -000001', '-000001-01-01T00:00:00.000Z', ID],
+        ['0000 yil', '0000-01-01T00:00:00.000Z', ID],
+        ['id ichida NUL', '2026-11-05T09:12:00.000Z', `${ID}\u0000`],
+        ['id UUID emas', '2026-11-05T09:12:00.000Z', 'not-a-uuid'],
+        ['id SQL bo\'lagi', '2026-11-05T09:12:00.000Z', `${ID}' OR '1'='1`],
+      ])('%s', async (_name, t, i) => {
+        const { res } = await ledger(child.token, `?cursor=${craft(t, i)}`);
+        expect(res.statusCode).toBe(400);
+        expect(res.json()).toMatchObject({ code: 'VALIDATION', message: 'cursor: invalid' });
+      });
+
+      it('to\'g\'ri shakldagi chekka qiymatlar (9999 yil, mavjud bo\'lmagan id) — 200', async () => {
+        await event('OTHER', 4, '2026-11-05T09:00:00.000Z');
+        const far = await ledger(child.token, `?cursor=${craft('9999-12-31T23:59:59.999Z', ID)}`);
+        expect(far.res.statusCode).toBe(200);
+        expect(far.body.items.map((i) => i.amount)).toEqual([4]);
+        const none = await ledger(child.token, `?cursor=${craft('2000-01-01T00:00:00.000Z', ID)}`);
+        expect(none.res.statusCode).toBe(200);
+        expect(none.body.items).toEqual([]);
+      });
     });
   });
 

@@ -12,6 +12,7 @@ import { DonLedgerQueryDto, LEDGER_DEFAULT_LIMIT } from '../dto/don-ledger-query
 import {
   decodeLedgerCursor,
   encodeLedgerCursor,
+  isCursorConversionError,
   LedgerItem,
   LedgerPosition,
 } from './don-ledger';
@@ -46,14 +47,15 @@ export class DonLedgerService {
   async list(childId: string, userId: string, query: DonLedgerQueryDto): Promise<DonLedgerPage> {
     await assertChildAccess(this.prisma, childId, userId);
     const after = query.cursor === undefined ? null : decodeLedgerCursor(query.cursor);
-    if (query.cursor !== undefined && !after) {
-      throw new BadRequestException({ message: 'cursor: invalid', code: 'VALIDATION' });
-    }
+    if (query.cursor !== undefined && !after) throw invalidCursor();
     const limit = query.limit ?? LEDGER_DEFAULT_LIMIT;
 
     const [profile, found] = await Promise.all([
       this.prisma.childProfile.findUnique({ where: { childId }, select: { donBalance: true } }),
-      collectLedgerEntries(this.sourceFor(childId), after, limit + 1),
+      collectLedgerEntries(this.sourceFor(childId), after, limit + 1).catch((e: unknown) => {
+        // Kursor bilan kelgan qiymatni Prisma/Postgres qabul qilmasa — 500 emas, 400.
+        throw after && isCursorConversionError(e) ? invalidCursor() : e;
+      }),
     ]);
     const page = found.slice(0, limit);
     const lookups = await loadLedgerLookups(this.prisma, childId, page);
@@ -122,6 +124,9 @@ export class DonLedgerService {
     return new Map(rows.map((r) => [r.day, { amount: r.amount, anchorId: r.anchor_id }]));
   }
 }
+
+const invalidCursor = () =>
+  new BadRequestException({ message: 'cursor: invalid', code: 'VALIDATION' });
 
 const anchorOf = (entry: LedgerEntry): LedgerPosition => ({
   at: entry.row.createdAt,

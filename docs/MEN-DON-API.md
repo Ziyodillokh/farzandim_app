@@ -26,7 +26,9 @@ Parvoz Growth bola ilovasining "Men" bo'limi uchun uch blok: **A** DON daftari (
 ### `GET /api/children/:childId/don-ledger?cursor=&limit=`
 
 `limit` 1–100 (default **50**; `0`, `101`, `abc`, `1.5` → `400`). `cursor` — oldingi javobdagi `nextCursor` (opaque).
-Noma'lum so'rov parametri → `400`. Buzilgan kursor → `400 { "code": "VALIDATION", "message": "cursor: invalid" }`.
+Noma'lum so'rov parametri → `400`. Buzilgan yoki yasalgan kursor → `400 { "code": "VALIDATION", "message": "cursor: invalid" }`
+(kursor qat'iy tekshiriladi: vaqt `YYYY-MM-DDTHH:MM:SS.mmmZ`, yil ≥ 2000, id — UUID; Prisma/Postgres kursor qiymatini
+qabul qilmasa ham 500 emas, 400).
 
 ```json
 {
@@ -121,7 +123,8 @@ Tartib — katalog tartibi (yuqoridagi). Katalog serverda konstanta (`badge-cata
 - **Voqea bo'yicha ochish** (`earnedAt` = ochilgan lahza):
   - `streak_7` / `streak_30` — `applyAward` ichida, streak yangilangan **o'sha tranzaksiyada** (kunlik test, kontent,
     olimpiada, qadam sinxroni va h.k.); alohida so'rov yo'q.
-  - `first_book` — mavjud: audiokitob tugatilganda (`unlockAchievement`).
+  - `first_book` — mavjud: audiokitob tugatilganda (`unlockAchievement`; yutuq xatosi berilgan DONdan keyin 500 bermaydi —
+    loglanadi, keyingi `GET` ma'lumotdan to'ldiradi).
   - `olympian` — olimpiadani boshlashda (ishtirok mukofoti bilan birga; DON/XP summasi o'zgarmagan).
   - `thinker` — IQ sessiyasini yakunlashda (`POST /iq/sessions/:id/complete`; xato yakunlashni buzmaydi).
   - `topic_master` — mavzu bo'yicha urinish yakunlanganda shu mavzu "o'zlashtirilgan" bo'lsa.
@@ -135,8 +138,11 @@ Tartib — katalog tartibi (yuqoridagi). Katalog serverda konstanta (`badge-cata
 - **Parallel xavfsizlik:** ochish bola mukofotlari qulfi (`pg_advisory_xact_lock xp:<childId>`) ostida o'qib-yoziladi —
   parallel voqealar bir-birining yutug'ini yo'qotmaydi (avval `unlockAchievement` qulfsiz o'qib-yozardi).
 - **Mazmun:** katalogda yo'q eski id'lar `achievements`da saqlanadi, javobga chiqmaydi.
-- **Narx:** backfill faqat hali ochilmagan yutuqlar uchun so'rov beradi (eng og'iri `topic_master` — bolaning
-  yakunlangan javoblari bo'yicha bitta oyna so'rovi); "Men" ekrani ochilganda bir marta chaqirish yetarli.
+- **Narx:** backfill faqat hali ochilmagan yutuqlar uchun so'rov beradi. Eng og'iri `topic_master` (bolaning yakunlangan
+  javoblari bo'yicha oyna so'rovi) cheklangan: bola hech bo'lmaganda bitta mavzu urinishini yakunlamagan bo'lsa
+  umuman ishlamaydi, "hali yo'q" natija esa jarayon xotirasida bola bo'yicha **60 soniya** keshlanadi
+  (`NegativeCache`, ≤5000 bola). Kesh faqat backfill'ni kechiktiradi (≤60 s): mavzu urinishi yakunlanganda yutuq
+  baribir darhol ochiladi.
 
 ## C. Haftalik o'quv faolligi (I02)
 
@@ -163,7 +169,9 @@ Joriy va oldingi ISO hafta (dushanba–yakshanba, Toshkent). **Eskisi birinchi.*
   (Bu o'quv-test streak'i; yutuqlardagi `streak_7/30` esa umumiy `ChildProfile.streakDays`.)
 - `firstWeek` — joriy haftadan oldin yakunlangan urinish **yo'q** (umuman urinishi yo'q bola ham `true`).
 - Urinishning "kuni" — `LearningAttempt.day` (boshlangan Toshkent kuni; ota-ona hisoboti va streak ham shunday).
-- So'rovlar: ikki haftalik urinishlar (`child_id, day` indeksi) + bolaning faol kunlari `GROUP BY day` (qatorlar emas).
+- So'rovlar: ikki haftalik urinishlar (`child_id, day` indeksi) + faol kunlar `GROUP BY day` (qatorlar emas) faqat oxirgi
+  **366 kun** bo'yicha — shu sabab streak ko'pi bilan **367** (366 kun orqaga + bugun) ko'rsatiladi. `firstWeek` esa
+  chegarasiz (alohida bitta qatorli mavjudlik so'rovi), ya'ni bir yildan oldingi urinish ham hisoblanadi.
 
 ## D. O'zgargan fayllar (qisqacha)
 
