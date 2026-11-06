@@ -11,6 +11,7 @@ import {
   Send,
   ShieldAlert,
   Siren,
+  Trash2,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +28,7 @@ const ICONS: Record<NotificationKind, LucideIcon> = {
   CARE_URGENT: HeartPulse,
   MESSAGE_SENT: Send,
   EMERGENCY: Siren,
+  DATA_DELETION_REQUEST: Trash2,
 };
 
 const TILE: Record<NotificationTone, string> = {

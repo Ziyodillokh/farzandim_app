@@ -24,6 +24,7 @@ export const notifications: DeepString<typeof uz> = {
     CARE_URGENT: 'Срочное обращение — {className}',
     MESSAGE_SENT: '«{title}» — отправлено получателям: {recipients}',
     EMERGENCY: 'Активен экстренный режим',
+    DATA_DELETION_REQUEST: '{studentName} ({className}) просит удалить данные',
   },
   category: {
     SAFETY_SIGNAL: 'Безопасность',
@@ -34,5 +35,6 @@ export const notifications: DeepString<typeof uz> = {
     CARE_URGENT: 'Срочно',
     MESSAGE_SENT: 'Сообщение',
     EMERGENCY: 'Экстренно',
+    DATA_DELETION_REQUEST: 'Данные',
   },
 };

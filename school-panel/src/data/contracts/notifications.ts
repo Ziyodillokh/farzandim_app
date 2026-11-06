@@ -3,7 +3,8 @@ import type { Id, IsoDateTime } from './common';
 import type { RoleKey } from './people';
 
 /** Saqlanadigan xodim bildirishnomalari (qolganlari jadvallardan hisoblanadi). */
-export type StaffNotificationKind = 'SAFETY_SIGNAL' | 'TEST_COMPLETED';
+/** DATA_DELETION_REQUEST — bola ma'lumotlarini o'chirishni so'radi (faqat direktor/admin; params: studentName, className). */
+export type StaffNotificationKind = 'SAFETY_SIGNAL' | 'TEST_COMPLETED' | 'DATA_DELETION_REQUEST';
 export type StaffNotification = {
   id: Id;
   kind: StaffNotificationKind;

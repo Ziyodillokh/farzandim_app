@@ -21,6 +21,7 @@ export const notifications = {
     CARE_URGENT: 'Shoshilinch murojaat — {className}',
     MESSAGE_SENT: '«{title}» — {recipients} ta oluvchiga yuborildi',
     EMERGENCY: 'Favqulodda rejim faol',
+    DATA_DELETION_REQUEST: '{studentName} ({className}) maʼlumotlarini oʻchirishni soʻradi',
   },
   category: {
     SAFETY_SIGNAL: 'Xavfsizlik',
@@ -31,5 +32,6 @@ export const notifications = {
     CARE_URGENT: 'Shoshilinch',
     MESSAGE_SENT: 'Xabar',
     EMERGENCY: 'Favqulodda',
+    DATA_DELETION_REQUEST: 'Maʼlumotlar',
   },
 };

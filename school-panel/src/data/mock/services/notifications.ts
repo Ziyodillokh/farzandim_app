@@ -29,6 +29,7 @@ export const NOTIFICATION_TONES: Record<NotificationKind, NotificationTone> = {
   CARE_URGENT: 'destructive',
   MESSAGE_SENT: 'success',
   EMERGENCY: 'destructive',
+  DATA_DELETION_REQUEST: 'warning',
 };
 
 /** Erkin matn (sabab, xabar) — ikkala tilda bir xil, qisqartirilgan. */
