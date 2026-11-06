@@ -4,6 +4,7 @@ import type { BadgeProps } from '@/components/ui/badge';
 import type { AssignmentState, PsychTestKind, PsychTestSource, PsychTestStatus, ScoreBand } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
 import type { TKey } from '@/i18n';
+import { hasKey } from '@/i18n/translate';
 import { errorKey } from '@/lib/errors';
 
 type Variant = NonNullable<BadgeProps['variant']>;
@@ -78,7 +79,7 @@ const VALIDATION_KEY = /assessments\.validation\.[A-Za-z]+|errors\.form\.[A-Za-z
 export function psychErrorKey(error: unknown): TKey {
   if (error instanceof ServiceError && (error.code === 'VALIDATION' || error.code === 'CONFLICT')) {
     const match = VALIDATION_KEY.exec(error.message)?.[0];
-    if (match) return match as TKey;
+    if (match && hasKey('uz', match)) return match as TKey;
   }
   return errorKey(error);
 }

@@ -200,6 +200,10 @@ export const care = {
       badge: 'Bola koʻrmaydi',
       hint: 'Faqat psixologlarga koʻrinadi. Bolaga yuborilmaydi.',
     },
+    personal: {
+      button: 'Shaxsiy soʻrov tayinlash',
+      hint: 'Shu oʻquvchiga alohida test tayinlang. Bu anonim soʻrovnoma emas: natija oʻquvchining shaxsiy kartasida, faqat psixologga koʻrinadi.',
+    },
     handler: 'Masʼul xodim',
     unassigned: 'Biriktirilmagan',
     openedAt: 'Ochilgan',

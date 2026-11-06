@@ -1,8 +1,9 @@
 'use client';
 
-import { CalendarClock, ShieldAlert, ShieldCheck, SlidersHorizontal } from 'lucide-react';
+import { CalendarClock, ClipboardList, ShieldAlert, ShieldCheck, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { useCan } from '@/auth/use-session';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { FormField } from '@/components/common/form-field';
 import { SectionCard } from '@/components/common/section-card';
@@ -13,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import type { CareRequestStatus } from '@/data/contracts';
 import type { CareRequestDetail } from '@/data/contracts';
 import { CARE_REQUEST_STATUSES } from '@/data/schemas/care';
+import { AssignDialog } from '@/features/assessments/components/assign-dialog';
 import { TILE } from '@/features/dashboard/lib/tile';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
@@ -22,11 +24,13 @@ import { toLocalInput } from '../lib/datetime';
 /** Psixolog amallari: holat, suhbat vaqti, himoya protokoli. */
 export function RequestActions({ request }: { request: CareRequestDetail }) {
   const { t } = useI18n();
+  const can = useCan();
   const updateStatus = useUpdateRequestStatus();
   const schedule = useScheduleMeeting();
   const protocol = useActivateProtocol();
   const [meetingAt, setMeetingAt] = useState(toLocalInput(request.meetingAt));
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
 
   useEffect(() => setMeetingAt(toLocalInput(request.meetingAt)), [request.meetingAt]);
 
@@ -70,6 +74,19 @@ export function RequestActions({ request }: { request: CareRequestDetail }) {
           </div>
         </FormField>
 
+        {can('assessments.manage') && (
+          <>
+            <Separator className="bg-border/60" />
+            <div className="space-y-2">
+              <Button variant="outline" className="h-auto w-full whitespace-normal py-2.5" onClick={() => setAssignOpen(true)} data-testid="assign-personal">
+                <ClipboardList />
+                {t('care.request.personal.button')}
+              </Button>
+              <p className="text-xs text-muted-foreground">{t('care.request.personal.hint')}</p>
+            </div>
+          </>
+        )}
+
         {request.urgency === 'URGENT' && (
           <>
             <Separator className="bg-border/60" />
@@ -87,6 +104,14 @@ export function RequestActions({ request }: { request: CareRequestDetail }) {
           </>
         )}
       </div>
+
+      {can('assessments.manage') && assignOpen && (
+        <AssignDialog
+          open={assignOpen}
+          onOpenChange={setAssignOpen}
+          prefill={{ studentId: request.studentId, studentName: request.studentName, classId: request.classId, careRequestId: request.id }}
+        />
+      )}
 
       <ConfirmDialog
         open={confirmOpen}

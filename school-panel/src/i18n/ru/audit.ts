@@ -89,6 +89,7 @@ export const audit: DeepString<typeof uz> = {
     assessments_norms_update: '«{title}»: нормы обновлены',
     assessments_norms_restore: '«{title}»: нормы возвращены к исходным',
     assessments_assign: 'Тест «{title}» назначен: классов — {classes}, учеников — {count}',
+    assessments_assign_personal: 'Тест «{title}» назначен отдельно: учеников — {count}',
     assessments_unassign: 'Назначение теста отменено',
     assessments_assignment_close: 'Назначение теста закрыто',
     assessments_simulate: 'Демо: {count} результатов по тесту «{title}»',

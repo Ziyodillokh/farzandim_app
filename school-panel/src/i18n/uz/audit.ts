@@ -90,6 +90,7 @@ export const audit = {
     assessments_norms_update: '«{title}»: me\'yorlar yangilandi',
     assessments_norms_restore: '«{title}»: me\'yorlar asl holiga qaytarildi',
     assessments_assign: '«{title}» testi tayinlandi: {classes} ta sinf, {count} o\'quvchi',
+    assessments_assign_personal: '«{title}» testi alohida tayinlandi: {count} oʻquvchi',
     assessments_unassign: 'Test tayinlovi bekor qilindi',
     assessments_assignment_close: 'Test tayinlovi yopildi',
     assessments_simulate: 'Demo: «{title}» bo\'yicha {count} ta natija',

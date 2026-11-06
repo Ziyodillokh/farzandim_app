@@ -9,6 +9,9 @@ import type { AssignInput, PsychNormsInput, PsychTestInput } from '@/data/schema
 import { type TKey, useI18n } from '@/i18n';
 import { psychErrorKey } from './lib/labels';
 
+export const STUDENT_PICK_MIN_QUERY = 2;
+const STUDENT_PICK_LIMIT = 8;
+
 export const assessmentKeys = {
   all: ['assessments'] as const,
   tests: (f: PsychTestFilter) => ['assessments', 'tests', f] as const,
@@ -27,6 +30,17 @@ export function useTest(id: string | null) {
 
 export function useClassOptions() {
   return useQuery({ queryKey: ['assessments', 'class-options'], queryFn: () => api.assessments.classOptions(), staleTime: 60_000 });
+}
+
+/** Shaxsiy tayinlash uchun o'quvchi qidiruvi (doira bo'yicha — servis o'zi cheklaydi); kamida 2 ta belgi. */
+export function useStudentPick(query: string) {
+  const q = query.trim();
+  return useQuery({
+    queryKey: ['assessments', 'student-pick', q],
+    queryFn: () => api.students.list({ search: q, limit: STUDENT_PICK_LIMIT }),
+    enabled: q.length >= STUDENT_PICK_MIN_QUERY,
+    placeholderData: keepPreviousData,
+  });
 }
 
 export function useAssignments(filter: AssignmentFilter = {}) {

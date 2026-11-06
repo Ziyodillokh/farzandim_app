@@ -6,6 +6,7 @@ import type {
   PsychTestKind,
   PsychTestSource,
   PsychTestStatus,
+  Student,
 } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
 import {
@@ -20,7 +21,7 @@ import {
 import { parseOrThrow } from '@/data/schemas/validate';
 import { normalizeSearch } from '@/lib/normalize-search';
 import { clockNow } from '../clock';
-import { assertCan, currentActor, latency, newId, writeAudit } from '../context';
+import { type Actor, assertCan, currentActor, inScope, latency, newId, writeAudit } from '../context';
 import { getTables, transact } from '../db';
 import { allTests, findTest, isTemplateId } from '../psych/catalog';
 import { allResults } from '../psych/results';
@@ -130,13 +131,29 @@ function setStatus(id: string, to: PsychTestStatus, from: readonly PsychTestStat
   });
 }
 
-/** Tayinlash maqsadi → sinflar (test parallellari bilan kesishma). */
+/** Tayinlash maqsadi → sinflar (test parallellari bilan kesishma). STUDENTS — o'quvchilar sinflari (`resolveStudents`). */
 function resolveClasses(t: Tables, input: AssignInput, test: PsychTest): string[] {
   const target = input.target;
+  if (target.kind === 'STUDENTS') return [];
   return t.classes
     .filter((c) => test.grades.includes(c.grade))
     .filter((c) => (target.kind === 'CLASSES' ? target.classIds.includes(c.id) : target.grades.includes(c.grade)))
     .map((c) => c.id);
+}
+
+/**
+ * Shaxsiy tayinlash (kontrakt D): bu maktabning, doiradagi, arxivlanmagan o'quvchilari (1..30, takrorlanmaydi).
+ * Panel qo'riqchisi (kontraktda yo'q): o'quvchi sinfi test parallellariga mos bo'lishi kerak.
+ */
+function resolveStudents(t: Tables, actor: Actor, studentIds: readonly string[], test: PsychTest): Student[] {
+  const unique = [...new Set(studentIds)];
+  const allowed = new Set(inScope(actor, t.students.filter((s) => !s.archived)).map((s) => s.id));
+  const found = unique.map((id) => t.students.find((s) => s.id === id));
+  if (found.some((s) => !s || !allowed.has(s.id))) throw new ServiceError('VALIDATION', 'target: assessments.validation.studentsInvalid');
+  const students = found.filter((s): s is Student => Boolean(s));
+  const grade = new Map(t.classes.map((c) => [c.id, c.grade]));
+  if (students.some((s) => !test.grades.includes(grade.get(s.classId) ?? -1))) throw new ServiceError('VALIDATION', 'target: assessments.validation.studentGrade');
+  return students;
 }
 
 function closeOrCancel(id: string, mode: 'unassign' | 'close'): PsychAssignment {
@@ -304,14 +321,17 @@ export const assessmentsService = {
       const test = findTest(t, data.testId);
       if (!test) throw new ServiceError('NOT_FOUND', data.testId);
       if (test.status !== 'PUBLISHED' || test.items.length === 0) throw new ServiceError('CONFLICT', 'test not assignable');
-      const classIds = resolveClasses(t, data, test);
+      if (data.careRequestId && !t.careRequests.some((r) => r.id === data.careRequestId)) throw new ServiceError('NOT_FOUND', 'careRequestId');
+      const personal = data.target.kind === 'STUDENTS' ? resolveStudents(t, actor, data.target.studentIds, test) : null;
+      const classIds = personal ? [...new Set(personal.map((s) => s.classId))] : resolveClasses(t, data, test);
       if (classIds.length === 0) throw new ServiceError('VALIDATION', 'target: assessments.validation.noClasses');
-      const invited = t.students.filter((s) => !s.archived && classIds.includes(s.classId)).length;
+      const invited = personal ? personal.length : t.students.filter((s) => !s.archived && classIds.includes(s.classId)).length;
       const a: PsychAssignment = {
         id: newId('pa'),
         testId: test.id,
         testVersion: test.version,
-        target: data.target,
+        target: personal ? { kind: 'STUDENTS', studentIds: personal.map((s) => s.id) } : data.target,
+        ...(data.careRequestId ? { careRequestId: data.careRequestId } : {}),
         classIds,
         opensAt: data.opensAt,
         closesAt: data.closesAt,
@@ -322,7 +342,9 @@ export const assessmentsService = {
         createdAt: nowIso(),
       };
       t.psychAssignments = [...t.psychAssignments, a];
-      writeAudit(t, actor, 'ASSESSMENTS', 'assessments.assign', `Test tayinlandi: ${test.title.uz}`, a.id, null, null, { classes: classIds.length, count: invited, title: test.title.uz });
+      // Auditda o'quvchi ismi, ID'si va murojaat ID'si YO'Q — faqat tayinlash va sonlar.
+      if (personal) writeAudit(t, actor, 'ASSESSMENTS', 'assessments.assign', `Shaxsiy test tayinlandi: ${test.title.uz}`, a.id, null, null, { count: invited, title: test.title.uz, variant: 'personal' });
+      else writeAudit(t, actor, 'ASSESSMENTS', 'assessments.assign', `Test tayinlandi: ${test.title.uz}`, a.id, null, null, { classes: classIds.length, count: invited, title: test.title.uz });
       return a;
     });
   },

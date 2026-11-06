@@ -154,6 +154,12 @@ function resultsActor(classId: string | undefined): { actor: Actor; bandsOnly: b
 
 function participation(t: Tables, actor: Actor, test: PsychTest, f: ResultsFilter, completed: number): { invited: number; completed: number } {
   const a = f.assignmentId ? t.psychAssignments.find((x) => x.id === f.assignmentId) : undefined;
+  if (a?.target.kind === 'STUDENTS') {
+    // Shaxsiy tayinlash: taklif qilinganlar — faqat tanlangan o'quvchilar (butun sinf emas).
+    const chosen = new Set(a.target.studentIds);
+    const invited = inScope(actor, t.students.filter((s) => !s.archived && chosen.has(s.id) && (!f.classId || s.classId === f.classId))).length;
+    return { invited, completed };
+  }
   const classIds = new Set(
     t.classes.filter((c) => (a ? a.classIds.includes(c.id) : test.grades.includes(c.grade)) && (!f.classId || c.id === f.classId)).map((c) => c.id),
   );

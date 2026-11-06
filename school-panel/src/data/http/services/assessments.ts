@@ -3,6 +3,7 @@ import { ServiceError } from '@/data/contracts';
 import type { assessmentsService } from '@/data/mock/services/assessments';
 import type { AssignInput, PsychNormsInput, PsychTestInput } from '@/data/schemas/assessments';
 import { http } from '../client';
+import { toAssignBody, toAssignmentRows } from './assessments-adapters';
 
 type Assessments = typeof assessmentsService;
 type Result<K extends keyof Assessments> = Awaited<ReturnType<Assessments[K]>>;
@@ -25,8 +26,9 @@ export const assessmentsHttp: Assessments = {
   archiveTest: (testId) => http<PsychTest>('POST', `${BASE}/tests/${id(testId)}/archive`),
   duplicateTest: (testId) => http<PsychTest>('POST', `${BASE}/tests/${id(testId)}/duplicate`),
   classOptions: () => http<Result<'classOptions'>>('GET', `${BASE}/class-options`),
-  listAssignments: (filter = {}) => http<Result<'listAssignments'>>('GET', `${BASE}/assignments`, { query: filter }),
-  assign: (input: AssignInput) => http<PsychAssignment>('POST', `${BASE}/assignments`, { body: input }),
+  listAssignments: async (filter = {}) => toAssignmentRows(await http<unknown>('GET', `${BASE}/assignments`, { query: filter })),
+  /** Shaxsiy tayinlash (`STUDENTS`) va murojaatdan boshlangan `careRequestId` — kontrakt D. */
+  assign: (input: AssignInput) => http<PsychAssignment>('POST', `${BASE}/assignments`, { body: toAssignBody(input) }),
   unassign: (assignmentId) => http<PsychAssignment>('POST', `${BASE}/assignments/${id(assignmentId)}/unassign`),
   closeAssignment: (assignmentId) => http<PsychAssignment>('POST', `${BASE}/assignments/${id(assignmentId)}/close`),
   exportTest: async (testId) => JSON.stringify(await http<unknown>('GET', `${BASE}/tests/${id(testId)}/export`), null, 2),

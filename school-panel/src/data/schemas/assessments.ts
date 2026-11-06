@@ -25,6 +25,8 @@ export const PSYCH_LIMITS = {
   jsonBytes: 200 * 1024,
   csvBytes: 512 * 1024,
   csvRows: 2000,
+  /** Bitta shaxsiy tayinlashdagi o'quvchilar soni (kontrakt D: 1..30). */
+  personalStudents: 30,
   externalRawMax: 1000,
 } as const;
 
@@ -40,6 +42,7 @@ export const vmsg = {
   duplicateBand: 'assessments.validation.duplicateBand',
   options: 'assessments.validation.options',
   consent: 'assessments.validation.consent',
+  tooManyStudents: 'assessments.validation.tooManyStudents',
 } as const;
 
 const keySchema = z.string({ required_error: msg.required }).regex(KEY_RE, vmsg.key);
@@ -181,7 +184,15 @@ export const assignInputSchema = z
     target: z.discriminatedUnion('kind', [
       z.object({ kind: z.literal('CLASSES'), classIds: z.array(z.string().min(1)).min(1, msg.atLeastOne).max(60) }).strict(),
       z.object({ kind: z.literal('GRADES'), grades: z.array(z.number().int().min(1).max(11)).min(1, msg.atLeastOne).max(11) }).strict(),
+      z
+        .object({
+          kind: z.literal('STUDENTS'),
+          studentIds: z.array(z.string().min(1)).min(1, msg.atLeastOne).max(PSYCH_LIMITS.personalStudents, vmsg.tooManyStudents),
+        })
+        .strict(),
     ]),
+    /** Murojaatdan boshlangan shaxsiy tayinlash. */
+    careRequestId: z.string().min(1).max(100).optional(),
     opensAt: dateTimeSchema,
     closesAt: dateTimeSchema,
     consent: z.literal(true, { errorMap: () => ({ message: vmsg.consent }) }),

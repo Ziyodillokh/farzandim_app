@@ -61,7 +61,14 @@ export type PsychTest = {
 /** Shablonlar kodda; maktabga xos holat va me'yor o'zgarishlari shu yerda. */
 export type TemplateState = { status: PsychTestStatus; norms: PsychNorms | null };
 
-export type AssignmentTarget = { kind: 'CLASSES'; classIds: Id[] } | { kind: 'GRADES'; grades: number[] };
+/**
+ * STUDENTS — alohida (shaxsiy) tayinlash, 1..30 o'quvchi (kontrakt D): natija shu o'quvchining kartasida saqlanadi,
+ * anonim so'rovnoma EMAS. Sinf/parallel bo'yicha tayinlashdan farqli ravishda ota-ona xabardorligi baribir talab qilinadi.
+ */
+export type AssignmentTarget =
+  | { kind: 'CLASSES'; classIds: Id[] }
+  | { kind: 'GRADES'; grades: number[] }
+  | { kind: 'STUDENTS'; studentIds: Id[] };
 export type PsychAssignment = {
   id: Id;
   testId: Id;
@@ -74,6 +81,8 @@ export type PsychAssignment = {
   status: 'OPEN' | 'CLOSED' | 'CANCELLED';
   invited: number;
   consent: 'PARENTS_INFORMED';
+  /** Shaxsiy tayinlash murojaatdan boshlangan bo'lsa — murojaat ID'si (auditga yozilmaydi). */
+  careRequestId?: Id | null;
   createdBy: Id;
   createdAt: IsoDateTime;
 };

@@ -41,7 +41,7 @@ function IconAction({ label, onClick, children, disabled, testId }: { label: str
 
 /** Tayinlashlar: muddat, holat, yakunlaganlar va amallar (demo simulyatsiya, yopish, bekor qilish). */
 export function AssignmentsTab({ onAssign, testId }: { onAssign: () => void; testId?: string }) {
-  const { t, locale, formatDate } = useI18n();
+  const { t, tc, locale, formatDate } = useI18n();
   const [state, setState] = useState<AssignmentState | undefined>();
   const list = useAssignments({ state, testId });
   const simulate = useSimulateCompletion();
@@ -66,20 +66,28 @@ export function AssignmentsTab({ onAssign, testId }: { onAssign: () => void; tes
       {
         key: 'classes',
         header: t('assessments.assignments.columns.classes'),
-        cell: (a) => (
-          <div className="flex max-w-[220px] flex-wrap gap-1">
-            {a.classNames.slice(0, MAX_CLASS_CHIPS).map((n) => (
-              <Badge key={n} variant="outline" size="sm">
-                {n}
+        cell: (a) =>
+          a.target.kind === 'STUDENTS' ? (
+            <div className="flex max-w-[220px] flex-wrap items-center gap-1" data-testid="personal-assignment">
+              <Badge variant="info" size="sm">
+                {t('assessments.assignments.personal')}
               </Badge>
-            ))}
-            {a.classNames.length > MAX_CLASS_CHIPS && (
-              <Badge variant="secondary" size="sm">
-                {t('assessments.assignments.more', { count: a.classNames.length - MAX_CLASS_CHIPS })}
-              </Badge>
-            )}
-          </div>
-        ),
+              <span className="text-xs text-muted-foreground">{tc('assessments.assignments.personalCount', a.invited)}</span>
+            </div>
+          ) : (
+            <div className="flex max-w-[220px] flex-wrap gap-1">
+              {a.classNames.slice(0, MAX_CLASS_CHIPS).map((n) => (
+                <Badge key={n} variant="outline" size="sm">
+                  {n}
+                </Badge>
+              ))}
+              {a.classNames.length > MAX_CLASS_CHIPS && (
+                <Badge variant="secondary" size="sm">
+                  {t('assessments.assignments.more', { count: a.classNames.length - MAX_CLASS_CHIPS })}
+                </Badge>
+              )}
+            </div>
+          ),
       },
       {
         key: 'window',
@@ -134,7 +142,7 @@ export function AssignmentsTab({ onAssign, testId }: { onAssign: () => void; tes
         ),
       },
     ],
-    [t, locale, formatDate, simulate],
+    [t, tc, locale, formatDate, simulate],
   );
 
   const confirm = () => {

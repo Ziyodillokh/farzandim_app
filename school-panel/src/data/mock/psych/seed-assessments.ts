@@ -16,7 +16,8 @@ const FIRST_MINUTE = 9 * 60;
 const MINUTE_SPAN = 10 * 60;
 const SEED_DAYS = 3;
 
-type SeedSpec = { id: string; testId: TemplateId; target: AssignmentTarget; opensDay: number; closesDay: number; share: number };
+/** Seed faqat sinf/parallel tayinlashlarni quradi (shaxsiy tayinlash — panel orqali). */
+type SeedSpec = { id: string; testId: TemplateId; target: Exclude<AssignmentTarget, { kind: 'STUDENTS' }>; opensDay: number; closesDay: number; share: number };
 
 const SPECS: readonly SeedSpec[] = [
   { id: 'pa-1', testId: 'tpl-logic', target: { kind: 'CLASSES', classIds: ['cls-7a', 'cls-7b'] }, opensDay: -3, closesDay: 4, share: 0.55 },

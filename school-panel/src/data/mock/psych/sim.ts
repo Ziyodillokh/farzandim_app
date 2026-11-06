@@ -192,12 +192,13 @@ export function buildAppResult(
   };
 }
 
-/** Tayinlangan sinflardagi faol o'quvchilar (sinf bilan). */
-export function targetStudents(t: Pick<Tables, 'students' | 'classes'>, a: Pick<PsychAssignment, 'classIds'>): Array<{ student: Student; cls: SchoolClass }> {
+/** Tayinlangan faol o'quvchilar (sinf bilan): sinflar bo'yicha — sinflardagilar; shaxsiy tayinlashda — faqat tanlanganlar. */
+export function targetStudents(t: Pick<Tables, 'students' | 'classes'>, a: Pick<PsychAssignment, 'classIds' | 'target'>): Array<{ student: Student; cls: SchoolClass }> {
   const classes = new Map(t.classes.filter((c) => a.classIds.includes(c.id)).map((c) => [c.id, c]));
+  const chosen = a.target.kind === 'STUDENTS' ? new Set(a.target.studentIds) : null;
   return t.students.flatMap((student) => {
     const cls = classes.get(student.classId);
-    return cls && !student.archived ? [{ student, cls }] : [];
+    return cls && !student.archived && (!chosen || chosen.has(student.id)) ? [{ student, cls }] : [];
   });
 }
 
