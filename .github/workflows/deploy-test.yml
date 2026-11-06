@@ -135,7 +135,9 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.backend == 'true' || github.event.inputs.component == 'backend' || github.event.inputs.component == 'all' }}
     runs-on: ubuntu-22.04
-    timeout-minutes: 20
+    # E2E (73+ to'plam, --runInBand) ~20 daqiqadan oshdi; 20 da bekor bo'lib
+    # deploy o'tkazib yuborilardi. Osilib qolish baribir chegaralangan.
+    timeout-minutes: 45
     services:
       postgres:
         image: postgres:16-alpine
