@@ -5,10 +5,19 @@ import {
   MinLength,
   MaxLength,
   IsInt,
+  IsIn,
   Min,
   Max,
   Matches,
 } from 'class-validator';
+import {
+  EDUCATION_LANGUAGES,
+  EducationLanguage,
+} from '../../child-auth/child-auth.constants';
+
+/** Jins: `create-child.dto` / `update-child.dto` bilan bir xil qiymatlar. */
+export const MY_PROFILE_GENDERS = ['male', 'female'] as const;
+export type MyProfileGender = (typeof MY_PROFILE_GENDERS)[number];
 
 /**
  * Bola O'ZINI tahrirlaydigan maydonlar (CHILD JWT, `PUT /children/me`).
@@ -48,4 +57,16 @@ export class UpdateMyProfileDto {
   @IsString()
   @MaxLength(100)
   region?: string;
+
+  /** Jins (A06 profil): 'male' | 'female'. */
+  @ApiPropertyOptional({ enum: MY_PROFILE_GENDERS, example: 'female' })
+  @IsOptional()
+  @IsIn(MY_PROFILE_GENDERS)
+  gender?: MyProfileGender;
+
+  /** Ta'lim tili (A06 profil): 'uz' | 'ru' | 'kaa'. */
+  @ApiPropertyOptional({ enum: EDUCATION_LANGUAGES, example: 'uz' })
+  @IsOptional()
+  @IsIn(EDUCATION_LANGUAGES)
+  educationLanguage?: EducationLanguage;
 }

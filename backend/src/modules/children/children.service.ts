@@ -631,6 +631,24 @@ export class ChildrenService {
   }
 
   /* ------------------------------------------------------------------ */
+  /*  GET /children/me — bola O'Z profilini o'qiydi                       */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Joriy bola profili (CHILD JWT): `PUT /children/me` qaytaradigan yozuvning o'zi — jumladan
+   * `gender` va `educationLanguage` (A06 profil). Boshqa oila bolasi mumkin emas: bola tokendan topiladi.
+   */
+  async findMe(userId: string) {
+    const child = await this.prisma.child.findFirst({
+      where: { childUserId: userId },
+    });
+    if (!child) {
+      throw new NotFoundException('Bola yozuvi topilmadi');
+    }
+    return child;
+  }
+
+  /* ------------------------------------------------------------------ */
   /*  PUT /children/me — bola O'ZINI tahrirlaydi (name/age/region)        */
   /* ------------------------------------------------------------------ */
 
@@ -655,6 +673,9 @@ export class ChildrenService {
     if (dto.name !== undefined) data.name = dto.name;
     if (dto.age !== undefined) data.age = dto.age;
     if (dto.region !== undefined) data.region = dto.region;
+    // A06 profil: jins va ta'lim tili (DTO qiymatlarni cheklaydi).
+    if (dto.gender !== undefined) data.gender = dto.gender;
+    if (dto.educationLanguage !== undefined) data.educationLanguage = dto.educationLanguage;
     // birthDate berilsa u ustun: `age` shundan qayta hisoblanadi (yuqoridagi
     // `dto.age` ustiga yoziladi), aks holda ikkalasi zid bo'lib qolardi.
     if (dto.birthDate !== undefined) {

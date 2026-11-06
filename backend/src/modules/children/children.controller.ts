@@ -184,6 +184,16 @@ export class ChildrenController {
     });
   }
 
+  // Diqqat: `me` `:id` dan OLDIN — bola O'Z profilini o'qiydi (jins, ta'lim tili va h.k.).
+  @Get('me')
+  @Roles('CHILD')
+  @ApiOperation({ summary: "Joriy bola o'z profilini o'qiydi" })
+  @ApiResponse({ status: 200, description: "Bola yozuvi (educationLanguage bilan)" })
+  @ApiResponse({ status: 404, description: 'Bola yozuvi topilmadi' })
+  async getMe(@CurrentUser() user: JwtPayload) {
+    return this.childrenService.findMe(user.userId);
+  }
+
   // Diqqat: `/me/interests` `:id` dan OLDIN — static route param'ga tushib
   // qolmasin (`me` UUID emas, lekin `:id` bilan moslashadi).
   @Put('me/interests')
