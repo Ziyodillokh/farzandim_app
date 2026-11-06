@@ -317,6 +317,7 @@ export const assessments: DeepString<typeof uz> = {
     noClasses: 'Выбранные классы не подходят по параллелям теста',
     tooManyStudents: 'В одном назначении не более 30 учеников',
     studentsInvalid: 'Ученик не найден или вне вашей области',
+    noStudents: 'Ученик не найден или вне вашей области',
     studentGrade: 'Класс ученика не подходит по параллелям теста',
     jsonTooLarge: 'Файл больше 200 КБ',
     jsonParse: 'Файл не в формате JSON',

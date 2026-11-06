@@ -144,6 +144,7 @@ export const staff = {
       aggregate: 'Bola ovozi — umumlashgan natija',
       individual: 'Bola ovozi — shaxsiy murojaatlar',
       surveys: 'So\'rovnomalarni boshqarish',
+      settings: 'Bola ovozi sozlamalari: psixolog, ish vaqti, muddat',
     },
     learning: { view: 'Growth Learning\'ni ko\'rish', assign: 'Material va test tayinlash' },
     reports: { view: 'Hisobotlar va eksport' },

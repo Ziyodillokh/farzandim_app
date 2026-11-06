@@ -147,6 +147,7 @@ export const staff: DeepString<typeof uz> = {
       aggregate: '«Голос ребёнка» — обобщённые результаты',
       individual: '«Голос ребёнка» — личные обращения',
       surveys: 'Управление опросами',
+      settings: 'Настройки «Голоса ребёнка»: психолог, часы, сроки',
     },
     learning: { view: 'Просмотр Growth Learning', assign: 'Назначение материалов и тестов' },
     reports: { view: 'Отчёты и экспорт' },

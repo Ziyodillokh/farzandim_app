@@ -10,8 +10,8 @@ import { nowLocalIso } from './comms-shared';
 
 /**
  * Bola ovozi sozlamalari (kontrakt C).
- * - O'qish: `care.aggregate` YOKI `care.individual` (direktor, admin, psixolog).
- * - Yozish: psixolog (`care.individual`) yoki `staff.manage` (direktor). Admin — faqat o'qiydi.
+ * - O'qish: `care.aggregate`, `care.individual` YOKI `care.settings` (direktor, admin, psixolog).
+ * - Yozish: faqat `care.settings` (direktor, admin, psixolog) — backend bilan bir xil.
  * - Auditda xodim ismi yo'q — faqat amal.
  */
 const STAFF_ERROR = 'errors.form.staffInvalid';
@@ -35,11 +35,11 @@ export function readCareSettings(t: Pick<Tables, 'careSettings'>): CareSettings 
 }
 
 function canReadSettings(actor: Actor): boolean {
-  return roleHas(actor.role, 'care.aggregate') || roleHas(actor.role, 'care.individual');
+  return roleHas(actor.role, 'care.aggregate') || roleHas(actor.role, 'care.individual') || roleHas(actor.role, 'care.settings');
 }
 
 function canWriteSettings(actor: Actor): boolean {
-  return roleHas(actor.role, 'care.individual') || roleHas(actor.role, 'staff.manage');
+  return roleHas(actor.role, 'care.settings');
 }
 
 /** Faol psixologlar (mas'ul va o'rinbosar faqat shulardan tanlanadi). */
@@ -68,7 +68,7 @@ export const careSettingsService = {
   async updateSettings(input: CareSettingsInput): Promise<CareSettingsView> {
     await latency();
     const actor = currentActor();
-    if (!canWriteSettings(actor)) throw new ServiceError('FORBIDDEN', 'care.individual');
+    if (!canWriteSettings(actor)) throw new ServiceError('FORBIDDEN', 'care.settings');
     const data = parseOrThrow(careSettingsInputSchema, input);
     return transact((t) => {
       if (!isEligible(t.staff, data.psychologistStaffId)) throw new ServiceError('VALIDATION', `psychologistStaffId: ${STAFF_ERROR}`);

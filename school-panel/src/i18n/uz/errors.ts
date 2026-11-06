@@ -23,6 +23,7 @@ export const errors = {
     staffInvalid: 'Faqat faol psixolog xodimni tanlash mumkin',
     invalidStaff: 'Faqat faol psixolog xodimni tanlash mumkin',
     duplicate: 'Qiymat takrorlangan',
+    invalid: 'Qiymat notoʻgʻri',
     outOfRange: 'Qiymat ruxsat etilgan oraliqdan tashqarida',
   },
 };

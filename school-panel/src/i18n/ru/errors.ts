@@ -26,6 +26,7 @@ export const errors: DeepString<typeof uz> = {
     staffInvalid: 'Можно выбрать только активного психолога',
     invalidStaff: 'Можно выбрать только активного психолога',
     duplicate: 'Значение повторяется',
+    invalid: 'Неверное значение',
     outOfRange: 'Значение вне допустимого диапазона',
   },
 };

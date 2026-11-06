@@ -314,6 +314,7 @@ export const assessments = {
     noClasses: 'Tanlangan sinflar test parallellariga mos emas',
     tooManyStudents: 'Bitta tayinlashda eng koʻpi bilan 30 ta oʻquvchi',
     studentsInvalid: 'Oʻquvchi topilmadi yoki sizning doirangizda emas',
+    noStudents: 'Oʻquvchi topilmadi yoki sizning doirangizda emas',
     studentGrade: 'Oʻquvchi sinfi test parallellariga mos emas',
     jsonTooLarge: 'Fayl 200 KB dan katta',
     jsonParse: 'Fayl JSON formatida emas',

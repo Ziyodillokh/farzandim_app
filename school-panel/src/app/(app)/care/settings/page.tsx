@@ -8,13 +8,13 @@ import { CareSettingsForm } from '@/features/care/components/settings-form';
 import { useCareSettings } from '@/features/care/hooks';
 import { useI18n } from '@/i18n';
 
-/** Bola ovozi sozlamalari: tahrirlash — psixolog yoki `staff.manage` (direktor); qolganlar faqat ko'radi. */
+/** Bola ovozi sozlamalari: tahrirlash — `care.settings` (direktor, admin, psixolog); qolganlar faqat ko'radi. */
 export default function CareSettingsPage() {
   const { t, formatDate } = useI18n();
   const can = useCan();
   const query = useCareSettings();
   const settings = query.data;
-  const canEdit = can('care.individual') || can('staff.manage');
+  const canEdit = can('care.settings');
 
   return (
     <>

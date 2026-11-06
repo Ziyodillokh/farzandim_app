@@ -73,14 +73,15 @@ test('noto\'g\'ri qiymatlar: xato xabari maydon yonida, fokus birinchi xatoli ma
   expect(errors).toEqual([]);
 });
 
-test('admin sozlamalarni faqat ko\'radi (tahrirlash tugmalari yo\'q); direktor tahrirlaydi', async ({ page }) => {
+test('admin va direktor sozlamalarni o\'zgartira oladi (care.settings)', async ({ page }) => {
   const errors = trackErrors(page);
   await login(page, 'admin', 'Admin2026');
   await page.goto(url('/care/settings'));
-  await expect(page.getByText('Faqat koʻrish: sozlamalarni psixolog yoki direktor oʻzgartiradi.')).toBeVisible();
-  await expect(page.locator('#care-settings-workEnd')).toBeDisabled();
-  await expect(page.locator('#care-settings-urgentSlaMinutes')).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Saqlash' })).toHaveCount(0);
+  await expect(page.getByText('Faqat koʻrish: sozlamalarni psixolog, direktor yoki admin oʻzgartiradi.')).toHaveCount(0);
+  await expect(page.locator('#care-settings-urgentSlaMinutes')).toBeEnabled();
+  await page.locator('#care-settings-urgentSlaMinutes').fill('40');
+  await page.getByRole('button', { name: 'Saqlash' }).click();
+  await expect(page.getByText('Sozlamalar saqlandi')).toBeVisible();
 
   await page.getByRole('button', { name: 'Hisob menyusi' }).first().click();
   await page.getByRole('menuitem', { name: 'Chiqish' }).click();
@@ -88,6 +89,7 @@ test('admin sozlamalarni faqat ko\'radi (tahrirlash tugmalari yo\'q); direktor t
 
   await login(page, 'direktor', 'Direktor2026');
   await page.goto(url('/care/settings'));
+  await expect(page.locator('#care-settings-urgentSlaMinutes')).toHaveValue('40');
   await expect(page.locator('#care-settings-workEnd')).toBeEnabled();
   await expect(page.getByRole('button', { name: 'Saqlash' })).toBeVisible();
   expect(errors).toEqual([]);

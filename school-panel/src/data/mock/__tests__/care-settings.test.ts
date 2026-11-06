@@ -32,12 +32,12 @@ describe('Bola ovozi sozlamalari — ruxsatlar', () => {
     }
   });
 
-  it('yozish: psixolog (care.individual) va direktor (staff.manage); admin va sinf rahbari — yo\'q', async () => {
-    for (const role of ['PSYCHOLOGIST', 'DIRECTOR'] as const) {
+  it('yozish: care.settings — psixolog, direktor va admin; sinf rahbari va navbatchi — yo\'q', async () => {
+    for (const role of ['PSYCHOLOGIST', 'DIRECTOR', 'ADMIN'] as const) {
       loginAs(role);
       await expect(careService.updateSettings(VALID)).resolves.toMatchObject({ urgentSlaMinutes: 45 });
     }
-    for (const role of ['ADMIN', 'HOMEROOM', 'DUTY'] as const) {
+    for (const role of ['HOMEROOM', 'DUTY'] as const) {
       loginAs(role);
       await expect(careService.updateSettings(VALID)).rejects.toMatchObject({ code: 'FORBIDDEN' });
     }

@@ -14,7 +14,7 @@ export const care = {
     title: 'Bola ovozi sozlamalari',
     subtitle: 'Masʼul psixolog, ish vaqti va javob muddati — bola ilovasida shu maʼlumot koʻrinadi',
     link: 'Sozlamalar',
-    readOnly: 'Faqat koʻrish: sozlamalarni psixolog yoki direktor oʻzgartiradi.',
+    readOnly: 'Faqat koʻrish: sozlamalarni psixolog, direktor yoki admin oʻzgartiradi.',
     notConfigured: 'Sozlamalar hali saqlanmagan — standart qiymatlar koʻrsatilgan.',
     lastUpdated: 'Oxirgi saqlangan: {date}',
     staffTitle: 'Masʼul xodimlar',
