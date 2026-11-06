@@ -130,16 +130,16 @@ describe('resolvePrefs', () => {
       familyMessages: true,
       dailyReminder: true,
       dailyReminderTime: '18:00',
-      hideText: true,
+      hideText: false,
     });
   });
 
   it('keeps stored values and exposes only the known fields', () => {
-    const row = { hideText: false, dailyReminderTime: '07:15', id: 'x', lastStudyNudgeAt: new Date() };
+    const row = { hideText: true, dailyReminderTime: '07:15', id: 'x', lastStudyNudgeAt: new Date() };
 
     const prefs = resolvePrefs(row);
 
-    expect(prefs.hideText).toBe(false);
+    expect(prefs.hideText).toBe(true);
     expect(prefs.dailyReminderTime).toBe('07:15');
     expect(prefs.familyMessages).toBe(true);
     expect(Object.keys(prefs).sort()).toEqual(Object.keys(DEFAULT_PREFS).sort());
@@ -147,9 +147,9 @@ describe('resolvePrefs', () => {
 
   it('returns a fresh object each time (defaults cannot be mutated through it)', () => {
     const first = resolvePrefs(null);
-    first.hideText = false;
+    first.hideText = true;
 
-    expect(resolvePrefs(null).hideText).toBe(true);
-    expect(DEFAULT_PREFS.hideText).toBe(true);
+    expect(resolvePrefs(null).hideText).toBe(false);
+    expect(DEFAULT_PREFS.hideText).toBe(false);
   });
 });

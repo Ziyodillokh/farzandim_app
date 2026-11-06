@@ -9,7 +9,7 @@ CREATE TYPE "ChildDeletionRequestStatus" AS ENUM ('RECEIVED', 'CLOSED');
 ALTER TABLE "notification_preferences" ADD COLUMN     "daily_reminder" BOOLEAN NOT NULL DEFAULT true,
 ADD COLUMN     "daily_reminder_time" TEXT NOT NULL DEFAULT '18:00',
 ADD COLUMN     "family_messages" BOOLEAN NOT NULL DEFAULT true,
-ADD COLUMN     "hide_text" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN     "hide_text" BOOLEAN NOT NULL DEFAULT false,
 ADD COLUMN     "homework_reminder" BOOLEAN NOT NULL DEFAULT true,
 ADD COLUMN     "school_announcements" BOOLEAN NOT NULL DEFAULT true;
 

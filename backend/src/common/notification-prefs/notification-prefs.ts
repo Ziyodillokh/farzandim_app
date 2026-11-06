@@ -11,7 +11,7 @@ export const DEFAULT_REMINDER_TIME = '18:00';
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 const MINUTES_PER_HOUR = 60;
 
-/** Sozlamalar yozuvi bo'lmagan bola uchun standart: hammasi yoqilgan, neytral matn. */
+/** Sozlamalar yozuvi bo'lmagan bola uchun standart: hammasi yoqilgan, matn yashirilmagan (`hideText = false`). */
 export interface ResolvedPrefs {
   studyNudge: boolean;
   healthNudge: boolean;
@@ -37,7 +37,7 @@ export const DEFAULT_PREFS: Readonly<ResolvedPrefs> = Object.freeze({
   familyMessages: true,
   dailyReminder: true,
   dailyReminderTime: DEFAULT_REMINDER_TIME,
-  hideText: true,
+  hideText: false,
 });
 
 /** Bazadagi (qisman) yozuv → to'liq sozlamalar; yozuv yo'q bo'lsa — standart. Yangi obyekt qaytaradi. */

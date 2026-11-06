@@ -27,14 +27,14 @@ Yozuv yo'q bo'lsa standart qiymatlar:
   "studyNudge": true, "healthNudge": true, "contentReminder": true,
   "quietFrom": null, "quietTo": null,
   "homeworkReminder": true, "schoolAnnouncements": true, "familyMessages": true,
-  "dailyReminder": true, "dailyReminderTime": "18:00", "hideText": true
+  "dailyReminder": true, "dailyReminderTime": "18:00", "hideText": false
 }
 ```
 
 ### `PUT /api/children/:childId/notification-preferences` — bola yoki ota-ona (qisman)
 
 ```json
-{ "hideText": false, "dailyReminderTime": "07:45", "familyMessages": false }
+{ "hideText": true, "dailyReminderTime": "07:45", "familyMessages": false }
 ```
 
 `200` — to'liq, yangilangan obyekt (GET bilan bir xil shakl). Maydonlar:
@@ -48,7 +48,7 @@ Yozuv yo'q bo'lsa standart qiymatlar:
 | `familyMessages` | bool | Oila matn / ovoz / video / media xabarlari push'i (SOS va qo'ng'iroqlar bundan **mustasno**) |
 | `dailyReminder` | bool | Kunlik o'qish eslatmasi (bola yoqadi/o'chiradi) |
 | `dailyReminderTime` | `"HH:MM"` | Kunlik eslatma vaqti, **`06:00`–`21:00`** (chegaralar kiradi), aynan `HH:MM` (nol bilan: `"6:00"` emas) |
-| `hideText` | bool | `true` — push lock-screen'da neytral ("Parvoz" + umumiy matn), yuboruvchi va mazmunsiz |
+| `hideText` | bool | `true` — push lock-screen'da neytral ("Parvoz" + umumiy matn), yuboruvchi va mazmunsiz. **Standart `false`**: joriy bola ilovasida bu sozlama uchun UI yo'q (v5 da chiqadi), shuning uchun mavjud bolalarning push ko'rinishi o'zgarmaydi; standart v5 relizida qayta ko'rib chiqiladi |
 
 Xatolar:
 
@@ -65,12 +65,12 @@ Xatolar:
 
 | Hodisa | Sozlama | Sarlavha / matn | `data` |
 |---|---|---|---|
-| Oila xabari (matn, ovoz, media, video) — qabul qiluvchi bola | `familyMessages=false` → yuborilmaydi; `hideText=true` (standart) → neytral | `Parvoz` / `Yangi xabar` (ru `Новое сообщение`, en `New message`). Yuboruvchi ham, mazmun ham yo'q | `{ type: "voice"\|"video", messageId }` (`senderId` yo'q) |
-| Oila xabari, `hideText=false` | — | avvalgidek: yuboruvchi ismi / qisqa mazmun | `{ type, messageId, senderId }` |
+| Oila xabari (matn, ovoz, media, video) — qabul qiluvchi bola | `familyMessages=false` → yuborilmaydi; `hideText=true` → neytral | `Parvoz` / `Yangi xabar` (ru `Новое сообщение`, en `New message`). Yuboruvchi ham, mazmun ham yo'q | `{ type: "voice"\|"video", messageId }` (`senderId` yo'q) |
+| Oila xabari, `hideText=false` (standart) | — | avvalgidek: yuboruvchi ismi / qisqa mazmun | `{ type, messageId, senderId }` |
 | Kunlik o'qish eslatmasi | `studyNudge` va `dailyReminder` | avvalgi matn ("Bugun bitta test yechib ko'rchi 📚") | `{ type: "study_nudge", childId, relatedRoute }` |
 | Ertangi topshiriq | `homeworkReminder` | `Parvoz` / `Ertaga topshiriq muddati` (ru `Завтра срок задания`) | `{ type: "HOMEWORK_DUE" }` |
 | Maktab e'loni (`audience.includeStudents=true`) | `schoolAnnouncements`; `hideText=true` → neytral | `Parvoz` / `Maktabdan yangi eʼlon` (ru `Новое объявление школы`) | `{ type: "SCHOOL_ANNOUNCEMENT", id }` |
-| Maktab e'loni, `hideText=false` | — | sarlavha: maktab nomi; matn: e'lon **sarlavhasi** (≤ 80 belgi, "…" bilan; e'lon matni emas) | `{ type: "SCHOOL_ANNOUNCEMENT", id }` |
+| Maktab e'loni, `hideText=false` (standart) | — | sarlavha: maktab nomi; matn: e'lon **sarlavhasi** (≤ 80 belgi, "…" bilan; e'lon matni emas) | `{ type: "SCHOOL_ANNOUNCEMENT", id }` |
 | Psixolog javobi (`CARE_MESSAGE`) | **sozlamalarga bog'liq emas** — doim neytral | o'zgarmagan | `{ type: "CARE_MESSAGE", requestId }` |
 
 Til — bolaning `User.language` (`uz` standart; `ru`, `en`).
@@ -190,7 +190,7 @@ Orqaga qaytarish: yangi jadvallar va enum'ni DROP qilish + qo'shilgan 6 ustunni 
 - Ota-ona ilovasi: `DATA_DELETION_REQUEST` + `childId` — kerakli bolaning profilini oching; holatni
   `GET …/deletion-requests/latest` bilan o'qing.
 - `GET …/deletion-requests/latest` javobi mavjud bo'lmaganda **`null`** (bo'sh tana emas).
-- Standart `hideText=true` — mavjud barcha bolalar uchun oila xabari push'i endi neytral (ilgari yuboruvchi ismi va matn ko'rinardi).
+- Standart `hideText=false` — mavjud bolalar uchun oila xabari push'i avvalgidek (yuboruvchi ismi va matn ko'rinadi); neytral ko'rinish faqat `hideText=true` qo'yilganda. Maktab e'loni push'i standartda e'lon sarlavhasini ko'rsatadi.
 - Kunlik eslatma tugmasi: `dailyReminder` + `dailyReminderTime`; ota-onaning `studyNudge` o'chirgichi bilan birga amal qiladi.
 
 ## 6. Testlar
@@ -202,13 +202,13 @@ Orqaga qaytarish: yangi jadvallar va enum'ni DROP qilish + qo'shilgan 6 ustunni 
   bolalar, dedupe), `child-push-dedupe.service.spec.ts`, `user-throttler.guard.spec.ts` (3/sutka), `error-label.spec.ts`,
   `child-data-purge.service.spec.ts` (o'chirish).
 - E2E (haqiqiy Postgres): `men-notify-prefs` (23), `men-notify-schedule` (35), `men-deletion-request` (28).
-- Natija: `tsc --noEmit` toza; unit — 90 suite / 996 test (shundan yangi: 11 suite, 143 test); e2e — 52 suite / 631 test, hammasi o'tadi
+- Natija: `tsc --noEmit` toza; unit — 90 suite / 998 test (shundan yangi: 11 suite, 145 test); e2e — 52 suite / 631 test, hammasi o'tadi
   (`farzandim_mennotify_test`, `prisma migrate diff --exit-code` — farq yo'q).
 
 ## 7. Ochiq savollar
 
 1. Hozir "kunlik eslatma" `studyNudge` (ota-ona) bilan birga amal qiladi. Ota-ona o'chirgichi bolaning o'zi yoqqan
    `dailyReminder`ni bekor qilishi kerakmi, yoki `dailyReminder` yagona manba bo'lib qolsinmi?
-2. Standart `hideText=true` mavjud bolalarning oila xabari push'ini neytral qiladi (kontraktga ko'ra). Ota-onalarga ma'lum qilish kerakmi?
+2. `hideText` standarti hozircha `false` (joriy bola ilovasida UI yo'q); v5 relizida (toggle chiqqanda) standartni qayta ko'rib chiqish kerak.
 3. So'rovni yopish (`CLOSED`) oqimi (kim, qanday, ota-onaga xabar) hali yo'q — xodim paneli bosqichi.
 4. E'lon va uy vazifasi push'lari bola ilovasining bildirishnomalar ro'yxatiga (`Notification`) yozilmaydi — faqat push. Kerak bo'lsa qo'shiladi.

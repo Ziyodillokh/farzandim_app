@@ -34,8 +34,9 @@ describe('AnnouncementChildPushService', () => {
     return { prisma, push, dedupe, sent, service };
   }
 
-  it('pushes to every linked child of the audience, neutral by default', async () => {
-    const { service, sent, dedupe } = setup();
+  it('pushes to every linked child of the audience, neutral when hideText is on', async () => {
+    const hidden = { schoolAnnouncements: true, hideText: true };
+    const { service, sent, dedupe } = setup({ students: [studentRow(1, hidden), studentRow(2, hidden)] });
 
     const delivered = await service.notify('ann-1');
 
@@ -47,6 +48,18 @@ describe('AnnouncementChildPushService', () => {
       data: { type: 'SCHOOL_ANNOUNCEMENT', id: 'ann-1' },
     });
     expect(dedupe.claim).toHaveBeenCalledWith(['ch-1', 'ch-2'], 'SCHOOL_ANNOUNCEMENT', 'ann-1');
+  });
+
+  it('shows the school and the title when the child has no preference row (hideText defaults to off)', async () => {
+    const { service, sent } = setup({ students: [studentRow(1)] });
+
+    await service.notify('ann-1');
+
+    expect(sent[0]?.payload).toEqual({
+      title: '5-maktab',
+      body: 'Ertaga sayohat',
+      data: { type: 'SCHOOL_ANNOUNCEMENT', id: 'ann-1' },
+    });
   });
 
   it('queries only the audience students (class filter comes from the announcement audience)', async () => {

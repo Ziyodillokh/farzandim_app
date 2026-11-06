@@ -44,7 +44,7 @@ export interface ChildRecipient {
   hideText: boolean;
 }
 
-/** Sozlamasi "maktab e'lonlari" ni o'chirmagan bolalar (yozuv yo'q — standart: yoqilgan, matn yashirin). Takrorlar olib tashlanadi. */
+/** Sozlamasi "maktab e'lonlari" ni o'chirmagan bolalar (yozuv yo'q — standart: yoqilgan, matn yashirilmagan). Takrorlar olib tashlanadi. */
 export function selectRecipients(rows: readonly RecipientRow[]): ChildRecipient[] {
   const seen = new Set<string>();
   const result: ChildRecipient[] = [];
@@ -54,7 +54,7 @@ export function selectRecipients(rows: readonly RecipientRow[]): ChildRecipient[
     const pref = row.child?.notificationPreference;
     if (pref && !pref.schoolAnnouncements) continue;
     seen.add(row.childId);
-    result.push({ childId: row.childId, childUserId, hideText: pref?.hideText ?? true });
+    result.push({ childId: row.childId, childUserId, hideText: pref?.hideText ?? false });
   }
   return result;
 }

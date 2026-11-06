@@ -26,7 +26,7 @@ export class NotificationPreferencesService {
     return child;
   }
 
-  /** Sozlamalarni o'qish — yozuv yo'q bo'lsa default (hammasi yoqilgan, kunlik eslatma 18:00, matn yashirin). */
+  /** Sozlamalarni o'qish — yozuv yo'q bo'lsa default (hammasi yoqilgan, kunlik eslatma 18:00, matn yashirilmagan). */
   async get(childId: string, userId: string) {
     await this.assertAccess(childId, userId);
     const pref = await this.prisma.notificationPreference.findUnique({

@@ -17,7 +17,7 @@ const DEFAULTS = {
   familyMessages: true,
   dailyReminder: true,
   dailyReminderTime: '18:00',
-  hideText: true,
+  hideText: false,
 };
 
 describe('Men notify: bildirishnoma sozlamalari', () => {
@@ -53,12 +53,12 @@ describe('Men notify: bildirishnoma sozlamalari', () => {
     });
 
     it('lets the child update a subset and keeps the rest', async () => {
-      const res = await put(child.token, { hideText: false, dailyReminderTime: '07:45', familyMessages: false });
+      const res = await put(child.token, { hideText: true, dailyReminderTime: '07:45', familyMessages: false });
 
       expect(res.statusCode).toBe(200);
-      expect(res.json()).toEqual({ ...DEFAULTS, hideText: false, dailyReminderTime: '07:45', familyMessages: false });
+      expect(res.json()).toEqual({ ...DEFAULTS, hideText: true, dailyReminderTime: '07:45', familyMessages: false });
       const again = await get(parent.token);
-      expect(again.json()).toEqual({ ...DEFAULTS, hideText: false, dailyReminderTime: '07:45', familyMessages: false });
+      expect(again.json()).toEqual({ ...DEFAULTS, hideText: true, dailyReminderTime: '07:45', familyMessages: false });
     });
 
     it('lets the parent update the new switches too (and the old ones keep working)', async () => {
@@ -77,7 +77,7 @@ describe('Men notify: bildirishnoma sozlamalari', () => {
     it.each(['05:59', '21:01', '6:00', '18:60', '24:00', 'noon', '', null, 1800])(
       'rejects dailyReminderTime %p with 400 VALIDATION',
       async (value) => {
-        const res = await put(child.token, { dailyReminderTime: value, hideText: false });
+        const res = await put(child.token, { dailyReminderTime: value, hideText: true });
 
         expect(res.statusCode).toBe(400);
         expect(res.json()).toMatchObject({ statusCode: 400, code: 'VALIDATION' });
@@ -112,7 +112,9 @@ describe('Men notify: bildirishnoma sozlamalari', () => {
     const sendText = (token: string, receiverId: string, text = 'Kechqurun uyda bo\'laman') =>
       appReq(t, token, 'POST', '/voice-messages/text', { receiverId, text });
 
-    it('is neutral by default: "Parvoz" / "Yangi xabar", no sender, no content', async () => {
+    it('is neutral when hideText is on: "Parvoz" / "Yangi xabar", no sender, no content', async () => {
+      await put(child.token, { hideText: true });
+
       const res = await sendText(parent.token, child.userId);
 
       expect(res.statusCode).toBe(201);
@@ -125,15 +127,14 @@ describe('Men notify: bildirishnoma sozlamalari', () => {
 
     it('is neutral in Russian for a Russian-speaking child', async () => {
       await t.prisma.user.update({ where: { id: child.userId }, data: { language: 'ru' } });
+      await put(child.token, { hideText: true });
 
       await sendText(parent.token, child.userId);
 
       expect(t.fcm.pushesTo(child.userId)[0]).toMatchObject({ title: 'Parvoz', body: 'Новое сообщение' });
     });
 
-    it('shows sender and text when hideText is off', async () => {
-      await put(child.token, { hideText: false });
-
+    it('shows sender and text by default (hideText is off)', async () => {
       const res = await sendText(parent.token, child.userId, 'Salom, o\'g\'lim');
 
       expect(t.fcm.pushesTo(child.userId)[0]).toEqual({

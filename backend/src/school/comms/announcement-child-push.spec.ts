@@ -56,8 +56,8 @@ describe('selectRecipients', () => {
     ...over,
   });
 
-  it('keeps linked children and defaults to hidden text when there is no preference row', () => {
-    expect(selectRecipients([row()])).toEqual([{ childId: 'ch-1', childUserId: 'cu-1', hideText: true }]);
+  it('keeps linked children and defaults to visible text when there is no preference row', () => {
+    expect(selectRecipients([row()])).toEqual([{ childId: 'ch-1', childUserId: 'cu-1', hideText: false }]);
   });
 
   it('skips children who switched school announcements off', () => {
@@ -65,9 +65,9 @@ describe('selectRecipients', () => {
   });
 
   it('carries the hideText preference through', () => {
-    const [r] = selectRecipients([row({ pref: { schoolAnnouncements: true, hideText: false } })]);
+    const [r] = selectRecipients([row({ pref: { schoolAnnouncements: true, hideText: true } })]);
 
-    expect(r?.hideText).toBe(false);
+    expect(r?.hideText).toBe(true);
   });
 
   it('skips students without a linked child or a child device account', () => {

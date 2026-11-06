@@ -558,7 +558,8 @@ model NotificationPreference {
   // Kunlik eslatma vaqti "HH:MM" (Asia/Tashkent), 06:00–21:00.
   dailyReminderTime     String    @default("18:00") @map("daily_reminder_time")
   // true — push lock-screen'da neytral ("Parvoz" / "Yangi xabar"), mazmun va yuboruvchisiz.
-  hideText              Boolean   @default(true) @map("hide_text")
+  // Standart false: joriy bola ilovasida bu sozlama uchun UI yo'q (v5 da paydo bo'ladi) — mavjud push ko'rinishi saqlanadi.
+  hideText              Boolean   @default(false) @map("hide_text")
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
 

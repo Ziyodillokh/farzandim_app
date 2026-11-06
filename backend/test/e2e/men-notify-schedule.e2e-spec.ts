@@ -328,7 +328,9 @@ describe('Men notify: maktab e\'loni -> bolalar', () => {
   const announcementPushes = (userId: string) => t.fcm.pushesTo(userId).filter((p) => p.data?.type === 'SCHOOL_ANNOUNCEMENT');
   const setPrefs = (child: TestChild, body: object) => appReq(t, child.token, 'PUT', `/children/${child.childId}/notification-preferences`, body);
 
-  it('whole school + includeStudents: pushes a neutral message to every linked child (and nobody else)', async () => {
+  it('whole school + includeStudents: pushes a neutral message to every linked child with hideText on (and nobody else)', async () => {
+    await setPrefs(w.child, { hideText: true });
+    await setPrefs(bek, { hideText: true });
     const a = await send(audience('SCHOOL', { includeStudents: true }));
 
     for (const child of [w.child, bek]) {
@@ -366,8 +368,8 @@ describe('Men notify: maktab e\'loni -> bolalar', () => {
     expect(announcementPushes(bek.userId)).toHaveLength(1);
   });
 
-  it('shows the school name and the announcement title (not the body) when hideText is off', async () => {
-    await setPrefs(w.child, { hideText: false });
+  it('shows the school name and the announcement title (not the body) by default, neutral for a child with hideText on', async () => {
+    await setPrefs(bek, { hideText: true });
 
     await send(audience('SCHOOL', { includeStudents: true }), 'A'.repeat(120));
 
@@ -376,7 +378,7 @@ describe('Men notify: maktab e\'loni -> bolalar', () => {
     expect([...push!.body]).toHaveLength(80);
     expect(push?.body.endsWith('…')).toBe(true);
     expect(push?.body).not.toContain('zalda');
-    // Boshqa bola hamon neytral.
+    // hideText yoqilgan bola neytral oladi.
     expect(announcementPushes(bek.userId)[0]).toMatchObject({ title: 'Parvoz', body: 'Maktabdan yangi eʼlon' });
   });
 

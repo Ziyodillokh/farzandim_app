@@ -43,13 +43,21 @@ describe('FamilyMessagePushService', () => {
       sendPushToUser: jest.fn().mockResolvedValue({ sent: 1, failed: 0, invalidTokens: [] }),
       getUserLang: jest.fn().mockResolvedValue('uz'),
     };
-    const prefsService = { forChild: jest.fn().mockResolvedValue({ familyMessages: true, hideText: true, ...prefs }) };
+    const prefsService = { forChild: jest.fn().mockResolvedValue({ familyMessages: true, hideText: false, ...prefs }) };
     const service = new FamilyMessagePushService(fcm as never, prefsService as never);
     return { fcm, prefsService, service };
   }
 
-  it('sends the neutral push to the child by default (hideText is on)', async () => {
+  it('keeps the usual push (sender and text) for the child by default (hideText is off)', async () => {
     const { fcm, service } = setup();
+
+    await service.send({ link, receiverId: 'child-user', shown, data });
+
+    expect(fcm.sendPushToUser).toHaveBeenCalledWith('child-user', { ...shown, data });
+  });
+
+  it('sends the neutral push to the child when hideText is on', async () => {
+    const { fcm, service } = setup({ hideText: true });
 
     await service.send({ link, receiverId: 'child-user', shown, data });
 

@@ -31,18 +31,18 @@ describe('NotificationPreferencesService', () => {
         familyMessages: true,
         dailyReminder: true,
         dailyReminderTime: '18:00',
-        hideText: true,
+        hideText: false,
       });
     });
 
     it('does not leak internal columns of the stored row', async () => {
-      const { service } = setup({ id: 'x', childId: 'child-1', lastStudyNudgeAt: new Date(), hideText: false });
+      const { service } = setup({ id: 'x', childId: 'child-1', lastStudyNudgeAt: new Date(), hideText: true });
 
       const prefs = await service.get('child-1', PARENT);
 
       expect(prefs).not.toHaveProperty('id');
       expect(prefs).not.toHaveProperty('lastStudyNudgeAt');
-      expect(prefs.hideText).toBe(false);
+      expect(prefs.hideText).toBe(true);
     });
 
     it('rejects a user who is neither the child nor the parent, and a missing child', async () => {
@@ -58,12 +58,12 @@ describe('NotificationPreferencesService', () => {
     it('saves only the provided fields (partial update)', async () => {
       const { service, prisma } = setup();
 
-      await service.update('child-1', CHILD_USER, { hideText: false, dailyReminderTime: '07:30' });
+      await service.update('child-1', CHILD_USER, { hideText: true, dailyReminderTime: '07:30' });
 
       expect(prisma.notificationPreference.upsert).toHaveBeenCalledWith({
         where: { childId: 'child-1' },
-        create: { childId: 'child-1', hideText: false, dailyReminderTime: '07:30' },
-        update: { hideText: false, dailyReminderTime: '07:30' },
+        create: { childId: 'child-1', hideText: true, dailyReminderTime: '07:30' },
+        update: { hideText: true, dailyReminderTime: '07:30' },
       });
     });
 
