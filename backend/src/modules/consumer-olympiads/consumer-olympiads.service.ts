@@ -331,6 +331,12 @@ export class ConsumerOlympiadsService {
     } catch (e) {
       this.logger.error('contest join bonus failed', e as Error);
     }
+    // "Olimpiadachi" yutug'i (idempotent, DON bermaydi). Xato boshlashni buzmaydi.
+    try {
+      await this.gamification.unlockAchievement(child.childId, 'olympian');
+    } catch (e) {
+      this.logger.error('olympian badge failed', e as Error);
+    }
 
     // Check existing attempt (unique constraint: olympiadId + childId)
     const existing = await this.prisma.olympiadAttempt.findUnique({

@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import {
   ChildProfile,
   Prisma,
@@ -24,12 +19,12 @@ import {
   XpEventType,
 } from './dto/create-xp-event.dto';
 import { ListXpEventsDto } from './dto/list-xp-events.dto';
+import { applyUnlocks, streakBadgesFor } from './badges/badge-catalog';
+import { BadgesService } from './badges/badges.service';
+import { assertChildAccess } from './child-access';
+import { AWARD_TX_OPTIONS, lockChildAwards } from './child-award-lock';
 
-/**
- * Mukofot tranzaksiyalari (bola qulfi ostida): avvalgi qulfsiz kod kabi
- * band paytda kutadi — standart 2 s kutishdan keyin 500 qaytarmasin.
- */
-export const AWARD_TX_OPTIONS = { maxWait: 10_000, timeout: 15_000 } as const;
+export { AWARD_TX_OPTIONS };
 
 @Injectable()
 export class GamificationService {
@@ -37,6 +32,7 @@ export class GamificationService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly realtime: RealtimeGateway,
+    private readonly badges: BadgesService,
   ) {}
 
   private async getOrCreateProfile(childId: string) {
@@ -47,15 +43,8 @@ export class GamificationService {
     return this.prisma.childProfile.create({ data: { childId } });
   }
 
-  private async validateChildAccess(childId: string, userId: string) {
-    const child = await this.prisma.child.findUnique({
-      where: { id: childId },
-    });
-    if (!child) throw new NotFoundException('Child not found');
-    if (child.parentId !== userId && child.childUserId !== userId) {
-      throw new ForbiddenException('Forbidden');
-    }
-    return child;
+  private validateChildAccess(childId: string, userId: string) {
+    return assertChildAccess(this.prisma, childId, userId);
   }
 
   async getProfile(childId: string, userId: string) {
@@ -193,6 +182,8 @@ export class GamificationService {
     const streak = input.touchStreak
       ? calculateNewStreak(profile.lastActivityDate, profile.streakDays, now)
       : null;
+    // Streak yutuqlari (7 / 30 kun) shu yangilanish bilan bir tranzaksiyada ochiladi.
+    const badgeUpdate = streak ? applyUnlocks(profile, streakBadgesFor(streak.newStreak), now) : null;
 
     // Tur berilgan bo'lsa ledger yozuvi doim (ota-onaning 0/0 yozuvi ham —
     // avvalgi xatti-harakat); `null` — faqat streak (qadam, don 0).
@@ -218,6 +209,10 @@ export class GamificationService {
           streakDays: streak.newStreak,
           lastActivityDate: now,
         }),
+        ...(badgeUpdate && {
+          achievements: badgeUpdate.achievements,
+          achievementDates: badgeUpdate.dates,
+        }),
       },
     });
     const level = levelForXp(updated.xp);
@@ -233,7 +228,9 @@ export class GamificationService {
 
   /**
    * Yutuq (achievement) berish — `ChildProfile.achievements` JSON massiviga
-   * qo'shadi. IDEMPOTENT: allaqachon bor bo'lsa hech nima qilmaydi.
+   * qo'shadi (ochilgan vaqti `achievementDates` da). IDEMPOTENT: allaqachon bor
+   * bo'lsa hech nima qilmaydi va emit qilmaydi. Bola qulfi ostida — parallel
+   * voqealar bir-birining yutug'ini yo'qotmaydi.
    *
    * Frontend `unlockedAchievements` shu ro'yxatni o'qiydi va tegishli badge'ni
    * ochadi. `profile:updated` real-time emit qilinadi — bola profil ekrani
@@ -243,18 +240,10 @@ export class GamificationService {
   async unlockAchievement(
     childId: string,
     achievementId: string,
+    at: Date = new Date(),
   ): Promise<void> {
-    const profile = await this.getOrCreateProfile(childId);
-    const current = Array.isArray(profile.achievements)
-      ? (profile.achievements as string[])
-      : [];
-    if (current.includes(achievementId)) return; // allaqachon bor
-
-    const updated = await this.prisma.childProfile.update({
-      where: { childId },
-      data: { achievements: [...current, achievementId] },
-    });
-    this.realtime.emitToChild(childId, 'profile:updated', updated);
+    const { profile, changed } = await this.badges.unlock(childId, [achievementId], at);
+    if (changed) this.realtime.emitToChild(childId, 'profile:updated', profile);
   }
 
   /**
@@ -305,8 +294,8 @@ export class GamificationService {
   }
 
   /** Bola mukofotlari qulfi (tranzaksiya oxirigacha; qayta olish xavfsiz). */
-  async lockChildAwards(tx: Prisma.TransactionClient, childId: string): Promise<void> {
-    await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(hashtextextended(${`xp:${childId}`}, 0))`;
+  lockChildAwards(tx: Prisma.TransactionClient, childId: string): Promise<void> {
+    return lockChildAwards(tx, childId);
   }
 
   async listXpEvents(

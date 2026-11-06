@@ -29,20 +29,14 @@ import {
   assessMastery,
   EvidenceAnswer,
   isTopicAvailable,
-  MASTERY_WINDOW,
   pickCurrentTopicId,
   summarizeTopicAttempts,
 } from './domain/topic-mastery';
+import { fetchMasteryEvidence } from './learning-mastery.query';
 import { requireProfile } from './learning-profile.guard';
 import { TopicDetailView, TopicListView, TopicView, toTopicView } from './learning-topic.mapper';
 
 type Db = Pick<Prisma.TransactionClient, 'learningTopic' | 'learningQuestion'>;
-
-interface EvidenceRow {
-  topic_id: string;
-  is_correct: boolean;
-  answered_at: Date;
-}
 
 @Injectable()
 export class LearningTopicsService {
@@ -175,34 +169,8 @@ export class LearningTopicsService {
     return new Map(rows.flatMap((r) => (r.topicId ? [[r.topicId, r._count._all] as const] : [])));
   }
 
-  /**
-   * Har mavzu uchun eng yangi MASTERY_WINDOW ta javob: bolaning YAKUNLANGAN
-   * urinishlaridagi, mavzuga bog'langan savollarga javoblari (urinish turidan
-   * qat'i nazar).
-   */
-  private async evidence(childId: string, ids: string[]): Promise<Map<string, EvidenceAnswer[]>> {
-    const rows = await this.prisma.$queryRaw<EvidenceRow[]>`
-      SELECT topic_id, is_correct, answered_at FROM (
-        SELECT q.topic_id AS topic_id, a.is_correct AS is_correct, a.answered_at AS answered_at,
-               ROW_NUMBER() OVER (
-                 PARTITION BY q.topic_id ORDER BY a.answered_at DESC, a.id DESC
-               ) AS rn
-        FROM learning_answers a
-        JOIN learning_attempts t ON t.id = a.attempt_id
-        JOIN learning_questions q ON q.id = a.question_id
-        WHERE t.child_id = ${childId}
-          AND t.status = 'COMPLETED'
-          AND q.topic_id IN (${Prisma.join(ids)})
-      ) ranked
-      WHERE rn <= ${MASTERY_WINDOW}`;
-    const byTopic = new Map<string, EvidenceAnswer[]>();
-    for (const r of rows) {
-      byTopic.set(r.topic_id, [
-        ...(byTopic.get(r.topic_id) ?? []),
-        { isCorrect: r.is_correct, answeredAt: r.answered_at },
-      ]);
-    }
-    return byTopic;
+  private evidence(childId: string, ids: string[]): Promise<Map<string, EvidenceAnswer[]>> {
+    return fetchMasteryEvidence(this.prisma, childId, ids);
   }
 
   private async completedAttempts(childId: string, ids: string[]) {

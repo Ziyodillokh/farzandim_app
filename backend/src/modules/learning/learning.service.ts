@@ -13,6 +13,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -23,7 +24,7 @@ import {
   Prisma,
 } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
-import { addDays, isoWeekday, tashkentDay } from '../../common/time/tashkent';
+import { isoWeekStart, tashkentDay } from '../../common/time/tashkent';
 import { GamificationService } from '../gamification/gamification.service';
 import { LocalizedText } from './domain/localized';
 import { donFor, xpFor } from './domain/rewards';
@@ -34,6 +35,7 @@ import {
   SaveLearningProfileDto,
   SubmitAnswerDto,
 } from './dto/learning.dto';
+import { hasMasteredTopic } from './learning-mastery.query';
 import { requireProfile } from './learning-profile.guard';
 import { LearningPickService } from './learning-pick.service';
 import { TOPIC_REF_SELECT, toTopicRef } from './learning-topic.mapper';
@@ -53,6 +55,8 @@ const DEFAULT_RESULTS_LIMIT = 30;
 
 @Injectable()
 export class LearningService {
+  private readonly logger = new Logger(LearningService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly gamification: GamificationService,
@@ -286,7 +290,7 @@ export class LearningService {
           xpEarned: xp,
           donEarned: don,
           // Yakunlangan hafta maktab hisobotida o'zgarmaydi: o'tgan haftada boshlangan urinish — snapshot'siz.
-          schoolClassId: weekStartOf(current.day) === weekStartOf(tashkentDay(now)) ? await schoolClassOf(tx, childId) : null,
+          schoolClassId: isoWeekStart(current.day) === isoWeekStart(tashkentDay(now)) ? await schoolClassOf(tx, childId) : null,
         },
         include: { topicRef: { select: TOPIC_REF_SELECT } },
       });
@@ -300,7 +304,22 @@ export class LearningService {
     });
 
     if (profile) this.gamification.notifyProfileUpdated(childId, profile);
+    if (attempt.topicId) await this.unlockTopicMaster(childId, attempt.topicId);
     return toResultView(attempt);
+  }
+
+  /**
+   * "Mavzu ustasi" yutug'i: mavzu bo'yicha urinishdan keyin shu mavzu "o'zlashtirilgan"
+   * bo'lsa (`domain/topic-mastery.ts` qoidasi) ochiladi. Xato natijani buzmaydi.
+   */
+  private async unlockTopicMaster(childId: string, topicId: string): Promise<void> {
+    try {
+      if (await hasMasteredTopic(this.prisma, childId, [topicId])) {
+        await this.gamification.unlockAchievement(childId, 'topic_master');
+      }
+    } catch (e) {
+      this.logger.error(`topic_master yutug'i berilmadi (child ${childId})`, e as Error);
+    }
   }
 
   async attemptView(childId: string, attemptId: string): Promise<AttemptView> {
@@ -403,11 +422,6 @@ export class LearningService {
     const byId = new Map(rows.map((q) => [q.id, q]));
     return ids.map((id) => byId.get(id)).filter((q): q is LearningQuestion => !!q);
   }
-}
-
-/** Hafta dushanbasi (Toshkent kuni). */
-function weekStartOf(day: string): string {
-  return addDays(day, 1 - isoWeekday(day));
 }
 
 /**

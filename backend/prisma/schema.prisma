@@ -656,6 +656,9 @@ model ChildProfile {
   streakDays       Int       @default(0) @map("streak_days")
   lastActivityDate DateTime? @map("last_activity_date")
   achievements     Json      @default("[]")
+  /// Yutuq ochilgan vaqt: `{ "<badgeId>": "<ISO>" }`. Faqat voqea paytida ochilganlar;
+  /// eski / keyinchalik to'ldirilgan (backfill) yutuqlarda yozuv yo'q.
+  achievementDates Json      @default("{}") @map("achievement_dates")
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 

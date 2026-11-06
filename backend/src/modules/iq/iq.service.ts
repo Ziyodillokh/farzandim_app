@@ -13,11 +13,13 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { IqSession, IqSessionStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { tashkentDay } from '../../common/time/tashkent';
+import { GamificationService } from '../gamification/gamification.service';
 import { IqItemKind, LocalizedText } from './domain/bank';
 import {
   formFor,
@@ -120,7 +122,12 @@ function itemView(item: ItemRow, position: number, choice: string | null): IqIte
 
 @Injectable()
 export class IqService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(IqService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly gamification: GamificationService,
+  ) {}
 
   /** Test uchun almashtiriladi. */
   protected now(): Date {
@@ -417,7 +424,17 @@ export class IqService {
       return { closed: false, value: null };
     });
     if (outcome.closed) throw sessionClosed();
+    await this.unlockThinker(childId);
     return this.sessionView(childId, sessionId);
+  }
+
+  /** "Mutafakkir" yutug'i (idempotent). Xato testni yakunlashni buzmaydi. */
+  private async unlockThinker(childId: string): Promise<void> {
+    try {
+      await this.gamification.unlockAchievement(childId, 'thinker');
+    } catch (e) {
+      this.logger.error(`thinker yutug'i berilmadi (child ${childId})`, e as Error);
+    }
   }
 
   // ── Ichki ──────────────────────────────────────────────────────────

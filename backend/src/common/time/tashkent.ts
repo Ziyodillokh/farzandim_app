@@ -51,3 +51,8 @@ export function isoWeekday(day: DayKey): number {
   const weekday = new Date(`${day}T00:00:00Z`).getUTCDay();
   return weekday === 0 ? 7 : weekday;
 }
+
+/** Shu kun tegishli ISO haftaning dushanbasi (hafta: dushanba–yakshanba). */
+export function isoWeekStart(day: DayKey): DayKey {
+  return addDays(day, 1 - isoWeekday(day));
+}

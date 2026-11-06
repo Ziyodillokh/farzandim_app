@@ -14,6 +14,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
+import { BadgesService } from './badges/badges.service';
 import { GamificationService } from './gamification.service';
 import { DonLedgerService } from './ledger/don-ledger.service';
 import { CreateXpEventDto } from './dto/create-xp-event.dto';
@@ -30,6 +31,7 @@ export class GamificationController {
   constructor(
     private readonly service: GamificationService,
     private readonly ledger: DonLedgerService,
+    private readonly badges: BadgesService,
   ) {}
 
   @Get('children/:childId/profile')
@@ -93,5 +95,11 @@ export class GamificationController {
     @Query() query: DonLedgerQueryDto,
   ) {
     return this.ledger.list(childId, user.userId, query);
+  }
+
+  @Get('children/:childId/badges')
+  @ApiOperation({ summary: 'Yutuqlar (badge) katalogi: ochilgan / ochilmagan' })
+  listBadges(@Param('childId') childId: string, @CurrentUser() user: JwtPayload) {
+    return this.badges.list(childId, user.userId);
   }
 }
