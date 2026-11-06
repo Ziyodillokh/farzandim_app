@@ -15,9 +15,11 @@ import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { GamificationService } from './gamification.service';
+import { DonLedgerService } from './ledger/don-ledger.service';
 import { CreateXpEventDto } from './dto/create-xp-event.dto';
 import { ListXpEventsDto } from './dto/list-xp-events.dto';
 import { DevelopmentSummaryQueryDto } from './dto/development-summary-query.dto';
+import { DonLedgerQueryDto } from './dto/don-ledger-query.dto';
 import { Request } from 'express';
 
 @ApiTags('Gamification')
@@ -25,7 +27,10 @@ import { Request } from 'express';
 @UseGuards(ConsumerJwtAuthGuard, RolesGuard)
 @Controller()
 export class GamificationController {
-  constructor(private readonly service: GamificationService) {}
+  constructor(
+    private readonly service: GamificationService,
+    private readonly ledger: DonLedgerService,
+  ) {}
 
   @Get('children/:childId/profile')
   @ApiOperation({ summary: 'Get child gamification profile' })
@@ -78,5 +83,15 @@ export class GamificationController {
       user.userId,
       query.range ?? 'weekly',
     );
+  }
+
+  @Get('children/:childId/don-ledger')
+  @ApiOperation({ summary: 'DON daftari: balans + yozuvlar (kursor bilan, yangisi birinchi)' })
+  donLedger(
+    @Param('childId') childId: string,
+    @CurrentUser() user: JwtPayload,
+    @Query() query: DonLedgerQueryDto,
+  ) {
+    return this.ledger.list(childId, user.userId, query);
   }
 }

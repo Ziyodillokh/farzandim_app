@@ -4,11 +4,12 @@ import { AuditModule } from '../../common/audit/audit.module';
 import { RealtimeModule } from '../../common/realtime/realtime.module';
 import { GamificationController } from './gamification.controller';
 import { GamificationService } from './gamification.service';
+import { DonLedgerService } from './ledger/don-ledger.service';
 
 @Module({
   imports: [DatabaseModule, AuditModule, RealtimeModule],
   controllers: [GamificationController],
-  providers: [GamificationService],
+  providers: [GamificationService, DonLedgerService],
   exports: [GamificationService],
 })
 export class GamificationModule {}
