@@ -12,8 +12,15 @@ import { DATA_DELETION_NOTIFICATION_KIND } from '../../modules/data-deletion/dat
 import { CHILD_RECOVERY_NOTIFICATION_KIND } from '../../modules/child-auth/child-auth.constants';
 import { CARE_TOPIC_LABELS } from '../care/care-labels';
 import { audienceTouchesScope, loadRoster, toAudience } from '../comms/comms-roster';
+import { GUARDIAN_REVIEW_KIND, LINK_CORRECTION_KIND, LINK_REQUESTS_HREF, LINK_REVIEW_KIND } from '../students/link-notification-ids';
 
 export const FEED_LIMIT = 30;
+/**
+ * Ulanish so'rovlari ommaviy bo'lishi mumkin (birinchi kunlar): lentani to'ldirib, erta ketish va favqulodda
+ * rejimni siqib chiqarmasligi uchun har tur bo'yicha eng yangi shuncha tasi ko'rsatiladi (to'liq navbat — so'rovlar sahifasida).
+ */
+export const LINK_FEED_PER_KIND = 10;
+const LINK_KINDS: ReadonlySet<string> = new Set([LINK_REVIEW_KIND, LINK_CORRECTION_KIND, GUARDIAN_REVIEW_KIND]);
 const MESSAGE_WINDOW_MS = 3 * 24 * 3_600_000;
 const SUBJECT_MAX = 90;
 const STORED_LIMIT = 200;
@@ -21,6 +28,9 @@ const STORED_LIMIT = 200;
 export type NotificationKind =
   | 'SAFETY_SIGNAL'
   | 'TEST_COMPLETED'
+  | 'LINK_REVIEW'
+  | 'LINK_CORRECTION'
+  | 'GUARDIAN_REVIEW'
   | 'EARLY_EXIT_PENDING'
   | 'VERIFICATION_OPEN'
   | 'CARE_NEW'
@@ -44,6 +54,9 @@ export interface NotificationItem {
 export const NOTIFICATION_TONES: Record<NotificationKind, NotificationItem['tone']> = {
   SAFETY_SIGNAL: 'destructive',
   TEST_COMPLETED: 'success',
+  LINK_REVIEW: 'warning',
+  LINK_CORRECTION: 'warning',
+  GUARDIAN_REVIEW: 'warning',
   EARLY_EXIT_PENDING: 'warning',
   VERIFICATION_OPEN: 'info',
   CARE_NEW: 'info',
@@ -117,7 +130,20 @@ export class NotificationsService {
       orderBy: { at: 'desc' },
       take: STORED_LIMIT,
     });
-    return rows.map((n) => {
+    const linkSeen = new Map<string, number>();
+    const visible = rows.filter((n) => {
+      if (!LINK_KINDS.has(n.kind)) return true;
+      const count = (linkSeen.get(n.kind) ?? 0) + 1;
+      linkSeen.set(n.kind, count);
+      return count <= LINK_FEED_PER_KIND;
+    });
+    return visible.map((n) => {
+      // Ulanish so'rovlari (K2) — faqat o'quvchi ismi va sinf nomi: bola ismi, kod va izoh hech qachon.
+      if (n.kind === LINK_REVIEW_KIND || n.kind === LINK_CORRECTION_KIND || n.kind === GUARDIAN_REVIEW_KIND) {
+        const stored = (n.params ?? {}) as Record<string, unknown>;
+        const params = { studentName: String(stored.studentName ?? ''), className: String(stored.className ?? '') };
+        return item(n.kind, n.id, n.at, { params, href: LINK_REQUESTS_HREF });
+      }
       // Bola ovozi (shoshilinch / eskalatsiya) — ism va matnsiz: sinf nomi va mavzu yorlig'i xolos.
       if (n.kind === 'CARE_URGENT' || n.kind === 'CARE_NEW') {
         const params = (n.params ?? {}) as Record<string, string | number>;

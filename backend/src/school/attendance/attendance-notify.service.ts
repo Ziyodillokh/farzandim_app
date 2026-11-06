@@ -65,7 +65,7 @@ export class AttendanceNotifyService {
   /** O'quvchining ilovaga ulangan ota-onalari bormi (yozuvdagi `parentNotified` uchun). */
   async hasParentUsers(db: Prisma.TransactionClient | PrismaService, studentId: string): Promise<boolean> {
     const count = await db.schoolStudentGuardian.count({
-      where: { studentId, guardian: { userId: { not: null } } },
+      where: { studentId, guardian: { userId: { not: null }, linkStatus: 'LINKED' } },
     });
     return count > 0;
   }
@@ -148,7 +148,7 @@ export class AttendanceNotifyService {
 
   private async targets(studentId: string): Promise<ParentTarget[]> {
     const links = await this.prisma.schoolStudentGuardian.findMany({
-      where: { studentId, guardian: { userId: { not: null } } },
+      where: { studentId, guardian: { userId: { not: null }, linkStatus: 'LINKED' } },
       select: { guardian: { select: { id: true, userId: true } } },
       orderBy: { guardian: { createdAt: 'asc' } },
     });

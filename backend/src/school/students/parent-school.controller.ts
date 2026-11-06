@@ -34,7 +34,10 @@ export class ParentSchoolController {
   @UseGuards(ThrottlerGuard)
   @Throttle({ schoolLink: SCHOOL_LINK_LIMIT })
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Maktab taklif kodini kiritish (8 belgi, 7 kun)' })
+  @ApiOperation({
+    summary:
+      "Maktab taklif kodini kiritish: 8 belgili vasiy kodi (7 kun) yoki 6 raqamli o'quvchi kodi (24 soat; vasiylik faqat maktab ishongan ota-onaga, qolganlariga xodim tasdig'i — PENDING_REVIEW)",
+  })
   redeem(@CurrentUser() user: JwtPayload, @Body() body: unknown, @Req() req: FastifyRequest) {
     return this.links.redeem(user.userId, body, req.ip);
   }

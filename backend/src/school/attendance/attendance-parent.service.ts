@@ -31,7 +31,7 @@ export class AttendanceParentService {
   /** Ota-onaning o'z guardian yozuvi orqali bog'langan (arxivlanmagan) o'quvchisi. */
   private async linked(userId: string, studentId: string) {
     const link = await this.prisma.schoolStudentGuardian.findFirst({
-      where: { studentId, guardian: { userId }, student: { archived: false } },
+      where: { studentId, guardian: { userId, linkStatus: 'LINKED' }, student: { archived: false } },
       include: linkInclude,
       orderBy: { guardian: { createdAt: 'asc' } },
     });
@@ -85,7 +85,7 @@ export class AttendanceParentService {
   /** Ota-onaning bog'langan o'quvchilari bo'yicha so'rovlar (eng yangisi birinchi). */
   async listEarlyExits(userId: string) {
     const links = await this.prisma.schoolStudentGuardian.findMany({
-      where: { guardian: { userId } },
+      where: { guardian: { userId, linkStatus: 'LINKED' } },
       select: { student: { select: { id: true, firstName: true, lastName: true, class: { select: { name: true } } } } },
     });
     if (links.length === 0) return [];

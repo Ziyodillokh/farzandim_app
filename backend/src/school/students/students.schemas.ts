@@ -3,6 +3,7 @@
 
 import { z } from 'zod';
 import { isoDateSchema, listQuerySchema, msg, phoneSchema, requiredText } from '../common/school-zod';
+import { stripCodeSeparators } from './student-code';
 
 export const guardianInputSchema = z.object({
   fullName: requiredText(80),
@@ -59,12 +60,31 @@ export const importRowsSchema = z.object({
     .max(IMPORT_MAX_ROWS, msg.tooLong),
 });
 
-/** Ota-ona ilovasi: taklif kodi (8 belgi, katta-kichik harf va bo'shliq farqsiz). */
+/**
+ * Ota-ona ilovasi: taklif kodi — 8 belgili vasiy kodi (katta-kichik harf va bo'shliq farqsiz) YOKI 6 raqamli
+ * o'quvchi kodi (K2, ota-ona o'rni).
+ */
 export const redeemSchema = z.object({
   code: z
     .string({ error: msg.required })
-    .transform((v) => v.replace(/[\s-]/g, '').toUpperCase())
-    .pipe(z.string().regex(/^[A-Z0-9]{8}$/, 'errors.school.inviteCodeFormat')),
+    .transform((v) => stripCodeSeparators(v).toUpperCase())
+    .pipe(z.string().regex(/^([A-Z0-9]{8}|\d{6})$/, 'errors.school.inviteCodeFormat')),
+});
+
+/** Bola ilovasi: faqat 6 raqamli o'quvchi kodi (bo'shliq va chiziqchalar farqsiz). */
+export const studentCodeSchema = z.object({
+  code: z
+    .string({ error: msg.required })
+    .transform(stripCodeSeparators)
+    .pipe(z.string().regex(/^\d{6}$/, 'errors.school.studentCodeFormat')),
+});
+
+/** Bolaning "maktab / sinf noto'g'ri" so'rovi (A08): izoh 300 belgigacha, `clientRequestId` — UUID. */
+export const CORRECTION_NOTE_MAX = 300;
+export const linkCorrectionSchema = z.object({
+  reason: z.enum(['WRONG_SCHOOL_OR_CLASS'], { error: msg.required }),
+  note: z.string().trim().max(CORRECTION_NOTE_MAX, msg.tooLong).default(''),
+  clientRequestId: z.string({ error: msg.required }).uuid(msg.required),
 });
 
 export const childLinkSchema = z.object({ childId: z.string().uuid().nullable() });
