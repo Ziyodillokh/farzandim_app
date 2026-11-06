@@ -44,9 +44,9 @@ function requiredBool(value: unknown, what: string): boolean {
   throw malformed(what);
 }
 
-/** Backend `409 NOT_LINKED`: o'quvchi hali bola profiliga ulanmagan (xato emas — «avval ota-ona ulashi kerak»). */
+/** Backend `409 NOT_LINKED`: o'quvchi hali bola profiliga ulanmagan (xato emas — «avval ota-ona ulashi kerak»). Kod aniq — status qat'iy emas. */
 export function isNotLinked(error: unknown): boolean {
-  return error instanceof ServiceError && error.code === 'CONFLICT' && error.detail === 'NOT_LINKED';
+  return error instanceof ServiceError && error.detail === 'NOT_LINKED';
 }
 
 // ── Kirish ma'lumotlari (K1) ─────────────────────────────────────────────

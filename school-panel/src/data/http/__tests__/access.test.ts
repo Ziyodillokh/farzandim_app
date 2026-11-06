@@ -264,10 +264,10 @@ describe('toLinkRequests (kontrakt K2: GET /school/link-requests)', () => {
 });
 
 describe('xato kodlari', () => {
-  it('isNotLinked faqat CONFLICT + NOT_LINKED detail', () => {
+  it('isNotLinked: aniq NOT_LINKED kodi (status qat\'iy emas); boshqa kod yoki oddiy xato — yo\'q', () => {
     expect(isNotLinked(new ServiceError('CONFLICT', 'x', 'NOT_LINKED'))).toBe(true);
+    expect(isNotLinked(new ServiceError('NOT_FOUND', 'x', 'NOT_LINKED'))).toBe(true);
     expect(isNotLinked(new ServiceError('CONFLICT', 'x', 'LOGIN_TAKEN'))).toBe(false);
-    expect(isNotLinked(new ServiceError('NOT_FOUND', 'x', 'NOT_LINKED'))).toBe(false);
     expect(isNotLinked(new ServiceError('CONFLICT', 'x'))).toBe(false);
     expect(isNotLinked(new Error('NOT_LINKED'))).toBe(false);
   });
