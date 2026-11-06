@@ -51,16 +51,20 @@ export function toMessageView(m: MessageRow, deps: ThreadDeps): ThreadMessage {
   };
 }
 
-/** Xabarlar (eskidan yangiga). Xabari yo'q eski murojaat — `messageEnc`dan sintetik bitta xabar. */
+/**
+ * Xabarlar (eskidan yangiga). Yangi murojaatda birinchi bola xabari murojaat bilan BIR LAHZADA
+ * yoziladi; eski murojaatda (xabarlar jadvalidan oldingi) hamma xabar murojaatdan keyin — shunda
+ * asl matn `messageEnc`dan sintetik "initial" xabar sifatida boshiga qo'shiladi.
+ */
 export function threadOf(
   request: Pick<SchoolCareRequest, 'messageEnc' | 'createdAt'>,
   rows: readonly MessageRow[],
   deps: ThreadDeps,
 ): ThreadMessage[] {
-  if (rows.length === 0) {
-    return [{ id: INITIAL_MESSAGE_ID, author: 'CHILD', authorName: null, text: deps.decrypt(request.messageEnc), createdAt: request.createdAt.toISOString() }];
-  }
-  return [...rows]
-    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id))
-    .map((m) => toMessageView(m, deps));
+  const sorted = [...rows].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id));
+  const hasOriginal = sorted.length > 0 && sorted[0]!.createdAt.getTime() <= request.createdAt.getTime();
+  const initial: ThreadMessage[] = hasOriginal
+    ? []
+    : [{ id: INITIAL_MESSAGE_ID, author: 'CHILD', authorName: null, text: deps.decrypt(request.messageEnc), createdAt: request.createdAt.toISOString() }];
+  return [...initial, ...sorted.map((m) => toMessageView(m, deps))];
 }
