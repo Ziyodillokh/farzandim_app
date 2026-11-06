@@ -16,6 +16,9 @@ describe('errorKey', () => {
   it('backend\'ning aniq kodi (detail) tarjimasi bo\'lsa — umumiy CONFLICT o\'rniga aynan shu xabar', () => {
     expect(errorKey(new ServiceError('CONFLICT', 'NOT_LINKED', 'NOT_LINKED'))).toBe('errors.detail.NOT_LINKED');
     expect(errorKey(new ServiceError('CONFLICT', 'LOGIN_TAKEN', 'LOGIN_TAKEN'))).toBe('errors.detail.LOGIN_TAKEN');
+    // Ulanish/tiklash so'rovi allaqachon hal qilingan: «yozuv mavjud» o'rniga aniq xabar (backend kodlari ham shular).
+    expect(errorKey(new ServiceError('CONFLICT', 'already resolved', 'ALREADY_RESOLVED'))).toBe('errors.detail.ALREADY_RESOLVED');
+    expect(errorKey(new ServiceError('NOT_FOUND', 'x', 'REQUEST_NOT_FOUND'))).toBe('errors.detail.REQUEST_NOT_FOUND');
     // Tarjimasi yo'q kod — kod bo'yicha umumiy kalit.
     expect(errorKey(new ServiceError('CONFLICT', 'x', 'REQUEST_CLOSED'))).toBe('errors.CONFLICT');
   });

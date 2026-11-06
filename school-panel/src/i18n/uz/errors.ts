@@ -7,6 +7,8 @@ export const errors = {
   detail: {
     NOT_LINKED: 'Oʻquvchi hali Parvoz bola profiliga ulanmagan',
     LOGIN_TAKEN: 'Bu login band — boshqasini tanlang',
+    ALREADY_RESOLVED: 'Soʻrov allaqachon koʻrib chiqilgan',
+    REQUEST_NOT_FOUND: 'Soʻrov topilmadi — allaqachon koʻrib chiqilgan boʻlishi mumkin',
   },
   storageFull: 'Brauzer xotirasi to\'ldi — o\'zgarishlar faqat shu sessiyada saqlanadi',
   form: {

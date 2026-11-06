@@ -82,9 +82,9 @@ describe('linkRequestsService: tekshiruv (REVIEW)', () => {
     loginAs('ADMIN');
     const request = byKind(await linkRequestsService.list(), 'REVIEW')[0]!;
     await linkRequestsService.confirm(request.id);
-    await expect(linkRequestsService.confirm(request.id)).rejects.toMatchObject({ code: 'CONFLICT' });
-    await expect(linkRequestsService.reject(request.id)).rejects.toMatchObject({ code: 'CONFLICT' });
-    await expect(linkRequestsService.confirm('lnk-yoq')).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await expect(linkRequestsService.confirm(request.id)).rejects.toMatchObject({ code: 'CONFLICT', detail: 'ALREADY_RESOLVED' });
+    await expect(linkRequestsService.reject(request.id)).rejects.toMatchObject({ code: 'CONFLICT', detail: 'ALREADY_RESOLVED' });
+    await expect(linkRequestsService.confirm('lnk-yoq')).rejects.toMatchObject({ code: 'NOT_FOUND', detail: 'REQUEST_NOT_FOUND' });
   });
 
   it('sinf rahbari: o\'z sinfini hal qiladi, boshqa sinfniki — FORBIDDEN', async () => {

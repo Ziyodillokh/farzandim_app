@@ -6,6 +6,7 @@ import { type TKey, translate } from '@/i18n/translate';
 import type { Vars } from '@/i18n/types';
 import { TEMP_PASSWORD_ALPHABET } from '../access-model';
 import { clockNow } from '../clock';
+import { roleHas } from '@/auth/permissions';
 import { currentActor } from '../context';
 import { getTables, transact } from '../db';
 import { accessService } from '../services/access';
@@ -180,7 +181,7 @@ describe('accessService: parol tiklash so\'rovlari', () => {
     expect(list).toEqual([{ id: sevenA.id, channel: 'SCHOOL', createdAt: sevenA.createdAt }]);
   });
 
-  it('rad etish: so\'rov ro\'yxatdan chiqadi, parol o\'zgarmaydi, audit; qayta rad etish — CONFLICT', async () => {
+  it('rad etish: so\'rov ro\'yxatdan chiqadi, parol o\'zgarmaydi, audit; qayta rad etish — CONFLICT/ALREADY_RESOLVED', async () => {
     const request = getTables().access.recoveryRequests.find((r) => r.status === 'RECEIVED')!;
     const before = await accessService.credentials(request.studentId);
     await accessService.rejectRecovery(request.studentId, request.id);
@@ -188,13 +189,13 @@ describe('accessService: parol tiklash so\'rovlari', () => {
     await expect(accessService.recoveryRequests(request.studentId)).resolves.toEqual([]);
     await expect(accessService.credentials(request.studentId)).resolves.toEqual(before);
     expect(getTables().audit.at(-1)).toMatchObject({ action: 'student.recovery.reject', module: 'STUDENTS' });
-    await expect(accessService.rejectRecovery(request.studentId, request.id)).rejects.toMatchObject({ code: 'CONFLICT' });
+    await expect(accessService.rejectRecovery(request.studentId, request.id)).rejects.toMatchObject({ code: 'CONFLICT', detail: 'ALREADY_RESOLVED' });
   });
 
   it('boshqa o\'quvchining so\'rovi yoki noma\'lum id — NOT_FOUND', async () => {
     const [a, b] = getTables().access.recoveryRequests.filter((r) => r.status === 'RECEIVED');
-    await expect(accessService.rejectRecovery(a!.studentId, b!.id)).rejects.toMatchObject({ code: 'NOT_FOUND' });
-    await expect(accessService.rejectRecovery(a!.studentId, 'rec-yoq')).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await expect(accessService.rejectRecovery(a!.studentId, b!.id)).rejects.toMatchObject({ code: 'NOT_FOUND', detail: 'REQUEST_NOT_FOUND' });
+    await expect(accessService.rejectRecovery(a!.studentId, 'rec-yoq')).rejects.toMatchObject({ code: 'NOT_FOUND', detail: 'REQUEST_NOT_FOUND' });
   });
 
   it('sinf rahbari (students.manage yo\'q) — FORBIDDEN', async () => {
@@ -289,7 +290,7 @@ describe('xodim bildirishnomalari (kirish)', () => {
     return buildFeed(getTables(), currentActor(), NOW).filter((i) => ['CHILD_RECOVERY_REQUEST', 'LINK_REVIEW', 'LINK_CORRECTION'].includes(i.kind));
   };
 
-  it('admin hammasini ko\'radi; direktor va navbatchi — yo\'q; sinf rahbari faqat o\'z sinfini', () => {
+  it('admin hammasini ko\'radi; direktor va navbatchi — yo\'q; sinf rahbari faqat o\'z sinfining ulanish bildirishnomalarini', () => {
     expect(kinds('ADMIN')).toHaveLength(7);
     expect(kinds('DIRECTOR')).toHaveLength(0);
     expect(kinds('DUTY')).toHaveLength(0);
@@ -297,6 +298,16 @@ describe('xodim bildirishnomalari (kirish)', () => {
     expect(homeroom.length).toBeGreaterThan(0);
     expect(homeroom.length).toBeLessThan(7);
     expect(new Set(homeroom.map((i) => i.params.className))).toEqual(new Set(['7-A']));
+  });
+
+  it('bildirishnoma faqat uni hal qila oladigan xodimga: `students.manage`siz sinf rahbariga CHILD_RECOVERY_REQUEST kelmaydi', () => {
+    expect(roleHas('HOMEROOM', 'students.manage')).toBe(false);
+    const homeroom = kinds('HOMEROOM');
+    expect(homeroom.some((i) => i.kind === 'CHILD_RECOVERY_REQUEST')).toBe(false);
+    // Ulanish so'rovlarini (`guardians.link`) hal qila oladi — ular keladi.
+    expect(new Set(homeroom.map((i) => i.kind))).toEqual(new Set(['LINK_REVIEW', 'LINK_CORRECTION']));
+    // Admin (`students.manage` bor) tiklash so'rovlarini oladi.
+    expect(kinds('ADMIN').filter((i) => i.kind === 'CHILD_RECOVERY_REQUEST')).toHaveLength(2);
   });
 
   it('ohang: parol tiklash va tuzatish — ogohlantirish, tekshiruv — ma\'lumot; params faqat ism va sinf', () => {

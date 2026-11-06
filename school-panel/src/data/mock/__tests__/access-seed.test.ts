@@ -52,11 +52,12 @@ describe('kirish demo ma\'lumotlari (seed)', () => {
     expect(JSON.stringify(getTables().access)).not.toMatch(/temporaryPassword|passwordHash|"password"/i);
   });
 
-  it('xodim bildirishnomalari: sinf rahbari + admin, faqat ism va sinf; havolalar tegishli sahifaga', () => {
+  it('xodim bildirishnomalari: faqat amalni bajara oladigan rollarga, faqat ism va sinf; havolalar tegishli sahifaga', () => {
     const stored = getTables().notifications.filter((n) => ['CHILD_RECOVERY_REQUEST', 'LINK_REVIEW', 'LINK_CORRECTION'].includes(n.kind));
     expect(stored).toHaveLength(7);
     for (const n of stored) {
-      expect(n.roles).toEqual(['HOMEROOM', 'ADMIN']);
+      // Tiklash — `students.manage` (sinf rahbarida yo'q) → faqat admin; ulanish so'rovlari — `guardians.link` → sinf rahbari + admin.
+      expect(n.roles).toEqual(n.kind === 'CHILD_RECOVERY_REQUEST' ? ['ADMIN'] : ['HOMEROOM', 'ADMIN']);
       expect(Object.keys(n.params).sort()).toEqual(['className', 'studentName']);
       expect(n.classIds).toHaveLength(1);
       expect(n.href).toMatch(n.kind === 'CHILD_RECOVERY_REQUEST' ? /^\/students\/view\?id=.+&tab=access$/ : /^\/students\/link-requests$/);

@@ -35,9 +35,9 @@ function toView(t: Tables, r: MockLinkRequest): LinkRequest | null {
 function openRequest(t: Tables, actor: Actor, id: string): { request: MockLinkRequest; student: Student } {
   const request = t.access.linkRequests.find((r) => r.id === id);
   const student = request && t.students.find((s) => s.id === request.studentId);
-  if (!request || !student) throw new ServiceError('NOT_FOUND', id);
+  if (!request || !student) throw new ServiceError('NOT_FOUND', id, 'REQUEST_NOT_FOUND');
   assertClassInScope(actor, student.classId);
-  if (request.status !== 'OPEN') throw new ServiceError('CONFLICT', 'already resolved');
+  if (request.status !== 'OPEN') throw new ServiceError('CONFLICT', 'already resolved', 'ALREADY_RESOLVED');
   return { request, student };
 }
 

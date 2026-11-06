@@ -1,6 +1,6 @@
 import type { Guardian, SchoolClass, StaffNotification, Student } from '@/data/contracts';
 import { hashString } from '@/lib/rng';
-import { suggestLogin } from '../access-model';
+import { type AccessNotificationKind, recipientRoles, suggestLogin } from '../access-model';
 import type { AccessTables, MockCredential, MockInviteCode, MockLinkRequest, MockRecoveryRequest } from '../access-tables';
 import { addDays } from '../calendar';
 import { studentName } from '../lookups';
@@ -14,7 +14,6 @@ import { studentName } from '../lookups';
 const CHILD_LINKED_SHARE = 70;
 const CREDENTIAL_SHARE = 55;
 const INVITE_TTL_DAYS = 1;
-const HOMEROOM_ADMIN_ROLES = ['HOMEROOM', 'ADMIN'] as const;
 const SEED_STAFF_ID = 'stf-admin';
 const CORRECTION_NOTE = 'Men boshqa sinfda oʻqiyman — bu yerda sinf notoʻgʻri koʻrsatilgan.';
 
@@ -120,7 +119,7 @@ export function buildAccess(input: Input): AccessSeed {
   const loginsTaken = new Set<string>();
   const credentials = linked.filter((s) => percentOf(seed, 'credential', s.id) < CREDENTIAL_SHARE).map((s) => credentialFor(s, input, loginsTaken));
 
-  // Parol tiklash: kirish ma'lumotli ulangan o'quvchilardan ikkitasi (biri 7-A da bo'lsa — sinf rahbari bildirishnomasi).
+  // Parol tiklash: kirish ma'lumotli ulangan o'quvchilardan ikkitasi (biri 7-A da: sinf doirasi sinovi uchun).
   const credentialed = credentials.map((c) => linked.find((s) => s.id === c.studentId)).filter((s): s is Student => Boolean(s));
   const recoveryStudents = [credentialed.find((s) => s.classId === 'cls-7a'), credentialed.find((s) => s.classId !== 'cls-7a')]
     .filter((s): s is Student => Boolean(s))
@@ -141,11 +140,12 @@ export function buildAccess(input: Input): AccessSeed {
   });
 
   const classes = classMap(input.classes);
-  const notificationOf = (kind: StaffNotification['kind'], id: string, student: Student, createdAt: string, href: string): StaffNotification => ({
+  const notificationOf = (kind: AccessNotificationKind, id: string, student: Student, createdAt: string, href: string): StaffNotification => ({
     id: `ntf-${kind.toLowerCase().replace(/_/g, '-')}-${id}`,
     kind,
     at: createdAt,
-    roles: [...HOMEROOM_ADMIN_ROLES],
+    // Faqat amalni bajara oladigan rollarga (sinf rahbarida `students.manage` yo'q — tiklash so'rovi unga kelmaydi).
+    roles: recipientRoles(kind),
     classIds: [student.classId],
     params: { studentName: studentName(student), className: classes.get(student.classId)?.name ?? '' },
     subject: null,

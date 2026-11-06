@@ -122,8 +122,8 @@ export const accessService = {
     transact((t) => {
       const student = studentInScope(t, actor, studentId);
       const request = t.access.recoveryRequests.find((r) => r.id === requestId && r.studentId === student.id);
-      if (!request) throw new ServiceError('NOT_FOUND', requestId);
-      if (request.status !== 'RECEIVED') throw new ServiceError('CONFLICT', 'already resolved');
+      if (!request) throw new ServiceError('NOT_FOUND', requestId, 'REQUEST_NOT_FOUND');
+      if (request.status !== 'RECEIVED') throw new ServiceError('CONFLICT', 'already resolved', 'ALREADY_RESOLVED');
       request.status = 'REJECTED';
       request.resolvedAt = toLocalIso(clockNow());
       const name = studentName(student);

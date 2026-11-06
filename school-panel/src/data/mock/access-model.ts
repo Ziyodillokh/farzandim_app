@@ -1,4 +1,5 @@
-import type { InviteCode, RecoveryRequest, Student } from '@/data/contracts';
+import { type Permission, roleHas } from '@/auth/permissions';
+import type { InviteCode, RecoveryRequest, RoleKey, Student } from '@/data/contracts';
 import { LOGIN_PATTERN } from '@/data/schemas/access';
 import { hashString } from '@/lib/rng';
 import type { AccessTables, MockInviteCode } from './access-tables';
@@ -110,4 +111,28 @@ export function openRecoveryOf(access: AccessTables, studentId: string): Recover
     .filter((r) => r.studentId === studentId && r.status === 'RECEIVED')
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
     .map((r) => ({ id: r.id, channel: r.channel, createdAt: r.createdAt }));
+}
+
+export type AccessNotificationKind = 'CHILD_RECOVERY_REQUEST' | 'LINK_REVIEW' | 'LINK_CORRECTION';
+
+/** Bildirishnoma ko'rsatadigan amalni bajarish uchun kerak bo'lgan ruxsat (amal endpoint'lari talab qiladigani). */
+export const ACTION_PERMISSION: Readonly<Record<AccessNotificationKind, Permission>> = {
+  CHILD_RECOVERY_REQUEST: 'students.manage',
+  LINK_REVIEW: 'guardians.link',
+  LINK_CORRECTION: 'guardians.link',
+};
+
+/** Kontrakt (K1/K2) qabul qiluvchilari: sinf rahbari + admin. */
+const CONTRACT_RECIPIENTS: readonly RoleKey[] = ['HOMEROOM', 'ADMIN'];
+
+/**
+ * Xodim bildirishnomasi FAQAT uni hal qila oladigan xodimga yuboriladi: kontrakt qabul qiluvchilari ∩ amal ruxsatiga ega
+ * rollar. Sinf rahbarida `students.manage` yo'q — unga parol tiklash so'rovi kelmaydi (bajara olmaydigan xabar boshi berk
+ * ko'cha bo'lardi); unga shu ruxsat berilsa, o'zi qo'shiladi. Sinf doirasi bildirishnomaning `classIds` orqali.
+ */
+export function recipientRoles(
+  kind: AccessNotificationKind,
+  can: (role: RoleKey, permission: Permission) => boolean = roleHas,
+): RoleKey[] {
+  return CONTRACT_RECIPIENTS.filter((role) => can(role, ACTION_PERMISSION[kind]));
 }

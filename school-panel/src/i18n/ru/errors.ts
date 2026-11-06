@@ -10,6 +10,8 @@ export const errors: DeepString<typeof uz> = {
   detail: {
     NOT_LINKED: 'Ученик ещё не подключён к детскому профилю Parvoz',
     LOGIN_TAKEN: 'Этот логин занят — выберите другой',
+    ALREADY_RESOLVED: 'Запрос уже рассмотрен',
+    REQUEST_NOT_FOUND: 'Запрос не найден — возможно, он уже рассмотрен',
   },
   storageFull: 'Память браузера заполнена — изменения сохранятся только в этой сессии',
   form: {

@@ -7,6 +7,7 @@ import {
   generateInviteCodeDigits,
   generateTemporaryPassword,
   isActiveInvite,
+  recipientRoles,
   TEMP_PASSWORD_ALPHABET,
   TEMP_PASSWORD_LENGTH,
   suggestLogin,
@@ -125,5 +126,19 @@ describe('suggestLogin', () => {
     const login = suggestLogin({ firstName: 'Muhammadyusufbekzodakattaism', lastName: 'Rahimov' }, new Set(), 's');
     expect(LOGIN_PATTERN.test(login)).toBe(true);
     expect(login.length).toBeLessThanOrEqual(24);
+  });
+});
+
+describe('recipientRoles: bildirishnoma faqat uni hal qila oladigan xodimga', () => {
+  it('kontrakt qabul qiluvchilari ∩ amal ruxsati: tiklash (`students.manage`) — faqat admin; ulanish (`guardians.link`) — sinf rahbari + admin', () => {
+    expect(recipientRoles('CHILD_RECOVERY_REQUEST')).toEqual(['ADMIN']);
+    expect(recipientRoles('LINK_REVIEW')).toEqual(['HOMEROOM', 'ADMIN']);
+    expect(recipientRoles('LINK_CORRECTION')).toEqual(['HOMEROOM', 'ADMIN']);
+  });
+
+  it('sinf rahbariga `students.manage` berilsa — tiklash so\'rovi unga ham keladi; ruxsati olinsa — hech kimga', () => {
+    const granted = (role: string, permission: string) => role === 'HOMEROOM' || (role === 'ADMIN' && permission !== 'none');
+    expect(recipientRoles('CHILD_RECOVERY_REQUEST', granted)).toEqual(['HOMEROOM', 'ADMIN']);
+    expect(recipientRoles('LINK_REVIEW', () => false)).toEqual([]);
   });
 });
