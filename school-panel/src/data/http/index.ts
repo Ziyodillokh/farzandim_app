@@ -1,5 +1,6 @@
 import type { Api } from '../api';
 import { notAvailable } from './not-available';
+import { accessHttp, linkRequestsHttp } from './services/access';
 import { assessmentsHttp } from './services/assessments';
 import { attendanceHttp } from './services/attendance';
 import { careHttp } from './services/care';
@@ -41,6 +42,8 @@ export function createHttpApi(): Api {
     development: developmentHttp,
     notifications: notificationsHttp,
     parents: parentsHttp,
+    access: accessHttp,
+    linkRequests: linkRequestsHttp,
     demo: notAvailable('demo'),
   };
 }

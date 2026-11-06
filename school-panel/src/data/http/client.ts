@@ -38,7 +38,9 @@ export function toServiceError(status: number, body: unknown): ServiceError {
   const byStatus: Record<number, Code> = { 400: 'VALIDATION', 401: 'FORBIDDEN', 403: 'FORBIDDEN', 404: 'NOT_FOUND', 409: 'CONFLICT' };
   const code: Code = fromBody ?? byStatus[status] ?? 'UNKNOWN';
   const message = Array.isArray(b.message) ? b.message.join('; ') : typeof b.message === 'string' ? b.message : `HTTP ${status}`;
-  return new ServiceError(code, message);
+  // Backend'ning aniq kodi (`NOT_LINKED`, `LOGIN_TAKEN` …): `code` bir nechta holatni bir xil `CONFLICT` qilib yuboradi.
+  const detail = typeof b.code === 'string' && b.code !== '' ? b.code : null;
+  return new ServiceError(code, message, detail);
 }
 
 function buildUrl(path: string, query?: Query): string {

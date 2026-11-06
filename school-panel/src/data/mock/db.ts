@@ -8,6 +8,7 @@ import { buildCareSettings } from './seed/care';
 import { buildDeputyPsychologist } from './seed/people';
 import { buildActivity, CLOSED_WEEKS } from './seed/learning';
 import { buildSubmissions, buildWrittenAssignments } from './seed/homework';
+import { buildAccess } from './seed/access';
 import { buildNotifications } from './seed/notifications';
 import { buildTimetables } from './seed/timetable';
 import type { DbSnapshot, Tables } from './tables';
@@ -143,6 +144,24 @@ function withCareThread(db: DbSnapshot): DbSnapshot {
   return { ...db, tables: { ...db.tables, careRequests } };
 }
 
+/**
+ * Kirish (5-bosqich): avval saqlangan bazada ulanish, kirish ma'lumotlari, kodlar va so'rovlar jadvallari (demo ma'lumot bilan)
+ * hamda ularga mos xodim bildirishnomalari qo'shiladi.
+ */
+function withAccess(db: DbSnapshot): DbSnapshot {
+  if (db.tables.access) return db;
+  const { access, notifications } = buildAccess({
+    students: db.tables.students,
+    guardians: db.tables.guardians,
+    classes: db.tables.classes,
+    baseIso: db.baseDate,
+    seed: db.seed,
+  });
+  const current = db.tables.notifications ?? [];
+  const known = new Set(current.map((n) => n.id));
+  return { ...db, tables: { ...db.tables, access, notifications: [...current, ...notifications.filter((n) => !known.has(n.id))] } };
+}
+
 const MIGRATIONS: readonly Migration[] = [
   withPortraits,
   withAssessments,
@@ -152,6 +171,7 @@ const MIGRATIONS: readonly Migration[] = [
   withHomework,
   withCareSettings,
   withCareThread,
+  withAccess,
 ];
 
 export function migrate(db: DbSnapshot): DbSnapshot {

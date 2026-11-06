@@ -38,6 +38,7 @@ import type {
   PsychTest,
   VerificationRequest,
 } from '@/data/contracts';
+import type { AccessTables } from './access-tables';
 
 /**
  * Mock bazadagi barcha jadvallar. Yangi jadval qo'shilsa — `db.ts` dagi yumshoq
@@ -88,6 +89,8 @@ export type Tables = {
   studentNotes: StudentNote[];
   /** Sinflarning haftalik dars jadvali (sinfga bitta yozuv). */
   timetables: TimetableRecord[];
+  /** Kirish (5-bosqich): bola profiliga ulanish, kirish ma'lumotlari holati, 6 xonali kodlar, so'rovlar. Parol saqlanmaydi. */
+  access: AccessTables;
   /** Simulyator holati: qaysi sana va qaysi daqiqagacha qayta ishlangan. */
   sim: { date: string; processedUntilMinute: number };
 };

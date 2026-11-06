@@ -20,11 +20,15 @@ export type ListQuery = {
 export type Gender = 'MALE' | 'FEMALE';
 export type DeviceOs = 'IOS' | 'ANDROID' | 'NONE';
 
-/** Servis xatosi — UI uni toast/forma xatosiga aylantiradi. */
+/**
+ * Servis xatosi — UI uni toast/forma xatosiga aylantiradi. `detail` — backenddagi aniq xato kodi
+ * (`NOT_LINKED`, `LOGIN_TAKEN` …): umumiy `code` (`CONFLICT`) bir nechta holatni bir xil ko'rsatganda ajratish uchun.
+ */
 export class ServiceError extends Error {
   constructor(
     public readonly code: 'FORBIDDEN' | 'NOT_FOUND' | 'VALIDATION' | 'CONFLICT' | 'UNKNOWN',
     message: string,
+    public readonly detail: string | null = null,
   ) {
     super(message);
     this.name = 'ServiceError';

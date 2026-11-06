@@ -4,6 +4,10 @@ export const errors = {
   VALIDATION: 'Ma\'lumotlar noto\'g\'ri to\'ldirilgan',
   CONFLICT: 'Bunday yozuv allaqachon mavjud',
   UNKNOWN: 'Kutilmagan xatolik. Qayta urinib ko\'ring',
+  detail: {
+    NOT_LINKED: 'Oʻquvchi hali Parvoz bola profiliga ulanmagan',
+    LOGIN_TAKEN: 'Bu login band — boshqasini tanlang',
+  },
   storageFull: 'Brauzer xotirasi to\'ldi — o\'zgarishlar faqat shu sessiyada saqlanadi',
   form: {
     required: 'Majburiy maydon',
@@ -25,5 +29,6 @@ export const errors = {
     duplicate: 'Qiymat takrorlangan',
     invalid: 'Qiymat notoʻgʻri',
     outOfRange: 'Qiymat ruxsat etilgan oraliqdan tashqarida',
+    invalidLogin: 'Login 4–24 belgidan iborat: kichik lotin harfi bilan boshlanadi, keyin harf, raqam, nuqta yoki pastki chiziq',
   },
 };
