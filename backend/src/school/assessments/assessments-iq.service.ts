@@ -16,6 +16,7 @@ import { IqResultView } from '../../modules/iq/iq.views';
 import { IqService } from '../../modules/iq/iq.service';
 import { actorCan, assertCan, assertClassInScope, SchoolActor } from '../auth/school-actor';
 import { CARE_MIN_GROUP } from '../care/care-suppression';
+import { PERSONAL_ASSIGNMENT } from './assessments-store';
 import { parseOrThrow } from '../common/school-zod';
 
 export const PARVOZ_IQ_TEST_ID = 'parvoz-iq';
@@ -92,11 +93,13 @@ export class AssessmentsIqService {
     });
     const childIds = students.flatMap((s) => (s.childId ? [s.childId] : []));
     const scored = await this.iq.latestScored(childIds, iqWindowStart(new Date()));
+    // Shaxsiy (mutaxassis tanlagan) tayinlash natijasi psixologdan boshqaga ko'rinmaydi (sinf rahbari ham, direktor K=5 ham).
+    const hidden = actorCan(actor, 'assessments.manage') ? new Set<string>() : await this.personalIqStudents(actor.schoolId, students, scored);
     const rows: IqStudentRow[] = students.map((s) => ({
       studentId: s.id,
       name: `${s.lastName} ${s.firstName}`,
       linked: s.childId !== null,
-      result: (s.childId && scored.get(s.childId)?.result) || null,
+      result: (!hidden.has(s.id) && s.childId && scored.get(s.childId)?.result) || null,
     }));
     const done = rows.flatMap((r) => (r.result ? [r.result] : []));
     const suppressed = mode === 'AGGREGATE' && done.length < CARE_MIN_GROUP;
@@ -111,6 +114,29 @@ export class AssessmentsIqService {
       suppressed,
       rows: mode === 'INDIVIDUAL' ? rows : [],
     };
+  }
+
+  /**
+   * Shaxsiy IQ tayinlovi bor o'quvchilar, ularning natijasi shu tayinlovni yakunlagan hisoblanadi
+   * (`childDone` qoidasi: natija tayinlov ochilishidan 180 kun oldindan keyin yakunlangan).
+   */
+  private async personalIqStudents(
+    schoolId: string,
+    students: ReadonlyArray<{ id: string; childId: string | null }>,
+    scored: ReadonlyMap<string, { result: IqResultView }>,
+  ): Promise<Set<string>> {
+    if (students.length === 0) return new Set();
+    const assignments = await this.prisma.schoolPsychAssignment.findMany({
+      where: { schoolId, testId: PARVOZ_IQ_TEST_ID, studentIds: { hasSome: students.map((s) => s.id) }, ...PERSONAL_ASSIGNMENT },
+      select: { studentIds: true, opensAt: true },
+    });
+    const hidden = new Set<string>();
+    for (const s of students) {
+      const done = s.childId ? scored.get(s.childId)?.result.completedAt : undefined;
+      if (!done) continue;
+      if (assignments.some((a) => a.studentIds.includes(s.id) && Date.parse(done) >= iqWindowStart(a.opensAt).getTime())) hidden.add(s.id);
+    }
+    return hidden;
   }
 
   /** IQ tayinlovlari bo'yicha yakunlaganlar soni (tayinlangan sinflarning ulangan o'quvchilari). */

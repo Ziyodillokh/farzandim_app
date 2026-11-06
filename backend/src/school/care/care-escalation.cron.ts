@@ -4,6 +4,9 @@
 // o'rinbosarga saqlangan bildirishnoma (shoshilinch bo'lsa direktorga ham, ismsiz signal).
 // Muddat: shoshilinch — `urgentSlaMinutes`, oddiy — `normalSlaHours` ISH VAQTI (dam olish
 // kunlari, bayramlar va ish soatlaridan tashqari vaqt hisobga olinmaydi).
+// Eski navbat o'tkazilmaydi: o'rinbosar sozlanganda butun eski `NEW` murojaatlar birdaniga ko'chib
+// ketmasin — faqat maktab sozlamalari qatori birinchi yaratilgandan KEYIN yaratilgan murojaatlar
+// ko'rib chiqiladi (`SchoolCareSettings.createdAt`).
 // Idempotent: shartli UPDATE bir murojaatni ikki marta (parallel nusxalarda ham) o'tkazmaydi.
 
 import { Injectable, Logger } from '@nestjs/common';
@@ -45,16 +48,16 @@ export class CareEscalationCron {
   async sweep(now: Date = new Date()): Promise<number> {
     const configured = await this.prisma.schoolCareSettings.findMany({
       where: { deputyStaffId: { not: null }, school: { status: 'ACTIVE' } },
-      select: { schoolId: true },
+      select: { schoolId: true, createdAt: true },
     });
     let total = 0;
-    for (const { schoolId } of configured) total += await this.sweepSchool(schoolId, now);
+    for (const { schoolId, createdAt } of configured) total += await this.sweepSchool(schoolId, createdAt, now);
     return total;
   }
 
-  private async sweepSchool(schoolId: string, now: Date): Promise<number> {
+  private async sweepSchool(schoolId: string, configuredAt: Date, now: Date): Promise<number> {
     const candidates = await this.prisma.schoolCareRequest.findMany({
-      where: { schoolId, status: 'NEW', openedAt: null, escalatedAt: null },
+      where: { schoolId, status: 'NEW', openedAt: null, escalatedAt: null, createdAt: { gte: configuredAt } },
       orderBy: { createdAt: 'asc' },
       take: SWEEP_BATCH,
     });

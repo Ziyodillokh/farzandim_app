@@ -14,6 +14,8 @@ import { ScoredResult, scoreStoredResult } from './results-view';
 export type Db = Prisma.TransactionClient | PrismaService;
 /** Panel tarjima kaliti (409) — faol tayinlash bor: savol / shkala o'zgarmaydi, arxivlanmaydi. */
 export const OPEN_ASSIGNMENTS = 'assessments.validation.openAssignments';
+/** Prisma filtri: shaxsiy (STUDENTS) tayinlash. */
+export const PERSONAL_ASSIGNMENT = { target: { path: ['kind'], equals: 'STUDENTS' } } satisfies Prisma.SchoolPsychAssignmentWhereInput;
 export type ClassRow = { id: string; name: string; grade: number; letter: string };
 
 @Injectable()
@@ -75,9 +77,12 @@ export class AssessmentsStore {
     return new Map(rows.flatMap((r) => (r.classId ? [[r.classId, r._count._all] as const] : [])));
   }
 
-  /** Shaxsiy (STUDENTS) tayinlashlar: mutaxassis tanlagan o'quvchilar — natijalari sinf rahbari va rivojlanish ko'rinishlariga chiqmaydi. */
+  /**
+   * Shaxsiy (STUDENTS) tayinlashlar: mutaxassis tanlagan o'quvchilar — natijalari sinf rahbari va rivojlanish ko'rinishlariga chiqmaydi.
+   * Belgi `target.kind` bo'yicha (o'quvchi o'chirilib `studentIds` bo'shab qolsa ham tayinlash shaxsiy hisoblanadi).
+   */
   async personalAssignmentIds(schoolId: string, db: Db = this.prisma): Promise<Set<string>> {
-    const rows = await db.schoolPsychAssignment.findMany({ where: { schoolId, studentIds: { isEmpty: false } }, select: { id: true } });
+    const rows = await db.schoolPsychAssignment.findMany({ where: { schoolId, ...PERSONAL_ASSIGNMENT }, select: { id: true } });
     return new Set(rows.map((r) => r.id));
   }
 

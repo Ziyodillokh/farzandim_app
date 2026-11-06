@@ -77,6 +77,7 @@ CREATE TABLE "school_care_settings" (
     "work_end" TEXT NOT NULL DEFAULT '17:00',
     "urgent_sla_minutes" INTEGER NOT NULL DEFAULT 60,
     "normal_sla_hours" INTEGER NOT NULL DEFAULT 24,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "updated_by_staff_id" TEXT,
 

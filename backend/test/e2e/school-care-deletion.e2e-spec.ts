@@ -124,6 +124,30 @@ describe('Bola ovozi — ma\'lumotlarni o\'chirish', () => {
     expect(await t.prisma.schoolPsychAssignment.findUniqueOrThrow({ where: { id: assignment.id } })).toMatchObject({ careRequestId: null });
   });
 
+  it('shaxsiy tayinlashdan o\'quvchi id\'si (studentIds va target.studentIds) olib tashlanadi; boshqa o\'quvchilar saqlanadi', async () => {
+    const [gone, kept] = [w.kids7a[0]!, w.kids7b[0]!];
+    await fill(gone);
+    const make = (studentIds: string[]) =>
+      t.prisma.schoolPsychAssignment.create({
+        data: {
+          schoolId: w.schoolId, testId: 'tpl-logic', testVersion: 1, target: { kind: 'STUDENTS', studentIds }, classIds: [], studentIds,
+          opensAt: new Date(), closesAt: new Date(Date.now() + 86_400_000), createdBy: w.psych.staffId,
+        },
+      });
+    const shared = await make([gone.studentId, kept.studentId]);
+    const solo = await make([gone.studentId]);
+    const unrelated = await make([kept.studentId]);
+
+    await t.app.inject({ method: 'DELETE', url: '/api/users/me', headers: { authorization: `Bearer ${gone.token}` } });
+
+    const after = async (id: string) => t.prisma.schoolPsychAssignment.findUniqueOrThrow({ where: { id } });
+    expect(await after(shared.id)).toMatchObject({ studentIds: [kept.studentId], target: { kind: 'STUDENTS', studentIds: [kept.studentId] } });
+    // Bo'shab qolgan tayinlash o'chmaydi va shaxsiy (kind: STUDENTS) bo'lib qoladi.
+    expect(await after(solo.id)).toMatchObject({ studentIds: [], target: { kind: 'STUDENTS', studentIds: [] } });
+    expect(await after(unrelated.id)).toMatchObject({ studentIds: [kept.studentId], target: { kind: 'STUDENTS', studentIds: [kept.studentId] } });
+    expect(JSON.stringify(await t.prisma.schoolPsychAssignment.findMany())).not.toContain(gone.studentId);
+  });
+
   it('o\'chirilgandan keyin psixolog ro\'yxatida ham murojaat qolmaydi', async () => {
     const gone = w.kids7a[0]!;
     await fill(gone);

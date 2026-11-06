@@ -27,7 +27,8 @@ type Tx = Prisma.TransactionClient;
 /**
  * Bola faqat O'Z murojaatlarini ko'radi: o'quvchi yozuvi + shu bola profili (`childId`). O'quvchi yozuvi
  * boshqa bola profiliga qayta bog'lansa, avvalgi bolaning yozishmasi yangisiga ko'rinmaydi.
- * Eski qatorlarda (`childId` yo'q) faqat o'quvchi yozuvi tekshiriladi.
+ * Eski qatorlarda (`childId` yo'q — kimniki ekani noma'lum) RO'YXATDA faqat holat ko'rinadi: matn, yozishma,
+ * xabar yozish va push yo'q (qarang `detailView`, `addMessage`, `CareRequestsService.childUserOf`).
  */
 const ownedBy = (student: Pick<EnrolledStudent, 'studentId' | 'childId'>) => ({
   studentId: student.studentId,
@@ -114,7 +115,8 @@ export class CareChildRequestsService {
       createdAt: r.createdAt.toISOString(),
       meetingAt: r.meetingAt?.toISOString() ?? null,
       lastMessageAt: (r.lastMessageAt ?? r.createdAt).toISOString(),
-      unread: unreadOf.get(r.id) ?? 0,
+      // Eski murojaatda xodim xabarlari bolaga ko'rsatilmaydi — o'qilmagan hisobi ham 0.
+      unread: r.childId === null ? 0 : (unreadOf.get(r.id) ?? 0),
     }));
   }
 
@@ -123,10 +125,12 @@ export class CareChildRequestsService {
     const student = await requireEnrolledStudent(this.prisma, childUserId);
     const request = await this.prisma.schoolCareRequest.findFirst({ where: { id, ...ownedBy(student) } });
     if (!request) throw notFound();
-    await this.prisma.schoolCareMessage.updateMany({
-      where: { requestId: id, author: 'STAFF', readByChildAt: null },
-      data: { readByChildAt: new Date() },
-    });
+    if (request.childId !== null) {
+      await this.prisma.schoolCareMessage.updateMany({
+        where: { requestId: id, author: 'STAFF', readByChildAt: null },
+        data: { readByChildAt: new Date() },
+      });
+    }
     return this.detailView(student.schoolId, request);
   }
 
@@ -139,7 +143,7 @@ export class CareChildRequestsService {
       // Murojaat qatori qulflanadi: xodim "hal qilindi" qilayotganda xabar o'tib ketmasin.
       const rows = await tx.$queryRaw<{ status: string }[]>`
         SELECT status FROM school_care_requests
-        WHERE id = ${id} AND student_id = ${student.studentId} AND (child_id = ${student.childId} OR child_id IS NULL) FOR UPDATE`;
+        WHERE id = ${id} AND student_id = ${student.studentId} AND child_id = ${student.childId} FOR UPDATE`;
       const request = rows[0];
       if (!request) throw notFound();
       if (data.clientMessageId) {
@@ -179,7 +183,9 @@ export class CareChildRequestsService {
   // ── Ichki ──────────────────────────────────────────────────────────
 
   private async detailView(schoolId: string, request: SchoolCareRequest) {
-    const rows = await this.prisma.schoolCareMessage.findMany({ where: { requestId: request.id } });
+    // Eski murojaat (`childId` yo'q): yozuvi qaysi bolaniki ekani noma'lum — matn HECH QAYSI bolaga qaytmaydi.
+    const legacy = request.childId === null;
+    const rows = legacy ? [] : await this.prisma.schoolCareMessage.findMany({ where: { requestId: request.id } });
     const state = await this.settings.load(schoolId);
     const people = await this.settings.people(schoolId, state, rows.flatMap((m) => (m.staffId ? [m.staffId] : [])));
     const handler =
@@ -199,7 +205,7 @@ export class CareChildRequestsService {
       resolvedAt: request.resolvedAt?.toISOString() ?? null,
       meetingAt: request.meetingAt?.toISOString() ?? null,
       handler,
-      messages: threadOf(request, rows, { decrypt: (t) => this.crypto.decrypt(t), nameOf: people.nameOf }),
+      messages: legacy ? [] : threadOf(request, rows, { decrypt: (t) => this.crypto.decrypt(t), nameOf: people.nameOf }),
     };
   }
 

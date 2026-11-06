@@ -418,29 +418,60 @@ describe('Bola ovozi — murojaat yozishmasi', () => {
     });
   });
 
-  it('eski (xabarsiz) murojaat: yozishma messageEnc dan "initial" xabar bilan tuziladi', async () => {
-    const student = kid();
-    const legacy = await t.prisma.schoolCareRequest.create({
-      data: {
-        schoolId: w.schoolId,
-        studentId: student.studentId,
-        classId: w.classes.c7a,
-        topic: 'FAMILY',
-        urgency: 'NORMAL',
-        messageEnc: t.app.get(SchoolCryptoService).encrypt('Eski murojaat matni'),
-      },
-    });
-    const detail = (await child(student, 'GET', `/requests/${legacy.id}`)).json();
-    expect(detail).toMatchObject({ id: legacy.id, stage: 'RECEIVED', handler: { name: 'PSYCHOLOGIST xodim', isDeputy: false } });
-    expect(detail.messages).toEqual([{ id: 'initial', author: 'CHILD', authorName: null, text: 'Eski murojaat matni', createdAt: legacy.createdAt.toISOString() }]);
-    expect((await child(student, 'GET', '/requests')).json()[0]).toMatchObject({ id: legacy.id, lastMessageAt: legacy.createdAt.toISOString(), unread: 0 });
+  describe('eski (childId yo\'q) murojaat', () => {
+    const LEGACY_TEXT = 'Eski murojaat matni';
+    const legacyFor = (studentId: string, classId: string) =>
+      t.prisma.schoolCareRequest.create({
+        data: { schoolId: w.schoolId, studentId, classId, topic: 'FAMILY', urgency: 'NORMAL', messageEnc: t.app.get(SchoolCryptoService).encrypt(LEGACY_TEXT) },
+      });
 
-    const staffView = (await staff(w.psych, 'GET', `/requests/${legacy.id}`)).json();
-    expect(staffView.messages).toEqual([{ id: 'initial', author: 'CHILD', authorName: null, text: 'Eski murojaat matni', createdAt: legacy.createdAt.toISOString() }]);
-    // Javob yozilgach yozishma: eski murojaat uchun sintetik xabar yo'qoladi (haqiqiy xabarlar bor)
-    // — shuning uchun javob yozilganda boshlang'ich xabar ham saqlanadi.
-    await staff(w.psych, 'POST', `/requests/${legacy.id}/messages`, { text: 'Javob' });
-    const after = (await child(student, 'GET', `/requests/${legacy.id}`)).json();
-    expect(after.messages.map((m: { text: string }) => m.text)).toEqual(['Eski murojaat matni', 'Javob']);
+    it('ro\'yxatda faqat holat; tafsilotda matn YO\'Q (yozishma bo\'sh); xabar yozish 404; xodim ko\'radi', async () => {
+      const student = kid();
+      const legacy = await legacyFor(student.studentId, w.classes.c7a);
+
+      const list = await child(student, 'GET', '/requests');
+      expect(list.json()).toEqual([
+        { id: legacy.id, topic: 'FAMILY', urgency: 'NORMAL', status: 'NEW', stage: 'RECEIVED', createdAt: legacy.createdAt.toISOString(), meetingAt: null, lastMessageAt: legacy.createdAt.toISOString(), unread: 0 },
+      ]);
+      const detail = await child(student, 'GET', `/requests/${legacy.id}`);
+      expect(detail.statusCode).toBe(200);
+      expect(detail.json()).toMatchObject({ id: legacy.id, stage: 'RECEIVED', messages: [], handler: { name: 'PSYCHOLOGIST xodim', isDeputy: false } });
+      expect(detail.body).not.toContain(LEGACY_TEXT);
+      expect((await child(student, 'POST', `/requests/${legacy.id}/messages`, { text: 'Yozmoqchiman' })).statusCode).toBe(404);
+      expect(await t.prisma.schoolCareMessage.count()).toBe(0);
+
+      const staffView = (await staff(w.psych, 'GET', `/requests/${legacy.id}`)).json();
+      expect(staffView.messages).toEqual([{ id: 'initial', author: 'CHILD', authorName: null, text: LEGACY_TEXT, createdAt: legacy.createdAt.toISOString() }]);
+    });
+
+    it('xodim javobi saqlanadi, lekin bolaga push ketmaydi va bola matnni ko\'rmaydi', async () => {
+      const student = kid();
+      await addFcmToken(t, student);
+      const legacy = await legacyFor(student.studentId, w.classes.c7a);
+
+      expect((await staff(w.psych, 'POST', `/requests/${legacy.id}/messages`, { text: 'Javob matni' })).statusCode).toBe(201);
+
+      expect(t.fcm.sent).toHaveLength(0);
+      const detail = await child(student, 'GET', `/requests/${legacy.id}`);
+      expect(detail.json()).toMatchObject({ messages: [], stage: 'REPLIED' });
+      expect(detail.body).not.toMatch(/Javob matni|Eski murojaat/);
+      expect((await child(student, 'GET', '/requests')).json()[0]).toMatchObject({ id: legacy.id, unread: 0 });
+      const staffView = (await staff(w.psych, 'GET', `/requests/${legacy.id}`)).json();
+      expect(staffView.messages.map((m: { text: string }) => m.text)).toEqual([LEGACY_TEXT, 'Javob matni']);
+    });
+
+    it('qayta bog\'langan (boshqa) bola eski murojaat matnini o\'qiy olmaydi', async () => {
+      const original = kid();
+      const legacy = await legacyFor(original.studentId, w.classes.c7a);
+      const sibling = await createChild(t.prisma, { userId: original.parentId, token: '' }, { name: 'Aka' });
+      await t.prisma.schoolStudent.update({ where: { id: original.studentId }, data: { childId: sibling.childId } });
+
+      const detail = await child(sibling, 'GET', `/requests/${legacy.id}`);
+      expect(detail.statusCode).toBe(200);
+      expect(detail.json().messages).toEqual([]);
+      expect(detail.body).not.toContain(LEGACY_TEXT);
+      expect((await child(sibling, 'POST', `/requests/${legacy.id}/messages`, { text: 'Hujum' })).statusCode).toBe(404);
+      expect(await t.prisma.schoolCareMessage.count()).toBe(0);
+    });
   });
 });

@@ -2,7 +2,7 @@
 // ANONIM javoblar (`SchoolCareAnonResponse`) O'CHIRILMAYDI — ular o'quvchiga bog'lanmagan
 // (shunday loyihalangan), shuning uchun kimniki ekanini aniqlab bo'lmaydi. Eski (o'quvchiga
 // bog'langan) `SchoolCareResponse` qatorlari ham tegilmaydi: ular maktab yozuvi, o'quvchi
-// qatori ham o'chirilmaydi. O'quvchi `childId` bog'lanishi child o'chganda SetNull bo'ladi,
+// qatori ham o'chirilmaydi. Shaxsiy test tayinlashlaridan o'quvchi id'si olib tashlanadi. O'quvchi `childId` bog'lanishi child o'chganda SetNull bo'ladi,
 // shuning uchun chaqiruv child o'chirilishidan OLDIN bo'lishi shart.
 
 import { Prisma } from '@prisma/client';
@@ -25,4 +25,26 @@ export async function deleteCareOfChildren(tx: Prisma.TransactionClient, childId
     await tx.schoolPsychAssignment.updateMany({ where: { careRequestId: { in: requestIds } }, data: { careRequestId: null } });
   }
   await tx.schoolCareParticipation.deleteMany({ where: { studentId: { in: studentIds } } });
+  await removeFromPersonalAssignments(tx, studentIds);
+}
+
+/**
+ * Shaxsiy (STUDENTS) tayinlashlardan o'quvchi id'sini `studentIds` va `target.studentIds` dan olib tashlaydi.
+ * Tayinlash o'chirilmaydi va bo'shab qolsa ham shaxsiy hisoblanadi (belgi `target.kind`) — qolgan natijalar yashirin turadi.
+ */
+async function removeFromPersonalAssignments(tx: Prisma.TransactionClient, studentIds: readonly string[]): Promise<void> {
+  const gone = new Set(studentIds);
+  const assignments = await tx.schoolPsychAssignment.findMany({
+    where: { studentIds: { hasSome: [...studentIds] } },
+    select: { id: true, studentIds: true, target: true },
+  });
+  for (const a of assignments) {
+    const target = a.target as { kind?: string; studentIds?: string[] } | null;
+    const nextTarget =
+      target?.kind === 'STUDENTS' ? { ...target, studentIds: (target.studentIds ?? []).filter((id) => !gone.has(id)) } : target;
+    await tx.schoolPsychAssignment.update({
+      where: { id: a.id },
+      data: { studentIds: a.studentIds.filter((id) => !gone.has(id)), target: (nextTarget ?? {}) as Prisma.InputJsonValue },
+    });
+  }
 }

@@ -2711,6 +2711,8 @@ model SchoolCareSettings {
   workEnd                 String   @default("17:00") @map("work_end")
   urgentSlaMinutes        Int      @default(60) @map("urgent_sla_minutes")
   normalSlaHours          Int      @default(24) @map("normal_sla_hours")
+  /// Sozlama qatori birinchi yaratilgan payt: eskalatsiya faqat shundan KEYIN yaratilgan murojaatlarga qo'llanadi.
+  createdAt               DateTime @default(now()) @map("created_at")
   updatedAt               DateTime @updatedAt @map("updated_at")
   updatedByStaffId        String?  @map("updated_by_staff_id")
 

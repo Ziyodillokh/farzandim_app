@@ -121,14 +121,17 @@ describe('Bola ovozi — anonim so\'rovnoma', () => {
     expect((await child(kids[0]!, 'POST', `/survey/${survey.id}/responses`, { answers: answersOf(survey.questionIds, 2) })).json().code).toBe('ALREADY_ANSWERED');
     expect(await t.prisma.schoolCareAnonResponse.count()).toBe(2);
 
+    // Faol so'rovnomada psixolog ham ko'rsatkichni ko'rmaydi (faqat ishtirok soni).
     const live = (await staff(w.psych, 'GET', `/aggregate?surveyId=${survey.id}&breakdown=SCHOOL`)).json();
-    expect(live.respondents).toBe(5);
-    expect(Object.keys(live.overall).length).toBeGreaterThan(0);
+    expect(live).toMatchObject({ respondents: 5, overall: {}, groups: [] });
     const list = (await staff(w.psych, 'GET', '/surveys')).json();
     expect(list[0]).toMatchObject({ id: survey.id, respondents: 5 });
     await staff(w.psych, 'POST', `/surveys/${survey.id}/close`);
     const closed = (await staff(w.director, 'GET', '/aggregate?breakdown=SCHOOL')).json();
     expect(closed).toMatchObject({ surveyId: survey.id, respondents: 5 });
+    // Yopilgach eski va anonim qatorlar birga hisoblanadi: ko'rsatkichlar paydo bo'ladi (psixolog ham ko'radi).
+    expect(Object.keys(closed.overall).length).toBeGreaterThan(0);
+    expect(Object.keys((await staff(w.psych, 'GET', `/aggregate?surveyId=${survey.id}&breakdown=SCHOOL`)).json().overall).length).toBeGreaterThan(0);
     expect((await staff(w.director, 'GET', '/surveys/summaries')).json()[0].participation).toMatchObject({ respondents: 5 });
   });
 
