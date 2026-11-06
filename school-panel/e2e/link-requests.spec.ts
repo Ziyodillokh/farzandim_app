@@ -30,6 +30,13 @@ test.describe('Ulanish soʻrovlari', () => {
     await expect(navLink(page)).toContainText('5');
     await expect(navLink(page)).toHaveAccessibleName(/Ochiq soʻrovlar: 5/);
     await expect(page.locator('aside').getByRole('link', { name: "O'quvchilar", exact: true })).not.toHaveClass(/from-primary/);
+    // Nishon rangi: oq matn ostida kontrast ≥ 4.5:1 (brand-600 = rgb(33, 107, 255)); brand-400 da atigi 3.3:1 edi.
+    await expect(navLink(page).locator('span[aria-hidden="true"]')).toHaveCSS('background-color', 'rgb(33, 107, 255)');
+
+    // Yaroqli HTML: nishon (div) sarlavha/abzats ichida emas; figcaption — figure'ning bevosita bolasi.
+    expect(await main.evaluate((el) => el.querySelectorAll('p div, h2 div, h3 div').length)).toBe(0);
+    expect(await main.evaluate((el) => [...el.querySelectorAll('figcaption')].filter((c) => c.parentElement?.tagName !== 'FIGURE').length)).toBe(0);
+    await expect(main.locator('figcaption')).toHaveCount(2);
 
     // Har bir tekshiruv: o'quvchi, sinf, vaqt, ota-ona kodi holati.
     const first = review.getByTestId('link-request').first();
@@ -37,6 +44,11 @@ test.describe('Ulanish soʻrovlari', () => {
     await expect(first).toContainText(/Soʻrov: .+ · \d{2}\.\d{2}\.\d{4}, \d{2}:\d{2}/);
     await expect(first).toContainText(/Ota-ona kodi: (kiritilgan|kiritilmagan)/);
     const studentName = (await first.getByRole('link').innerText()).trim();
+    // Bir xil nomli tugmalar qaysi o'quvchiga tegishli ekani ekran o'qish dasturiga ham ma'lum (aria-describedby → ism va sinf).
+    for (const name of [uzLink.review.confirm, uzLink.review.reject]) {
+      const description = first.getByRole('button', { name, exact: true });
+      await expect(description).toHaveAccessibleDescription(new RegExp(studentName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    }
     const studentId = new URL((await first.getByRole('link').getAttribute('href')) ?? '', 'http://x').searchParams.get('id') ?? '';
     expect(studentId).not.toBe('');
     expect((await readDb(page)).tables.access.linkedStudentIds).not.toContain(studentId);
@@ -63,6 +75,36 @@ test.describe('Ulanish soʻrovlari', () => {
     await page.goto(url(`/students/view?id=${studentId}&tab=access`));
     await expect(page.getByRole('main').getByRole('button', { name: uzAccess.credentials.issue, exact: true })).toBeVisible();
     expect(errors).toEqual([]);
+  });
+
+  test('tasdiq oynasi yopilish animatsiyasida bo\'sh qolmaydi (sarlavha oxirigacha saqlanadi)', async ({ page }) => {
+    await login(page, 'admin', 'Admin2026');
+    await page.goto(url(PAGE));
+    const item = page.getByRole('main').getByTestId('link-request').first();
+    await item.getByRole('button', { name: uzLink.review.reject, exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByRole('heading', { name: uzLink.review.rejectTitle })).toBeVisible();
+
+    // Yopilish paytida oyna sarlavhasi har kadrda va har DOM o'zgarishida yig'iladi.
+    await page.evaluate(() => {
+      const w = window as unknown as { __titles: string[] };
+      w.__titles = [];
+      const record = () => {
+        const el = document.querySelector('[role="dialog"] h2');
+        if (el) w.__titles.push((el.textContent ?? '').trim());
+      };
+      new MutationObserver(record).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true });
+      const sample = () => {
+        record();
+        requestAnimationFrame(sample);
+      };
+      requestAnimationFrame(sample);
+    });
+    await dialog.getByRole('button', { name: 'Bekor qilish' }).click();
+    await expect(dialog).toBeHidden();
+    const titles = await page.evaluate(() => (window as unknown as { __titles: string[] }).__titles);
+    expect(titles.length).toBeGreaterThan(0);
+    expect(titles.every((title) => title === uzLink.review.rejectTitle)).toBe(true);
   });
 
   test('rad etish: tasdiq oynasi, so\'rov yo\'qoladi, o\'quvchi ulanmaydi, kodda o\'quvchi o\'rni bo\'shaydi', async ({ page }) => {
@@ -227,6 +269,15 @@ test.describe('Bildirishnomadan o\'tish', () => {
     await item.click();
     await expect(page).toHaveURL(REQUESTS_URL);
     await expect(page.getByRole('main').getByRole('heading', { name: uzLink.title, level: 1 })).toBeVisible();
+  });
+
+  test('sinf rahbari: «kirish parolini tiklashni so\'radi» kelmaydi (`students.manage` yo\'q) — faqat ulanish bildirishnomalari', async ({ page }) => {
+    await login(page, 'sinf7a', 'Sinf2026');
+    await page.getByRole('button', { name: /^Bildirishnomalar/ }).click();
+    const popover = page.getByRole('dialog');
+    await expect(popover.getByRole('button', { name: /maktabga ulanishi tekshiruvni kutmoqda/ }).first()).toBeVisible();
+    await expect(popover.getByRole('button', { name: /maktab yoki sinf notoʻgʻri ekanini bildirdi/ }).first()).toBeVisible();
+    await expect(popover.getByRole('button', { name: /kirish parolini tiklashni soʻradi/ })).toHaveCount(0);
   });
 
   test('admin: «kirish parolini tiklashni so\'radi» → o\'quvchi kartasi, «Kirish» tabi, so\'rov ko\'rinadi', async ({ page }) => {

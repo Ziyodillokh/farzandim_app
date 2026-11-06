@@ -20,4 +20,3 @@ export const issueCredentialsSchema = z.object({
   signOutDevices: z.boolean().optional(),
 });
 
-export type IssueCredentialsFormInput = z.input<typeof issueCredentialsSchema>;

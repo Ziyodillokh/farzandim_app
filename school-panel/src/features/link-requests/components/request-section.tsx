@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 
-import { Badge } from '@/components/ui/badge';
+import { CountChip } from '@/components/common/count-chip';
 import { Card } from '@/components/ui/card';
 import type { LinkRequest } from '@/data/contracts';
 import { useI18n } from '@/i18n';
@@ -34,9 +34,7 @@ export function RequestSection({
           <div className="min-w-0">
             <h2 id={id} className="text-[0.95rem] font-semibold tracking-[-0.005em]">
               {title}
-              <Badge variant="default" size="sm" className="ml-2 align-middle tabular-nums">
-                {formatNumber(requests.length)}
-              </Badge>
+              <CountChip>{formatNumber(requests.length)}</CountChip>
             </h2>
             <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
           </div>

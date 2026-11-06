@@ -31,7 +31,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 export function CredentialsCard({ studentId, onIssue, onReset }: { studentId: string; onIssue: () => void; onReset: () => void }) {
   const { t, formatDate } = useI18n();
   const copy = useCopy();
-  const query = useCredentials(studentId, true);
+  const query = useCredentials(studentId);
   const data = query.data;
   const credentials = data?.credentials ?? null;
 

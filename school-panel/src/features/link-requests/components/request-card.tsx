@@ -16,6 +16,8 @@ import type { LinkDecision } from '../hooks';
 export function RequestCard({ request, onDecide }: { request: LinkRequest; onDecide: (request: LinkRequest, decision: LinkDecision) => void }) {
   const { t, formatDate, formatRelative } = useI18n();
   const correction = request.kind === 'CORRECTION';
+  // Bir xil nomli tugmalar qaysi o'quvchiga tegishli ekanini ekran o'qish dasturi ham bilsin (aria-describedby).
+  const whoId = `link-request-${request.id}-who`;
 
   // Telefonda amallar mazmun ostida (ustun), kengroq ekranda o'ngda (qator). `flex-1` + `flex-wrap` birga ishlatilsa
   // mazmun 0 gacha siqilib ketadi (flex-basis 0) — shuning uchun ustun/qator almashinuvi `sm:` bilan.
@@ -26,7 +28,7 @@ export function RequestCard({ request, onDecide }: { request: LinkRequest; onDec
           <AvatarFallback className="bg-gradient-to-br from-brand-400 to-brand-800 text-2xs font-semibold text-white">{initials(request.studentName)}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
+          <div id={whoId} className="flex flex-wrap items-center gap-2">
             {request.studentId ? (
               <Link
                 href={`/students/view?id=${encodeURIComponent(request.studentId)}`}
@@ -51,14 +53,14 @@ export function RequestCard({ request, onDecide }: { request: LinkRequest; onDec
                   {t(`linkRequests.correction.reason.${request.reason}`)}
                 </Badge>
               )}
-              <figure className="flex gap-2 rounded-lg bg-muted/60 p-3 text-sm dark:bg-white/[0.04]">
-                <Quote className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                <div className="min-w-0">
-                  <figcaption className="text-2xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{t('linkRequests.correction.note')}</figcaption>
-                  <blockquote className="mt-1 whitespace-pre-wrap break-words" data-testid="link-request-note">
-                    {request.note ?? <span className="text-muted-foreground">{t('linkRequests.correction.noNote')}</span>}
-                  </blockquote>
-                </div>
+              <figure className="rounded-lg bg-muted/60 p-3 text-sm dark:bg-white/[0.04]">
+                <figcaption className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  <Quote className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  {t('linkRequests.correction.note')}
+                </figcaption>
+                <blockquote className="mt-1 whitespace-pre-wrap break-words" data-testid="link-request-note">
+                  {request.note ?? <span className="text-muted-foreground">{t('linkRequests.correction.noNote')}</span>}
+                </blockquote>
               </figure>
             </div>
           ) : (
@@ -70,10 +72,16 @@ export function RequestCard({ request, onDecide }: { request: LinkRequest; onDec
         </div>
       </div>
       <div className="flex gap-2 sm:shrink-0">
-        <Button size="sm" variant="outline" className="flex-1 text-destructive hover:text-destructive sm:flex-none" onClick={() => onDecide(request, 'reject')}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex-1 text-destructive hover:text-destructive sm:flex-none"
+          aria-describedby={whoId}
+          onClick={() => onDecide(request, 'reject')}
+        >
           {t(correction ? 'linkRequests.correction.unlink' : 'linkRequests.review.reject')}
         </Button>
-        <Button size="sm" className="flex-1 sm:flex-none" onClick={() => onDecide(request, 'confirm')}>
+        <Button size="sm" className="flex-1 sm:flex-none" aria-describedby={whoId} onClick={() => onDecide(request, 'confirm')}>
           {t(correction ? 'linkRequests.correction.keep' : 'linkRequests.review.confirm')}
         </Button>
       </div>

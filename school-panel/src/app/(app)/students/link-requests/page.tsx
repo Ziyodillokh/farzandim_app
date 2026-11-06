@@ -92,7 +92,9 @@ function RequestsBody({ onDecide }: { onDecide: (request: LinkRequest, decision:
 export default function LinkRequestsPage() {
   const { t } = useI18n();
   const decide = useDecideLinkRequest();
+  // `pending` yopilgandan keyin ham saqlanadi: yopilish animatsiyasi paytida oyna matni bo'sh qolmasin.
   const [pending, setPending] = useState<Pending | null>(null);
+  const [open, setOpen] = useState(false);
   // Qaror qabul qilingach qator yo'qoladi — fokus belgilangan sahifa hududiga qaytadi.
   const region = useRef<HTMLDivElement>(null);
   const focus = useFocusReturn(() => region.current);
@@ -101,6 +103,7 @@ export default function LinkRequestsPage() {
   const ask = (request: LinkRequest, decision: LinkDecision) => {
     focus.remember();
     setPending({ request, decision });
+    setOpen(true);
   };
 
   return (
@@ -114,8 +117,8 @@ export default function LinkRequestsPage() {
       </div>
 
       <ConfirmDialog
-        open={Boolean(pending)}
-        onOpenChange={(open) => !open && setPending(null)}
+        open={open}
+        onOpenChange={setOpen}
         title={dialog ? t(dialog.title) : ''}
         description={pending && dialog ? t(dialog.text, { name: pending.request.studentName, className: pending.request.className }) : undefined}
         confirmLabel={dialog ? t(dialog.confirm) : undefined}
@@ -123,7 +126,7 @@ export default function LinkRequestsPage() {
         loading={decide.isPending}
         onConfirm={() => {
           if (!pending) return;
-          decide.mutate(pending, { onSettled: () => setPending(null) });
+          void decide.decide(pending).then(undefined, () => undefined).finally(() => setOpen(false));
         }}
         onCloseAutoFocus={focus.restore}
       />

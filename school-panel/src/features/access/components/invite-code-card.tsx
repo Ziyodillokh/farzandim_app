@@ -1,7 +1,7 @@
 'use client';
 
 import { CircleCheck, Clock, Copy, Printer, RefreshCw, Ticket } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { EmptyState } from '@/components/common/empty-state';
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { InviteSlot } from '@/data/contracts';
+import { clockNow } from '@/data/mock/clock';
 import { INNER_TILE } from '@/features/classes/styles';
 import { useClockNow } from '@/features/engine/use-clock';
 import { useCopy } from '@/features/parents/hooks';
@@ -45,17 +46,30 @@ export function InviteCodeCard({ studentId, studentName, className }: { studentI
   const { t, formatDate } = useI18n();
   const copy = useCopy();
   const school = useSchool();
-  const now = useClockNow(TICK_MS);
-  const query = useInviteCode(studentId, true);
+  // Qayta chizishni har `TICK_MS` da turtadi; qolgan vaqt esa chizish paytidagi aniq soatdan hisoblanadi
+  // (eskirgan holat yangi yaratilgan kodda 24 soatdan ortiq qolgandek ko'rsatib qo'yardi).
+  useClockNow(TICK_MS);
+  const query = useInviteCode(studentId);
   const generate = useGenerateInviteCode(studentId);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [printJob, setPrintJob] = useState(0);
+  const [focusCode, setFocusCode] = useState(false);
+  const codeTile = useRef<HTMLDivElement>(null);
   const donePrinting = useCallback(() => setPrintJob(0), []);
   const focus = useFocusReturn();
 
   const invite = query.data ?? null;
-  const remaining = invite ? remainingUntil(invite.expiresAt, now.getTime()) : null;
+  const remaining = invite ? remainingUntil(invite.expiresAt, clockNow().getTime()) : null;
   const active = invite !== null && remaining !== null && !remaining.expired;
+
+  // «Kod yaratish» tugmasi kod paydo bo'lishi bilan yo'qoladi — fokus yangi kodga o'tadi (ekran o'qish dasturi kodni o'qiydi).
+  useEffect(() => {
+    if (!focusCode || !active) return;
+    codeTile.current?.focus();
+    setFocusCode(false);
+  }, [focusCode, active]);
+
+  const create = () => void generate.generate().then(() => setFocusCode(true), () => undefined);
 
   const countdown = (() => {
     if (!remaining || remaining.expired) return null;
@@ -83,7 +97,7 @@ export function InviteCodeCard({ studentId, studentName, className }: { studentI
           description={t('access.invite.none.text')}
           className="py-6"
           action={
-            <Button onClick={() => generate.mutate()} loading={generate.isPending}>
+            <Button onClick={create} loading={generate.isPending}>
               <Ticket />
               {t('access.invite.create')}
             </Button>
@@ -91,7 +105,7 @@ export function InviteCodeCard({ studentId, studentName, className }: { studentI
         />
       ) : (
         <div className="space-y-4">
-          <div className={cn('flex items-center justify-between gap-3 px-5 py-4', INNER_TILE)}>
+          <div ref={codeTile} tabIndex={-1} data-testid="invite-code-tile" className={cn('flex items-center justify-between gap-3 px-5 py-4 outline-none', INNER_TILE)}>
             <p className="min-w-0 font-display text-4xl font-semibold tabular-nums tracking-[0.14em]">
               <span aria-hidden data-testid="invite-code" className="select-all">
                 {groupCode(invite.code)}
@@ -144,7 +158,7 @@ export function InviteCodeCard({ studentId, studentName, className }: { studentI
         description={t('access.invite.confirmText')}
         confirmLabel={t('access.invite.confirm')}
         loading={generate.isPending}
-        onConfirm={() => generate.mutate(undefined, { onSettled: () => setConfirmOpen(false) })}
+        onConfirm={() => void generate.generate().then(undefined, () => undefined).finally(() => setConfirmOpen(false))}
         onCloseAutoFocus={focus.restore}
       />
       {active && invite && (

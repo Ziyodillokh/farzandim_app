@@ -29,14 +29,20 @@ function isNodeActive(pathname: string, path: string, allPaths: readonly string[
   return isActive(pathname, path) && !allPaths.some((other) => other !== path && other.startsWith(`${path}/`) && isActive(pathname, other));
 }
 
-/** Menyu hisoblagichi: ochiq ulanish so'rovlari soni (0 bo'lsa ko'rinmaydi). */
+/**
+ * Menyu hisoblagichi: ochiq ulanish so'rovlari soni (0 bo'lsa ko'rinmaydi). Oq matn `brand-600` ustida 4.5:1 (AA);
+ * `brand-400` da atigi 3.3:1 edi.
+ */
 function LinkRequestsBadge() {
   const { t } = useI18n();
   const count = useLinkRequestCount();
   if (count === 0) return null;
   return (
     <>
-      <span aria-hidden className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-400 px-1.5 text-[0.68rem] font-bold tabular-nums leading-none text-white">
+      <span
+        aria-hidden
+        className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-[0.7rem] font-bold tabular-nums leading-none text-white ring-1 ring-inset ring-white/25"
+      >
         {count > 99 ? '99+' : count}
       </span>
       <span className="sr-only">{t('linkRequests.badgeLabel', { count })}</span>

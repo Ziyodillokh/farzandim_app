@@ -4,9 +4,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { useCan } from '@/auth/use-session';
-import type { CredentialsView } from '@/data/contracts';
 import type { StudentDetail } from '@/data/mock/services/students';
-import { accessKeys } from '../hooks';
+import { markNotLinked } from '../hooks';
 import { useFocusReturn } from '../lib/use-focus-return';
 import { CredentialsCard } from './credentials-card';
 import { CredentialsDialog, type CredentialsMode } from './credentials-dialog';
@@ -45,7 +44,7 @@ export function AccessPanel({ student }: { student: StudentDetail }) {
           mode={dialog}
           onClose={() => setDialog(null)}
           onCloseAutoFocus={focus.restore}
-          onNotLinked={() => queryClient.setQueryData<CredentialsView>(accessKeys.credentials(student.id), { linked: false, credentials: null })}
+          onNotLinked={() => markNotLinked(queryClient, student.id)}
         />
       )}
     </div>

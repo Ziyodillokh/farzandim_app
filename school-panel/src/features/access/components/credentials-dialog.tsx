@@ -19,13 +19,13 @@ import { useI18n } from '@/i18n';
 import { errorDetail, errorKey } from '@/lib/errors';
 import { cn } from '@/lib/utils';
 import { useIssueCredentials } from '../hooks';
+import { REVEAL_MINUTES, REVEAL_TTL_MS, revealExpiry } from '../lib/expiry';
 import { CredentialPrintCard } from './credential-print-card';
 import { PrintOnly } from './print-only';
 
 export type CredentialsMode = 'issue' | 'reset';
 
-/** Bir martalik parol ochiq qoldirilgan ish joyida cheksiz turmasin: shu muddatdan keyin oyna o'zi yopiladi. */
-export const REVEAL_TTL_MS = 5 * 60_000;
+const EXPIRY_TICK_MS = 1000;
 
 type Props = {
   studentId: string;
@@ -48,7 +48,6 @@ function SecretRow({
   copyLabel,
   onCopy,
   mono,
-  buttonRef,
   testId,
 }: {
   label: string;
@@ -56,7 +55,6 @@ function SecretRow({
   copyLabel: string;
   onCopy: () => void;
   mono?: boolean;
-  buttonRef?: React.Ref<HTMLButtonElement>;
   testId: string;
 }) {
   return (
@@ -67,35 +65,58 @@ function SecretRow({
           {value}
         </p>
       </div>
-      <Button ref={buttonRef} type="button" variant="outline" size="icon" onClick={onCopy} aria-label={copyLabel} title={copyLabel}>
+      <Button type="button" variant="outline" size="icon" onClick={onCopy} aria-label={copyLabel} title={copyLabel}>
         <Copy />
       </Button>
     </div>
   );
 }
 
-/** `active` davomida `REVEAL_TTL_MS` o'tsa yoki sahifa yashirilsa (yopish, bfcache) `onExpire`. */
-function useRevealExpiry(active: boolean, onExpire: () => void): void {
+/**
+ * `active` davomida `REVEAL_TTL_MS` o'tsa (yoki sahifa yashirilsa: yopish, bfcache) `onExpire`. Oxirgi soniyalarda
+ * `secondsLeft` to'ladi — oyna ogohlantiradi; `extend()` muddatni to'liq qayta boshlaydi (hisob: `lib/expiry.ts`).
+ */
+function useRevealExpiry(active: boolean, onExpire: () => void): { secondsLeft: number | null; extend: () => void } {
   const latest = useRef(onExpire);
+  const deadline = useRef(0);
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+
   useEffect(() => {
     latest.current = onExpire;
   });
+
   useEffect(() => {
     if (!active) return;
-    const expire = () => latest.current();
-    const timer = window.setTimeout(expire, REVEAL_TTL_MS);
-    window.addEventListener('pagehide', expire);
+    deadline.current = Date.now() + REVEAL_TTL_MS;
+    const check = () => {
+      const status = revealExpiry(deadline.current, Date.now());
+      if (status.expired) latest.current();
+      else setSecondsLeft(status.secondsLeft);
+    };
+    const timer = window.setInterval(check, EXPIRY_TICK_MS);
+    const hide = () => latest.current();
+    window.addEventListener('pagehide', hide);
     return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener('pagehide', expire);
+      window.clearInterval(timer);
+      window.removeEventListener('pagehide', hide);
     };
   }, [active]);
+
+  const extend = useCallback(() => {
+    deadline.current = Date.now() + REVEAL_TTL_MS;
+    setSecondsLeft(null);
+  }, []);
+
+  return { secondsLeft, extend };
 }
 
 /**
  * Kirish ma'lumotlarini berish / parolni tiklash: 1) tasdiqlash (login, «boshqa qurilmalardan chiqarish»), 2) bir martalik
  * ochish (login + vaqtinchalik parol, nusxalash, chop etish). Parol FAQAT shu komponent holatida yashaydi: oyna yopilganda
  * komponent olib tashlanadi (state yo'qoladi); URL, storage, RQ keshi, toast va logga yozilmaydi.
+ *
+ * Modal ochiqligida Sonner toast'lari ekran o'qish dasturi uchun yashirin (aria-hidden) — shuning uchun natija, nusxalash
+ * va xatolar oyna ichidagi `role="status"` hududida ham e'lon qilinadi; ochilganda fokus sarlavhaga o'tadi.
  */
 export function CredentialsDialog({ studentId, studentName, className, mode, onClose, onNotLinked, onCloseAutoFocus }: Props) {
   const { t } = useI18n();
@@ -108,9 +129,14 @@ export function CredentialsDialog({ studentId, studentName, className, mode, onC
   const [loginError, setLoginError] = useState<string | null>(null);
   const [issued, setIssued] = useState<IssuedCredentials | null>(null);
   const [printJob, setPrintJob] = useState(0);
+  const [live, setLive] = useState({ text: '', flip: false });
   const alive = useRef(true);
-  const passwordCopy = useRef<HTMLButtonElement>(null);
+  const title = useRef<HTMLHeadingElement>(null);
+  const keepOpenButton = useRef<HTMLButtonElement>(null);
   const reset = mode === 'reset';
+
+  /** Bir xil matn ketma-ket e'lon qilinsa ham qayta o'qilsin (ko'rinmas belgi almashadi). */
+  const announce = useCallback((text: string) => setLive((prev) => ({ text, flip: !prev.flip })), []);
 
   useEffect(() => {
     alive.current = true;
@@ -119,14 +145,31 @@ export function CredentialsDialog({ studentId, studentName, className, mode, onC
     };
   }, []);
 
+  // Ochish qadamida fokus sarlavhaga: ekran o'qish dasturi yangi mazmunni sarlavhadan boshlab o'qiydi.
   useEffect(() => {
-    if (step === 'reveal') passwordCopy.current?.focus();
+    if (step === 'reveal') title.current?.focus();
   }, [step]);
 
-  useRevealExpiry(step === 'reveal', () => {
+  const { secondsLeft, extend } = useRevealExpiry(step === 'reveal', () => {
     toast.info(t('access.reveal.expired'));
     onClose();
   });
+  const expiring = secondsLeft !== null;
+
+  // Ogohlantirish chiqqanda fokus «Ochiq qoldirish» tugmasiga: bitta tugma bilan muddat uzayadi.
+  useEffect(() => {
+    if (expiring) keepOpenButton.current?.focus();
+  }, [expiring]);
+
+  const keepOpen = () => {
+    extend();
+    announce(t('access.reveal.kept', { minutes: REVEAL_MINUTES }));
+    title.current?.focus();
+  };
+
+  const copyValue = async (value: string) => {
+    announce((await copy(value)) ? t('common.copied') : t('parents.copyFailed'));
+  };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -139,11 +182,15 @@ export function CredentialsDialog({ studentId, studentName, className, mode, onC
     }
     setLoginError(null);
     try {
-      const result = await issue({ ...(parsed.data.login ? { login: parsed.data.login } : {}), ...(reset ? { signOutDevices: signOut } : {}) });
+      // Birinchi berishda `signOutDevices: false`: ko'rinish eskirgan bo'lib, kirish ma'lumoti allaqachon mavjud bo'lsa,
+      // backend uni tiklash deb hisoblaydi (standart `true`) va ota-ona juftlagan qurilmani ham chiqarib yuborardi.
+      const result = await issue({ ...(parsed.data.login ? { login: parsed.data.login } : {}), signOutDevices: reset ? signOut : false });
       if (!alive.current) return;
       setIssued(result);
       setStep('reveal');
-      toast.success(t(reset ? 'access.toast.reset' : 'access.toast.issued'));
+      const done = t(reset ? 'access.toast.reset' : 'access.toast.issued');
+      toast.success(done);
+      announce(done);
     } catch (error) {
       if (!alive.current) return;
       const detail = errorDetail(error);
@@ -151,7 +198,9 @@ export function CredentialsDialog({ studentId, studentName, className, mode, onC
         setLoginError(t('errors.detail.LOGIN_TAKEN'));
         return;
       }
-      toast.error(t(errorKey(error)));
+      const message = t(errorKey(error));
+      toast.error(message);
+      announce(message);
       if (detail === 'NOT_LINKED') {
         onNotLinked();
         onClose();
@@ -239,27 +288,43 @@ export function CredentialsDialog({ studentId, studentName, className, mode, onC
         {step === 'reveal' && issued && (
           <div className="grid gap-4">
             <DialogHeader>
-              <DialogTitle>{t('access.reveal.title')}</DialogTitle>
+              <DialogTitle ref={title} tabIndex={-1} className="outline-none">
+                {t('access.reveal.title')}
+              </DialogTitle>
               <DialogDescription>{t('access.reveal.description', { name: studentName })}</DialogDescription>
             </DialogHeader>
             <p role="note" className="flex items-start gap-2.5 rounded-xl bg-warning/10 p-3 text-sm font-medium leading-relaxed ring-1 ring-inset ring-warning/25">
               <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
-              {t('access.reveal.warning')}
+              {t('access.reveal.warning', { minutes: REVEAL_MINUTES })}
             </p>
+            {expiring && (
+              <div
+                role="alert"
+                data-testid="reveal-expiring"
+                className="flex flex-wrap items-center gap-3 rounded-xl bg-destructive/10 p-3 text-sm font-medium ring-1 ring-inset ring-destructive/25"
+              >
+                <p className="min-w-0 flex-1">{t('access.reveal.expiringSoon')}</p>
+                <span aria-hidden className="font-display font-semibold tabular-nums text-destructive">
+                  {t('access.reveal.secondsLeft', { seconds: secondsLeft })}
+                </span>
+                <Button ref={keepOpenButton} type="button" size="sm" variant="outline" onClick={keepOpen}>
+                  {t('access.reveal.keepOpen')}
+                </Button>
+              </div>
+            )}
             <SecretRow
               label={t('access.reveal.login')}
               value={issued.login}
               copyLabel={t('access.reveal.copyLogin')}
-              onCopy={() => void copy(issued.login)}
+              onCopy={() => void copyValue(issued.login)}
               testId="issued-login"
             />
             <SecretRow
               label={t('access.reveal.password')}
               value={issued.temporaryPassword}
               copyLabel={t('access.reveal.copyPassword')}
-              onCopy={() => void copy(issued.temporaryPassword)}
+              onCopy={() => void copyValue(issued.temporaryPassword)}
               mono
-              buttonRef={passwordCopy}
               testId="issued-password"
             />
             <p className="text-sm text-muted-foreground">{t('access.reveal.firstLogin')}</p>
@@ -277,6 +342,12 @@ export function CredentialsDialog({ studentId, studentName, className, mode, onC
             </PrintOnly>
           </div>
         )}
+
+        {/* Toast'lar modal ochiqligida ekran o'qish dasturiga yashirin — natija shu hududda e'lon qilinadi. */}
+        <p role="status" data-testid="dialog-status" className="sr-only">
+          {live.text}
+          {live.flip ? ' ' : ''}
+        </p>
       </DialogContent>
     </Dialog>
   );

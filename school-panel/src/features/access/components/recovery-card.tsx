@@ -4,6 +4,7 @@ import { KeyRound, TriangleAlert } from 'lucide-react';
 import { useState } from 'react';
 
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
+import { CountChip } from '@/components/common/count-chip';
 import { ErrorState } from '@/components/common/error-state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,7 +23,7 @@ import { useFocusReturn } from '../lib/use-focus-return';
  */
 export function RecoveryCard({ studentId, onReset }: { studentId: string; onReset: () => void }) {
   const { t, formatDate, formatRelative } = useI18n();
-  const query = useRecoveryRequests(studentId, true);
+  const query = useRecoveryRequests(studentId);
   const reject = useRejectRecovery(studentId);
   const [target, setTarget] = useState<RecoveryRequest | null>(null);
   const focus = useFocusReturn();
@@ -48,9 +49,7 @@ export function RecoveryCard({ studentId, onReset }: { studentId: string; onRese
           <div className="min-w-0">
             <h2 id="recovery-title" className="text-[0.95rem] font-semibold tracking-[-0.005em]">
               {t('access.recovery.title')}
-              <Badge variant="warning" size="sm" className="ml-2 align-middle tabular-nums">
-                {requests.length}
-              </Badge>
+              <CountChip variant="warning">{requests.length}</CountChip>
             </h2>
             <p className="mt-0.5 text-sm text-muted-foreground">{t('access.recovery.description')}</p>
           </div>
@@ -61,15 +60,17 @@ export function RecoveryCard({ studentId, onReset }: { studentId: string; onRese
               <div className="flex min-w-0 items-center gap-2.5">
                 <KeyRound className="h-4 w-4 shrink-0 text-warning" aria-hidden />
                 <div className="min-w-0">
-                  <p className="text-sm font-medium">{t('access.recovery.requested', { time: formatRelative(request.createdAt) })}</p>
-                  <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                  <p id={`recovery-${request.id}-label`} className="text-sm font-medium">
+                    {t('access.recovery.requested', { time: formatRelative(request.createdAt) })}
+                  </p>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                     <time dateTime={request.createdAt}>{formatDate(request.createdAt, 'dd.MM.yyyy, HH:mm')}</time>
                     {request.channel && (
                       <Badge variant="outline" size="sm">
                         {t(`access.recovery.channel.${request.channel}`)}
                       </Badge>
                     )}
-                  </p>
+                  </div>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -77,6 +78,7 @@ export function RecoveryCard({ studentId, onReset }: { studentId: string; onRese
                   size="sm"
                   variant="outline"
                   className="text-destructive hover:text-destructive"
+                  aria-describedby={`recovery-${request.id}-label`}
                   onClick={() => {
                     focus.remember();
                     setTarget(request);
@@ -84,7 +86,7 @@ export function RecoveryCard({ studentId, onReset }: { studentId: string; onRese
                 >
                   {t('access.recovery.reject')}
                 </Button>
-                <Button size="sm" onClick={onReset}>
+                <Button size="sm" aria-describedby={`recovery-${request.id}-label`} onClick={onReset}>
                   <KeyRound />
                   {t('access.recovery.reset')}
                 </Button>
@@ -103,7 +105,7 @@ export function RecoveryCard({ studentId, onReset }: { studentId: string; onRese
         loading={reject.isPending}
         onConfirm={() => {
           if (!target) return;
-          reject.mutate(target.id, { onSettled: () => setTarget(null) });
+          void reject.reject(target.id).then(undefined, () => undefined).finally(() => setTarget(null));
         }}
         onCloseAutoFocus={focus.restore}
       />

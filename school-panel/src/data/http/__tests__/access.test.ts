@@ -72,11 +72,16 @@ describe('toIssuedCredentials (kontrakt K1: 201 { login, temporaryPassword, issu
     for (const wire of [{ ...WIRE, temporaryPassword: undefined }, { ...WIRE, temporaryPassword: '' }, { ...WIRE, temporaryPassword: 12345678 }, null, 'k7m3pq9x']) {
       expect(() => toIssuedCredentials(wire)).toThrowError(MALFORMED);
     }
+    // Xato matniga qiymat (parol) tushmaydi — faqat maydon nomi. Xato albatta tashlanishi tekshiriladi.
+    let thrown: unknown;
     try {
       toIssuedCredentials({ ...WIRE, login: 5, temporaryPassword: 'k7m3pq9x' });
     } catch (error) {
-      expect(String((error as Error).message)).not.toContain('k7m3pq9x');
+      thrown = error;
     }
+    expect(thrown).toBeInstanceOf(ServiceError);
+    expect((thrown as ServiceError).message).toMatch(MALFORMED);
+    expect((thrown as ServiceError).message).not.toContain('k7m3pq9x');
   });
 });
 

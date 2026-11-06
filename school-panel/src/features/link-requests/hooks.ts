@@ -8,6 +8,7 @@ import { api } from '@/data/api';
 import type { LinkRequest } from '@/data/contracts';
 import { type TKey, useI18n } from '@/i18n';
 import { errorKey } from '@/lib/errors';
+import { useSingleFlight } from '@/lib/single-flight';
 
 export const linkRequestKeys = { all: ['link-requests'] as const };
 
@@ -42,10 +43,10 @@ const TOASTS: Record<LinkRequest['kind'], Record<LinkDecision, TKey>> = {
  * Tasdiqlash / rad etish. Natijadan qat'i nazar ro'yxat yangilanadi (so'rov allaqachon hal qilingan bo'lishi mumkin).
  * Muvaffaqiyatda yangilanish TUGAGUNCHA kutiladi: tasdiq oynasi yopilganda qator allaqachon yo'q bo'lsin (fokus to'g'ri joyga qaytadi).
  */
-export function useDecideLinkRequest() {
+export function useDecideLinkRequest(): { decide: (vars: { request: LinkRequest; decision: LinkDecision }) => Promise<void>; isPending: boolean } {
   const queryClient = useQueryClient();
   const { t } = useI18n();
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: ({ request, decision }: { request: LinkRequest; decision: LinkDecision }) =>
       decision === 'confirm' ? api.linkRequests.confirm(request.id) : api.linkRequests.reject(request.id),
     onSuccess: async (_result, { request, decision }) => {
@@ -57,4 +58,7 @@ export function useDecideLinkRequest() {
       void queryClient.invalidateQueries({ queryKey: linkRequestKeys.all });
     },
   });
+  // Tez-tez bosish ikkinchi qaror yubormasin (u «allaqachon ko'rib chiqilgan» xatosini berardi).
+  const once = useSingleFlight(mutation.mutateAsync);
+  return { decide: (vars) => once(vars), isPending: mutation.isPending };
 }
