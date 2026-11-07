@@ -13,7 +13,7 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { MaterialKind, Subject } from '@/data/contracts';
 import type { MaterialRow } from '@/data/mock/services/learning';
-import { MATERIAL_KINDS, SUBJECTS, type MaterialFilter } from '@/data/schemas/learning';
+import { SUBJECTS, type MaterialFilter, VISIBLE_MATERIAL_KINDS } from '@/data/schemas/learning';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { useLearningMaterials } from '../hooks';
@@ -106,7 +106,7 @@ export function MaterialsTab() {
         <FilterSelect
           value={filter.kind}
           onChange={(v) => setFilter((f) => ({ ...f, kind: v as MaterialKind | undefined }))}
-          options={MATERIAL_KINDS.map((k) => ({ value: k, label: t(`enums.materialKind.${k}`) }))}
+          options={VISIBLE_MATERIAL_KINDS.map((k) => ({ value: k, label: t(`enums.materialKind.${k}`) }))}
           allLabel={`${t('learning.materials.kind')}: ${t('common.all')}`}
           className="sm:w-44"
         />

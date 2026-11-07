@@ -4,7 +4,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { toast } from 'sonner';
 
 import { api } from '@/data/api';
-import type { AssignmentInput, MaterialFilter, ReviewInput } from '@/data/schemas/learning';
+import { type AssignmentInput, isVisibleMaterialKind, type MaterialFilter, type ReviewInput } from '@/data/schemas/learning';
 import { type TKey, useI18n } from '@/i18n';
 import { errorKey } from '@/lib/errors';
 import { applyOptimisticReview, rollbackReview, submissionsKey } from './lib/optimistic-review';
@@ -31,11 +31,18 @@ export function useLearningInterests() {
 }
 
 export function useLearningMaterials(filter: MaterialFilter) {
-  return useQuery({ queryKey: learningKeys.materials(filter), queryFn: () => api.learning.materials(filter), placeholderData: keepPreviousData });
+  return useQuery({
+    queryKey: learningKeys.materials(filter),
+    queryFn: async () => (await api.learning.materials(filter)).filter((m) => isVisibleMaterialKind(m.kind)),
+    placeholderData: keepPreviousData,
+  });
 }
 
 export function useLearningAssignments() {
-  return useQuery({ queryKey: learningKeys.assignments, queryFn: () => api.learning.assignments() });
+  return useQuery({
+    queryKey: learningKeys.assignments,
+    queryFn: async () => (await api.learning.assignments()).filter((a) => isVisibleMaterialKind(a.materialKind)),
+  });
 }
 
 export function useLearningClassOptions() {

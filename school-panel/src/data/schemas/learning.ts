@@ -2,6 +2,18 @@ import { z } from 'zod';
 import { isoDateSchema, msg, optionalText } from './common';
 
 export const MATERIAL_KINDS = ['AUDIOBOOK', 'VIDEO', 'TEST'] as const;
+
+/**
+ * Panelda ko'rsatilmaydigan material turlari: egasi qarori bilan (2026-11-07)
+ * audiokitob va videodarslar platformaning hech bir joyida chiqmaydi.
+ * Qaytarish uchun ro'yxatni bo'shating.
+ */
+export const HIDDEN_MATERIAL_KINDS: readonly string[] = ['AUDIOBOOK', 'VIDEO'];
+export const VISIBLE_MATERIAL_KINDS = MATERIAL_KINDS.filter((k) => !HIDDEN_MATERIAL_KINDS.includes(k));
+
+/** Yashirin turdagi material / topshiriq emasmi (yozma vazifada tur yo'q). */
+export const isVisibleMaterialKind = (kind: string | null | undefined): boolean =>
+  !kind || !HIDDEN_MATERIAL_KINDS.includes(kind);
 export const SUBJECTS = ['MATH', 'ENGLISH', 'HISTORY', 'LITERATURE', 'GEOGRAPHY', 'BIOLOGY', 'IT', 'NATIVE', 'PHYSICS', 'CHEMISTRY', 'RUSSIAN'] as const;
 
 /** Yozma vazifaning `materialId` qiymati (katalogda material yo'q — backend shartnomasi). */

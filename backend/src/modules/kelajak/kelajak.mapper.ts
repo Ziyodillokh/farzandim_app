@@ -16,6 +16,7 @@ import {
 } from './domain/catalog';
 import { CareerLabRating, CATEGORY_MIN_ANSWERS, SupportSnapshot } from './domain/insights';
 import { L } from './domain/localized';
+import { withTranslations } from './domain/translations';
 import { KelajakInsightCodes, KelajakProfile, KelajakResultData } from './domain/profile';
 import { KelajakProgress } from './domain/progress';
 import { CategoryScore, InterestScores } from './domain/scoring';
@@ -190,9 +191,12 @@ export function toSessionQuestionView(q: KelajakQuestion): SessionQuestionView {
     externalId: q.externalId,
     category: q.category,
     categoryName: categoryName(q.category),
-    text: q.text as unknown as L,
+    text: withTranslations(q.text as unknown as L),
     answerType: q.answerType,
-    options: q.options as unknown as SessionQuestionView['options'],
+    options: (q.options as unknown as SessionQuestionView['options']).map((o) => ({
+      ...o,
+      label: withTranslations(o.label),
+    })),
     required: q.required,
     maxLength: q.answerType === 'text' ? TEXT_ANSWER_MAX_LENGTH : null,
   };

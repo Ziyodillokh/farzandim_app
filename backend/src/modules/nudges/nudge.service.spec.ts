@@ -23,13 +23,14 @@ describe('NudgeService hourly tick', () => {
     expect(res.kind).toBe('HEALTH');
   });
 
-  it('still runs the content reminder on Saturday 11:00', async () => {
+  it('sends no content reminder on Saturday 11:00 (audio/video hidden)', async () => {
     const prisma = { child: { findMany: jest.fn().mockResolvedValue([]) } };
     const service = new NudgeService(prisma as never, {} as never);
 
     const res = await service.tick(new Date('2026-11-07T06:00:00Z')); // shanba 11:00 Tashkent
 
-    expect(res.kind).toBe('CONTENT');
+    expect(res).toEqual({ kind: null, sent: 0 });
+    expect(prisma.child.findMany).not.toHaveBeenCalled();
   });
 
   it('skips a child in quiet hours for the health nudge', async () => {

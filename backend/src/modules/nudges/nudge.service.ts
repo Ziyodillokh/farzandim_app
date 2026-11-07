@@ -27,6 +27,13 @@ interface NudgeChild {
   } | null;
 }
 
+/**
+ * Kontent eslatmasi (audiokitob / videodarslar, `/videos`) — o'chiq: egasi
+ * qarori bilan (2026-11-07) audiokitob va videodarslar platformada
+ * ko'rsatilmaydi. Qaytarish uchun `true`.
+ */
+export const CONTENT_NUDGES_ENABLED = false;
+
 const NUDGE_COPY: Record<
   NudgeKind,
   { type: string; notif: NotificationType; bodyKey: string; route: string }
@@ -75,7 +82,7 @@ export class NudgeService {
     const kind: NudgeKind | null =
       hour === 18
         ? 'HEALTH'
-        : hour === 11 && weekday === 6
+        : CONTENT_NUDGES_ENABLED && hour === 11 && weekday === 6
           ? 'CONTENT'
           : null;
     if (!kind) return { kind: null, sent: 0 };
