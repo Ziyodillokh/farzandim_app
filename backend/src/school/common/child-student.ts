@@ -9,6 +9,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { Prisma, SchoolShift } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
+import { type ChildLang, childLang } from '../assessments/child-view';
 
 export interface EnrolledStudent {
   childId: string;
@@ -19,7 +20,7 @@ export interface EnrolledStudent {
   /** Sinf darajasi (1..11). */
   grade: number;
   /** Bola ilovasi tili (`User.language`; noma'lum — `uz`). */
-  lang: 'uz' | 'ru';
+  lang: ChildLang;
   /** Maktabga qabul sanasi (YYYY-MM-DD). */
   enrolledAt: string;
   shift: SchoolShift;
@@ -71,7 +72,7 @@ async function resolveEnrollment(prisma: PrismaService, childUserId: string): Pr
       classId: student.class.id,
       className: student.class.name,
       grade: student.class.grade,
-      lang: child.childUser?.language === 'ru' ? 'ru' : 'uz',
+      lang: childLang(child.childUser?.language),
       enrolledAt: student.enrolledAt,
       shift: student.class.shift,
     },

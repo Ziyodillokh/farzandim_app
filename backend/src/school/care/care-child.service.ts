@@ -15,6 +15,7 @@ import { estimatedMinutes } from '../common/estimated-minutes';
 import { buildAnonRow } from './care-anon';
 import { toQuestionView } from './care-store';
 import { ageGroupOf, careAnswersSchema } from './care.schemas';
+import { pick } from '../assessments/child-view';
 
 const alreadyAnswered = () => new ConflictException({ code: 'ALREADY_ANSWERED', message: 'Survey already answered' });
 const invalidAnswers = (reason: string) => new HttpException({ code: 'VALIDATION', message: `answers: ${reason}` }, HttpStatus.BAD_REQUEST);
@@ -43,7 +44,7 @@ export class CareChildService {
       .sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))
       .map((q) => {
         const view = toQuestionView(q);
-        return { id: q.id, text: student.lang === 'ru' ? view.text.ru : view.text.uz };
+        return { id: q.id, text: pick(view.text, student.lang) };
       });
     return {
       enrolled: true,

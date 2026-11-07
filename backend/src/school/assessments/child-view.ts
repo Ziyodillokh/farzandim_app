@@ -6,18 +6,21 @@ import { invalid } from '../common/school-errors';
 import type { ChildAnswer } from './assessments-inputs.schemas';
 import type { AnswerVector } from './psych/scoring';
 import type { Localized, PsychItem, PsychTest } from './psych/types';
+import { SCHOOL_CHILD_EN } from '../common/child-en.data';
 
-export type ChildLang = 'uz' | 'ru';
+export type ChildLang = 'uz' | 'ru' | 'en';
 export type ChildOption = { key: string; text: string };
 export type ChildItem =
   | { id: string; type: 'SINGLE'; text: string; options: ChildOption[]; stimulus?: { text: string; showSec: number } }
   | { id: string; type: 'LIKERT'; text: string }
   | { id: string; type: 'MULTI'; text: string; options: ChildOption[] };
 
-export const childLang = (language: string | null | undefined): ChildLang => (language === 'ru' ? 'ru' : 'uz');
+export const childLang = (language: string | null | undefined): ChildLang =>
+  language === 'ru' || language === 'en' ? language : 'uz';
 
 /** Bola tilidagi matn (bo'sh bo'lsa — ikkinchi til). */
 export function pick(text: Localized, lang: ChildLang): string {
+  if (lang === 'en') return SCHOOL_CHILD_EN[text.uz.trim()] ?? (text.uz || text.ru);
   return lang === 'ru' ? text.ru || text.uz : text.uz || text.ru;
 }
 
