@@ -12,6 +12,7 @@ import { development } from './development';
 import { enums } from './enums';
 import { errors } from './errors';
 import { learning } from './learning';
+import { inbox } from './inbox';
 import { linkRequests } from './linkRequests';
 import { messages } from './messages';
 import { nav } from './nav';
@@ -56,6 +57,7 @@ export const uz = {
   timetable,
   access,
   linkRequests,
+  inbox,
 };
 
 export type Dict = typeof uz;

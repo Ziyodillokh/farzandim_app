@@ -12,3 +12,4 @@ export * from './assessments';
 export * from './notifications';
 export * from './development';
 export * from './timetable';
+export * from './inbox';

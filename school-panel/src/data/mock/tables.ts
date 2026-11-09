@@ -39,6 +39,7 @@ import type {
   VerificationRequest,
 } from '@/data/contracts';
 import type { AccessTables } from './access-tables';
+import type { MockParentThread } from './seed/parent-threads';
 
 /**
  * Mock bazadagi barcha jadvallar. Yangi jadval qo'shilsa — `db.ts` dagi yumshoq
@@ -91,6 +92,8 @@ export type Tables = {
   timetables: TimetableRecord[];
   /** Kirish (5-bosqich): bola profiliga ulanish, kirish ma'lumotlari holati, 6 xonali kodlar, so'rovlar. Parol saqlanmaydi. */
   access: AccessTables;
+  /** Ota-onalar xodimga yozgan xabarlar (har xodim faqat o'zinikini ko'radi). */
+  parentThreads: MockParentThread[];
   /** Simulyator holati: qaysi sana va qaysi daqiqagacha qayta ishlangan. */
   sim: { date: string; processedUntilMinute: number };
 };

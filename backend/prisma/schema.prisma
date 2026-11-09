@@ -2184,6 +2184,7 @@ model School {
   studentInvites      SchoolStudentInvite[]
   linkCorrections     SchoolLinkCorrection[]
   guardianReviews     SchoolGuardianReview[]
+  parentThreads       SchoolParentThread[]
 
   @@map("schools")
 }
@@ -2271,10 +2272,11 @@ model SchoolStaff {
   createdAt          DateTime        @default(now()) @map("created_at")
   updatedAt          DateTime        @updatedAt @map("updated_at")
 
-  school     School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  classes    SchoolStaffClass[]
-  homeroomOf SchoolClass[]        @relation("ClassHomeroom")
-  sessions   SchoolStaffSession[]
+  school        School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classes       SchoolStaffClass[]
+  homeroomOf    SchoolClass[]        @relation("ClassHomeroom")
+  parentThreads SchoolParentThread[]
+  sessions      SchoolStaffSession[]
 
   @@unique([schoolId, username])
   @@index([schoolId, role])
@@ -2373,6 +2375,7 @@ model SchoolStudent {
   invites             SchoolStudentInvite[]
   linkCorrections     SchoolLinkCorrection[]
   guardianReviews     SchoolGuardianReview[]
+  parentThreads       SchoolParentThread[]
 
   @@unique([schoolId, studentCode])
   @@index([schoolId, classId])
@@ -2394,9 +2397,10 @@ model SchoolGuardian {
   createdAt       DateTime           @default(now()) @map("created_at")
   updatedAt       DateTime           @updatedAt @map("updated_at")
 
-  school   School                  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  user     User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
-  students SchoolStudentGuardian[]
+  school        School                  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user          User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  students      SchoolStudentGuardian[]
+  parentThreads SchoolParentThread[]
 
   @@index([schoolId, phone])
   @@index([userId])
@@ -3186,4 +3190,63 @@ model SchoolAnnouncementStudentRead {
   @@unique([announcementId, studentId])
   @@index([studentId])
   @@map("school_announcement_student_reads")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Ota-ona ↔ xodim yozishmasi (Parvoz Parents → "Maktab bilan bog'lanish").
+// Bitta (vasiy, xodim, o'quvchi) uchun bitta yozishma — chat kabi; mavzu har
+// xabarda. Matn `bodyEnc` — AES-256-GCM. Xodim tomonida FAQAT qabul qiluvchi
+// xodim ko'radi (direktor boshqalarning yozishmasini ko'rmaydi).
+// ─────────────────────────────────────────────────────────────────────
+
+model SchoolParentThread {
+  id            String    @id @default(uuid())
+  schoolId      String    @map("school_id")
+  staffId       String    @map("staff_id")
+  studentId     String    @map("student_id")
+  guardianId    String    @map("guardian_id")
+  /// 'OPEN' | 'RESOLVED' — ota-ona yozsa yana OPEN.
+  status        String    @default("OPEN")
+  /// 'PARENT' | 'STAFF' — oxirgi xabar muallifi (ro'yxatda "javob kutilmoqda").
+  lastAuthor    String    @default("PARENT") @map("last_author")
+  lastMessageAt DateTime  @default(now()) @map("last_message_at")
+  /// O'qilmagan xabarlar: ota-ona uchun (xodim yozgan) va xodim uchun (ota-ona yozgan).
+  parentUnread  Int       @default(0) @map("parent_unread")
+  staffUnread   Int       @default(0) @map("staff_unread")
+  parentReadAt  DateTime? @map("parent_read_at")
+  staffReadAt   DateTime? @map("staff_read_at")
+  resolvedAt    DateTime? @map("resolved_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  school   School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  staff    SchoolStaff           @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  student  SchoolStudent         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  guardian SchoolGuardian        @relation(fields: [guardianId], references: [id], onDelete: Cascade)
+  messages SchoolParentMessage[]
+
+  @@unique([guardianId, staffId, studentId])
+  @@index([schoolId, staffId, lastMessageAt(sort: Desc)])
+  @@index([guardianId, lastMessageAt(sort: Desc)])
+  @@map("school_parent_threads")
+}
+
+model SchoolParentMessage {
+  id              String   @id @default(uuid())
+  threadId        String   @map("thread_id")
+  /// 'PARENT' | 'STAFF'
+  author          String
+  staffId         String?  @map("staff_id")
+  /// Ota-ona tanlagan shablon mavzusi (ABSENCE, MEETING …); xodim javobida null.
+  topic           String?
+  bodyEnc         String   @map("body_enc")
+  /// Klient idempotentligi: takroriy yuborish dublikat yaratmaydi.
+  clientMessageId String?  @map("client_message_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  thread SchoolParentThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@unique([threadId, clientMessageId])
+  @@index([threadId, createdAt])
+  @@map("school_parent_messages")
 }

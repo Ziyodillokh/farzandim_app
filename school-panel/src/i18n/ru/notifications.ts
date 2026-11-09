@@ -29,6 +29,7 @@ export const notifications: DeepString<typeof uz> = {
     LINK_REVIEW: 'Подключение к школе ждёт проверки: {studentName} ({className})',
     LINK_CORRECTION: 'Запрос на исправление: {studentName} ({className}) — неверная школа или класс',
     GUARDIAN_REVIEW: 'Родитель ввёл код для {studentName} ({className}) — нужно подтвердить опекуна',
+    PARENT_MESSAGE: 'Новое сообщение от родителя: {name} ({className})',
   },
   category: {
     SAFETY_SIGNAL: 'Безопасность',
@@ -44,5 +45,6 @@ export const notifications: DeepString<typeof uz> = {
     LINK_REVIEW: 'Подключение',
     LINK_CORRECTION: 'Исправление',
     GUARDIAN_REVIEW: 'Опекун',
+    PARENT_MESSAGE: 'Родитель',
   },
 };

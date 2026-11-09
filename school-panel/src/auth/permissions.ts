@@ -42,6 +42,7 @@ export const PERMISSIONS = [
   'assessments.manage',
   'development.view',
   'development.individual',
+  'inbox.parents',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -84,6 +85,7 @@ export const ROLES: Record<RoleKey, RoleDefinition> = {
       'learning.view',
       'reports.view',
       'development.view',
+      'inbox.parents',
     ],
   },
   ADMIN: {
@@ -120,6 +122,7 @@ export const ROLES: Record<RoleKey, RoleDefinition> = {
       'learning.assign',
       'reports.view',
       'development.view',
+      'inbox.parents',
     ],
   },
   HOMEROOM: {
@@ -144,6 +147,7 @@ export const ROLES: Record<RoleKey, RoleDefinition> = {
       'learning.assign',
       'development.view',
       'development.individual',
+      'inbox.parents',
     ],
   },
   PSYCHOLOGIST: {
@@ -159,6 +163,7 @@ export const ROLES: Record<RoleKey, RoleDefinition> = {
       'assessments.manage',
       'development.view',
       'development.individual',
+      'inbox.parents',
     ],
   },
   DUTY: {
@@ -169,7 +174,7 @@ export const ROLES: Record<RoleKey, RoleDefinition> = {
   TEACHER: {
     key: 'TEACHER',
     scope: 'OWN_CLASS',
-    permissions: ['dashboard.view', 'classes.view', 'students.view', 'attendance.view'],
+    permissions: ['dashboard.view', 'classes.view', 'students.view', 'attendance.view', 'inbox.parents'],
   },
 };
 

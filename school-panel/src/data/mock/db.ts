@@ -10,6 +10,7 @@ import { buildDeputyPsychologist } from './seed/people';
 import { buildActivity, CLOSED_WEEKS } from './seed/learning';
 import { buildSubmissions, buildWrittenAssignments } from './seed/homework';
 import { buildAccess } from './seed/access';
+import { buildParentThreads } from './seed/parent-threads';
 import { buildNotifications } from './seed/notifications';
 import { buildTimetables } from './seed/timetable';
 import type { DbSnapshot, Tables } from './tables';
@@ -177,6 +178,13 @@ function withAccess(db: DbSnapshot): DbSnapshot {
   return { ...db, tables: { ...db.tables, access, notifications: [...current, ...notifications] } };
 }
 
+/** Ota-onalar xabarlari: avval saqlangan bazada demo yozishmalar yaratiladi. */
+function withParentThreads(db: DbSnapshot): DbSnapshot {
+  if (db.tables.parentThreads) return db;
+  const parentThreads = buildParentThreads({ students: db.tables.students, guardians: db.tables.guardians, baseIso: db.baseDate });
+  return { ...db, tables: { ...db.tables, parentThreads } };
+}
+
 const MIGRATIONS: readonly Migration[] = [
   withPortraits,
   withAssessments,
@@ -187,6 +195,7 @@ const MIGRATIONS: readonly Migration[] = [
   withCareSettings,
   withCareThread,
   withAccess,
+  withParentThreads,
 ];
 
 export function migrate(db: DbSnapshot): DbSnapshot {

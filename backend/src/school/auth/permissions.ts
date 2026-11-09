@@ -47,6 +47,7 @@ export const SCHOOL_PERMISSIONS = [
   'assessments.manage',
   'development.view',
   'development.individual',
+  'inbox.parents',
 ] as const;
 
 export type SchoolPermission = (typeof SCHOOL_PERMISSIONS)[number];
@@ -93,6 +94,7 @@ export const SCHOOL_ROLES: Record<SchoolStaffRole, SchoolRoleDefinition> = {
       'learning.view',
       'reports.view',
       'development.view',
+      'inbox.parents',
     ],
   },
   ADMIN: {
@@ -129,6 +131,7 @@ export const SCHOOL_ROLES: Record<SchoolStaffRole, SchoolRoleDefinition> = {
       'learning.assign',
       'reports.view',
       'development.view',
+      'inbox.parents',
     ],
   },
   HOMEROOM: {
@@ -153,6 +156,7 @@ export const SCHOOL_ROLES: Record<SchoolStaffRole, SchoolRoleDefinition> = {
       'learning.assign',
       'development.view',
       'development.individual',
+      'inbox.parents',
     ],
   },
   PSYCHOLOGIST: {
@@ -168,6 +172,7 @@ export const SCHOOL_ROLES: Record<SchoolStaffRole, SchoolRoleDefinition> = {
       'assessments.manage',
       'development.view',
       'development.individual',
+      'inbox.parents',
     ],
   },
   DUTY: {
@@ -178,7 +183,7 @@ export const SCHOOL_ROLES: Record<SchoolStaffRole, SchoolRoleDefinition> = {
   TEACHER: {
     key: 'TEACHER',
     scope: 'OWN_CLASS',
-    permissions: ['dashboard.view', 'classes.view', 'students.view', 'attendance.view'],
+    permissions: ['dashboard.view', 'classes.view', 'students.view', 'attendance.view', 'inbox.parents'],
   },
 };
 

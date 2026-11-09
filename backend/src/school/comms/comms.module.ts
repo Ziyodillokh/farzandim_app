@@ -52,5 +52,6 @@ import { VerificationsService } from './verifications.service';
     ParentSchoolCommsService,
     ChildAnnouncementsService,
   ],
+  exports: [CommsPushService],
 })
 export class CommsModule {}

@@ -11,6 +11,7 @@ import { actorCan, allowedClassIds, assertCan, classScopeWhere, SchoolActor } fr
 import { DATA_DELETION_NOTIFICATION_KIND } from '../../modules/data-deletion/data-deletion-purge';
 import { CHILD_RECOVERY_NOTIFICATION_KIND } from '../../modules/child-auth/child-auth.constants';
 import { CARE_TOPIC_LABELS } from '../care/care-labels';
+import { topicLabel } from '../parent-connect/parent-connect.labels';
 import { audienceTouchesScope, loadRoster, toAudience } from '../comms/comms-roster';
 import { GUARDIAN_REVIEW_KIND, LINK_CORRECTION_KIND, LINK_REQUESTS_HREF, LINK_REVIEW_KIND } from '../students/link-notification-ids';
 
@@ -38,7 +39,8 @@ export type NotificationKind =
   | 'MESSAGE_SENT'
   | 'EMERGENCY'
   | 'DATA_DELETION_REQUEST'
-  | 'CHILD_RECOVERY_REQUEST';
+  | 'CHILD_RECOVERY_REQUEST'
+  | 'PARENT_MESSAGE';
 type Localized = { uz: string; ru: string };
 
 export interface NotificationItem {
@@ -65,6 +67,7 @@ export const NOTIFICATION_TONES: Record<NotificationKind, NotificationItem['tone
   EMERGENCY: 'destructive',
   DATA_DELETION_REQUEST: 'warning',
   CHILD_RECOVERY_REQUEST: 'warning',
+  PARENT_MESSAGE: 'info',
 };
 
 /** Erkin matn (sabab, xabar) — ikkala tilda bir xil, qisqartirilgan. */
@@ -100,6 +103,7 @@ export class NotificationsService {
       this.care(actor),
       this.messages(actor, now),
       this.emergency(actor),
+      this.parentMessages(actor),
     ]);
     // Bir xil id: saqlangan (nishonlangan) bildirishnoma hisoblanganidan ustun — `groups` tartibida birinchi.
     const unique = new Map<string, NotificationItem>();
@@ -250,6 +254,35 @@ export class NotificationsService {
           href: '/messages',
         }),
       );
+  }
+
+  /**
+   * Ota-onadan o'qilmagan xabar — FAQAT qabul qiluvchi xodimga (yozishma maxfiy). Id oxirgi xabar
+   * vaqtini o'z ichiga oladi: yangi xabar "o'qilgan" bildirishnomani qayta faollashtiradi.
+   */
+  private async parentMessages(actor: SchoolActor): Promise<NotificationItem[]> {
+    if (!actorCan(actor, 'inbox.parents')) return [];
+    const threads = await this.prisma.schoolParentThread.findMany({
+      where: { schoolId: actor.schoolId, staffId: actor.staffId, staffUnread: { gt: 0 } },
+      orderBy: { lastMessageAt: 'desc' },
+      take: FEED_LIMIT,
+      include: { student: { select: { firstName: true, lastName: true, class: { select: { name: true } } } } },
+    });
+    if (threads.length === 0) return [];
+    const topics = await this.prisma.schoolParentMessage.findMany({
+      where: { threadId: { in: threads.map((t) => t.id) }, author: 'PARENT', topic: { not: null } },
+      orderBy: [{ threadId: 'asc' }, { createdAt: 'desc' }],
+      distinct: ['threadId'],
+      select: { threadId: true, topic: true },
+    });
+    const topicOf = new Map(topics.map((t) => [t.threadId, t.topic]));
+    return threads.map((t) =>
+      item('PARENT_MESSAGE', `pmsg:${t.id}:${t.lastMessageAt.getTime()}`, t.lastMessageAt, {
+        params: { name: `${t.student.lastName} ${t.student.firstName}`, className: t.student.class?.name ?? '', count: t.staffUnread },
+        subject: topicLabel(topicOf.get(t.id)),
+        href: `/inbox?thread=${t.id}`,
+      }),
+    );
   }
 
   private async emergency(actor: SchoolActor): Promise<NotificationItem[]> {

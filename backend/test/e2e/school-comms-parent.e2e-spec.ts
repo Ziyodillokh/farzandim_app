@@ -125,6 +125,8 @@ describe('School comms: ota-ona ilovasi (S4)', () => {
       {
         id: payment.id, schoolId, schoolName: 'Test maktab', nextDate: '2099-04-05', prepaidMonths: 2, paused: false,
         children: [{ id: fam.studentId, name: 'Aliyev Vali', className: '7-A' }], openVerification: true,
+        // Tarix: faqat amal va vaqt — xodim izohi va kimligi yo'q.
+        history: [{ at: '2026-09-01T05:00:00.000Z', action: 'CREATED' }],
       },
     ]);
     expect((await parentApi(father.token, 'GET', '/payments')).json()).toEqual([]);

@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useCan, useSession } from '@/auth/use-session';
 import { SchoolLogo } from '@/components/common/school-logo';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useInboxUnread } from '@/features/inbox/hooks';
 import { useLinkRequestCount } from '@/features/link-requests/hooks';
 import { useSchool } from '@/features/school/hooks';
 import { useI18n } from '@/i18n';
@@ -30,12 +31,10 @@ function isNodeActive(pathname: string, path: string, allPaths: readonly string[
 }
 
 /**
- * Menyu hisoblagichi: ochiq ulanish so'rovlari soni (0 bo'lsa ko'rinmaydi). Oq matn `brand-600` ustida 4.5:1 (AA);
+ * Menyu hisoblagichi (ulanish so'rovlari, ota-onalar xabarlari) — 0 bo'lsa ko'rinmaydi. Oq matn `brand-600` ustida 4.5:1 (AA);
  * `brand-400` da atigi 3.3:1 edi.
  */
-function LinkRequestsBadge() {
-  const { t } = useI18n();
-  const count = useLinkRequestCount();
+function CountBadge({ count, label }: { count: number; label: string }) {
   if (count === 0) return null;
   return (
     <>
@@ -45,9 +44,22 @@ function LinkRequestsBadge() {
       >
         {count > 99 ? '99+' : count}
       </span>
-      <span className="sr-only">{t('linkRequests.badgeLabel', { count })}</span>
+      <span className="sr-only">{label}</span>
     </>
   );
+}
+
+function LinkRequestsBadge() {
+  const { t } = useI18n();
+  const count = useLinkRequestCount();
+  return <CountBadge count={count} label={t('linkRequests.badgeLabel', { count })} />;
+}
+
+/** Ota-onalar xabarlari: o'qilmagan yozishmalar soni. */
+function ParentInboxBadge() {
+  const { t } = useI18n();
+  const count = useInboxUnread();
+  return <CountBadge count={count} label={t('inbox.badgeLabel', { count })} />;
 }
 
 function NavLink({ node, pathname, allPaths, onNavigate }: { node: NavNode; pathname: string; allPaths: readonly string[]; onNavigate?: () => void }) {
@@ -83,6 +95,7 @@ function NavLink({ node, pathname, allPaths, onNavigate }: { node: NavNode; path
         <Icon className="h-[18px] w-[18px] shrink-0" />
         <span className="truncate">{t(node.titleKey)}</span>
         {node.badge === 'linkRequests' && <LinkRequestsBadge />}
+        {node.badge === 'parentInbox' && <ParentInboxBadge />}
       </Link>
     );
   }

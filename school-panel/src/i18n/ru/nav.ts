@@ -27,6 +27,7 @@ export const nav: DeepString<typeof uz> = {
   classes: 'Классы',
   students: 'Ученики',
   linkRequests: 'Запросы на подключение',
+  inbox: 'Сообщения родителей',
   parents: 'Родители',
   messages: 'Сообщения',
   reminders: 'Smart Reminder',

@@ -8,6 +8,7 @@ import { classesHttp } from './services/classes';
 import { commsHttp } from './services/comms';
 import { developmentHttp } from './services/development';
 import { dashboardHttp, notificationsHttp, reportsHttp, searchHttp } from './services/insights';
+import { inboxHttp } from './services/inbox';
 import { learningHttp } from './services/learning';
 import { profileHttp } from './services/profile';
 import { schoolHttp } from './services/school';
@@ -44,6 +45,7 @@ export function createHttpApi(): Api {
     parents: parentsHttp,
     access: accessHttp,
     linkRequests: linkRequestsHttp,
+    inbox: inboxHttp,
     demo: notAvailable('demo'),
   };
 }

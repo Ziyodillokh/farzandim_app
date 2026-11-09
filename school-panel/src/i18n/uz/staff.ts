@@ -113,6 +113,7 @@ export const staff = {
     assessments: 'Psixologik testlar',
     development: 'Rivojlanish',
     timetable: 'Dars jadvali',
+    inbox: 'Ota-onalar xabarlari',
   },
   perm: {
     dashboard: { view: 'Bosh sahifani ko\'rish' },
@@ -151,5 +152,6 @@ export const staff = {
     assessments: { manage: 'Psixologik testlar: yaratish, tayinlash, natijalar' },
     development: { view: 'Rivojlanish dashboardi (umumlashgan)', individual: 'O\'quvchining rivojlanish profili (ism bilan)' },
     timetable: { manage: 'Sinf dars jadvalini tahrirlash' },
+    inbox: { parents: 'Ota-onalar menga yozgan xabarlar (faqat o\'ziga yozilganlar)' },
   },
 };

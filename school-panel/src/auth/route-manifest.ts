@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   Link2,
   LogOut,
+  MessageCircleMore,
   MessageSquareHeart,
   MessagesSquare,
   type LucideIcon,
@@ -59,7 +60,7 @@ export type RouteDef = {
   /** Yangi tabda ochiladi (kiosk). */
   external?: boolean;
   /** Menyuda hisoblagich nishoni (masalan, ochiq so'rovlar soni). */
-  badge?: 'linkRequests';
+  badge?: 'linkRequests' | 'parentInbox';
 };
 
 export const ROUTES: readonly RouteDef[] = [
@@ -80,6 +81,7 @@ export const ROUTES: readonly RouteDef[] = [
   { path: '/reminders', perm: 'reminders.manage', titleKey: 'nav.reminders', icon: Bell, parent: '/reminders' },
   { path: '/reminders/payments', perm: 'payments.manage', titleKey: 'nav.payments', icon: Wallet, parent: '/reminders' },
   { path: '/reminders/verifications', perm: 'payments.manage', titleKey: 'nav.verifications', icon: Receipt, parent: '/reminders' },
+  { path: '/inbox', perm: 'inbox.parents', titleKey: 'nav.inbox', icon: MessageCircleMore, group: 'communication', badge: 'parentInbox' },
   { path: '/messages', perm: 'messages.view', titleKey: 'nav.messages', icon: MessagesSquare, group: 'communication' },
   { path: '/messages/new', perm: 'messages.view', titleKey: 'nav.messages', icon: MessagesSquare, hidden: true },
 

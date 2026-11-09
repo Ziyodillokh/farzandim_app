@@ -41,7 +41,8 @@ export type NotificationKind =
   | 'CARE_NEW'
   | 'CARE_URGENT'
   | 'MESSAGE_SENT'
-  | 'EMERGENCY';
+  | 'EMERGENCY'
+  | 'PARENT_MESSAGE';
 export type NotificationTone = 'destructive' | 'warning' | 'info' | 'success';
 export type NotificationItem = {
   id: string;

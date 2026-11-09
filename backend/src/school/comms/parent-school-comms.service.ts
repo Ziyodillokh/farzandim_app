@@ -3,15 +3,20 @@
 // o'ziniki bo'lgan vasiy yozuvlariga yuborilganlarni ko'radi — boshqasi 404.
 
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { conflict, notFound } from '../common/school-errors';
 import { paginate, parseOrThrow } from '../common/school-zod';
 import { parentPageSchema, verificationCreateSchema } from './comms.schemas';
+import { toAudience } from './comms-roster';
 import { lockPayment } from './payment-updates.service';
+import { parseHistory } from './payment-views';
 import { toVerificationStatus } from './verifications.service';
 
 /** Ota-onaga ko'rsatiladigan so'nggi tekshiruv so'rovlari soni. */
 const MAX_PARENT_VERIFICATIONS = 100;
+/** To'lov tarixidan ota-onaga ko'rsatiladigan yozuvlar. */
+const MAX_PARENT_HISTORY = 24;
 
 const earliest = (dates: readonly (Date | null)[]): Date | null =>
   dates.reduce<Date | null>((min, d) => (d && (!min || d < min) ? d : min), null);
@@ -37,6 +42,7 @@ export class ParentSchoolCommsService {
       take: query.limit,
       include: { school: { select: { name: true } }, deliveries: { where: mine, select: { readAt: true } } },
     });
+    const [authors, classNames] = await Promise.all([this.authors(rows), this.classNames(rows)]);
     const items = rows.map((a) => ({
       id: a.id,
       schoolId: a.schoolId,
@@ -46,6 +52,8 @@ export class ParentSchoolCommsService {
       priority: a.priority === 'IMPORTANT' ? 'IMPORTANT' : 'NORMAL',
       sentAt: a.sentAt?.toISOString() ?? null,
       readAt: earliest(a.deliveries.map((d) => d.readAt))?.toISOString() ?? null,
+      from: authors.get(a.byStaffId) ?? null,
+      audience: this.audienceView(a.audience, classNames),
     }));
     return { ...paginate(items, total, { page: query.page, limit: query.limit }), unread };
   }
@@ -88,6 +96,11 @@ export class ParentSchoolCommsService {
         .filter((s): s is NonNullable<typeof s> => Boolean(s) && s?.schoolId === p.schoolId)
         .map((s) => ({ id: s.id, name: `${s.lastName} ${s.firstName}`, className: s.class?.name ?? '' })),
       openVerification: p.verifications.length > 0,
+      // Tarix: faqat amal va vaqt — xodim izohi va kimligi ota-onaga ko'rsatilmaydi (ichki yozuv).
+      history: parseHistory(p.history)
+        .map((e) => ({ at: e.at, action: e.action }))
+        .sort((a, b) => b.at.localeCompare(a.at))
+        .slice(0, MAX_PARENT_HISTORY),
     }));
   }
 
@@ -127,6 +140,32 @@ export class ParentSchoolCommsService {
       });
     });
     return this.toParentVerification(created, payment.school.name, payment.nextDate);
+  }
+
+  /** E'lon muallifi: rol va lavozim (ism — rasmiy e'lon imzosi). */
+  private async authors(rows: readonly { byStaffId: string }[]) {
+    const ids = [...new Set(rows.map((r) => r.byStaffId))];
+    if (ids.length === 0) return new Map<string, { role: string; name: string; position: string }>();
+    const staff = await this.prisma.schoolStaff.findMany({ where: { id: { in: ids } }, select: { id: true, role: true, fullName: true, position: true } });
+    return new Map(staff.map((s) => [s.id, { role: s.role, name: s.fullName, position: s.position }]));
+  }
+
+  private async classNames(rows: readonly { audience: Prisma.JsonValue }[]) {
+    const ids = [...new Set(rows.flatMap((r) => toAudience(r.audience).classIds))];
+    if (ids.length === 0) return new Map<string, string>();
+    const classes = await this.prisma.schoolClass.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } });
+    return new Map(classes.map((c) => [c.id, c.name]));
+  }
+
+  /** Kimga: butun maktab / sinflar / shaxsan (vasiylar ro'yxati oshkor qilinmaydi). */
+  private audienceView(value: Prisma.JsonValue, classNames: ReadonlyMap<string, string>) {
+    const a = toAudience(value);
+    if (a.kind === 'SCHOOL') return { kind: 'SCHOOL' as const, classNames: [] };
+    if (a.kind === 'CLASSES') {
+      const names = a.classIds.map((id) => classNames.get(id)).filter((n): n is string => Boolean(n));
+      return { kind: 'CLASSES' as const, classNames: names.sort((x, y) => x.localeCompare(y, 'uz', { numeric: true })) };
+    }
+    return { kind: 'PERSONAL' as const, classNames: [] };
   }
 
   private async guardianIds(userId: string): Promise<string[]> {

@@ -24,6 +24,7 @@ export const nav = {
   classes: 'Sinflar',
   students: 'O\'quvchilar',
   linkRequests: 'Ulanish soʻrovlari',
+  inbox: 'Ota-onalar xabarlari',
   parents: 'Ota-onalar',
   messages: 'Xabarlar',
   reminders: 'Smart Reminder',

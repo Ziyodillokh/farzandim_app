@@ -1,7 +1,10 @@
 import { roleHas } from '@/auth/permissions';
-import type { Localized, NotificationItem, NotificationKind, NotificationTone, OpenRequests, StaffNotification } from '@/data/contracts';
+import type { Localized, NotificationItem, NotificationKind, NotificationTone, OpenRequests, ParentTopic, StaffNotification } from '@/data/contracts';
+import { PARENT_TOPICS } from '@/data/contracts';
 import { enums as ruEnums } from '@/i18n/ru/enums';
 import { enums as uzEnums } from '@/i18n/uz/enums';
+import { inbox as ruInbox } from '@/i18n/ru/inbox';
+import { inbox as uzInbox } from '@/i18n/uz/inbox';
 import { toIsoDate, toLocalIso } from '../calendar';
 import { clockNow } from '../clock';
 import { type Actor, allowedClassIds, assertCan, currentActor, inScope, latency } from '../context';
@@ -10,6 +13,7 @@ import { studentName } from '../lookups';
 import { notificationsFor } from '../notify';
 import type { Tables } from '../tables';
 import { audienceTouchesScope, timeOf } from './comms-shared';
+import { unreadOf } from './inbox';
 
 /**
  * Bildirishnomalar markazi: saqlangan signallar (xavfsizlik, test yakunlandi) +
@@ -17,6 +21,11 @@ import { audienceTouchesScope, timeOf } from './comms-shared';
  * qayta hisoblashda ham saqlanadi.
  */
 export const FEED_LIMIT = 30;
+
+/** Ota-ona murojaati mavzusi — ikkala tilda (bildirishnoma sarlavhasi). */
+const PARENT_TOPIC_LABELS = Object.fromEntries(
+  PARENT_TOPICS.map((topic) => [topic, { uz: uzInbox.topics[topic], ru: ruInbox.topics[topic] }]),
+) as Record<ParentTopic, Localized>;
 const MESSAGE_WINDOW_MS = 3 * 24 * 3_600_000;
 const SUBJECT_MAX = 90;
 
@@ -34,6 +43,7 @@ export const NOTIFICATION_TONES: Record<NotificationKind, NotificationTone> = {
   LINK_REVIEW: 'warning',
   LINK_CORRECTION: 'warning',
   GUARDIAN_REVIEW: 'warning',
+  PARENT_MESSAGE: 'info',
 };
 
 /** Erkin matn (sabab, xabar) — ikkala tilda bir xil, qisqartirilgan. */
@@ -154,6 +164,30 @@ function emergencyItems(t: Tables, actor: Actor, now: Date): NotificationItem[] 
   return [{ id: `emg:${at}`, kind: 'EMERGENCY', at, tone: NOTIFICATION_TONES.EMERGENCY, params: {}, subject: plain(e.reason), href: '/school-mode' }];
 }
 
+/** Ota-onadan o'qilmagan xabar — FAQAT qabul qiluvchi xodimga (id oxirgi xabar vaqti bilan: yangi xabar qayta faollashtiradi). */
+function parentMessageItems(t: Tables, actor: Actor): NotificationItem[] {
+  if (!roleHas(actor.role, 'inbox.parents')) return [];
+  return (t.parentThreads ?? [])
+    .filter((th) => th.staffId === actor.staffId && unreadOf(th) > 0)
+    .flatMap((th) => {
+      const last = [...th.messages].reverse().find((m) => m.author === 'PARENT');
+      const topic = [...th.messages].reverse().find((m) => m.author === 'PARENT' && m.topic)?.topic ?? 'OTHER';
+      const student = t.students.find((s) => s.id === th.studentId);
+      if (!last || !student) return [];
+      return [
+        {
+          id: `pmsg:${th.id}:${Date.parse(last.createdAt) || 0}`,
+          kind: 'PARENT_MESSAGE' as const,
+          at: last.createdAt,
+          tone: NOTIFICATION_TONES.PARENT_MESSAGE,
+          params: { name: studentName(student), className: t.classes.find((c) => c.id === student.classId)?.name ?? '', count: unreadOf(th) },
+          subject: PARENT_TOPIC_LABELS[topic],
+          href: `/inbox?thread=${th.id}`,
+        },
+      ];
+    });
+}
+
 /**
  * Rol va doiraga mos lenta: eng yangilari birinchi, ko'pi bilan 30 ta. Demo
  * soatidan "keyingi" hodisalar (masalan, 09:10 dagi so'rov soat 07:45 da yoki
@@ -168,6 +202,7 @@ export function buildFeed(t: Tables, actor: Actor, now: Date): NotificationItem[
     ...careItems(t, actor),
     ...messageItems(t, actor, nowMs),
     ...emergencyItems(t, actor, now),
+    ...parentMessageItems(t, actor),
   ];
   const at = (item: NotificationItem) => {
     const ms = timeOf(item.at);
