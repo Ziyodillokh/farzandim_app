@@ -1,6 +1,7 @@
 'use client';
 
-import { CalendarClock, CircleCheck, Quote, Reply } from 'lucide-react';
+import { CalendarClock, CircleCheck, ExternalLink, Quote, Receipt, Reply } from 'lucide-react';
+import { useState } from 'react';
 
 import { StaffAvatar } from '@/components/common/staff-avatar';
 import { VerificationBadge } from '@/components/common/status-badges';
@@ -8,10 +9,58 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { VerificationRow } from '@/data/mock/services/comms';
 import { INNER_TILE, WARM_GLOW } from '@/features/messages/styles';
 import { useI18n } from '@/i18n';
+import { withBase } from '@/lib/base-path';
 import { cn, initials } from '@/lib/utils';
+
+/** Backend — to'liq imzolangan havola; demo — `public/` yo'li (basePath bilan). */
+const receiptSrc = (url: string) => (/^https?:\/\//.test(url) ? url : withBase(url));
+
+/** Onlayn to'lov cheki: kichik rasm, bosilsa kattalashadi. */
+function ReceiptPreview({ url }: { url: string }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const src = receiptSrc(url);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={cn(INNER_TILE, 'group flex w-full items-center gap-4 p-3 text-left transition-colors hover:bg-primary/[0.05]')}
+        aria-label={t('reminders.verifications.receiptOpen')}
+        data-testid="verification-receipt"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- statik eksport, imzolangan proksi havola */}
+        <img src={src} alt="" loading="lazy" className="h-24 w-16 shrink-0 rounded-lg object-cover object-top ring-1 ring-border/60" />
+        <span className="min-w-0">
+          <span className="flex items-center gap-1.5 text-sm font-semibold">
+            <Receipt className="h-4 w-4 text-primary" />
+            {t('reminders.verifications.receipt')}
+          </span>
+          <span className="mt-0.5 block text-xs text-muted-foreground">{t('reminders.verifications.receiptHint')}</span>
+          <span className="mt-1.5 block text-xs font-medium text-primary group-hover:underline">{t('reminders.verifications.receiptOpen')}</span>
+        </span>
+      </button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('reminders.verifications.receipt')}</DialogTitle>
+            <DialogDescription>{t('reminders.verifications.receiptHint')}</DialogDescription>
+          </DialogHeader>
+          {/* eslint-disable-next-line @next/next/no-img-element -- statik eksport, imzolangan proksi havola */}
+          <img src={src} alt={t('reminders.verifications.receipt')} className="max-h-[70vh] w-full rounded-xl object-contain ring-1 ring-border/60" />
+          <a href={src} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+            <ExternalLink className="h-4 w-4" />
+            {t('reminders.verifications.receiptNewTab')}
+          </a>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
 
 /** Tekshiruv so'rovi: ota-ona xabari, bog'liq eslatma va maktab javobi. */
 export function VerificationCard({ row, onAnswer, onClose }: { row: VerificationRow; onAnswer: (row: VerificationRow) => void; onClose: (row: VerificationRow) => void }) {
@@ -55,6 +104,8 @@ export function VerificationCard({ row, onAnswer, onClose }: { row: Verification
           <Quote className="absolute left-4 top-4 h-4 w-4 text-primary/50" />
           {row.message}
         </blockquote>
+
+        {row.receiptUrl && <ReceiptPreview url={row.receiptUrl} />}
 
         {row.payment && (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">

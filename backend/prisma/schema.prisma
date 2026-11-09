@@ -2735,6 +2735,10 @@ model SchoolVerificationRequest {
   answeredByStaffId String?   @map("answered_by_staff_id")
   answeredAt        DateTime? @map("answered_at")
   createdAt         DateTime  @default(now()) @map("created_at")
+  /// Onlayn to'lov chekining rasmi (skrinshot) — MinIO kaliti; naqd to'lovda yo'q.
+  receiptKey        String?   @map("receipt_key")
+  receiptType       String?   @map("receipt_type")
+  receiptSize       Int?      @map("receipt_size")
 
   school  School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   payment SchoolPaymentReminder @relation(fields: [paymentReminderId], references: [id], onDelete: Cascade)

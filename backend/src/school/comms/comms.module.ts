@@ -5,6 +5,7 @@
 import { Module } from '@nestjs/common';
 import { FcmModule } from '../../common/fcm/fcm.module';
 import { NotificationPrefsModule } from '../../common/notification-prefs/notification-prefs.module';
+import { HomeworkModule } from '../homework/homework.module';
 import { SchoolCoreModule } from '../school-core.module';
 import { AnnouncementChildPushService } from './announcement-child-push.service';
 import { AnnouncementDeliveryService } from './announcement-delivery.service';
@@ -22,12 +23,14 @@ import { CommsController } from './comms.controller';
 import { ParentSchoolCommsController } from './parent-school-comms.controller';
 import { ParentSchoolCommsService } from './parent-school-comms.service';
 import { PaymentUpdatesService } from './payment-updates.service';
+import { ReceiptController } from './receipt.controller';
+import { ReceiptService } from './receipt.service';
 import { PaymentsService } from './payments.service';
 import { RemindersService } from './reminders.service';
 import { VerificationsService } from './verifications.service';
 
 @Module({
-  imports: [SchoolCoreModule, FcmModule, NotificationPrefsModule],
+  imports: [SchoolCoreModule, FcmModule, NotificationPrefsModule, HomeworkModule],
   controllers: [
     CommsController,
     CommsAnnouncementsController,
@@ -36,6 +39,7 @@ import { VerificationsService } from './verifications.service';
     CommsVerificationsController,
     ParentSchoolCommsController,
     ChildAnnouncementsController,
+    ReceiptController,
   ],
   providers: [
     CommsPushService,
@@ -51,6 +55,7 @@ import { VerificationsService } from './verifications.service';
     CommsDispatcherService,
     ParentSchoolCommsService,
     ChildAnnouncementsService,
+    ReceiptService,
   ],
   exports: [CommsPushService],
 })

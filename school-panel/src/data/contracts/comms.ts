@@ -69,4 +69,6 @@ export type VerificationRequest = {
   answer: string | null;
   answeredByStaffId: Id | null;
   answeredAt: IsoDateTime | null;
+  /** Onlayn to'lov cheki rasmi: backend — imzolangan proksi havola (1 soat); demo — `public/` yo'li. */
+  receiptUrl?: string | null;
 };

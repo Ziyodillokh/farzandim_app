@@ -3,13 +3,16 @@
 // o'ziniki bo'lgan vasiy yozuvlariga yuborilganlarni ko'radi — boshqasi 404.
 
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { conflict, notFound } from '../common/school-errors';
 import { paginate, parseOrThrow } from '../common/school-zod';
 import { parentPageSchema, verificationCreateSchema } from './comms.schemas';
 import { toAudience } from './comms-roster';
+import type { UploadedPhoto } from '../homework/homework-upload';
 import { lockPayment } from './payment-updates.service';
+import { ReceiptService } from './receipt.service';
 import { parseHistory } from './payment-views';
 import { toVerificationStatus } from './verifications.service';
 
@@ -23,7 +26,10 @@ const earliest = (dates: readonly (Date | null)[]): Date | null =>
 
 @Injectable()
 export class ParentSchoolCommsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly receipts: ReceiptService,
+  ) {}
 
   /** Yuborilgan e'lonlar (yangisi oldin) + o'qilmaganlar soni. */
   async announcements(userId: string, raw: Record<string, unknown>) {
@@ -116,8 +122,11 @@ export class ParentSchoolCommsService {
     return rows.map((v) => this.toParentVerification(v, v.school.name, v.payment.nextDate));
   }
 
-  /** "To'laganman, tekshiring": faqat o'z to'lov eslatmasiga; bittasida bir vaqtda bitta ochiq (409). */
-  async createVerification(userId: string, body: unknown) {
+  /**
+   * "To'laganman, tekshiring": faqat o'z to'lov eslatmasiga; bittasida bir vaqtda bitta ochiq (409).
+   * [receipt] — onlayn to'lov chekining rasmi (multipart); avval yuklanadi, so'rov saqlanmasa o'chiriladi.
+   */
+  async createVerification(userId: string, body: unknown, receipt?: UploadedPhoto) {
     const data = parseOrThrow(verificationCreateSchema, body);
     const guardianIds = await this.guardianIds(userId);
     const payment = await this.prisma.schoolPaymentReminder.findFirst({
@@ -125,21 +134,33 @@ export class ParentSchoolCommsService {
       include: { school: { select: { name: true } } },
     });
     if (!payment) throw notFound(data.paymentReminderId);
-    const created = await this.prisma.$transaction(async (tx) => {
-      await lockPayment(tx, payment.schoolId, payment.id);
-      const open = await tx.schoolVerificationRequest.count({ where: { paymentReminderId: payment.id, status: 'OPEN' } });
-      if (open > 0) throw conflict('open verification exists');
-      return tx.schoolVerificationRequest.create({
-        data: {
-          schoolId: payment.schoolId,
-          guardianId: payment.guardianId,
-          paymentReminderId: payment.id,
-          message: data.message,
-          status: 'OPEN',
-        },
+    // Tez rad: ochiq so'rov bo'lsa rasm keraksiz yuklanmasin (yakuniy tekshiruv — tranzaksiyada).
+    const openNow = await this.prisma.schoolVerificationRequest.count({ where: { paymentReminderId: payment.id, status: 'OPEN' } });
+    if (openNow > 0) throw conflict('open verification exists');
+    const id = randomUUID();
+    const stored = receipt ? await this.receipts.upload(payment.schoolId, id, receipt) : null;
+    try {
+      const created = await this.prisma.$transaction(async (tx) => {
+        await lockPayment(tx, payment.schoolId, payment.id);
+        const open = await tx.schoolVerificationRequest.count({ where: { paymentReminderId: payment.id, status: 'OPEN' } });
+        if (open > 0) throw conflict('open verification exists');
+        return tx.schoolVerificationRequest.create({
+          data: {
+            id,
+            schoolId: payment.schoolId,
+            guardianId: payment.guardianId,
+            paymentReminderId: payment.id,
+            message: data.message,
+            status: 'OPEN',
+            ...(stored ?? {}),
+          },
+        });
       });
-    });
-    return this.toParentVerification(created, payment.school.name, payment.nextDate);
+      return this.toParentVerification(created, payment.school.name, payment.nextDate);
+    } catch (err) {
+      if (stored) await this.receipts.discard(stored.receiptKey);
+      throw err;
+    }
   }
 
   /** E'lon muallifi: rol va lavozim (ism — rasmiy e'lon imzosi). */
@@ -177,7 +198,17 @@ export class ParentSchoolCommsService {
   }
 
   private toParentVerification(
-    v: { id: string; paymentReminderId: string; schoolId: string; message: string; status: string; answer: string | null; answeredAt: Date | null; createdAt: Date },
+    v: {
+      id: string;
+      paymentReminderId: string;
+      schoolId: string;
+      message: string;
+      status: string;
+      answer: string | null;
+      answeredAt: Date | null;
+      createdAt: Date;
+      receiptKey: string | null;
+    },
     schoolName: string,
     nextDate: string,
   ) {
@@ -192,6 +223,7 @@ export class ParentSchoolCommsService {
       answer: v.answer,
       answeredAt: v.answeredAt?.toISOString() ?? null,
       createdAt: v.createdAt.toISOString(),
+      hasReceipt: Boolean(v.receiptKey),
     };
   }
 }

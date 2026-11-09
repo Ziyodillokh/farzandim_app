@@ -138,10 +138,13 @@ function addMonths(iso: string, months: number): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
+/** Demo chek rasmi (`public/demo/`) — basePath karta tomonida qo'shiladi. */
+const DEMO_RECEIPT = '/demo/receipt-transfer.png';
+
 export function buildVerifications(payments: PaymentReminder[], baseIso: string): VerificationRequest[] {
   const candidates = payments.filter((p) => p.prepaidMonths === 0).slice(0, 4);
   const messages = [
-    'Assalomu alaykum! Biz sentabrda 4 oylik to\'lovni oldindan qilganmiz, lekin eslatma keldi. Tekshirib bera olasizmi?',
+    'To\'lov usuli: Click. Oy: Noyabr 2026. Ikkala farzand uchun bitta to\'lov qildim.',
     'Ikki farzandim uchun bitta eslatma kelishi kerak edi, ikkita keldi.',
     'To\'lovni kecha bank orqali qildim, chek bor. Eslatmani to\'xtatib qo\'ying, iltimos.',
     'Eslatma sanasini oyning 10-sanasiga ko\'chirish mumkinmi? Maosh shu kuni tushadi.',
@@ -156,5 +159,7 @@ export function buildVerifications(payments: PaymentReminder[], baseIso: string)
     answer: i === 3 ? 'Albatta, eslatma sanasi har oyning 10-sanasiga ko\'chirildi.' : null,
     answeredByStaffId: i === 3 ? FIXED_STAFF.admin : null,
     answeredAt: i === 3 ? `${addDays(baseIso, -2)}T15:00:00` : null,
+    // Ilovadan onlayn to'lov chekining rasmi bilan kelgan so'rovlar (demo namuna).
+    receiptUrl: i === 0 || i === 2 ? DEMO_RECEIPT : null,
   }));
 }

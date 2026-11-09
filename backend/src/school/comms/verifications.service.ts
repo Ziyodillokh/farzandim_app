@@ -15,6 +15,7 @@ import { verificationAnsweredPush } from './comms.i18n';
 import { VERIFICATION_STATUSES, verificationAnswerSchema, verificationFilterSchema, VerificationStatus } from './comms.schemas';
 import { countBy, pageOf } from './comms-paging';
 import { CommsPushService } from './comms-push.service';
+import { ReceiptService } from './receipt.service';
 import { childrenByGuardian, loadRoster } from './comms-roster';
 import { guardianLabel, lockPayment, PaymentUpdatesService } from './payment-updates.service';
 
@@ -48,6 +49,7 @@ export class VerificationsService {
     private readonly audit: SchoolAuditService,
     private readonly payments: PaymentUpdatesService,
     private readonly push: CommsPushService,
+    private readonly receipts: ReceiptService,
   ) {}
 
   async list(actor: SchoolActor, raw: Record<string, unknown>) {
@@ -68,6 +70,8 @@ export class VerificationsService {
       children: children.get(v.guardianId) ?? [],
       payment: v.payment,
       answeredByName: v.answeredByStaffId ? (names.get(v.answeredByStaffId) ?? '—') : null,
+      // Onlayn to'lov cheki rasmi — imzolangan proksi havola (1 soat).
+      receiptUrl: v.receiptKey ? this.receipts.url(v.id) : null,
     }));
     const filtered = rows
       .filter((r) => !filter.status || r.status === filter.status)

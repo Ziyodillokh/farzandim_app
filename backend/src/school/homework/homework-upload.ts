@@ -51,7 +51,7 @@ function mapMultipartError(err: unknown): never {
   throw err;
 }
 
-async function readParts(req: MultipartCapable) {
+async function readParts(req: MultipartCapable, limits: Record<string, number> = LIMITS) {
   const buffers: Buffer[] = [];
   const raw: Record<string, string> = {};
   let timedOut = false;
@@ -60,7 +60,7 @@ async function readParts(req: MultipartCapable) {
     req.raw?.destroy(new Error('Upload deadline exceeded'));
   }, UPLOAD_DEADLINE_MS);
   try {
-    for await (const part of req.parts!({ limits: LIMITS })) {
+    for await (const part of req.parts!({ limits })) {
       if (part.type === 'file') {
         buffers.push(await part.toBuffer!());
       } else if (typeof part.value === 'string') {
@@ -76,11 +76,24 @@ async function readParts(req: MultipartCapable) {
   return { buffers, raw };
 }
 
-export async function readHomeworkUpload(req: FastifyRequest): Promise<HomeworkUpload> {
+/** So'rov multipart (fayl yuklash) shaklidami. */
+export function isMultipartRequest(req: FastifyRequest): boolean {
   const capable = req as unknown as MultipartCapable;
-  if (typeof capable.parts !== 'function' || !capable.isMultipart?.()) throw invalid('files: errors.form.required');
-  const { buffers, raw } = await readParts(capable);
-  if (buffers.length === 0) throw invalid(`files: ${msg.atLeastOne}`);
+  return typeof capable.parts === 'function' && Boolean(capable.isMultipart?.());
+}
+
+/**
+ * Multipart: ko'pi bilan [maxPhotos] rasm (har biri <= 8 MB) va matn maydonlari. Rasm formati
+ * baytlardan aniqlanadi, EXIF/GPS tozalanadi (tozalab bo'lmaydigan fayl — 415).
+ */
+export async function readImageUpload(
+  req: FastifyRequest,
+  maxPhotos: number,
+): Promise<{ photos: UploadedPhoto[]; raw: Record<string, string> }> {
+  const capable = req as unknown as MultipartCapable;
+  if (!isMultipartRequest(req)) throw invalid('files: errors.form.required');
+  const limits = { fileSize: MAX_PHOTO_BYTES, files: maxPhotos, fields: MAX_FIELDS, parts: maxPhotos + MAX_FIELDS };
+  const { buffers, raw } = await readParts(capable, limits);
   const unsupported = () => new UnsupportedMediaTypeException({ code: 'UNSUPPORTED_IMAGE', message: 'Only JPEG, PNG or WebP images are accepted' });
   const photos = buffers.map((buffer): UploadedPhoto => {
     const image = sniffImage(buffer);
@@ -91,5 +104,11 @@ export async function readHomeworkUpload(req: FastifyRequest): Promise<HomeworkU
       throw unsupported(); // tuzilma buzilgan — metadata qolib ketishi mumkin
     }
   });
+  return { photos, raw };
+}
+
+export async function readHomeworkUpload(req: FastifyRequest): Promise<HomeworkUpload> {
+  const { photos, raw } = await readImageUpload(req, MAX_PHOTOS);
+  if (photos.length === 0) throw invalid(`files: ${msg.atLeastOne}`);
   return { photos, fields: parseOrThrow(submissionFieldsSchema, { comment: raw.comment, requestId: raw.requestId }) };
 }
