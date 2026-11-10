@@ -1,6 +1,7 @@
 import type { Id, IsoDate, IsoDateTime } from './common';
 
-export type MaterialKind = 'AUDIOBOOK' | 'VIDEO' | 'TEST';
+/** `LESSON` — maktabning o'z materiali (o'qituvchi qo'shadi: matn + havola), id `school:<uuid>`. */
+export type MaterialKind = 'AUDIOBOOK' | 'VIDEO' | 'TEST' | 'LESSON';
 /** Topshiriq turi: katalog materiali yoki o'qituvchi yozgan YOZMA vazifa (`materialId: 'written'`). */
 export type AssignmentKind = MaterialKind | 'WRITTEN';
 export type Subject =
@@ -24,6 +25,17 @@ export type LearningMaterial = {
   grades: number[];
   durationMin: number;
   questions: number; // test bo'lsa
+  /** Maktabning o'z materiali (LESSON) maydonlari; Parvoz katalogida yo'q. */
+  own?: boolean;
+  body?: string;
+  linkUrl?: string | null;
+  byStaffId?: string;
+  byName?: string;
+  /** Muallif yoki butun maktab xodimi (direktor / admin) tahrirlay oladi. */
+  canEdit?: boolean;
+  /** Mock bazada: arxivlangan material katalogda ko'rinmaydi. */
+  archived?: boolean;
+  createdAt?: IsoDateTime;
 };
 
 export type LearningAssignment = {

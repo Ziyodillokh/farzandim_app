@@ -68,7 +68,7 @@ describe('School homework: xodim tomoni va ma\'lumotlarni o\'chirish', () => {
       expect(photo.statusCode).toBe(200);
     });
 
-    it('scopes by role: HOMEROOM sees only own classes, DIRECTOR and ADMIN everything, others denied', async () => {
+    it('scopes by role: HOMEROOM and TEACHER see only own classes, DIRECTOR and ADMIN everything, others denied', async () => {
       const both = await createWritten(t, w.admin, [w.classA, w.classB]);
       const onlyB = await createWritten(t, w.admin, [w.classB]);
       await submit(both.id, w.child.token);
@@ -82,7 +82,9 @@ describe('School homework: xodim tomoni va ma\'lumotlarni o\'chirish', () => {
 
       expect((await submissions(w.director, both.id)).json().students).toHaveLength(3);
       expect((await submissions(w.admin, onlyB.id)).json().students).toHaveLength(1);
-      for (const denied of [w.teacher, w.duty, w.psych]) expect((await submissions(denied, both.id)).statusCode).toBe(403);
+      // Fan o'qituvchisi (8-B) — faqat o'z sinfi.
+      expect((await submissions(w.teacher, both.id)).json().students.map((s: { name: string }) => s.name)).toEqual(['Rasulov Bek']);
+      for (const denied of [w.duty, w.psych]) expect((await submissions(denied, both.id)).statusCode).toBe(403);
       expect((await t.app.inject({ method: 'GET', url: `/api/school/learning/assignments/${both.id}/submissions` })).statusCode).toBe(401);
     });
 
@@ -142,8 +144,9 @@ describe('School homework: xodim tomoni va ma\'lumotlarni o\'chirish', () => {
 
       expect((await review(w.homeroom, mine.id, { status: 'ACCEPTED' })).statusCode).toBe(200);
       expect((await review(w.homeroom, bek.id, { status: 'ACCEPTED' })).statusCode).toBe(403);
-      expect((await review(w.director, mine.id, { status: 'ACCEPTED' })).statusCode).toBe(403); // learning.assign yo'q
-      for (const denied of [w.teacher, w.duty, w.psych]) expect((await review(denied, mine.id, { status: 'ACCEPTED' })).statusCode).toBe(403);
+      // Fan o'qituvchisi (8-B) 7-A ishini tekshira olmaydi; navbatchi va psixologda `learning.assign` yo'q.
+      expect((await review(w.teacher, mine.id, { status: 'ACCEPTED' })).statusCode).toBe(403);
+      for (const denied of [w.duty, w.psych]) expect((await review(denied, mine.id, { status: 'ACCEPTED' })).statusCode).toBe(403);
       expect(await t.prisma.schoolHomeworkSubmission.count({ where: { id: bek.id, status: 'SUBMITTED' } })).toBe(1);
     });
 

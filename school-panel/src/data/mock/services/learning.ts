@@ -1,7 +1,18 @@
 import { roleHas } from '@/auth/permissions';
 import type { AssignmentKind, ClassActivity, IsoDate, LearningAssignment, LearningMaterial, Subject } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
-import { assignmentInputSchema, materialFilterSchema, SUBJECTS, WRITTEN_MATERIAL_ID, type AssignmentInput, type MaterialFilter } from '@/data/schemas/learning';
+import {
+  assignmentInputSchema,
+  isSchoolMaterialId,
+  materialFilterSchema,
+  materialInputSchema,
+  SCHOOL_MATERIAL_PREFIX,
+  SUBJECTS,
+  WRITTEN_MATERIAL_ID,
+  type AssignmentInput,
+  type MaterialFilter,
+  type MaterialInput,
+} from '@/data/schemas/learning';
 import { parseOrThrow } from '@/data/schemas/validate';
 import { CARE_MIN_GROUP } from '@/lib/k-anon';
 import { matchesSearch } from '@/lib/normalize-search';
@@ -56,6 +67,8 @@ export type AssignmentRow = LearningAssignment & {
   byName: string;
   overdue: boolean;
   canDelete: boolean;
+  /** Maktab materiali (LESSON): "O'qidim" belgilagan o'quvchilar soni; boshqalarda `null`. */
+  readCount?: number | null;
 };
 export type LearningClassOption = { id: string; name: string; grade: number };
 
@@ -116,6 +129,24 @@ function toPercents(weights: number[]): number[] {
   const missing = 100 - floors.reduce((a, b) => a + b, 0);
   const bump = new Set(order.slice(0, missing).map((o) => o.i));
   return floors.map((f, i) => (bump.has(i) ? f + 1 : f));
+}
+
+/** Maktab materialini muallif yoki butun maktab xodimi (direktor / admin) tahrirlaydi. */
+function canEditMaterial(actor: Actor, material: LearningMaterial): boolean {
+  return material.byStaffId === actor.staffId || allowedClassIds(actor) === null;
+}
+
+/** Muallif ismi va tahrir huquqi bilan katalog ko'rinishi. */
+function materialView(t: Tables, actor: Actor, m: LearningMaterial): LearningMaterial {
+  if (!m.own) return m;
+  return { ...m, byName: t.staff.find((s) => s.id === m.byStaffId)?.fullName ?? '—', canEdit: canEditMaterial(actor, m) };
+}
+
+function findOwnMaterial(t: Tables, actor: Actor, id: string): LearningMaterial {
+  const material = t.materials.find((m) => m.id === id && m.own);
+  if (!material) throw new ServiceError('NOT_FOUND', id);
+  if (!canEditMaterial(actor, material)) throw new ServiceError('FORBIDDEN', id);
+  return material;
 }
 
 function canDeleteAssignment(actor: Actor, assignment: LearningAssignment): boolean {
@@ -190,7 +221,10 @@ export const learningService = {
     const t = getTables();
     const allowed = allowedClassIds(actor);
     const inScopeIds = (ids: string[]) => ids.filter((id) => !allowed || allowed.includes(id));
-    return t.materials
+    // Maktabning o'z materiallari birinchi (yangilari tepada), keyin Parvoz katalogi; arxivlangani yo'q.
+    const own = t.materials.filter((m) => m.own && !m.archived).sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
+    return [...own, ...t.materials.filter((m) => !m.own)]
+      .map((m) => materialView(t, actor, m))
       .filter(
         (m) =>
           (!f.kind || m.kind === f.kind) &&
@@ -217,10 +251,12 @@ export const learningService = {
       .map((a) => {
         const material = materials.get(a.materialId);
         const written = a.materialId === WRITTEN_MATERIAL_ID;
+        const lesson = material?.kind === 'LESSON';
         return {
           ...a,
-          materialTitle: written ? (a.title ?? '—') : (material?.title ?? '—'),
+          materialTitle: written || lesson ? (a.title ?? material?.title ?? '—') : (material?.title ?? '—'),
           materialKind: written ? ('WRITTEN' as const) : (material?.kind ?? null),
+          readCount: lesson ? 0 : null,
           subject: material?.subject ?? null,
           classNames: a.classIds
             .filter((id) => !allowed || allowed.includes(id))
@@ -252,8 +288,9 @@ export const learningService = {
     if (data.dueDate < clockToday()) throw new ServiceError('VALIDATION', 'dueDate: errors.form.invalidDate');
     const isWritten = data.materialId === WRITTEN_MATERIAL_ID;
     return transact((t) => {
-      const material = isWritten ? null : t.materials.find((m) => m.id === data.materialId);
+      const material = isWritten ? null : t.materials.find((m) => m.id === data.materialId && !m.archived);
       if (!isWritten && !material) throw new ServiceError('VALIDATION', 'materialId: errors.form.required');
+      const lesson = material?.kind === 'LESSON';
       if (data.classIds.some((id) => !t.classes.some((c) => c.id === id))) throw new ServiceError('VALIDATION', 'classIds');
       const title = isWritten ? (data.title ?? '').trim() : (material?.title ?? '');
       const assignment: LearningAssignment = {
@@ -264,8 +301,10 @@ export const learningService = {
         note: data.note,
         createdAt: new Date().toISOString(),
         byStaffId: actor.staffId,
-        ...(isWritten && { title }),
-        ...(data.estimatedMinutes !== undefined && { estimatedMinutes: data.estimatedMinutes }),
+        ...((isWritten || lesson) && { title }),
+        ...(data.estimatedMinutes !== undefined
+          ? { estimatedMinutes: data.estimatedMinutes }
+          : lesson && material ? { estimatedMinutes: material.durationMin } : {}),
       };
       t.assignments.push(assignment);
       const names = assignment.classIds.map((id) => t.classes.find((c) => c.id === id)?.name ?? id).join(', ');
@@ -288,5 +327,68 @@ export const learningService = {
     });
   },
 
+  /** Maktabning o'z materiali: matn + ixtiyoriy https havola (backend `POST /materials`). */
+  async createMaterial(input: MaterialInput): Promise<LearningMaterial> {
+    await latency();
+    const actor = currentActor();
+    assertCan(actor, 'learning.assign');
+    const data = parseOrThrow(materialInputSchema, input);
+    return transact((t) => {
+      const material: LearningMaterial = {
+        id: `${SCHOOL_MATERIAL_PREFIX}${newId('mat')}`,
+        kind: 'LESSON',
+        title: data.title,
+        subject: data.subject,
+        grades: [...new Set(data.grades)].sort((a, b) => a - b),
+        durationMin: data.estimatedMinutes,
+        questions: 0,
+        own: true,
+        body: data.body,
+        linkUrl: data.linkUrl || null,
+        byStaffId: actor.staffId,
+        archived: false,
+        createdAt: new Date().toISOString(),
+      };
+      t.materials.push(material);
+      writeAudit(t, actor, 'LEARNING', 'learning.materialCreate', `Maktab materiali qo'shildi: "${material.title}"`, material.id, null, { title: material.title }, { title: material.title });
+      return materialView(t, actor, material);
+    });
+  },
+
+  async updateMaterial(id: string, input: MaterialInput): Promise<LearningMaterial> {
+    await latency();
+    const actor = currentActor();
+    assertCan(actor, 'learning.assign');
+    const data = parseOrThrow(materialInputSchema, input);
+    return transact((t) => {
+      const material = findOwnMaterial(t, actor, id);
+      const before = { title: material.title };
+      Object.assign(material, {
+        title: data.title,
+        subject: data.subject,
+        grades: [...new Set(data.grades)].sort((a, b) => a - b),
+        durationMin: data.estimatedMinutes,
+        body: data.body,
+        linkUrl: data.linkUrl || null,
+      });
+      writeAudit(t, actor, 'LEARNING', 'learning.materialUpdate', `Maktab materiali tahrirlandi: "${material.title}"`, id, before, { title: material.title }, { title: material.title });
+      return materialView(t, actor, material);
+    });
+  },
+
+  async archiveMaterial(id: string): Promise<void> {
+    await latency();
+    const actor = currentActor();
+    assertCan(actor, 'learning.assign');
+    transact((t) => {
+      const material = findOwnMaterial(t, actor, id);
+      if (material.archived) return;
+      material.archived = true;
+      writeAudit(t, actor, 'LEARNING', 'learning.materialArchive', `Maktab materiali arxivlandi: "${material.title}"`, id, null, null, { title: material.title });
+    });
+  },
+
   ...learningSubmissionsService,
 };
+
+export { isSchoolMaterialId };

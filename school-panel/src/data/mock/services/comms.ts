@@ -13,7 +13,7 @@ import { MESSAGE_TEMPLATES, type MessageTemplate } from './comms-templates';
 import { verificationCounts, verificationsService } from './comms-verifications';
 
 export type { AnnouncementCounts, AnnouncementDetail, AnnouncementFilter, AnnouncementList, AnnouncementRow, SendOptions } from './comms-announcements';
-export type { PaymentFilter, PaymentFilterKind, PaymentHistoryEntry, PaymentRow, PaymentStats } from './comms-payments';
+export type { PaymentBulkCreateResult, PaymentFilter, PaymentFilterKind, PaymentHistoryEntry, PaymentRow, PaymentStats } from './comms-payments';
 export { addMonthsIso } from './comms-payments';
 export type { ReminderFilter, ReminderList, ReminderRow, ReminderStats, ReminderWhen } from './comms-reminders';
 export type { AudienceReach, ChildRef } from './comms-shared';

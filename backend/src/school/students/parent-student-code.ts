@@ -191,25 +191,25 @@ async function requestGuardianReview(
  * Shu o'quvchida UNDER_REVIEW da kutayotgan bola SHU ota-onaning farzandi bo'lsa — bog'lanish tasdiqlanadi
  * (qaysi kod bilan kiritgani muhim emas: xodim kodni qayta yaratgan bo'lsa ham). Ota-ona vasiy bo'lgandan keyin
  * chaqiriladi. To'siq (o'quvchi boshqa oilaga ulangan, bola boshqa o'quvchida) — bog'lanish UNDER_REVIEW da qoladi,
- * xodim hal qiladi. Ulangan bo'lsa `true`.
+ * xodim hal qiladi. Ulangan bo'lsa — tasdiqlangan bola id'si, aks holda `null`.
  */
 export async function confirmOwnPendingChild(
   tx: Tx,
   ctx: { student: ParentStudent; children: Array<{ id: string; parentId: string }>; now: Date },
-): Promise<boolean> {
+): Promise<string | null> {
   const { student, children, now } = ctx;
-  if (children.length === 0) return false;
+  if (children.length === 0) return null;
   const pending = await tx.schoolStudentInvite.findFirst({
     where: { studentId: student.id, studentConfirmedAt: null, studentChildId: { in: children.map((c) => c.id) } },
     orderBy: { studentUsedAt: 'asc' },
     select: { studentChildId: true },
   });
   const child = children.find((c) => c.id === pending?.studentChildId);
-  if (!child) return false;
+  if (!child) return null;
   const outcome = await tryLinkChildToStudent(tx, student, child);
-  if (outcome === 'STUDENT_LINKED_ELSEWHERE' || outcome === 'ALREADY_ENROLLED') return false;
+  if (outcome === 'STUDENT_LINKED_ELSEWHERE' || outcome === 'ALREADY_ENROLLED') return null;
   await settleConfirmedLink(tx, student.id, child.id, now);
-  return true;
+  return child.id;
 }
 
 export async function auditChildLinked(audit: SchoolAuditService, actorName: string, student: ParentStudent, tx: Tx): Promise<void> {

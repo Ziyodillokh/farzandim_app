@@ -117,8 +117,10 @@ describe('School learning (Growth)', () => {
   it('topshiriqlar: validatsiya, doira, audit va bola ilovasida "bajarildi"', async () => {
     const kid = await linkedKid(classA);
     const due = addDays(tashkentDay(), 3);
-    // Topshiriq berish — administrator va sinf rahbari (direktorda `learning.assign` yo'q).
-    expect((await call(director, 'POST', '/assignments', { materialId: 'test:MATH', classIds: [classA], dueDate: due })).statusCode).toBe(403);
+    // Topshiriq berish — direktor, administrator, sinf rahbari va fan o'qituvchisi (o'z sinflari).
+    const byDirector = await call(director, 'POST', '/assignments', { materialId: 'test:MATH', classIds: [classA], dueDate: due });
+    expect(byDirector.statusCode).toBe(201);
+    expect((await call(director, 'DELETE', `/assignments/${byDirector.json().id}`)).statusCode).toBe(204);
     await createStaff(t.prisma, schoolId, 'ADMIN', 'admin');
     const admin = await login(t.app, 'admin');
     expect((await call(admin, 'POST', '/assignments', { materialId: 'test:MATH', classIds: [classA], dueDate: addDays(tashkentDay(), -1) })).json().message).toBe('dueDate: errors.form.invalidDate');
@@ -138,7 +140,7 @@ describe('School learning (Growth)', () => {
     expect(list).toHaveLength(2);
     expect(list.find((a: { id: string }) => a.id === both.id)).toMatchObject({ classNames: ['7-A'], canDelete: false, materialKind: 'TEST' });
     expect((await call(homeroom, 'DELETE', `/assignments/${both.id}`)).statusCode).toBe(403);
-    expect(await t.prisma.schoolAuditLog.count({ where: { action: 'learning.assign' } })).toBe(2);
+    expect(await t.prisma.schoolAuditLog.count({ where: { action: 'learning.assign' } })).toBe(3);
 
     const childList = async () =>
       (await t.app.inject({ method: 'GET', url: '/api/child/school/assignments', headers: { authorization: `Bearer ${kid.token}` } })).json();

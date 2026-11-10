@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { isoDateSchema, msg, optionalText } from './common';
 
-export const MATERIAL_KINDS = ['AUDIOBOOK', 'VIDEO', 'TEST'] as const;
+export const MATERIAL_KINDS = ['LESSON', 'TEST', 'AUDIOBOOK', 'VIDEO'] as const;
 
 /**
  * Panelda ko'rsatilmaydigan material turlari: egasi qarori bilan (2026-11-07)
@@ -66,6 +66,44 @@ export const materialFilterSchema = z.object({
   search: z.string().trim().max(80).optional(),
 });
 
+/** Maktab materiali (backend `materialInputSchema` bilan bir xil cheklovlar). */
+export const SCHOOL_MATERIAL_PREFIX = 'school:';
+export const MATERIAL_TITLE_MIN = 3;
+export const MATERIAL_TITLE_MAX = 120;
+export const MATERIAL_BODY_MAX = 4000;
+export const MATERIAL_LINK_MAX = 500;
+
+export const isSchoolMaterialId = (id: string) => id.startsWith(SCHOOL_MATERIAL_PREFIX);
+
+/** Faqat https, login/parolsiz havola. */
+export function isSafeLink(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && !url.username && !url.password && url.hostname.includes('.');
+  } catch {
+    return false;
+  }
+}
+
+export const materialInputSchema = z.object({
+  title: z.string({ required_error: msg.required }).trim().min(MATERIAL_TITLE_MIN, msg.tooShort).max(MATERIAL_TITLE_MAX, msg.tooLong),
+  subject: z.enum(SUBJECTS, { required_error: msg.required }),
+  grades: z.array(z.number().int().min(1).max(11)).min(1, msg.atLeastOne),
+  body: z.string({ required_error: msg.required }).trim().min(1, msg.required).max(MATERIAL_BODY_MAX, msg.tooLong),
+  linkUrl: z
+    .string()
+    .trim()
+    .max(MATERIAL_LINK_MAX, msg.tooLong)
+    .refine((v) => v === '' || isSafeLink(v), 'errors.form.invalidUrl')
+    .optional(),
+  estimatedMinutes: z
+    .number({ invalid_type_error: msg.minutes, required_error: msg.minutes })
+    .int(msg.minutes)
+    .min(ESTIMATED_MINUTES_MIN, msg.minutes)
+    .max(ESTIMATED_MINUTES_MAX, msg.minutes),
+});
+
 export type AssignmentInput = z.input<typeof assignmentInputSchema>;
+export type MaterialInput = z.input<typeof materialInputSchema>;
 export type MaterialFilter = z.input<typeof materialFilterSchema>;
 export type ReviewInput = z.input<typeof reviewInputSchema>;

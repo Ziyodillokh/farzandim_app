@@ -2,6 +2,7 @@
 // Bola ismi va ota-ona ma'lumoti FAQAT shu navbatda (xodimga qaror uchun kerak); bildirishnoma va auditda yo'q.
 
 import { Prisma } from '@prisma/client';
+import type { LinkNotice } from './link-decision-push';
 import { studentFullName } from './student-view';
 
 export type LinkRequestKind = 'REVIEW' | 'CORRECTION' | 'GUARDIAN';
@@ -72,6 +73,9 @@ export function toEntry(input: {
 }
 
 export const decisionView = (id: string, kind: LinkRequestKind, status: LinkDecision) => ({ id, kind, status });
+
+/** Qaror natijasi: javob tanasi va tranzaksiyadan keyin yuboriladigan push'lar (takroriy qarorda — bo'sh). */
+export type Resolution = { view: ReturnType<typeof decisionView>; notices: LinkNotice[] };
 
 const REVIEW_ID_SEPARATOR = ':';
 

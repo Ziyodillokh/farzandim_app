@@ -23,6 +23,7 @@ export const errors = {
     tooLong: 'Ko\'pi bilan {max} ta belgi',
     invalidPhone: 'Telefon: +998 XX XXX XX XX',
     invalidEmail: 'Email noto\'g\'ri',
+    invalidUrl: 'Havola https:// bilan boshlanishi kerak',
     invalidTime: 'Vaqt: SS:DD',
     invalidDate: 'Sana noto\'g\'ri',
     endBeforeStart: 'Tugash vaqti boshlanishdan keyin bo\'lishi kerak',

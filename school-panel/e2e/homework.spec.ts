@@ -84,7 +84,7 @@ test('sinf rahbari: topshirilgan ishni ko\'radi, rasmlarni kattalashtiradi, qayt
   expect(errors).toEqual([]);
 });
 
-test('direktor: topshiriqlarni ko\'radi, lekin tekshira olmaydi', async ({ page }) => {
+test('direktor: barcha sinflar topshiriqlarini ko\'radi va tekshira oladi', async ({ page }) => {
   const errors = trackErrors(page);
   await login(page, 'direktor', 'Direktor2026');
   await page.goto(url('/learning'));
@@ -96,7 +96,8 @@ test('direktor: topshiriqlarni ko\'radi, lekin tekshira olmaydi', async ({ page 
   await sheet.getByRole('button', { name: 'Yuborildi', exact: true }).click();
   await sheet.getByRole('button', { name: /Ochish/ }).first().click();
   const drawer = page.getByRole('dialog').last();
-  await expect(drawer.getByText(/tekshirish uchun ruxsatingiz yo.q/)).toBeVisible();
-  await expect(drawer.getByRole('button', { name: 'Qabul qilish' })).toHaveCount(0);
+  // Direktorda ham `learning.assign` bor (2026-11-10): qabul / qaytarish tugmalari ko'rinadi.
+  await expect(drawer.getByRole('button', { name: 'Qabul qilish' })).toBeVisible();
+  await expect(drawer.getByText(/tekshirish uchun ruxsatingiz yo.q/)).toHaveCount(0);
   expect(errors).toEqual([]);
 });

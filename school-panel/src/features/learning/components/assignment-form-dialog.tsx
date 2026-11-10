@@ -42,7 +42,7 @@ export function AssignmentFormDialog({ open, onOpenChange, materialId }: { open:
   const materials = useLearningMaterials({});
   const classes = useLearningClassOptions();
   const create = useCreateAssignment();
-  const ownClassOnly = session?.role === 'HOMEROOM';
+  const ownClassOnly = session?.role === 'HOMEROOM' || session?.role === 'TEACHER';
   const [kind, setKind] = useState<Kind>('catalog');
   const form = useForm<AssignmentInput>({
     resolver: zodResolver(assignmentInputSchema),

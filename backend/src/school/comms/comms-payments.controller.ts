@@ -22,8 +22,8 @@ export class CommsPaymentsController {
   }
 
   @Get('stats')
-  stats(@Actor() actor: SchoolActor) {
-    return this.payments.stats(actor);
+  stats(@Actor() actor: SchoolActor, @Query() query: Record<string, unknown>) {
+    return this.payments.stats(actor, query);
   }
 
   /** CSV eksport — filtr bo'yicha barcha qatorlar. */
@@ -36,6 +36,11 @@ export class CommsPaymentsController {
   @Post()
   create(@Actor() actor: SchoolActor, @Body() body: unknown) {
     return this.payments.create(actor, body);
+  }
+
+  @Post('bulk-create')
+  bulkCreate(@Actor() actor: SchoolActor, @Body() body: unknown) {
+    return this.payments.bulkCreate(actor, body);
   }
 
   @Post('bulk-shift')

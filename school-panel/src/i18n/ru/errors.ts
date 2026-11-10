@@ -26,6 +26,7 @@ export const errors: DeepString<typeof uz> = {
     tooLong: 'Максимум {max} символов',
     invalidPhone: 'Телефон: +998 XX XXX XX XX',
     invalidEmail: 'Неверный email',
+    invalidUrl: 'Ссылка должна начинаться с https://',
     invalidTime: 'Время: ЧЧ:ММ',
     invalidDate: 'Неверная дата',
     endBeforeStart: 'Время окончания должно быть позже начала',

@@ -9,15 +9,13 @@ import type { Guardian } from '@/data/contracts';
 import { INNER_TILE, SELECTED_SOFT } from '@/features/messages/styles';
 import { isHttpMode } from '@/data/source';
 import { useI18n } from '@/i18n';
+import { inviteLink } from '@/lib/invite-link';
 import { cn } from '@/lib/utils';
 import { useCopy } from '../hooks';
 
-const LINK_BASE = 'https://parvoz.uz/link?code=';
 const QR_SIZE = 184;
 
-export function inviteLink(code: string): string {
-  return `${LINK_BASE}${encodeURIComponent(code)}`;
-}
+export { inviteLink };
 
 /** Parvoz Parents taklif kodi + QR (ota-ona ilovada skanerlaydi). */
 export function InviteQrDialog({ guardian, onOpenChange }: { guardian: Guardian | null; onOpenChange: (open: boolean) => void }) {

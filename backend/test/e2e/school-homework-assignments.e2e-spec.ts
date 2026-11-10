@@ -77,7 +77,10 @@ describe('School homework: topshiriqlar va bola ro\'yxati', () => {
 
       expect((await post({ materialId: 'written', title: 'ok' }, w.homeroom)).statusCode).toBe(201);
       expect((await post({ materialId: 'written', title: 'ok', classIds: [w.classB] }, w.homeroom)).statusCode).toBe(403);
-      expect((await post({ materialId: 'written', title: 'ok' }, w.director)).statusCode).toBe(403);
+      expect((await post({ materialId: 'written', title: 'ok' }, w.director)).statusCode).toBe(201);
+      expect((await post({ materialId: 'written', title: 'ok', classIds: [w.classB] }, w.teacher)).statusCode).toBe(201);
+      expect((await post({ materialId: 'written', title: 'ok', classIds: [w.classA] }, w.teacher)).statusCode).toBe(403);
+      expect((await post({ materialId: 'written', title: 'ok' }, w.psych)).statusCode).toBe(403);
     });
 
     it('TEST assignments are unchanged; estimatedMinutes is allowed on any kind, a title is ignored', async () => {

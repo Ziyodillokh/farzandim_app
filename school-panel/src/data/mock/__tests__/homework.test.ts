@@ -132,7 +132,7 @@ describe('yozma vazifa: tekshirish', () => {
     expect(other?.submission).toBeTruthy();
     loginAs('HOMEROOM');
     await expect(learningService.reviewSubmission(other!.submission!.id, { status: 'ACCEPTED' })).rejects.toMatchObject({ code: 'FORBIDDEN' });
-    loginAs('DIRECTOR');
+    loginAs('PSYCHOLOGIST');
     await expect(learningService.reviewSubmission(other!.submission!.id, { status: 'ACCEPTED' })).rejects.toMatchObject({ code: 'FORBIDDEN' });
     loginAs('ADMIN');
     await expect(learningService.reviewSubmission('sub-yoq', { status: 'ACCEPTED' })).rejects.toMatchObject({ code: 'NOT_FOUND' });

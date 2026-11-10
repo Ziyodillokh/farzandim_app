@@ -84,6 +84,21 @@ export const paymentBulkShiftSchema = z
   })
   .refine((v) => (v.months === undefined) !== (v.date === undefined), { message: msg.required, path: ['months'] });
 
+/** Bitta oila uchun eslatma (backend `paymentCreateSchema`): farzandlar berilmasa — vasiyning hammasi. */
+export const paymentCreateSchema = z.object({
+  guardianId: z.string({ required_error: msg.required }).min(1, msg.required),
+  studentIds: z.array(z.string().min(1)).min(1, msg.atLeastOne).optional(),
+  nextDate: isoDateSchema,
+  note: noteSchema,
+});
+
+/** Sinf bo'yicha: eslatmasi yo'q har o'quvchi uchun bitta oila eslatmasi. */
+export const paymentBulkCreateSchema = z.object({
+  classId: z.string({ required_error: msg.required }).min(1, msg.required),
+  nextDate: isoDateSchema,
+  note: noteSchema,
+});
+
 export const verificationAnswerSchema = z.object({
   text: requiredText(MESSAGE_BODY_MAX),
   newDate: isoDateSchema.nullable().default(null),
@@ -94,4 +109,6 @@ export type AnnouncementInput = z.input<typeof announcementInputSchema>;
 export type ReminderInput = z.input<typeof reminderInputSchema>;
 export type PaymentShiftInput = z.input<typeof paymentShiftSchema>;
 export type PaymentBulkShiftInput = z.input<typeof paymentBulkShiftSchema>;
+export type PaymentCreateInput = z.input<typeof paymentCreateSchema>;
+export type PaymentBulkCreateInput = z.input<typeof paymentBulkCreateSchema>;
 export type VerificationAnswerInput = z.input<typeof verificationAnswerSchema>;
