@@ -49,11 +49,11 @@ describe('Growth Learning — tayinlash doirasi', () => {
     ).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
 
-  it('direktor faqat ko\'radi, tayinlay olmaydi; psixolog umuman kira olmaydi', async () => {
+  it('direktor ham tayinlaydi (butun maktab); psixolog umuman kira olmaydi', async () => {
     loginAs('DIRECTOR');
     await expect(
       learningService.createAssignment({ materialId: 'mat-2', classIds: ['cls-7a'], dueDate: DUE, note: '' }),
-    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    ).resolves.toMatchObject({ materialId: 'mat-2', classIds: ['cls-7a'] });
     loginAs('PSYCHOLOGIST');
     await expect(learningService.activity()).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
@@ -294,3 +294,34 @@ describe('Growth Learning — natijalar faqat yopiq haftalardan (backend bilan b
     expect(profile.context.classLearning?.activeRate).toBe(100);
   });
 });
+
+describe('maktab materiallari', () => {
+  beforeEach(() => freshDb());
+
+  const INPUT = { title: 'Kasrlar', subject: 'MATH' as const, grades: [7], body: 'Umumiy maxrajni toping.', linkUrl: 'https://youtu.be/x1', estimatedMinutes: 10 };
+
+  it('direktor qo\'shadi, katalogda birinchi; muallif bo\'lmagan sinf rahbari tahrirlay olmaydi, admin arxivlaydi', async () => {
+    loginAs('DIRECTOR');
+    const created = await learningService.createMaterial(INPUT);
+    expect(created).toMatchObject({ kind: 'LESSON', own: true, canEdit: true });
+    expect((await learningService.materials())[0]).toMatchObject({ id: created.id });
+    await expect(learningService.createMaterial({ ...INPUT, linkUrl: 'http://x.uz' })).rejects.toMatchObject({ code: 'VALIDATION' });
+    loginAs('HOMEROOM');
+    expect((await learningService.materials()).find((m) => m.id === created.id)).toMatchObject({ canEdit: false });
+    await expect(learningService.updateMaterial(created.id, INPUT)).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    loginAs('ADMIN');
+    await learningService.archiveMaterial(created.id);
+    expect((await learningService.materials()).some((m) => m.id === created.id)).toBe(false);
+  });
+
+  it('maktab materiali topshiriq sifatida sarlavha va vaqt bilan yuboriladi', async () => {
+    loginAs('ADMIN');
+    const created = await learningService.createMaterial(INPUT);
+    const classId = getTables().classes[0]!.id;
+    const assignment = await learningService.createAssignment({ materialId: created.id, classIds: [classId], dueDate: '2099-01-01', note: '' });
+    expect(assignment).toMatchObject({ title: 'Kasrlar', estimatedMinutes: 10 });
+    const row = (await learningService.assignments()).find((a) => a.id === assignment.id);
+    expect(row).toMatchObject({ materialKind: 'LESSON', materialTitle: 'Kasrlar', readCount: 0 });
+  });
+});
+

@@ -140,7 +140,7 @@ export const staff = {
     },
     messages: { view: 'Xabarlarni ko\'rish', sendSchool: 'Butun maktabga xabar yuborish', sendClass: 'Sinfga xabar yuborish' },
     reminders: { manage: 'Eslatmalarni boshqarish' },
-    payments: { manage: 'To\'lov eslatmalarini boshqarish' },
+    payments: { view: 'To\'lov eslatmalarini ko\'rish (sinf rahbari — o\'z sinfi)', manage: 'To\'lov eslatmalarini boshqarish' },
     care: {
       aggregate: 'Bola ovozi — umumlashgan natija',
       individual: 'Bola ovozi — shaxsiy murojaatlar',

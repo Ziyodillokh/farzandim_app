@@ -11,11 +11,12 @@ import { HomeworkReminderService } from './homework-reminder.service';
 import { SchoolLearningChildService } from './school-learning-child.service';
 import { SchoolLearningChildController, SchoolLearningController } from './school-learning.controller';
 import { SchoolLearningService } from './school-learning.service';
+import { SchoolMaterialsService } from './school-materials.service';
 
 @Module({
   imports: [SchoolCoreModule, HomeworkModule, FcmModule, NotificationPrefsModule],
   controllers: [SchoolLearningController, SchoolLearningChildController],
-  providers: [SchoolLearningService, SchoolLearningChildService, HomeworkReminderService],
+  providers: [SchoolLearningService, SchoolLearningChildService, SchoolMaterialsService, HomeworkReminderService],
   exports: [SchoolLearningService],
 })
 export class SchoolLearningModule {}

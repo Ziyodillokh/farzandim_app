@@ -221,6 +221,7 @@ jobs:
           check /account-deletion.html     200 "Akkauntni"
           check /privacy                   200 "Maxfiylik siyosati"
           check /robots.txt                200 "Sitemap:"
+          check '/link?code=ABCD2345'      200 "Maktabga ulanish"
           check /parvoz-yoq-sahifa         404 "Bu sahifa topilmadi"
           check /school/                   200 "Parvoz School"
           check /school/login/             200 "Parvoz School"

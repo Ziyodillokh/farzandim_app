@@ -24,8 +24,10 @@ import {
   LinkDecision,
   RequestEntry,
   requestStudentSelect,
+  Resolution,
   toEntry,
 } from './link-request-views';
+import type { LinkNotice } from './link-decision-push';
 import { studentName } from './student-view';
 
 type Tx = Prisma.TransactionClient;
@@ -100,19 +102,20 @@ export async function resolveGuardianReview(
   actor: SchoolActor,
   id: string,
   decision: LinkDecision,
-) {
+): Promise<Resolution> {
   const review = await tx.schoolGuardianReview.findFirst({
     where: { id, schoolId: actor.schoolId },
     select: { status: true, userId: true, inviteId: true, student: { select: parentStudentSelect } },
   });
   if (!review) throw linkRequestNotFound();
   if (review.status !== 'OPEN') {
-    if (review.status === decision) return decisionView(id, 'GUARDIAN', decision);
+    if (review.status === decision) return { view: decisionView(id, 'GUARDIAN', decision), notices: [] };
     throw requestStale();
   }
   const { student, userId } = review;
   if (student.archived) throw requestStale();
   const now = new Date();
+  const notices: LinkNotice[] = [];
   if (decision === 'CONFIRMED') {
     const guardian = (await linkKnownGuardian(tx, userId, student, now)) ?? (await createGuardianFromUser(tx, userId, student, now));
     await audit.write(
@@ -127,7 +130,10 @@ export async function resolveGuardianReview(
       tx,
     );
     const children = await tx.child.findMany({ where: { parentId: userId }, select: { id: true, parentId: true } });
-    if (await confirmOwnPendingChild(tx, { student, children, now })) {
+    notices.push({ to: 'PARENT', userId, event: 'GUARDIAN_CONFIRMED', schoolId: student.schoolId, studentFirstName: student.firstName });
+    const confirmedChildId = await confirmOwnPendingChild(tx, { student, children, now });
+    if (confirmedChildId) {
+      notices.push({ to: 'CHILD', childId: confirmedChildId, event: 'CONFIRMED' });
       await audit.write(
         actor,
         {
@@ -141,6 +147,7 @@ export async function resolveGuardianReview(
       );
     }
   } else {
+    notices.push({ to: 'PARENT', userId, event: 'GUARDIAN_REJECTED' });
     if (review.inviteId) {
       await tx.schoolStudentInvite.updateMany({
         where: { id: review.inviteId, parentUserId: userId },
@@ -164,5 +171,5 @@ export async function resolveGuardianReview(
     data: { status: decision, resolvedAt: now, resolvedByStaffId: actor.staffId },
   });
   await clearLinkNotifications(tx, [guardianReviewNotificationId(id)]);
-  return decisionView(id, 'GUARDIAN', decision);
+  return { view: decisionView(id, 'GUARDIAN', decision), notices };
 }

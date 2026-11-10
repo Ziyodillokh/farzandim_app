@@ -56,6 +56,7 @@ export function AssignmentsTab() {
                     a.subject ? t(`enums.subject.${a.subject}`) : null,
                     kind ? t(`enums.materialKind.${kind}`) : null,
                     a.estimatedMinutes ? t('learning.assignments.estimated', { count: a.estimatedMinutes }) : null,
+                    a.readCount != null ? t('learning.assignments.readCount', { count: a.readCount }) : null,
                   ]
                     .filter(Boolean)
                     .join(' · ')}

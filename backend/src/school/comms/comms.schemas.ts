@@ -148,6 +148,17 @@ export const reminderFilterSchema = listQuerySchema.extend({
 
 export const paymentFilterSchema = listQuerySchema.extend({
   filter: z.enum(PAYMENT_FILTERS).optional(),
+  classId: z.string().min(1).max(64).optional(),
+});
+
+/** Ko'rsatkichlar: sinf filtri ro'yxat bilan bir xil. */
+export const paymentStatsQuerySchema = z.object({ classId: z.string().min(1).max(64).optional() });
+
+/** Sinfdagi eslatmasi yo'q har o'quvchi uchun bitta oila eslatmasi. */
+export const paymentBulkCreateSchema = z.object({
+  classId: z.string({ error: msg.required }).min(1, msg.required).max(64),
+  nextDate: dayKeySchema,
+  note: noteSchema,
 });
 
 export const verificationFilterSchema = listQuerySchema.extend({

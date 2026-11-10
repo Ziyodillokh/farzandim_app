@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maktabga ulanish — Parvoz</title>
+<meta name="description" content="Parvoz Parents: maktab bergan taklif kodi bilan farzandingiz maktabiga ulaning.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#060B16">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#060B16;--card:#0D1628;--line:rgba(157,184,232,.18);--blue:#2F7BF5;--text:#F2F6FF;--mute:#8FA3C4;--gold:#F4C257;--red:#FF4D5E;
+    --disp:'Unbounded',system-ui,sans-serif;--body:'Onest',system-ui,-apple-system,'Segoe UI',sans-serif}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--ink);color:var(--text);font-family:var(--body);-webkit-font-smoothing:antialiased}
+  body{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px 16px;
+    background:radial-gradient(1200px 600px at 50% -10%,rgba(47,123,245,.22),transparent 60%),var(--ink)}
+  main{width:100%;max-width:440px}
+  .brand{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:22px;color:var(--text);text-decoration:none}
+  .brand img{width:36px;height:36px;border-radius:10px}
+  .brand span{font-family:var(--disp);font-weight:600;font-size:18px;letter-spacing:-.02em}
+  .card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:24px;padding:26px 22px}
+  h1{font-family:var(--disp);font-weight:600;font-size:21px;line-height:1.3;letter-spacing:-.02em;margin:0 0 8px;text-align:center}
+  .lead{margin:0 0 22px;color:var(--mute);font-size:15px;line-height:1.5;text-align:center}
+  .code{display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(47,123,245,.12);border:1px solid rgba(47,123,245,.35);border-radius:16px;padding:14px 16px}
+  .code small{display:block;color:var(--mute);font-size:12px;margin-bottom:2px}
+  .code strong{font-family:var(--disp);font-weight:600;font-size:26px;letter-spacing:.12em;font-variant-numeric:tabular-nums}
+  .copy{flex-shrink:0;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);border-radius:12px;padding:10px 14px;font:500 14px var(--body);cursor:pointer}
+  .copy:focus-visible,.btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  ol{margin:20px 0 0;padding:0;list-style:none;counter-reset:s}
+  ol li{counter-increment:s;display:flex;gap:12px;align-items:flex-start;padding:9px 0;font-size:15px;line-height:1.45}
+  ol li::before{content:counter(s);flex-shrink:0;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.08);border:1px solid var(--line);font:600 13px var(--body)}
+  .actions{display:grid;gap:10px;margin-top:22px}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;border-radius:14px;padding:12px 16px;text-decoration:none;font:600 15px var(--body);color:var(--text);border:1px solid var(--line);background:rgba(255,255,255,.05)}
+  .btn.primary{background:var(--blue);border-color:transparent;box-shadow:0 10px 30px -12px rgba(47,123,245,.8)}
+  .stores{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .note{margin:18px 0 0;color:var(--mute);font-size:13px;line-height:1.5;text-align:center}
+  .warn{border-color:rgba(244,194,87,.4);background:rgba(244,194,87,.08)}
+  .warn p{margin:0;color:var(--gold);font-size:14px;line-height:1.5}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <a class="brand" href="/"><img src="/icon-192.png" alt="" width="36" height="36"><span>Parvoz</span></a>
+  <div class="card">
+    <h1 data-t="title">Maktabga ulanish taklifi</h1>
+    <p class="lead" data-t="lead">Farzandingiz maktabi sizni Parvoz Parents ilovasiga taklif qildi: davomat, e'lonlar, to'lovlar va maktab bilan yozishma.</p>
+
+    <div class="code" id="code-box" hidden>
+      <div><small data-t="codeLabel">Taklif kodi</small><strong id="code"></strong></div>
+      <button class="copy" type="button" id="copy" data-t="copy">Nusxa olish</button>
+    </div>
+    <div class="code warn" id="no-code" hidden>
+      <p data-t="noCode">Havolada taklif kodi yo'q yoki u noto'g'ri. Maktabdan yangi QR yoki kod so'rang.</p>
+    </div>
+
+    <ol>
+      <li data-t="step1">Parvoz Parents ilovasini o'rnating va kiring</li>
+      <li data-t="step2">Maktab bo'limida «Taklif kodini kiritish»ni bosing</li>
+      <li data-t="step3">Kodni kiriting yoki shu QR'ni ilovadagi skaner bilan skanerlang</li>
+    </ol>
+
+    <div class="actions">
+      <a class="btn primary" id="open-app" href="#" hidden data-t="openApp">Parvoz Parents'da ochish</a>
+      <div class="stores">
+        <a class="btn" href="https://play.google.com/store/apps/details?id=com.farzandim.parent" rel="noopener">Google Play</a>
+        <a class="btn" href="https://apps.apple.com/app/id6798972223" rel="noopener">App Store</a>
+      </div>
+    </div>
+    <p class="note" data-t="note">Kod 7 kun amal qiladi. Ilova o'rnatilgan bo'lsa, «Parvoz Parents'da ochish» kodni o'zi yozib qo'yadi — ulanishni siz tasdiqlaysiz.</p>
+  </div>
+</main>
+<script>
+(function () {
+  'use strict';
+  var RU = {
+    title: 'Приглашение подключиться к школе',
+    lead: 'Школа вашего ребёнка пригласила вас в приложение Parvoz Parents: посещаемость, объявления, оплаты и переписка со школой.',
+    codeLabel: 'Код приглашения', copy: 'Копировать', copied: 'Скопировано',
+    noCode: 'В ссылке нет кода приглашения или он неверный. Попросите в школе новый QR или код.',
+    step1: 'Установите приложение Parvoz Parents и войдите',
+    step2: 'В разделе «Школа» нажмите «Ввести код приглашения»',
+    step3: 'Введите код или отсканируйте этот QR сканером в приложении',
+    openApp: 'Открыть в Parvoz Parents',
+    note: 'Код действует 7 дней. Если приложение установлено, «Открыть в Parvoz Parents» подставит код — подключение подтверждаете вы.'
+  };
+  var UZ_COPIED = 'Nusxa olindi';
+  var ru = /^ru\b/i.test(navigator.language || '');
+  if (ru) {
+    document.documentElement.lang = 'ru';
+    document.title = RU.title + ' — Parvoz';
+    Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function (el) {
+      var key = el.getAttribute('data-t');
+      if (RU[key]) el.textContent = RU[key];
+    });
+  }
+
+  // Kod: 8 belgili vasiy kodi yoki 6 raqamli o'quvchi kodi (bo'shliq va "-" e'tiborga olinmaydi).
+  var raw = '';
+  try { raw = new URLSearchParams(location.search).get('code') || ''; } catch (e) { raw = ''; }
+  var code = raw.replace(/[\s-]/g, '').toUpperCase();
+  var valid = /^[A-Z0-9]{8}$/.test(code) || /^[0-9]{6}$/.test(code);
+  if (!valid) { document.getElementById('no-code').hidden = false; return; }
+
+  var shown = /^[0-9]{6}$/.test(code) ? code.slice(0, 3) + ' ' + code.slice(3) : code.slice(0, 4) + '-' + code.slice(4);
+  document.getElementById('code').textContent = shown;
+  document.getElementById('code-box').hidden = false;
+
+  var copyBtn = document.getElementById('copy');
+  copyBtn.addEventListener('click', function () {
+    var done = function () { copyBtn.textContent = ru ? RU.copied : UZ_COPIED; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(done, function () {});
+  });
+
+  // Android: ilova o'rnatilgan bo'lsa ochiladi (kod maydonga yoziladi), bo'lmasa Google Play.
+  if (/android/i.test(navigator.userAgent)) {
+    var play = 'https://play.google.com/store/apps/details?id=com.farzandim.parent';
+    var open = document.getElementById('open-app');
+    open.href = 'intent://app/link?code=' + encodeURIComponent(code) +
+      '#Intent;scheme=parvozparents;package=com.farzandim.parent;S.browser_fallback_url=' + encodeURIComponent(play) + ';end';
+    open.hidden = false;
+  }
+})();
+</script>
+</body>
+</html>

@@ -3,12 +3,14 @@
 // bog'lanishi (`/api/child/school/link*`, `/api/school/link-requests`).
 
 import { Module } from '@nestjs/common';
+import { CommsModule } from '../comms/comms.module';
 import { SchoolCoreModule } from '../school-core.module';
 import { ChildLinkController } from './child-link.controller';
 import { ChildLinkService } from './child-link.service';
 import { GuardiansController } from './guardians.controller';
 import { GuardiansService } from './guardians.service';
 import { LinkAttemptLimiter } from './link-attempt-limiter';
+import { LinkDecisionNotifier } from './link-decision-notify.service';
 import { LinkRequestsController } from './link-requests.controller';
 import { LinkRequestsService } from './link-requests.service';
 import { ParentLinksService } from './parent-links.service';
@@ -20,7 +22,7 @@ import { StudentsController } from './students.controller';
 import { StudentsService } from './students.service';
 
 @Module({
-  imports: [SchoolCoreModule],
+  imports: [SchoolCoreModule, CommsModule],
   controllers: [StudentsController, GuardiansController, ParentSchoolController, ChildLinkController, LinkRequestsController],
   providers: [
     StudentsService,
@@ -32,6 +34,7 @@ import { StudentsService } from './students.service';
     ChildLinkService,
     LinkRequestsService,
     LinkAttemptLimiter,
+    LinkDecisionNotifier,
   ],
   exports: [StudentsService, GuardiansService],
 })

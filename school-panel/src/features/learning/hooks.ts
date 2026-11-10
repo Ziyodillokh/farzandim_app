@@ -4,7 +4,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { toast } from 'sonner';
 
 import { api } from '@/data/api';
-import { type AssignmentInput, isVisibleMaterialKind, type MaterialFilter, type ReviewInput } from '@/data/schemas/learning';
+import { type AssignmentInput, isVisibleMaterialKind, type MaterialFilter, type MaterialInput, type ReviewInput } from '@/data/schemas/learning';
 import { type TKey, useI18n } from '@/i18n';
 import { errorKey } from '@/lib/errors';
 import { applyOptimisticReview, rollbackReview, submissionsKey } from './lib/optimistic-review';
@@ -64,6 +64,25 @@ function useLearningMutation<TVars, TResult>(fn: (vars: TVars) => Promise<TResul
 
 export function useCreateAssignment() {
   return useLearningMutation((input: AssignmentInput) => api.learning.createAssignment(input), 'learning.assignments.created');
+}
+
+/** Maktab materiali: `id` bo'lsa — tahrirlash, aks holda yangi. */
+export function useSaveMaterial() {
+  const queryClient = useQueryClient();
+  const { t } = useI18n();
+  return useMutation({
+    mutationFn: ({ id, input }: { id?: string; input: MaterialInput }) =>
+      id ? api.learning.updateMaterial(id, input) : api.learning.createMaterial(input),
+    onSuccess: (_r, { id }) => {
+      void queryClient.invalidateQueries({ queryKey: learningKeys.all });
+      toast.success(t(id ? 'learning.materials.form.updated' : 'learning.materials.form.created'));
+    },
+    onError: (error) => toast.error(t(errorKey(error))),
+  });
+}
+
+export function useArchiveMaterial() {
+  return useLearningMutation((id: string) => api.learning.archiveMaterial(id), 'learning.materials.form.archived');
 }
 
 export function useDeleteAssignment() {

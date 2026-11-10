@@ -17,6 +17,8 @@ import { buildCells, cellKey, LEARNING_MIN_COHORT, LearningCell, mondayOf, total
 import { loadCatalog, PANEL_SUBJECT } from './school-learning-catalog';
 import { AssignmentInput, assignmentInputSchema, isWrittenInput, WRITTEN_KIND, WRITTEN_MATERIAL_ID } from './school-learning.schemas';
 import { HomeworkStorageService } from '../homework/homework-storage.service';
+import { LESSON_KIND, parseSchoolMaterialId, schoolMaterialId } from './school-materials';
+import { SchoolMaterialsService } from './school-materials.service';
 import { homeworkKeysOf } from '../homework/homework-purge';
 
 /** Faollik grafigi — oxirgi shuncha hafta (panel: "oxirgi 6 hafta"). */
@@ -27,7 +29,7 @@ const mondayOnOrAfter = (day: string) => (isoWeekday(day) === 1 ? day : addDays(
 
 
 const materialFilterSchema = z.object({
-  kind: z.enum(['AUDIOBOOK', 'VIDEO', 'TEST']).optional(),
+  kind: z.enum(['AUDIOBOOK', 'VIDEO', 'TEST', 'LESSON']).optional(),
   subject: z.string().max(20).optional(),
   grade: z.coerce.number().int().min(1).max(11).optional(),
   search: z.string().trim().max(80).optional(),
@@ -50,6 +52,7 @@ export class SchoolLearningService {
     private readonly prisma: PrismaService,
     private readonly audit: SchoolAuditService,
     private readonly homeworkStorage: HomeworkStorageService,
+    private readonly schoolMaterials: SchoolMaterialsService,
   ) {}
 
   /**
@@ -139,12 +142,14 @@ export class SchoolLearningService {
   async materials(actor: SchoolActor, query: unknown) {
     assertCan(actor, 'learning.view');
     const f = parseOrThrow(materialFilterSchema, query ?? {});
-    const [catalog, assignments] = await Promise.all([
+    const [catalog, own, assignments] = await Promise.all([
       loadCatalog(this.prisma),
+      this.schoolMaterials.list(actor),
       this.prisma.schoolLearningAssignment.findMany({ where: { schoolId: actor.schoolId }, select: { materialId: true, classIds: true } }),
     ]);
     const allowed = allowedClassIds(actor);
-    return catalog
+    // Maktabning o'z materiallari birinchi (yangilari tepada), keyin Parvoz katalogi.
+    return [...own, ...catalog]
       .filter(
         (m) =>
           (!f.kind || m.kind === f.kind) &&
@@ -163,22 +168,26 @@ export class SchoolLearningService {
   async assignments(actor: SchoolActor) {
     assertCan(actor, 'learning.view');
     const allowed = allowedClassIds(actor);
-    const [rows, catalog, classes, staff] = await Promise.all([
+    const [rows, catalog, own, classes, staff] = await Promise.all([
       this.prisma.schoolLearningAssignment.findMany({
         where: { schoolId: actor.schoolId, ...(allowed && { classIds: { hasSome: allowed } }) },
         orderBy: { dueDate: 'asc' },
+        include: { _count: { select: { reads: true } } },
       }),
       loadCatalog(this.prisma),
+      this.prisma.schoolLearningMaterial.findMany({ where: { schoolId: actor.schoolId }, select: { id: true, subject: true } }),
       this.prisma.schoolClass.findMany({ where: { schoolId: actor.schoolId }, select: { id: true, name: true, grade: true, letter: true } }),
       this.prisma.schoolStaff.findMany({ where: { schoolId: actor.schoolId }, select: { id: true, fullName: true } }),
     ]);
     const material = new Map(catalog.map((m) => [m.id, m]));
+    const ownSubject = new Map(own.map((m) => [schoolMaterialId(m.id), m.subject]));
     const classById = new Map(classes.map((c) => [c.id, c]));
     const staffName = new Map(staff.map((s) => [s.id, s.fullName]));
     const today = tashkentDay();
     return rows.map((a) => {
       const m = material.get(a.materialId);
       const written = a.materialKind === WRITTEN_KIND;
+      const lesson = a.materialKind === LESSON_KIND;
       return {
         id: a.id,
         materialId: a.materialId,
@@ -189,9 +198,11 @@ export class SchoolLearningService {
         byStaffId: a.byStaffId,
         title: a.title,
         estimatedMinutes: a.estimatedMinutes,
-        materialTitle: written ? (a.title ?? '—') : (m?.title ?? '—'),
-        materialKind: written ? WRITTEN_KIND : (m?.kind ?? null),
-        subject: m?.subject ?? null,
+        materialTitle: written || lesson ? (a.title ?? '—') : (m?.title ?? '—'),
+        materialKind: written ? WRITTEN_KIND : lesson ? LESSON_KIND : (m?.kind ?? null),
+        subject: lesson ? (ownSubject.get(a.materialId) ?? null) : (m?.subject ?? null),
+        /** Maktab materiali: "O'qidim" belgilagan o'quvchilar soni (boshqalarda `null`). */
+        readCount: lesson ? a._count.reads : null,
         classNames: a.classIds
           .filter((id) => !allowed || allowed.includes(id))
           .flatMap((id) => (classById.get(id) ? [classById.get(id)!] : []))
@@ -263,7 +274,7 @@ export class SchoolLearningService {
     const data = parseOrThrow(assignmentInputSchema, input);
     for (const classId of data.classIds) assertClassInScope(actor, classId);
     if (data.dueDate < tashkentDay()) throw invalid('dueDate: errors.form.invalidDate');
-    const material = await this.resolveMaterial(data);
+    const material = await this.resolveMaterial(actor, data);
     const classIds = [...new Set(data.classIds)];
     const classes = await this.prisma.schoolClass.findMany({ where: { schoolId: actor.schoolId, id: { in: classIds } }, select: { id: true, name: true, grade: true, letter: true } });
     if (classes.length !== classIds.length) throw invalid('classIds: errors.form.required');
@@ -273,8 +284,8 @@ export class SchoolLearningService {
           schoolId: actor.schoolId,
           materialKind: material.kind,
           materialId: material.id,
-          title: material.kind === WRITTEN_KIND ? material.title : null,
-          estimatedMinutes: data.estimatedMinutes ?? null,
+          title: material.kind === WRITTEN_KIND || material.kind === LESSON_KIND ? material.title : null,
+          estimatedMinutes: data.estimatedMinutes ?? material.estimatedMinutes ?? null,
           classIds,
           dueDate: data.dueDate,
           note: data.note,
@@ -309,9 +320,17 @@ export class SchoolLearningService {
     });
   }
 
-  /** Yozma vazifa (sarlavha xodimdan) yoki katalog materiali (test / audiokitob). */
-  private async resolveMaterial(data: AssignmentInput): Promise<{ kind: string; id: string; title: string }> {
+  /** Yozma vazifa (sarlavha xodimdan), maktab materiali (shu maktabniki, arxivsiz) yoki katalog materiali. */
+  private async resolveMaterial(
+    actor: SchoolActor,
+    data: AssignmentInput,
+  ): Promise<{ kind: string; id: string; title: string; estimatedMinutes?: number }> {
     if (isWrittenInput(data)) return { kind: WRITTEN_KIND, id: WRITTEN_MATERIAL_ID, title: data.title ?? '' };
+    if (data.materialId && parseSchoolMaterialId(data.materialId)) {
+      const own = await this.schoolMaterials.resolve(actor.schoolId, data.materialId);
+      if (!own) throw invalid('materialId: errors.form.required');
+      return { kind: LESSON_KIND, id: schoolMaterialId(own.id), title: own.title, estimatedMinutes: own.estimatedMinutes };
+    }
     const material = (await loadCatalog(this.prisma)).find((m) => m.id === data.materialId);
     if (!material) throw invalid('materialId: errors.form.required');
     return material;

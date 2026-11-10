@@ -61,6 +61,8 @@ export type RouteDef = {
   external?: boolean;
   /** Menyuda hisoblagich nishoni (masalan, ochiq so'rovlar soni). */
   badge?: 'linkRequests' | 'parentInbox';
+  /** Shu ruxsat bo'lsa yuqori darajadagi element yashiriladi (u ota bo'lim ichida ko'rinadi). */
+  unless?: Permission;
 };
 
 export const ROUTES: readonly RouteDef[] = [
@@ -79,7 +81,9 @@ export const ROUTES: readonly RouteDef[] = [
 
   { path: '/reminders', perm: 'reminders.manage', titleKey: 'nav.reminders', icon: Bell, group: 'communication' },
   { path: '/reminders', perm: 'reminders.manage', titleKey: 'nav.reminders', icon: Bell, parent: '/reminders' },
-  { path: '/reminders/payments', perm: 'payments.manage', titleKey: 'nav.payments', icon: Wallet, parent: '/reminders' },
+  { path: '/reminders/payments', perm: 'payments.view', titleKey: 'nav.payments', icon: Wallet, parent: '/reminders' },
+  // Sinf rahbari: Smart Reminder bo'limisiz — o'z sinfi to'lovlari alohida menyu bandi (faqat ko'rish).
+  { path: '/reminders/payments', perm: 'payments.view', titleKey: 'nav.payments', icon: Wallet, group: 'communication', unless: 'reminders.manage' },
   { path: '/reminders/verifications', perm: 'payments.manage', titleKey: 'nav.verifications', icon: Receipt, parent: '/reminders' },
   { path: '/inbox', perm: 'inbox.parents', titleKey: 'nav.inbox', icon: MessageCircleMore, group: 'communication', badge: 'parentInbox' },
   { path: '/messages', perm: 'messages.view', titleKey: 'nav.messages', icon: MessagesSquare, group: 'communication' },
@@ -109,6 +113,7 @@ export const ROUTES: readonly RouteDef[] = [
   { path: '/students/view', perm: 'students.view', titleKey: 'nav.students', icon: Users, hidden: true },
   { path: '/students/link-requests', perm: 'guardians.link', titleKey: 'nav.linkRequests', icon: Link2, group: 'school', badge: 'linkRequests' },
   { path: '/parents', perm: 'guardians.link', titleKey: 'nav.parents', icon: UsersRound, group: 'school' },
+  { path: '/parents/print', perm: 'guardians.link', titleKey: 'nav.parents', icon: UsersRound, hidden: true },
 
   { path: '/reports', perm: 'reports.view', titleKey: 'nav.reports', icon: FileCheck2, group: 'admin' },
   { path: '/reports/print', perm: 'reports.view', titleKey: 'nav.reports', icon: ClipboardList, hidden: true },

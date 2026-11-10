@@ -8,7 +8,7 @@ export type NavSection = { group: NavGroup; items: NavNode[] };
 export function buildNav(can: (p: Permission) => boolean): NavSection[] {
   return NAV_GROUP_ORDER.map((group) => ({
     group,
-    items: ROUTES.filter((r) => r.group === group && !r.hidden && can(r.perm)).map((r) => ({
+    items: ROUTES.filter((r) => r.group === group && !r.hidden && can(r.perm) && !(r.unless && can(r.unless))).map((r) => ({
       ...r,
       children: ROUTES.filter((c) => c.parent === r.path && can(c.perm)),
     })),

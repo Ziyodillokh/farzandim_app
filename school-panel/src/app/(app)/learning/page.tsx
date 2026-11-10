@@ -19,7 +19,7 @@ export default function LearningPage() {
   const { t } = useI18n();
   const session = useSession();
   const [tab, setTab] = useState<Tab>('activity');
-  const ownClass = session?.role === 'HOMEROOM';
+  const ownClass = session?.role === 'HOMEROOM' || session?.role === 'TEACHER';
 
   return (
     <>

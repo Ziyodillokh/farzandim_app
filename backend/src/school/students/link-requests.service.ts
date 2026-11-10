@@ -15,6 +15,8 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { allowedClassIds, assertCan, assertClassInScope, SchoolActor } from '../auth/school-actor';
 import { SchoolAuditService } from '../common/school-audit.service';
 import { listGuardianEntries, locateGuardianReview, resolveGuardianReview } from './guardian-review-requests';
+import { LinkDecisionNotifier } from './link-decision-notify.service';
+import type { LinkNotice } from './link-decision-push';
 import { LINK_REQUESTS_PERMISSION } from './link-access';
 import { linkChildToStudent, releaseChildSlots, settleConfirmedLink } from './link-core';
 import { linkRequestNotFound, requestStale } from './link-errors';
@@ -28,6 +30,7 @@ import {
   LinkRequestView,
   parseReviewId,
   RequestEntry,
+  Resolution,
   requestChildSelect,
   requestStudentSelect,
   reviewRequestId,
@@ -54,6 +57,7 @@ export class LinkRequestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: SchoolAuditService,
+    private readonly notifier: LinkDecisionNotifier,
   ) {}
 
   /** Tasdiq kutayotgan bog'lanishlar, ochiq tuzatish so'rovlari va vasiylik so'rovlari (doira bo'yicha), eng eskilari birinchi. */
@@ -148,12 +152,15 @@ export class LinkRequestsService {
   private async resolve(actor: SchoolActor, id: string, decision: LinkDecision) {
     assertCan(actor, LINK_REQUESTS_PERMISSION);
     const target = await this.locate(actor, id);
-    return this.prisma.$transaction(async (tx) => {
+    const outcome = await this.prisma.$transaction(async (tx): Promise<Resolution> => {
       await acquireLinkLocks(tx, [...target.lockChildIds.map(childLock), studentLock(target.studentId)]);
       if (target.kind === 'GUARDIAN') return resolveGuardianReview(tx, this.audit, actor, id, decision);
       if (target.kind === 'CORRECTION') return this.resolveCorrection(tx, actor, id, decision);
       return this.resolveReview(tx, actor, id, decision, target.childId!);
     });
+    // Qaror saqlangach: ota-ona / bola ilovani o'zi ochmaguncha kutib qolmasin (takroriy qarorda — push yo'q).
+    await this.notifier.send(outcome.notices);
+    return outcome.view;
   }
 
   /**
@@ -189,7 +196,13 @@ export class LinkRequestsService {
     return { kind: 'GUARDIAN', studentId: guardian.studentId, childId: null, lockChildIds: guardian.childIds };
   }
 
-  private async resolveReview(tx: Tx, actor: SchoolActor, requestId: string, decision: LinkDecision, expectedChildId: string) {
+  private async resolveReview(
+    tx: Tx,
+    actor: SchoolActor,
+    requestId: string,
+    decision: LinkDecision,
+    expectedChildId: string,
+  ): Promise<Resolution> {
     const id = parseReviewId(requestId)?.inviteId ?? requestId;
     const invite = await tx.schoolStudentInvite.findFirst({
       where: { id, schoolId: actor.schoolId },
@@ -205,7 +218,7 @@ export class LinkRequestsService {
     if (!invite?.studentChild || invite.studentChildId !== expectedChildId) throw requestStale();
     const { student, studentChild: child } = invite;
     if (invite.studentConfirmedAt) {
-      if (decision === 'CONFIRMED') return decisionView(requestId, 'REVIEW', decision);
+      if (decision === 'CONFIRMED') return { view: decisionView(requestId, 'REVIEW', decision), notices: [] };
       throw requestStale();
     }
     if (student.archived) throw requestStale();
@@ -239,17 +252,18 @@ export class LinkRequestsService {
         tx,
       );
     }
-    return decisionView(requestId, 'REVIEW', decision);
+    const notice: LinkNotice = { to: 'CHILD', childId: child.id, event: decision === 'CONFIRMED' ? 'CONFIRMED' : 'REJECTED' };
+    return { view: decisionView(requestId, 'REVIEW', decision), notices: [notice] };
   }
 
-  private async resolveCorrection(tx: Tx, actor: SchoolActor, id: string, decision: LinkDecision) {
+  private async resolveCorrection(tx: Tx, actor: SchoolActor, id: string, decision: LinkDecision): Promise<Resolution> {
     const correction = await tx.schoolLinkCorrection.findFirst({
       where: { id, schoolId: actor.schoolId },
       select: { status: true, childId: true, student: { select: requestStudentSelect } },
     });
     if (!correction) throw linkRequestNotFound();
     if (correction.status !== 'OPEN') {
-      if (correction.status === decision) return decisionView(id, 'CORRECTION', decision);
+      if (correction.status === decision) return { view: decisionView(id, 'CORRECTION', decision), notices: [] };
       throw requestStale();
     }
     const { student, childId } = correction;
@@ -283,7 +297,8 @@ export class LinkRequestsService {
           },
       tx,
     );
-    return decisionView(id, 'CORRECTION', decision);
+    const notice: LinkNotice = { to: 'CHILD', childId, event: decision === 'REJECTED' ? 'UNLINKED' : 'CORRECTION_KEPT' };
+    return { view: decisionView(id, 'CORRECTION', decision), notices: [notice] };
   }
 
   /** `studentId:userId` juftliklari — shu foydalanuvchi o'quvchining ulangan vasiysi. */

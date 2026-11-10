@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -34,6 +34,8 @@ export function StatCard({
   loading,
   footer,
   className,
+  onClick,
+  active,
 }: {
   icon: ReactNode;
   label: string;
@@ -43,9 +45,35 @@ export function StatCard({
   loading?: boolean;
   footer?: ReactNode;
   className?: string;
+  /** Berilsa karta filtr tugmasi bo'ladi (klaviatura bilan ham: Enter / Space). */
+  onClick?: () => void;
+  /** Filtr kartasi tanlangan. */
+  active?: boolean;
 }) {
+  const interactive = onClick
+    ? {
+        role: 'button' as const,
+        tabIndex: 0,
+        'aria-pressed': Boolean(active),
+        onClick,
+        onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          e.preventDefault();
+          onClick();
+        },
+      }
+    : {};
   return (
-    <Card className={cn('card-glow relative overflow-hidden p-5', className)}>
+    <Card
+      {...interactive}
+      className={cn(
+        'card-glow relative overflow-hidden p-5',
+        onClick &&
+          'cursor-pointer select-none transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-primary/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        active && 'border-primary/45 ring-2 ring-primary/40',
+        className,
+      )}
+    >
       <div aria-hidden className={cn('pointer-events-none absolute inset-0', GLOWS[tone])} />
       <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">

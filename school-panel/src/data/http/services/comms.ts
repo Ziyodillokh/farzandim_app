@@ -6,6 +6,7 @@ import type {
   CommsOverview,
   commsService,
   MessageTemplate,
+  PaymentBulkCreateResult,
   PaymentHistoryEntry,
   PaymentRow,
   PaymentStats,
@@ -49,12 +50,14 @@ const reminders: Comms['reminders'] = {
 
 const payments: Comms['payments'] = {
   list: (filter = {}) => http<Paginated<PaymentRow>>('GET', `${BASE}/payments`, { query: filter }),
-  stats: () => http<PaymentStats>('GET', `${BASE}/payments/stats`),
+  stats: (filter = {}) => http<PaymentStats>('GET', `${BASE}/payments/stats`, { query: filter }),
   exportRows: (filter = {}) => http<PaymentRow[]>('GET', `${BASE}/payments/export`, { query: filter }),
   shift: (paymentId, input) => http<PaymentReminder>('POST', `${BASE}/payments/${id(paymentId)}/shift`, { body: input }),
   pause: (paymentId, input) => http<PaymentReminder>('POST', `${BASE}/payments/${id(paymentId)}/pause`, { body: input }),
   resume: (paymentId, input) => http<PaymentReminder>('POST', `${BASE}/payments/${id(paymentId)}/resume`, { body: input }),
   bulkShift: (input) => http<{ updated: number }>('POST', `${BASE}/payments/bulk-shift`, { body: input }),
+  create: (input) => http<PaymentReminder>('POST', `${BASE}/payments`, { body: input }),
+  bulkCreate: (input) => http<PaymentBulkCreateResult>('POST', `${BASE}/payments/bulk-create`, { body: input }),
   history: (paymentId) => http<PaymentHistoryEntry[]>('GET', `${BASE}/payments/${id(paymentId)}/history`),
 };
 

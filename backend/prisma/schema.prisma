@@ -2180,6 +2180,7 @@ model School {
   psychResults        SchoolPsychResult[]
   staffNotifications  SchoolStaffNotification[]
   learningAssignments SchoolLearningAssignment[]
+  learningMaterials   SchoolLearningMaterial[]
   timetableLessons    SchoolTimetableLesson[]
   studentInvites      SchoolStudentInvite[]
   linkCorrections     SchoolLinkCorrection[]
@@ -2372,6 +2373,7 @@ model SchoolStudent {
   notes               SchoolStudentNote[]
   announcementReads   SchoolAnnouncementStudentRead[]
   homeworkSubmissions SchoolHomeworkSubmission[]
+  materialReads       SchoolMaterialRead[]
   invites             SchoolStudentInvite[]
   linkCorrections     SchoolLinkCorrection[]
   guardianReviews     SchoolGuardianReview[]
@@ -3107,9 +3109,50 @@ model SchoolLearningAssignment {
 
   school      School                     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   submissions SchoolHomeworkSubmission[]
+  reads       SchoolMaterialRead[]
 
   @@index([schoolId, dueDate])
   @@map("school_learning_assignments")
+}
+
+/// Maktabning o'z o'quv materiali (o'qituvchi qo'shadi): matn + ixtiyoriy havola. Sinflarga topshiriq sifatida
+/// yuboriladi (`SchoolLearningAssignment.materialId = "school:<id>"`, `materialKind = "LESSON"`). O'chirish — arxiv
+/// (yuborilgan topshiriqlar sarlavhasi saqlanadi).
+model SchoolLearningMaterial {
+  id               String   @id @default(uuid())
+  schoolId         String   @map("school_id")
+  title            String
+  /// Panel fani (MATH, ENGLISH, ...).
+  subject          String
+  grades           Int[]
+  /// Oddiy matn (<= 4000), HTML emas.
+  body             String
+  /// Ixtiyoriy https havola (video, hujjat).
+  linkUrl          String?  @map("link_url")
+  estimatedMinutes Int      @map("estimated_minutes")
+  byStaffId        String   @map("by_staff_id")
+  archived         Boolean  @default(false)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, archived])
+  @@map("school_learning_materials")
+}
+
+/// O'quvchi maktab materialini o'qidi ("O'qidim") — topshiriq bo'yicha bitta yozuv.
+model SchoolMaterialRead {
+  assignmentId String   @map("assignment_id")
+  studentId    String   @map("student_id")
+  readAt       DateTime @default(now()) @map("read_at")
+
+  assignment SchoolLearningAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    SchoolStudent            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([assignmentId, studentId])
+  @@index([studentId])
+  @@map("school_material_reads")
 }
 
 enum SchoolHomeworkStatus {

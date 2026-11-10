@@ -1,17 +1,21 @@
 import type { IsoDate, ListQuery, Paginated, ParentLinkStatus, PaymentReminder, PaymentReminderEntry } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
 import {
+  paymentBulkCreateSchema,
   paymentBulkShiftSchema,
+  paymentCreateSchema,
   paymentPauseSchema,
   paymentShiftSchema,
+  type PaymentBulkCreateInput,
   type PaymentBulkShiftInput,
+  type PaymentCreateInput,
   type PaymentShiftInput,
 } from '@/data/schemas/comms';
 import { parseOrThrow } from '@/data/schemas/validate';
 import { matchesSearch } from '@/lib/normalize-search';
 import { addDays, fromIsoDate, toIsoDate } from '../calendar';
 import { clockToday } from '../clock';
-import { type Actor, assertCan, currentActor, latency, writeAudit } from '../context';
+import { type Actor, allowedClassIds, assertCan, assertClassInScope, currentActor, latency, newId, writeAudit } from '../context';
 import { getTables, transact } from '../db';
 import { paginate, sortItems } from '../query';
 import type { Tables } from '../tables';
@@ -22,7 +26,8 @@ import { type ChildRef, childrenByGuardian, nowLocalIso, staffName } from './com
  * faqat maktab tasdiqlagan keyingi eslatma sanasi saqlanadi (TZ 4.5).
  */
 export type PaymentFilterKind = 'ALL' | 'DUE_SOON' | 'PREPAID' | 'PAUSED';
-export type PaymentFilter = ListQuery & { filter?: PaymentFilterKind };
+export type PaymentFilter = ListQuery & { filter?: PaymentFilterKind; classId?: string };
+export type PaymentBulkCreateResult = { created: number; skipped: number; noGuardian: number };
 export type PaymentRow = PaymentReminder & {
   guardianName: string;
   phone: string;
@@ -74,18 +79,41 @@ export function paymentRows(t: Tables, today: IsoDate): PaymentRow[] {
   });
 }
 
-export function paymentStats(t: Tables, today: IsoDate): PaymentStats {
-  const active = t.payments.filter((p) => !p.paused && p.nextDate >= today);
+/** Ko'rsatkichlar — berilgan eslatmalar (doira / sinf filtri qo'llangan) bo'yicha. */
+export function paymentStatsOf(payments: readonly PaymentReminder[], today: IsoDate): PaymentStats {
+  const active = payments.filter((p) => !p.paused && p.nextDate >= today);
   const nearestDate = active.reduce<IsoDate | null>((min, p) => (!min || p.nextDate < min ? p.nextDate : min), null);
   return {
-    families: t.payments.length,
-    dueSoon: t.payments.filter((p) => isDueSoon(p, today)).length,
-    prepaid: t.payments.filter((p) => p.prepaidMonths > 0).length,
-    paused: t.payments.filter((p) => p.paused).length,
+    families: payments.length,
+    dueSoon: payments.filter((p) => isDueSoon(p, today)).length,
+    prepaid: payments.filter((p) => p.prepaidMonths > 0).length,
+    paused: payments.filter((p) => p.paused).length,
     nearestDate,
     dueSoonDays: DUE_SOON_DAYS,
   };
 }
+
+export function paymentStats(t: Tables, today: IsoDate): PaymentStats {
+  return paymentStatsOf(t.payments, today);
+}
+
+/**
+ * Sinf doirasi (sinf rahbari, backend bilan bir xil): faqat o'z sinf(lar)ida farzandi bor oilalar,
+ * farzandlar ro'yxati ham shu sinflar bilan cheklanadi.
+ */
+function scopeRows(actor: Actor, rows: PaymentRow[]): PaymentRow[] {
+  const allowed = allowedClassIds(actor);
+  if (!allowed) return rows;
+  return rows.flatMap((r) => {
+    const children = r.children.filter((c) => allowed.includes(c.classId));
+    return children.length > 0 ? [{ ...r, children }] : [];
+  });
+}
+
+const inClass = (r: PaymentRow, classId: string | undefined) => !classId || r.children.some((c) => c.classId === classId);
+
+/** Oila eslatmasi kimga: ilovaga ulangan vasiy, keyin taklif qilingan, keyin birinchisi. */
+const LINK_RANK: Record<string, number> = { LINKED: 0, INVITED: 1 };
 
 function matchesFilter(r: PaymentRow, kind: PaymentFilterKind | undefined): boolean {
   if (kind === 'DUE_SOON') return r.dueSoon;
@@ -128,9 +156,10 @@ const SORTERS: Record<string, (r: PaymentRow) => string | number> = {
   prepaid: (r) => r.prepaidMonths,
 };
 
-/** Filtr → qidiruv → saralash (sahifalashsiz). Ruxsat chaqiruvchida tekshiriladi. */
-function queryRows(filter: PaymentFilter): PaymentRow[] {
-  const rows = paymentRows(getTables(), clockToday()).filter((r) => matchesFilter(r, filter.filter));
+/** Doira → filtr (holat, sinf) → qidiruv → saralash (sahifalashsiz). Ruxsat chaqiruvchida tekshiriladi. */
+function queryRows(actor: Actor, filter: PaymentFilter): PaymentRow[] {
+  if (filter.classId) assertClassInScope(actor, filter.classId);
+  const rows = scopeRows(actor, paymentRows(getTables(), clockToday())).filter((r) => matchesFilter(r, filter.filter) && inClass(r, filter.classId));
   const search = filter.search ?? '';
   const searched = search
     ? rows.filter((r) => matchesSearch(`${r.guardianName} ${r.phone} ${r.children.map((c) => `${c.name} ${c.className}`).join(' ')}`, search))
@@ -157,24 +186,105 @@ async function setPaused(id: string, paused: boolean, input: { note: string }): 
   });
 }
 
+/** Vasiyga bog'langan faol (arxivlanmagan) o'quvchilar. */
+function activeStudentIdsOf(t: Tables, guardianId: string): string[] {
+  return t.students.filter((s) => !s.archived && s.guardianIds.includes(guardianId)).map((s) => s.id);
+}
+
+function pickGuardian(t: Tables, student: Tables['students'][number]) {
+  return t.guardians
+    .filter((g) => student.guardianIds.includes(g.id))
+    .sort((a, b) => (LINK_RANK[a.linkStatus] ?? 2) - (LINK_RANK[b.linkStatus] ?? 2) || a.id.localeCompare(b.id))[0];
+}
+
+function newPayment(actor: Actor, guardianId: string, studentIds: string[], nextDate: IsoDate, note: string): PaymentReminder {
+  return { id: newId('pay'), guardianId, studentIds, nextDate, prepaidMonths: 0, paused: false, history: [entry(actor, 'CREATED', note)] };
+}
+
 export const paymentsService = {
   async list(filter: PaymentFilter = {}): Promise<Paginated<PaymentRow>> {
     await latency(80, 180);
-    assertCan(currentActor(), 'payments.manage');
-    return paginate(queryRows(filter), filter.page, filter.limit);
+    const actor = currentActor();
+    assertCan(actor, 'payments.view');
+    return paginate(queryRows(actor, filter), filter.page, filter.limit);
   },
 
-  async stats(): Promise<PaymentStats> {
+  /** Ro'yxat bilan bir xil doira va sinf filtri bo'yicha. */
+  async stats(filter: { classId?: string } = {}): Promise<PaymentStats> {
     await latency(60, 120);
-    assertCan(currentActor(), 'payments.manage');
-    return paymentStats(getTables(), clockToday());
+    const actor = currentActor();
+    assertCan(actor, 'payments.view');
+    if (filter.classId) assertClassInScope(actor, filter.classId);
+    const rows = scopeRows(actor, paymentRows(getTables(), clockToday())).filter((r) => inClass(r, filter.classId));
+    return paymentStatsOf(rows, clockToday());
   },
 
   /** CSV uchun — filtr bo'yicha BARCHA qatorlar (sahifalashsiz; `paginate` 500 bilan cheklaydi). */
   async exportRows(filter: PaymentFilter = {}): Promise<PaymentRow[]> {
     await latency(80, 180);
-    assertCan(currentActor(), 'payments.manage');
-    return queryRows(filter);
+    const actor = currentActor();
+    assertCan(actor, 'payments.view');
+    return queryRows(actor, filter);
+  },
+
+  /** Bitta oila uchun eslatma: vasiyga bittadan (409); farzandlar — vasiyning faol o'quvchilari. */
+  async create(input: PaymentCreateInput): Promise<PaymentReminder> {
+    await latency();
+    const actor = currentActor();
+    assertCan(actor, 'payments.manage');
+    const data = parseOrThrow(paymentCreateSchema, input);
+    return transact((t) => {
+      const guardian = t.guardians.find((g) => g.id === data.guardianId);
+      if (!guardian) throw new ServiceError('VALIDATION', 'guardianId: errors.form.required');
+      const linked = activeStudentIdsOf(t, guardian.id);
+      const studentIds = data.studentIds ? [...new Set(data.studentIds)] : linked;
+      if (studentIds.length === 0 || studentIds.some((id) => !linked.includes(id))) throw new ServiceError('VALIDATION', 'studentIds: errors.form.selectAtLeastOne');
+      if (t.payments.some((p) => p.guardianId === guardian.id)) throw new ServiceError('CONFLICT', guardian.id);
+      const payment = newPayment(actor, guardian.id, studentIds, data.nextDate, data.note);
+      t.payments.push(payment);
+      writeAudit(t, actor, 'PAYMENTS', 'payment.create', `${guardian.fullName}: to'lov eslatmasi yaratildi (keyingi sana ${data.nextDate})`, payment.id, null, payment, {
+        name: guardian.fullName,
+        date: data.nextDate,
+      });
+      return payment;
+    });
+  },
+
+  /** Sinf bo'yicha: eslatmasi yo'q har faol o'quvchi uchun bitta vasiy (backend bilan bir xil qoida). */
+  async bulkCreate(input: PaymentBulkCreateInput): Promise<PaymentBulkCreateResult> {
+    await latency(200, 400);
+    const actor = currentActor();
+    assertCan(actor, 'payments.manage');
+    const data = parseOrThrow(paymentBulkCreateSchema, input);
+    return transact((t) => {
+      const cls = t.classes.find((c) => c.id === data.classId);
+      if (!cls) throw new ServiceError('VALIDATION', 'classId: errors.form.required');
+      const covered = new Set(t.payments.flatMap((p) => p.studentIds));
+      const taken = new Set(t.payments.map((p) => p.guardianId));
+      const plan = new Map<string, string[]>();
+      let skipped = 0;
+      let noGuardian = 0;
+      const students = t.students.filter((s) => s.classId === cls.id && !s.archived).sort((a, b) => a.lastName.localeCompare(b.lastName));
+      for (const student of students) {
+        if (covered.has(student.id)) {
+          skipped += 1;
+          continue;
+        }
+        const guardian = pickGuardian(t, student);
+        if (!guardian) noGuardian += 1;
+        else if (taken.has(guardian.id)) skipped += 1;
+        else plan.set(guardian.id, [...(plan.get(guardian.id) ?? []), student.id]);
+      }
+      for (const [guardianId, studentIds] of plan) t.payments.push(newPayment(actor, guardianId, studentIds, data.nextDate, data.note));
+      if (plan.size > 0) {
+        writeAudit(t, actor, 'PAYMENTS', 'payment.bulkCreate', `${cls.name}: ${plan.size} oila uchun to'lov eslatmasi yaratildi (keyingi sana ${data.nextDate})`, cls.id, null, { created: plan.size }, {
+          className: cls.name,
+          count: plan.size,
+          date: data.nextDate,
+        });
+      }
+      return { created: plan.size, skipped, noGuardian };
+    });
   },
 
   async shift(id: string, input: PaymentShiftInput): Promise<PaymentReminder> {
@@ -215,8 +325,12 @@ export const paymentsService = {
 
   async history(id: string): Promise<PaymentHistoryEntry[]> {
     await latency(60, 140);
-    assertCan(currentActor(), 'payments.manage');
+    const actor = currentActor();
+    assertCan(actor, 'payments.view');
     const t = getTables();
-    return [...findPayment(t, id).history].reverse().map((e) => ({ ...e, byName: staffName(t, e.byStaffId) }));
+    const payment = findPayment(t, id);
+    const allowed = allowedClassIds(actor);
+    if (allowed && !t.students.some((s) => payment.studentIds.includes(s.id) && allowed.includes(s.classId))) throw new ServiceError('FORBIDDEN', id);
+    return [...payment.history].reverse().map((e) => ({ ...e, byName: staffName(t, e.byStaffId) }));
   },
 };

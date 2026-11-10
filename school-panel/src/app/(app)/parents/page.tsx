@@ -1,6 +1,7 @@
 'use client';
 
-import { Send, ShieldCheck } from 'lucide-react';
+import { Printer, Send, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -110,6 +111,12 @@ export default function ParentsPage() {
           <>
             <ExportMenu onCsv={() => void exportCsv()} />
             <Can perm="guardians.link">
+              <Button asChild variant="outline">
+                <Link href={filter.classId ? `/parents/print?classId=${encodeURIComponent(filter.classId)}` : '/parents/print'}>
+                  <Printer />
+                  {t('parents.print.button')}
+                </Link>
+              </Button>
               <Button onClick={() => setBulkOpen(true)}>
                 <Send />
                 {t('parents.bulk.button')}

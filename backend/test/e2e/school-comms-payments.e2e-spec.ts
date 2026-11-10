@@ -42,14 +42,13 @@ describe('School comms: to\'lov eslatmalari va tekshiruv so\'rovlari (S4)', () =
 
   afterAll(() => t.close());
 
-  it('faqat payments.manage: sinf rahbari / o\'qituvchi — 403', async () => {
+  it('sinf rahbari — o\'z sinfini faqat ko\'radi; o\'zgartirish payments.manage bilan; o\'qituvchi — 403', async () => {
     await createStaff(t.prisma, schoolId, 'HOMEROOM', 'rahbar', [cls7a]);
     const homeroom = await login(t.app, 'rahbar');
-    const denied = [
-      ['GET', '/comms/payments'], ['GET', '/comms/payments/stats'], ['GET', '/comms/payments/export'],
-      ['GET', `/comms/payments/${paymentId}/history`], ['GET', '/comms/verifications'],
-    ] as const;
-    for (const [method, url] of denied) expect((await call(homeroom, method, url)).statusCode).toBe(403);
+    for (const url of ['/comms/payments', '/comms/payments/stats', '/comms/payments/export']) {
+      expect((await call(homeroom, 'GET', url)).statusCode).toBe(200);
+    }
+    expect((await call(homeroom, 'GET', '/comms/verifications')).statusCode).toBe(403);
     expect((await call(homeroom, 'POST', `/comms/payments/${paymentId}/shift`, { nextDate: '2099-01-01', note: 'x' })).statusCode).toBe(403);
     expect((await call(homeroom, 'POST', '/comms/payments/bulk-shift', { ids: [paymentId], months: 1, note: 'x' })).statusCode).toBe(403);
     expect((await call(homeroom, 'GET', '/comms/reminders')).statusCode).toBe(403);

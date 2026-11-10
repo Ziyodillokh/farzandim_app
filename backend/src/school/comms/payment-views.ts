@@ -77,6 +77,21 @@ export function isDueSoon(p: { paused: boolean; nextDate: DayKey }, today: DayKe
   return !p.paused && p.nextDate >= today && p.nextDate <= addDays(today, DUE_SOON_DAYS);
 }
 
+/**
+ * Sinf doirasi (sinf rahbari): faqat shu sinf(lar)da farzandi bor oilalar, farzandlar ro'yxati ham shu sinflar bilan
+ * cheklanadi (boshqa sinfdagi aka-ukasi ko'rinmaydi). `allowed = null` — butun maktab.
+ */
+export function scopePaymentRows(rows: readonly PaymentRow[], allowed: readonly string[] | null): PaymentRow[] {
+  if (!allowed) return [...rows];
+  return rows.flatMap((r) => {
+    const children = r.children.filter((c) => allowed.includes(c.classId));
+    return children.length > 0 ? [{ ...r, children }] : [];
+  });
+}
+
+/** Sinf filtri: shu sinfda farzandi bor oilalar. */
+export const inClass = (r: PaymentRow, classId: string | undefined) => !classId || r.children.some((c) => c.classId === classId);
+
 export function paymentStats(payments: readonly { paused: boolean; nextDate: DayKey; prepaidMonths: number }[], today: DayKey) {
   const nearestDate = payments
     .filter((p) => !p.paused && p.nextDate >= today)
@@ -134,14 +149,14 @@ function matchesFilter(r: PaymentRow, kind: PaymentFilterKind | undefined): bool
   return true;
 }
 
-/** Filtr → qidiruv → saralash (sahifalashsiz). */
+/** Filtr (holat, sinf) → qidiruv → saralash (sahifalashsiz). */
 export function queryPaymentRows(
   rows: readonly PaymentRow[],
-  filter: { filter?: PaymentFilterKind; search?: string; sortBy?: string; sortDir?: 'asc' | 'desc' },
+  filter: { filter?: PaymentFilterKind; classId?: string; search?: string; sortBy?: string; sortDir?: 'asc' | 'desc' },
 ): PaymentRow[] {
   const search = filter.search ?? '';
   const searched = rows
-    .filter((r) => matchesFilter(r, filter.filter))
+    .filter((r) => matchesFilter(r, filter.filter) && inClass(r, filter.classId))
     .filter(
       (r) =>
         !search ||

@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { AnnouncementInput } from '@/data/schemas/comms';
-import { getTables } from '../db';
+import { currentActor } from '../context';
+import { getTables, transact } from '../db';
 import { commsService } from '../services/comms';
 import { freshDb, loginAs } from './helpers';
 
@@ -120,8 +121,16 @@ describe('to\'lov eslatmalari: moliyaviy chegara', () => {
     expect(Object.keys(t).some((k) => /debt|qarz/i.test(k))).toBe(false);
   });
 
-  it('to\'xtatish va surish faqat payments.manage bilan', async () => {
+  it('to\'xtatish va surish faqat payments.manage bilan; sinf rahbari — o\'z sinfini faqat ko\'radi', async () => {
     loginAs('HOMEROOM');
+    const own = currentActor().classIds;
+    const mine = await commsService.payments.list({ limit: 500 });
+    expect(mine.items.length).toBeGreaterThan(0);
+    expect(mine.items.every((r) => r.children.length > 0 && r.children.every((c) => own.includes(c.classId)))).toBe(true);
+    const target = mine.items[0]!;
+    await expect(commsService.payments.pause(target.id, { note: 'Sinov' })).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await expect(commsService.payments.bulkCreate({ classId: own[0]!, nextDate: '2026-12-01', note: 'Sinov' })).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    loginAs('DUTY');
     await expect(commsService.payments.list()).rejects.toMatchObject({ code: 'FORBIDDEN' });
     loginAs('ADMIN');
     const id = getTables().payments.find((p) => !p.paused)!.id;
@@ -180,3 +189,44 @@ describe('Smart Reminder', () => {
     await expect(commsService.reminders.list()).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
 });
+
+describe('to\'lov eslatmalari: sinflar kesimi va yaratish', () => {
+  beforeEach(() => freshDb());
+
+  it('sinf filtri ro\'yxat va ko\'rsatkichlarga birdek qo\'llanadi', async () => {
+    loginAs('ADMIN');
+    const classId = getTables().classes[0]!.id;
+    const all = await commsService.payments.stats();
+    const filtered = await commsService.payments.stats({ classId });
+    const rows = await commsService.payments.list({ classId, limit: 500 });
+    expect(filtered.families).toBe(rows.pagination.total);
+    expect(filtered.families).toBeLessThanOrEqual(all.families);
+    expect(rows.items.every((r) => r.children.some((c) => c.classId === classId))).toBe(true);
+  });
+
+  it('butun sinf uchun eslatma: eslatmasi yo\'q o\'quvchilarga bittadan, takrorda — hech narsa', async () => {
+    loginAs('ADMIN');
+    const cls = getTables().classes[0]!;
+    // Sinf o'quvchilarining eslatmalarini olib tashlaymiz — hammasi "eslatmasiz" bo'ladi.
+    transact((t) => {
+      const inClass = new Set(t.students.filter((s) => s.classId === cls.id).map((s) => s.id));
+      t.payments = t.payments.filter((p) => !p.studentIds.some((id) => inClass.has(id)));
+    });
+    const first = await commsService.payments.bulkCreate({ classId: cls.id, nextDate: '2026-12-05', note: 'Dekabr' });
+    expect(first.created).toBeGreaterThan(0);
+    expect(getTables().audit.at(-1)).toMatchObject({ action: 'payment.bulkCreate', params: { className: cls.name, count: first.created } });
+    const again = await commsService.payments.bulkCreate({ classId: cls.id, nextDate: '2026-12-05', note: 'Takror' });
+    expect(again.created).toBe(0);
+  });
+
+  it('bitta oila: vasiyga bittadan (CONFLICT)', async () => {
+    loginAs('ADMIN');
+    const t = getTables();
+    const taken = new Set(t.payments.map((p) => p.guardianId));
+    const guardian = t.guardians.find((g) => !taken.has(g.id) && t.students.some((s) => !s.archived && s.guardianIds.includes(g.id)))!;
+    const created = await commsService.payments.create({ guardianId: guardian.id, nextDate: '2026-12-10', note: 'Yangi oila' });
+    expect(created).toMatchObject({ guardianId: guardian.id, nextDate: '2026-12-10', paused: false });
+    await expect(commsService.payments.create({ guardianId: guardian.id, nextDate: '2026-12-10', note: 'Takror' })).rejects.toMatchObject({ code: 'CONFLICT' });
+  });
+});
+
