@@ -8,7 +8,6 @@ import {
   normGroupForAge,
   normKey,
   resolveIqAge,
-  RETAKE_DAYS,
 } from './levels';
 
 describe('IQ darajalari (docs/IQ-REJA.md §1)', () => {
@@ -73,10 +72,17 @@ describe('IQ darajalari (docs/IQ-REJA.md §1)', () => {
     expect(normKey('L2B', '11')).toBe('11');
   });
 
-  it('qayta topshirish 180 kundan keyin, sessiya 24 soatda eskiradi', () => {
+  it('qayta topshirish kuniga 1 marta (Toshkent kuni), sessiya 24 soatda eskiradi', () => {
+    // 2026-01-01 15:00 Toshkent (10:00 UTC) yakunlangan.
     const done = new Date('2026-01-01T10:00:00Z');
-    expect(nextAvailableAt(done)?.getTime()).toBe(done.getTime() + RETAKE_DAYS * 86_400_000);
-    expect(nextAvailableAt(null)).toBeNull();
+    // Shu kuni — ertangi Toshkent kuni boshigacha (2026-01-01T19:00Z = 2026-01-02 00:00 Toshkent).
+    expect(nextAvailableAt([done], new Date('2026-01-01T18:59:00Z'))?.toISOString()).toBe('2026-01-01T19:00:00.000Z');
+    // Ertasi kuni — ochiq.
+    expect(nextAvailableAt([done], new Date('2026-01-01T19:00:00Z'))).toBeNull();
+    // Kecha yakunlangan / hech qachon — ochiq.
+    expect(nextAvailableAt([new Date('2025-12-31T10:00:00Z')], new Date('2026-01-01T10:00:00Z'))).toBeNull();
+    expect(nextAvailableAt([], new Date('2026-01-01T10:00:00Z'))).toBeNull();
+    expect(nextAvailableAt([null], new Date('2026-01-01T10:00:00Z'))).toBeNull();
     expect(isExpired(done, new Date('2026-01-02T09:59:00Z'))).toBe(false);
     expect(isExpired(done, new Date('2026-01-02T10:01:00Z'))).toBe(true);
   });
