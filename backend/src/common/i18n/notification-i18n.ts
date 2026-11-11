@@ -286,6 +286,18 @@ const T: Record<string, Record<NotifLang, string>> = {
     ru: 'Вам новое сообщение',
     en: 'You have a new message',
   },
+  // Mutaxassis tayinlagan test / so'rovnoma (bolaga): test nomi ham, "psixolog" so'zi ham yo'q.
+  'psychAssignment.body': {
+    uz: 'Sizga yangi test yuborildi',
+    ru: 'Вам отправлен новый тест',
+    en: 'You have a new test',
+  },
+  // Maktab so'rovnomasi faollashdi (bolaga, anonim).
+  'careSurvey.body': {
+    uz: 'Maktabdan yangi so\u02bbrovnoma',
+    ru: 'Новый опрос от школы',
+    en: 'New survey from school',
+  },
 
   // ── Admin ogohlantirishi (matn admin tomonidan yoziladi) ──
   'adminWarning.title': {

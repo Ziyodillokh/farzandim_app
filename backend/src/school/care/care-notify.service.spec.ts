@@ -8,7 +8,7 @@ function setup(options: { tokens?: number; sendFails?: boolean; lang?: 'uz' | 'r
       ? jest.fn().mockRejectedValue(new Error('fcm down'))
       : jest.fn().mockResolvedValue({ sent: options.sent ?? 1, failed: 0, invalidTokens: [] }),
   };
-  return { service: new CareNotifyService(prisma as never, fcm as never), prisma, fcm };
+  return { service: new CareNotifyService(prisma as never, fcm as never, {} as never), prisma, fcm };
 }
 
 describe('CareNotifyService.notifyChildOfReply', () => {
@@ -64,5 +64,48 @@ describe('CareNotifyService.notifyChildOfReply', () => {
     const { service } = setup({ sent: 0 });
 
     await expect(service.notifyChildOfReply('child-user', 'req-1')).resolves.toBeUndefined();
+  });
+});
+
+describe('CareNotifyService.surveyActivated', () => {
+  function surveySetup(students: unknown[] = [{ childId: 'ch-1', child: { childUserId: 'cu-1' } }]) {
+    const prisma = { schoolStudent: { findMany: jest.fn().mockResolvedValue(students) } };
+    const childPush = { sendOnce: jest.fn(async (recipients: unknown[]) => recipients.length) };
+    const service = new CareNotifyService(prisma as never, {} as never, childPush as never);
+    return { service, prisma, childPush };
+  }
+
+  it('pushes the neutral survey text once per child of the survey classes', async () => {
+    const { service, prisma, childPush } = surveySetup();
+
+    const delivered = await service.surveyActivated('s-1', 'sv-1', ['c-5a', 'c-6b']);
+
+    expect(delivered).toBe(1);
+    expect(prisma.schoolStudent.findMany.mock.calls[0][0].where).toMatchObject({
+      schoolId: 's-1',
+      archived: false,
+      classId: { in: ['c-5a', 'c-6b'] },
+      child: { childUserId: { not: null } },
+      linkCorrections: { none: { status: 'OPEN' } },
+    });
+    const [recipients, kind, key, build] = childPush.sendOnce.mock.calls[0] as unknown as [unknown, string, string, (l: 'uz') => unknown];
+    expect(recipients).toEqual([{ childId: 'ch-1', childUserId: 'cu-1' }]);
+    expect([kind, key]).toEqual(['CARE_SURVEY', 'sv-1']);
+    expect(build('uz')).toEqual({ title: 'Parvoz', body: 'Maktabdan yangi soʻrovnoma', data: { type: 'CARE_SURVEY', surveyId: 'sv-1' } });
+  });
+
+  it('no classes in the age groups — no query, no push', async () => {
+    const { service, prisma, childPush } = surveySetup();
+
+    expect(await service.surveyActivated('s-1', 'sv-1', [])).toBe(0);
+    expect(prisma.schoolStudent.findMany).not.toHaveBeenCalled();
+    expect(childPush.sendOnce).not.toHaveBeenCalled();
+  });
+
+  it('a database error never fails the activation', async () => {
+    const { service, prisma } = surveySetup();
+    prisma.schoolStudent.findMany.mockRejectedValue(new Error('db down'));
+
+    await expect(service.surveyActivated('s-1', 'sv-1', ['c-5a'])).resolves.toBe(0);
   });
 });

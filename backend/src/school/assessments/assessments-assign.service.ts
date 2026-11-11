@@ -1,5 +1,7 @@
 // Tayinlashlar: sinflar / parallellarga test yuborish (ota-onalar xabardor —
 // rozilik belgisi majburiy), ro'yxat, yopish va bekor qilish. FAQAT psixolog.
+// Tayinlangach testni ko'radigan bolalarga neytral push ketadi (tranzaksiyadan
+// KEYIN; xatosi tayinlashni yiqitmaydi).
 
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -12,6 +14,7 @@ import { AssignInput, assignInputSchema, assignmentFilterSchema, toInstant } fro
 import { AssessmentsIqService, PARVOZ_IQ_TEST_ID, PARVOZ_IQ_TITLE } from './assessments-iq.service';
 import { AssessmentsStore, ClassRow } from './assessments-store';
 import { AssignmentRow, PsychAssignment, toAssignment, toAssignmentRow } from './assessments-view';
+import { PsychAssignmentPushService } from './psych-assignment-push.service';
 import type { PsychTest } from './psych/types';
 
 /** Tayinlash maqsadi → sinflar (test parallellari bilan kesishma; faqat shu maktab sinflari). */
@@ -39,6 +42,7 @@ export class AssessmentsAssignService {
     private readonly store: AssessmentsStore,
     private readonly audit: SchoolAuditService,
     private readonly iq: AssessmentsIqService,
+    private readonly childPush: PsychAssignmentPushService,
   ) {}
 
   async listAssignments(actor: SchoolActor, query: unknown): Promise<AssignmentRow[]> {
@@ -70,7 +74,12 @@ export class AssessmentsAssignService {
   async assign(actor: SchoolActor, input: unknown): Promise<PsychAssignment> {
     assertCan(actor, 'assessments.manage');
     const data = parseOrThrow(assignInputSchema, input);
-    if (data.testId === PARVOZ_IQ_TEST_ID) return this.assignIq(actor, data);
+    const assignment = data.testId === PARVOZ_IQ_TEST_ID ? await this.assignIq(actor, data) : await this.assignTest(actor, data);
+    await this.childPush.notify(assignment.id);
+    return assignment;
+  }
+
+  private assignTest(actor: SchoolActor, data: AssignInput): Promise<PsychAssignment> {
     return this.prisma.$transaction(async (tx) => {
       // Test tahriri / arxivi bilan bir navbatda — tayinlash eskirgan versiyaga bog'lanmasin.
       await this.store.lock(tx, `psych-test:${data.testId}`);

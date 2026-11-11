@@ -1,13 +1,17 @@
 // So'rovnomalar va savollar banki — FAQAT psixolog (`care.surveys`).
 // Audit yozuvlarida savol matni yoki javoblar yo'q — faqat amal va obyekt.
+// Faollashgan so'rovnoma haqida bolalarga neytral push (tranzaksiyadan KEYIN).
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
+import { errorLabel } from '../../common/notification-prefs/error-label';
 import { assertCan, SchoolActor } from '../auth/school-actor';
 import { SchoolAuditService } from '../common/school-audit.service';
 import { conflict, invalid, notFound } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
+import { targetClasses } from './care-aggregate';
+import { CareNotifyService } from './care-notify.service';
 import { CareStore, toQuestionView, toSurveyView } from './care-store';
 import { careQuestionInputSchema, careSurveyInputSchema } from './care.schemas';
 
@@ -16,10 +20,13 @@ const percent = (part: number, total: number) => (total > 0 ? Math.round((part /
 
 @Injectable()
 export class CareSurveysService {
+  private readonly logger = new Logger(CareSurveysService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly store: CareStore,
     private readonly audit: SchoolAuditService,
+    private readonly notify: CareNotifyService,
   ) {}
 
   async listSurveys(actor: SchoolActor) {
@@ -85,7 +92,7 @@ export class CareSurveysService {
     const survey = await this.findSurvey(actor.schoolId, id);
     if (survey.status !== 'DRAFT') throw conflict(`status ${survey.status}`);
     const invited = await this.store.invitedFor(actor.schoolId, survey.ageGroups);
-    return this.prisma.$transaction(async (tx) => {
+    const view = await this.prisma.$transaction(async (tx) => {
       // Bir vaqtda bitta faol so'rovnoma — parallel faollashtirishlar navbat bilan.
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`care-survey-activate:${actor.schoolId}`}, 0))`;
       await tx.schoolCareSurvey.updateMany({ where: { schoolId: actor.schoolId, status: 'ACTIVE' }, data: { status: 'CLOSED' } });
@@ -97,6 +104,18 @@ export class CareSurveysService {
       await this.statusAudit(tx, actor, 'care.survey.activate', survey.title, id, 'DRAFT', 'ACTIVE');
       return toSurveyView(await tx.schoolCareSurvey.findUniqueOrThrow({ where: { id } }));
     });
+    await this.notifyActivated(actor.schoolId, id, survey.ageGroups);
+    return view;
+  }
+
+  /** Yosh guruhlari sinflaridagi bolalarga push; xato faollashtirishni yiqitmaydi (log). */
+  private async notifyActivated(schoolId: string, surveyId: string, ageGroups: readonly string[]): Promise<void> {
+    try {
+      const classIds = targetClasses(await this.store.classes(schoolId), ageGroups).map((c) => c.id);
+      await this.notify.surveyActivated(schoolId, surveyId, classIds);
+    } catch (err) {
+      this.logger.warn(`so'rovnoma push: sinflar o'qilmadi (${errorLabel(err)})`);
+    }
   }
 
   async closeSurvey(actor: SchoolActor, id: string) {

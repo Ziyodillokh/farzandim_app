@@ -6,6 +6,7 @@
 import { Module } from '@nestjs/common';
 import { IqModule } from '../../modules/iq/iq.module';
 import { CareModule } from '../care/care.module';
+import { SchoolChildPushModule } from '../common/school-child-push.service';
 import { SchoolCoreModule } from '../school-core.module';
 import { AssessmentsAssignService } from './assessments-assign.service';
 import { AssessmentsChildController } from './assessments-child.controller';
@@ -18,9 +19,10 @@ import { AssessmentsResultsService } from './assessments-results.service';
 import { AssessmentsStatusService } from './assessments-status.service';
 import { AssessmentsStore } from './assessments-store';
 import { AssessmentsController } from './assessments.controller';
+import { PsychAssignmentPushService } from './psych-assignment-push.service';
 
 @Module({
-  imports: [SchoolCoreModule, IqModule, CareModule],
+  imports: [SchoolCoreModule, IqModule, CareModule, SchoolChildPushModule],
   controllers: [AssessmentsController, AssessmentsChildController],
   providers: [
     AssessmentsStore,
@@ -32,6 +34,7 @@ import { AssessmentsController } from './assessments.controller';
     AssessmentsCsvService,
     AssessmentsChildService,
     AssessmentsIqService,
+    PsychAssignmentPushService,
   ],
   exports: [AssessmentsStore],
 })
