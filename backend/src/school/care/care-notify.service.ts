@@ -1,14 +1,18 @@
 // Bola ovozi bildirishnomalari.
 //  - Xodim tomoni: saqlangan bildirishnomalar (`SchoolStaffNotification`) — shoshilinch murojaat
 //    va eskalatsiya. Faqat sinf nomi / mavzu yorlig'i: bola ismi va matn HECH QACHON yo'q.
-//  - Bola tomoni: xodim javob yozganda NEYTRAL push ("Sizga yangi xabar keldi"). Mazmun ham,
-//    "psixolog" so'zi ham yo'q; token bo'lmasa jim o'tkazib yuboriladi, xato javobni yiqitmaydi.
+//  - Bola tomoni: xodim javob yozganda yoki suhbat vaqtini belgilaganda NEYTRAL push ("Sizga yangi
+//    xabar keldi"); so'rovnoma faollashganda — uning sinflaridagi bolalarga ("Maktabdan yangi
+//    so'rovnoma"). Mazmun ham, "psixolog" so'zi ham yo'q; token bo'lmasa jim o'tkazib yuboriladi,
+//    xato asosiy amalni yiqitmaydi.
 
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
-import { FcmService } from '../../common/fcm/fcm.service';
-import { tr } from '../../common/i18n/notification-i18n';
+import { FcmService, PushPayload } from '../../common/fcm/fcm.service';
+import { NotifLang, tr } from '../../common/i18n/notification-i18n';
+import { errorLabel } from '../../common/notification-prefs/error-label';
+import { enrolledChildWhere, SchoolChildPushService, toRecipients } from '../common/school-child-push.service';
 import { CARE_TOPIC_LABELS, ESCALATED_SUBJECT } from './care-labels';
 import { careNotificationIds, directorNotificationId, escalationNotificationId, urgentNotificationId } from './care-notification-ids';
 
@@ -16,6 +20,18 @@ type Tx = Prisma.TransactionClient;
 
 /** Push `data.type` — bola ilovasi yozishmani ochishi uchun. */
 export const CARE_MESSAGE_PUSH_TYPE = 'CARE_MESSAGE';
+/** Push `data.type` — bola ilovasi so'rovnomani ochishi uchun. */
+export const CARE_SURVEY_PUSH_TYPE = 'CARE_SURVEY';
+/** `child_push_dedupe.kind` — kalit: so'rovnoma id. */
+export const CARE_SURVEY_DEDUPE_KIND = 'CARE_SURVEY';
+
+export function careSurveyPush(lang: NotifLang, survey: { id: string }): PushPayload {
+  return {
+    title: tr(lang, 'push.neutralTitle'),
+    body: tr(lang, 'careSurvey.body'),
+    data: { type: CARE_SURVEY_PUSH_TYPE, surveyId: survey.id },
+  };
+}
 
 const requestHref = (requestId: string) => `/care/requests/view?id=${requestId}`;
 
@@ -34,6 +50,7 @@ export class CareNotifyService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly fcm: FcmService,
+    private readonly childPush: SchoolChildPushService,
   ) {}
 
   /** Shoshilinch murojaat: mas'ul psixolog va o'rinbosarga saqlangan bildirishnoma (sozlangan bo'lsa). */
@@ -104,6 +121,26 @@ export class CareNotifyService {
       if (result.sent === 0) this.logger.log('bola xabari push yetkazilmadi (FCM qabul qilmadi)');
     } catch (err) {
       this.logger.warn(`bola xabari push xatosi: ${err instanceof Error ? err.message : 'noma\'lum'}`);
+    }
+  }
+
+  /**
+   * So'rovnoma faollashdi: [classIds] (so'rovnoma yosh guruhlari sinflari) dagi, ilovasi ulangan bolalarga
+   * NEYTRAL push — har bola uchun bir marta. Qaytadi: FCM qabul qilganlar soni; xato yutiladi (log).
+   */
+  async surveyActivated(schoolId: string, surveyId: string, classIds: readonly string[]): Promise<number> {
+    if (classIds.length === 0) return 0;
+    try {
+      const rows = await this.prisma.schoolStudent.findMany({
+        where: { ...enrolledChildWhere(schoolId), classId: { in: [...classIds] } },
+        select: { childId: true, child: { select: { childUserId: true } } },
+      });
+      return await this.childPush.sendOnce(toRecipients(rows), CARE_SURVEY_DEDUPE_KIND, surveyId, (lang) =>
+        careSurveyPush(lang, { id: surveyId }),
+      );
+    } catch (err) {
+      this.logger.warn(`so'rovnoma push xatosi: ${errorLabel(err)}`);
+      return 0;
     }
   }
 

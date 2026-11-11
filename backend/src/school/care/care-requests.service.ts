@@ -114,13 +114,18 @@ export class CareRequestsService {
     }));
   }
 
+  /** Suhbat vaqti. Vaqt o'zgargan bo'lsa bolaga NEYTRAL push (tranzaksiyadan KEYIN; xatosi yiqitmaydi). */
   async scheduleMeeting(actor: SchoolActor, id: string, input: unknown) {
     assertCan(actor, 'care.individual');
     const { meetingAt } = parseOrThrow(careMeetingSchema, input);
-    return this.mutate(actor, id, REQUEST_AUDIT.meeting, (request) => ({
-      meetingAt: parseMeetingAt(meetingAt),
-      ...(request.status !== 'RESOLVED' && { status: 'SCHEDULED' }),
-    }));
+    const at = parseMeetingAt(meetingAt);
+    let notifyUserId: string | null = null;
+    const view = await this.mutate(actor, id, REQUEST_AUDIT.meeting, async (request, tx) => {
+      if (request.meetingAt?.getTime() !== at.getTime()) notifyUserId = await this.childUserOf(tx, request);
+      return { meetingAt: at, ...(request.status !== 'RESOLVED' && { status: 'SCHEDULED' }) };
+    });
+    await this.notify.notifyChildOfReply(notifyUserId, id);
+    return view;
   }
 
   /**

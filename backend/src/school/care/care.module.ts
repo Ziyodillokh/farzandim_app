@@ -5,6 +5,7 @@
 
 import { Module } from '@nestjs/common';
 import { FcmModule } from '../../common/fcm/fcm.module';
+import { SchoolChildPushModule } from '../common/school-child-push.service';
 import { SchoolCoreModule } from '../school-core.module';
 import { CareChildRequestsService } from './care-child-requests.service';
 import { CareChildController } from './care-child.controller';
@@ -20,7 +21,7 @@ import { CareSurveysService } from './care-surveys.service';
 import { CareController } from './care.controller';
 
 @Module({
-  imports: [SchoolCoreModule, FcmModule],
+  imports: [SchoolCoreModule, FcmModule, SchoolChildPushModule],
   controllers: [CareController, CareChildController],
   providers: [
     CareStore,
