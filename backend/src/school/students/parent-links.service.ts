@@ -12,7 +12,8 @@ import { studentFullName, studentName } from './student-view';
 import { KeyedMutex } from './keyed-mutex';
 import { settleConfirmedLink, settleUnlinkedChildren } from './link-core';
 import { acquireLinkLocks, childLock, studentLock } from './link-locks';
-import { redeemParentSlot } from './parent-student-code';
+import { LinkDecisionNotifier } from './link-decision-notify.service';
+import { auditChildLinked, confirmOwnPendingChild, parentStudentSelect, redeemParentSlot } from './parent-student-code';
 import { FailureLimiter } from './redeem-limiter';
 import { isStudentCode } from './student-code';
 import { childLinkSchema, redeemSchema } from './students.schemas';
@@ -46,6 +47,7 @@ export class ParentLinksService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: SchoolAuditService,
+    private readonly notifier: LinkDecisionNotifier,
   ) {}
 
   /**
@@ -72,42 +74,70 @@ export class ParentLinksService {
   }
 
   private async redeemCode(userId: string, code: string): Promise<void> {
-    if (isStudentCode(code)) {
-      await this.prisma.$transaction((tx) => redeemParentSlot(tx, this.audit, userId, code));
-      return;
-    }
-    await this.prisma.$transaction(async (tx) => {
-      const guardian = await tx.schoolGuardian.findUnique({
-        where: { inviteCode: code },
-        include: { school: { select: { status: true } } },
-      });
-      if (
-        !guardian ||
-        guardian.linkStatus !== 'INVITED' ||
-        !guardian.inviteExpiresAt ||
-        guardian.inviteExpiresAt < new Date() ||
-        guardian.school.status !== 'ACTIVE'
-      ) {
-        throw inviteInvalid();
-      }
-      const res = await tx.schoolGuardian.updateMany({
-        where: { id: guardian.id, inviteCode: code, linkStatus: 'INVITED' },
-        data: { userId, linkStatus: 'LINKED', linkedAt: new Date(), inviteCode: null, inviteExpiresAt: null },
-      });
-      if (res.count === 0) throw inviteInvalid();
-      await this.audit.writeExternal(
-        guardian.schoolId,
-        `Ota-ona: ${guardian.fullName}`,
-        {
-          module: 'GUARDIANS',
-          action: 'guardian.linked',
-          summary: `${guardian.fullName} Parvoz Parents'ga ulandi`,
-          entityId: guardian.id,
-          params: { name: guardian.fullName },
-        },
-        tx,
-      );
+    const confirmed = isStudentCode(code)
+      ? await this.prisma.$transaction((tx) => redeemParentSlot(tx, this.audit, userId, code))
+      : await this.prisma.$transaction((tx) => this.redeemGuardianCode(tx, userId, code));
+    // Bola "Tasdiq kutilmoqda"dan chiqdi — neytral push (tranzaksiya yopilgandan keyin; xatosi ulanishni yiqitmaydi).
+    await this.notifier.send(confirmed.map((childId) => ({ to: 'CHILD' as const, childId, event: 'CONFIRMED' as const })));
+  }
+
+  /**
+   * 8 belgili vasiy kodi: vasiy yozuvi shu foydalanuvchiga ulanadi. Ota-onaning o'z farzandi shu vasiyning
+   * o'quvchisida UNDER_REVIEW da kutayotgan bo'lsa — u ham tasdiqlanadi (6 raqamli kod va bola avval vasiy
+   * bo'lgan holat bilan bir xil). Qaytadi: tasdiqlangan bolalar.
+   */
+  private async redeemGuardianCode(tx: Tx, userId: string, code: string): Promise<string[]> {
+    const now = new Date();
+    const children = await tx.child.findMany({ where: { parentId: userId }, select: { id: true, parentId: true } });
+    const studentIds = (
+      await tx.schoolStudentGuardian.findMany({ where: { guardian: { inviteCode: code } }, select: { studentId: true } })
+    ).map((s) => s.studentId);
+    // Qulf tartibi (`link-locks`): bolalar, keyin o'quvchilar — kutayotgan bolani tasdiqlash xavfsiz bo'lsin.
+    await acquireLinkLocks(tx, [...children.map((c) => childLock(c.id)), ...studentIds.map(studentLock)]);
+    const guardian = await tx.schoolGuardian.findUnique({
+      where: { inviteCode: code },
+      include: { school: { select: { status: true } } },
     });
+    if (
+      !guardian ||
+      guardian.linkStatus !== 'INVITED' ||
+      !guardian.inviteExpiresAt ||
+      guardian.inviteExpiresAt < now ||
+      guardian.school.status !== 'ACTIVE'
+    ) {
+      throw inviteInvalid();
+    }
+    const res = await tx.schoolGuardian.updateMany({
+      where: { id: guardian.id, inviteCode: code, linkStatus: 'INVITED' },
+      data: { userId, linkStatus: 'LINKED', linkedAt: now, inviteCode: null, inviteExpiresAt: null },
+    });
+    if (res.count === 0) throw inviteInvalid();
+    const actorName = `Ota-ona: ${guardian.fullName}`;
+    await this.audit.writeExternal(
+      guardian.schoolId,
+      actorName,
+      {
+        module: 'GUARDIANS',
+        action: 'guardian.linked',
+        summary: `${guardian.fullName} Parvoz Parents'ga ulandi`,
+        entityId: guardian.id,
+        params: { name: guardian.fullName },
+      },
+      tx,
+    );
+    if (children.length === 0 || studentIds.length === 0) return [];
+    const students = await tx.schoolStudent.findMany({
+      where: { id: { in: studentIds }, schoolId: guardian.schoolId, archived: false },
+      select: parentStudentSelect,
+    });
+    const confirmed: string[] = [];
+    for (const student of students) {
+      const childId = await confirmOwnPendingChild(tx, { student, children, now });
+      if (!childId) continue;
+      await auditChildLinked(this.audit, actorName, student, tx);
+      confirmed.push(childId);
+    }
+    return confirmed;
   }
 
   /**
