@@ -1,5 +1,7 @@
+import { PRODUCT_NAME } from '@/lib/brand';
+
 export const common = {
-  appName: 'Parvoz School',
+  appName: PRODUCT_NAME,
   tagline: 'Maktab, ota-ona va o\'quvchini birlashtiruvchi raqamli ekotizim',
   demoBadge: 'Demo · uydirma ma\'lumotlar',
   save: 'Saqlash',

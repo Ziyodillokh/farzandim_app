@@ -16,6 +16,7 @@ import { ReportBody } from '@/features/reports/components/report-body';
 import { useMonthlyReport } from '@/features/reports/hooks';
 import { useSchool } from '@/features/school/hooks';
 import { useI18n } from '@/i18n';
+import { PRODUCT_SUB } from '@/lib/brand';
 
 const PRINT_DELAY_MS = 700;
 
@@ -65,7 +66,7 @@ function PrintableReport() {
               </p>
             </div>
           </div>
-          <ParvozWordmark size="sm" sub="School" className="shrink-0" />
+          <ParvozWordmark size="sm" sub={PRODUCT_SUB} className="shrink-0" />
         </div>
         <PageHeader
           className="mb-0"

@@ -4,6 +4,7 @@ import { PhoneMockup, PhoneNotification } from '@/components/common/phone-mockup
 import { useSchool } from '@/features/school/hooks';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { PRODUCT_NAME } from '@/lib/brand';
 
 /**
  * Parvoz Parents telefon maketida oldindan ko'rish: bildirishnoma kartochkasi
@@ -27,7 +28,7 @@ export function MessagePhonePreview({
 }) {
   const { t } = useI18n();
   const school = useSchool();
-  const schoolName = school.data?.school.shortName ?? school.data?.school.name ?? 'Parvoz School';
+  const schoolName = school.data?.school.shortName ?? school.data?.school.name ?? PRODUCT_NAME;
   const trimmedTitle = title.trim();
   const trimmedBody = body.trim();
 

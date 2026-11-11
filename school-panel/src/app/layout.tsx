@@ -4,13 +4,14 @@ import type { ReactNode } from 'react';
 
 import { AppProviders } from '@/providers/app-providers';
 import './globals.css';
+import { PRODUCT_NAME } from '@/lib/brand';
 
 const onest = Onest({ subsets: ['latin', 'cyrillic'], variable: '--font-onest', display: 'swap' });
 const unbounded = Unbounded({ subsets: ['latin', 'cyrillic'], variable: '--font-unbounded', display: 'swap', weight: ['500', '600', '700'] });
 
 export const metadata: Metadata = {
-  title: { default: 'Parvoz School', template: '%s · Parvoz School' },
-  description: 'Parvoz School — maktab, ota-ona va o\'quvchini birlashtiruvchi raqamli ekotizim (demo).',
+  title: { default: PRODUCT_NAME, template: `%s · ${PRODUCT_NAME}` },
+  description: `${PRODUCT_NAME} — maktab, ota-ona va o'quvchini birlashtiruvchi raqamli ekotizim (demo).`,
   robots: { index: false, follow: false },
   icons: { icon: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/icon.svg` },
 };

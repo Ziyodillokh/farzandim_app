@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { buildNav, type NavNode } from './nav-items';
 import { ParvozWordmark } from './parvoz-wordmark';
 import { UserMenu } from './user-menu';
+import { PRODUCT_NAME, PRODUCT_SUB } from '@/lib/brand';
 
 function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -146,8 +147,8 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex h-full flex-col text-sidebar-foreground">
-      <Link href="/dashboard" onClick={onNavigate} className="flex items-center px-5 pb-4 pt-5" aria-label="Parvoz School">
-        <ParvozWordmark size="md" sub="School" tone="onDark" />
+      <Link href="/dashboard" onClick={onNavigate} className="flex items-center px-5 pb-4 pt-5" aria-label={PRODUCT_NAME}>
+        <ParvozWordmark size="md" sub={PRODUCT_SUB} tone="onDark" />
       </Link>
       <div className="mx-3 flex items-center gap-3 rounded-2xl bg-white/[0.04] p-2.5 ring-1 ring-inset ring-white/[0.07]">
         <SchoolLogo school={school} className="h-10 w-10 shrink-0" />
