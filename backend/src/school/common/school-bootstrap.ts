@@ -1,8 +1,13 @@
 // Yangi maktab + direktor hisobi (CLI va testlar umumiy ishlatadi).
 
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { randomBytes } from 'node:crypto';
 import { hashStaffPassword } from '../auth/school-auth.service';
+
+export interface NewDirector {
+  fullName: string;
+  username: string;
+}
 
 export interface NewSchoolInput {
   code: string;
@@ -10,8 +15,11 @@ export interface NewSchoolInput {
   shortName?: string;
   city?: string;
   academicYear?: string;
-  director: { fullName: string; username: string; password: string };
+  director: NewDirector & { password: string };
 }
+
+/** Parol xeshi alohida beriladi (bcrypt tranzaksiyadan oldin hisoblanadi). */
+export type SchoolInsertInput = Omit<NewSchoolInput, 'director'> & { director: NewDirector };
 
 /** Standart 1-smena: 08:00–13:25, 6 dars, dushanba–shanba. */
 export const DEFAULT_SHIFT = {
@@ -39,32 +47,45 @@ export function defaultAcademicYear(now = new Date()): string {
   return `${year}–${year + 1}`;
 }
 
+export const SCHOOL_CODE_PATTERN = /^[a-z0-9-]{2,40}$/;
+
 export async function createSchoolWithDirector(prisma: PrismaClient, input: NewSchoolInput) {
+  const passwordHash = await hashStaffPassword(input.director.password);
+  return prisma.$transaction((tx) => insertSchoolWithDirector(tx, input, passwordHash));
+}
+
+/**
+ * Maktab, standart smena va direktor (birinchi kirishda parolni almashtiradi) —
+ * chaqiruvchining tranzaksiyasida (admin panel audit yozuvini ham shu yerda yozadi).
+ */
+export async function insertSchoolWithDirector(
+  tx: Prisma.TransactionClient,
+  input: SchoolInsertInput,
+  passwordHash: string,
+) {
   const code = input.code.trim().toLowerCase();
-  if (!/^[a-z0-9-]{2,40}$/.test(code)) throw new Error('code: a-z, 0-9, "-" (2–40)');
-  return prisma.$transaction(async (tx) => {
-    const school = await tx.school.create({
-      data: {
-        code,
-        name: input.name,
-        shortName: input.shortName ?? input.name.slice(0, 12),
-        city: input.city ?? '',
-        academicYear: input.academicYear ?? defaultAcademicYear(),
-        kioskSecret: randomBytes(32).toString('base64url'),
-      },
-    });
-    await tx.schoolShift.create({ data: { schoolId: school.id, ...DEFAULT_SHIFT } });
-    const director = await tx.schoolStaff.create({
-      data: {
-        schoolId: school.id,
-        fullName: input.director.fullName,
-        position: 'Direktor',
-        role: 'DIRECTOR',
-        username: input.director.username.trim().toLowerCase(),
-        passwordHash: await hashStaffPassword(input.director.password),
-        mustChangePassword: true,
-      },
-    });
-    return { school, director };
+  if (!SCHOOL_CODE_PATTERN.test(code)) throw new Error('code: a-z, 0-9, "-" (2–40)');
+  const school = await tx.school.create({
+    data: {
+      code,
+      name: input.name,
+      shortName: input.shortName ?? input.name.slice(0, 12).trim(),
+      city: input.city ?? '',
+      academicYear: input.academicYear ?? defaultAcademicYear(),
+      kioskSecret: randomBytes(32).toString('base64url'),
+    },
   });
+  await tx.schoolShift.create({ data: { schoolId: school.id, ...DEFAULT_SHIFT } });
+  const director = await tx.schoolStaff.create({
+    data: {
+      schoolId: school.id,
+      fullName: input.director.fullName,
+      position: 'Direktor',
+      role: 'DIRECTOR',
+      username: input.director.username.trim().toLowerCase(),
+      passwordHash,
+      mustChangePassword: true,
+    },
+  });
+  return { school, director };
 }

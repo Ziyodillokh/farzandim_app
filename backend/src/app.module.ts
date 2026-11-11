@@ -62,6 +62,7 @@ import { AdminNotificationsModule } from './admin/admin-notifications/admin-noti
 import { AdminOlympiadsModule } from './admin/admin-olympiads/admin-olympiads.module';
 import { AdminLearningModule } from './admin/admin-learning/admin-learning.module';
 import { AdminKelajakModule } from './admin/admin-kelajak/admin-kelajak.module';
+import { AdminSchoolsModule } from './admin/admin-schools/admin-schools.module';
 import { AdminAnalyticsModule } from './admin/admin-analytics/admin-analytics.module';
 import { AdminContentModule } from './admin/admin-content/admin-content.module';
 import { AdminAuditLogModule } from './admin/admin-audit-log/admin-audit-log.module';
@@ -146,6 +147,7 @@ import { AppController } from './app.controller';
     AdminOlympiadsModule,
     AdminLearningModule,
     AdminKelajakModule,
+    AdminSchoolsModule,
     AdminAnalyticsModule,
     AdminContentModule,
     AdminAuditLogModule,
