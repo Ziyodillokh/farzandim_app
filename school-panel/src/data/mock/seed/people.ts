@@ -1,5 +1,5 @@
 import type { DeviceOs, Guardian, GuardianRelation, ParentLinkStatus, SchoolClass, Staff, Student } from '@/data/contracts';
-import { Random } from '@/lib/rng';
+import { hashString, Random } from '@/lib/rng';
 import { FEMALE_NAMES, MALE_NAMES, patronymic, SURNAME_STEMS, surname, TEACHER_POSITIONS } from './names';
 
 export type Family = { id: string; guardianIds: string[]; primaryGuardianId: string; studentIds: string[] };
@@ -25,9 +25,16 @@ function phone(rng: Random): string {
   return `+998 ${op} ${a} ${b} ${c}`;
 }
 
+/**
+ * Taklif kodi — backend bilan bir xil 8 belgi. Tasodifiy sondan aynan 6 tasi olinadi
+ * (avvalgidek): seed ketma-ketligi va undan keyingi barcha demo ma'lumot o'zgarmaydi;
+ * oxirgi 2 belgi shu 6 belgidan hisoblanadi.
+ */
 function inviteCode(rng: Random): string {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  return Array.from({ length: 6 }, () => alphabet[rng.int(0, alphabet.length - 1)]).join('');
+  const head = Array.from({ length: 6 }, () => alphabet[rng.int(0, alphabet.length - 1)]).join('');
+  const tail = [0, 1].map((i) => alphabet[hashString(`${head}:${i}`) % alphabet.length]).join('');
+  return head + tail;
 }
 
 function deviceFor(rng: Random, grade: number): DeviceOs {

@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import type { Guardian } from '@/data/contracts';
 import { isHttpMode } from '@/data/source';
 import { useI18n } from '@/i18n';
-import { inviteLink } from '@/lib/invite-link';
+import { formatInviteCode, inviteLink } from '@/lib/invite-link';
 
 /** Parvoz Parents taklif kodi + QR (ota-ona ilovada skanerlaydi). */
 export function InviteDialog({ guardian, onOpenChange }: { guardian: Guardian | null; onOpenChange: (open: boolean) => void }) {
@@ -29,7 +29,7 @@ export function InviteDialog({ guardian, onOpenChange }: { guardian: Guardian | 
             </div>
             <div className="text-center">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">{t('students.detail.inviteCode')}</p>
-              <p className="mt-1 font-display text-3xl font-semibold tracking-[0.3em]">{code}</p>
+              <p className="mt-1 select-all font-display text-3xl font-semibold tracking-[0.2em]">{formatInviteCode(code)}</p>
               {guardian.inviteExpiresAt && (
                 <p className="mt-1 text-xs text-muted-foreground">
                   {t('students.detail.expires', { date: formatDate(guardian.inviteExpiresAt, 'd MMMM') })}
