@@ -105,7 +105,7 @@ describe('ommaviy taklif (ota-onalar)', () => {
     expect(lastAudit()).toMatchObject({ module: 'GUARDIANS', action: 'guardian.inviteBulk', entityId: 'cls-5a' });
     const ids = new Set(pending.items.map((g) => g.id));
     const invited = getTables().guardians.filter((g) => ids.has(g.id));
-    expect(invited.every((g) => g.linkStatus === 'INVITED' && /^[A-Z2-9]{6}$/.test(g.inviteCode ?? ''))).toBe(true);
+    expect(invited.every((g) => g.linkStatus === 'INVITED' && /^[A-Z2-9]{8}$/.test(g.inviteCode ?? ''))).toBe(true);
     expect(new Set(invited.map((g) => g.inviteCode)).size).toBe(invited.length);
     const again = await classesService.inviteGuardians({ classId: 'cls-5a' });
     expect(again.invited).toBe(0);

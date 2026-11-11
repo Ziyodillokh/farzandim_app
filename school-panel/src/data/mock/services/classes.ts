@@ -32,7 +32,8 @@ export type ClassDetail = ClassRow & {
 export type ClassModeNow = { classId: string; date: IsoDate; minute: number; state: ClassModeState };
 
 const INVITE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const INVITE_CODE_LENGTH = 6;
+// Backend bilan bir xil: 8 belgi (`backend/src/school/students/invite-code.ts`).
+const INVITE_CODE_LENGTH = 8;
 const INVITE_TTL_MS = 7 * 86_400_000;
 const BULK_PAGE_LIMIT = 500;
 

@@ -11,9 +11,9 @@
 // Vaqtinchalik parol BIR MARTA chiqariladi; birinchi kirishda almashtiriladi.
 
 import { PrismaClient, SchoolStaffRole } from '@prisma/client';
-import { randomBytes } from 'node:crypto';
 import { isProtectedRole } from '../../src/school/auth/permissions';
 import { hashStaffPassword } from '../../src/school/auth/school-auth.service';
+import { generateTempPassword } from '../../src/school/common/temp-password';
 
 const OPERATOR = 'Parvoz operatori';
 
@@ -32,7 +32,7 @@ async function main(): Promise<void> {
     throw new Error('Kerak: --school <kod> --username <login> [--role PSYCHOLOGIST --name "F.I.Sh."] [--reset [--id <xodim-id>] [--reset-2fa]]');
   }
   if ((staffId || resetTotp) && !reset) throw new Error('--id va --reset-2fa faqat --reset bilan');
-  const password = randomBytes(9).toString('base64url');
+  const password = generateTempPassword();
   const prisma = new PrismaClient();
   try {
     const school = await prisma.school.findUnique({ where: { code } });

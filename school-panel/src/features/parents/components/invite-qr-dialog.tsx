@@ -9,7 +9,7 @@ import type { Guardian } from '@/data/contracts';
 import { INNER_TILE, SELECTED_SOFT } from '@/features/messages/styles';
 import { isHttpMode } from '@/data/source';
 import { useI18n } from '@/i18n';
-import { inviteLink } from '@/lib/invite-link';
+import { formatInviteCode, inviteLink } from '@/lib/invite-link';
 import { cn } from '@/lib/utils';
 import { useCopy } from '../hooks';
 
@@ -41,7 +41,7 @@ export function InviteQrDialog({ guardian, onOpenChange }: { guardian: Guardian 
             </div>
             <div className="text-center">
               <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{t('parents.inviteDialog.code')}</p>
-              <p className="mt-1 select-all font-display text-3xl font-semibold tracking-[0.3em]">{code}</p>
+              <p className="mt-1 select-all font-display text-3xl font-semibold tracking-[0.2em]">{formatInviteCode(code)}</p>
               {guardian.inviteExpiresAt && (
                 <p className="mt-1 text-xs text-muted-foreground">
                   {t('parents.inviteDialog.expires', { date: formatDate(guardian.inviteExpiresAt, 'd MMMM, HH:mm') })}

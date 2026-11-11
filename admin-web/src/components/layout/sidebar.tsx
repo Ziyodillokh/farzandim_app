@@ -25,6 +25,7 @@ import {
   FolderOpen,
   Telescope,
   Route,
+  School,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ParvozLogo } from './parvoz-logo';
@@ -60,6 +61,7 @@ const sections: NavSection[] = [
     entries: [
       { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { label: 'Foydalanuvchilar', href: '/users', icon: Users },
+      { label: 'Maktablar', href: '/schools', icon: School },
     ],
   },
   {

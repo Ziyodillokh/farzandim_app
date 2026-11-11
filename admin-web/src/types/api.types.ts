@@ -552,3 +552,44 @@ export interface ApiError {
   message: string | string[];
   error?: string;
 }
+
+// ───────────────────────── SCHOOLS (Parvoz maktablari) ─────────────────────────
+// Kontrakt: backend `admin/admin-schools` (`manage_schools` ruxsati).
+
+export type SchoolStaffRole = 'DIRECTOR' | 'ADMIN' | 'HOMEROOM' | 'PSYCHOLOGIST' | 'DUTY' | 'TEACHER';
+
+/** Admin boshqaradigan hisob: direktor yoki himoyalangan rol (psixolog). */
+export interface AdminSchoolAccount {
+  id: string;
+  fullName: string;
+  role: SchoolStaffRole;
+  position: string;
+  username: string | null;
+  active: boolean;
+  mustChangePassword: boolean;
+  totpEnabled: boolean;
+  locked: boolean;
+  lastLoginAt: string | null;
+  createdAt: string;
+}
+
+export interface AdminSchool {
+  id: string;
+  code: string;
+  name: string;
+  shortName: string;
+  city: string;
+  status: 'ACTIVE' | 'SUSPENDED';
+  academicYear: string;
+  createdAt: string;
+  counts: { classes: number; students: number; staff: number; linkedGuardians: number };
+  accounts: AdminSchoolAccount[];
+}
+
+/** Vaqtinchalik parol — faqat shu javobda, bir marta. */
+export interface AdminSchoolCredentials {
+  schoolCode: string;
+  username: string;
+  temporaryPassword: string;
+  account: AdminSchoolAccount;
+}

@@ -27,6 +27,7 @@ import {
 import { createTestApp, TestApp } from './test-app';
 
 const wrongOf = (code: string) => (code === '000001' ? '000002' : '000001');
+const SCHOOL_LINK = 'SCHOOL_LINK';
 
 /** `randomInt` ni vaqtincha qotiradi (kod to'qnashuvini sinash uchun); keyingi chaqiruvlar haqiqiy. */
 async function withRandomCodes<T>(values: number[], fn: () => Promise<T>): Promise<T> {
@@ -55,6 +56,8 @@ describe('School student code (K2)', () => {
   });
 
   afterAll(() => t.close());
+
+  const linkPushes = (userId: string) => t.fcm.pushesTo(userId).filter((p) => p.data?.type === SCHOOL_LINK);
 
   describe('staff: invite code', () => {
     it('creates a 6-digit code valid for 24h; GET shows both slots; regenerating closes the previous code', async () => {
@@ -398,10 +401,15 @@ describe('School student code (K2)', () => {
       const code = await issueCode(t, w.director, w.aziz.id);
       expect((await childLink(t, family.child, code)).json().student.status).toBe('UNDER_REVIEW');
       expect(await t.prisma.schoolStaffNotification.count({ where: { kind: 'LINK_REVIEW' } })).toBe(1);
+      t.fcm.reset();
 
       const parent = await parentLink(t, family.parent, code);
 
       expect(parent.statusCode).toBe(200);
+      // Bola "Tasdiq kutilmoqda"dan chiqdi — bitta neytral push (maktab nomisiz).
+      const pushes = linkPushes(family.child.userId);
+      expect(pushes).toHaveLength(1);
+      expect(JSON.stringify(pushes[0])).not.toContain(SCHOOL_NAME);
       expect(parent.json().links[0].students[0]).toMatchObject({ id: w.aziz.id, childId: family.child.childId, linkedBy: 'ME' });
       expect((await linkStatus(t, family.child)).json()).toEqual({
         student: { status: 'CONFIRMED', schoolName: SCHOOL_NAME, className: '7-A' },
@@ -536,6 +544,50 @@ describe('School student code (K2)', () => {
   });
 
   describe('legacy 8-character guardian codes', () => {
+    /** Maktab vasiy yozuvini yaratib, unga 8 belgili taklif kodini beradi. */
+    async function guardianCode(): Promise<string> {
+      const guardian = await createGuardian(t.prisma, w.schoolId, [w.aziz.id]);
+      return (await schoolReq(t, w.director, 'POST', `/guardians/${guardian.id}/invite`)).json().inviteCode as string;
+    }
+
+    it('child first (UNDER_REVIEW), then the child\'s parent redeems an 8-character guardian code: CONFIRMED, review cleared, one neutral push', async () => {
+      const family = await newFamily(t, 'Aziz');
+      const code = await issueCode(t, w.director, w.aziz.id);
+      expect((await childLink(t, family.child, code)).json().student.status).toBe('UNDER_REVIEW');
+      const legacy = await guardianCode();
+      t.fcm.reset();
+
+      const linked = await parentLink(t, family.parent, legacy);
+
+      expect(linked.statusCode).toBe(200);
+      expect(linked.json().links[0].students[0]).toMatchObject({ id: w.aziz.id, childId: family.child.childId, linkedBy: 'ME' });
+      expect((await linkStatus(t, family.child)).json().student).toEqual({
+        status: 'CONFIRMED',
+        schoolName: SCHOOL_NAME,
+        className: '7-A',
+      });
+      expect(await t.prisma.schoolStaffNotification.count({ where: { kind: 'LINK_REVIEW' } })).toBe(0);
+      const pushes = linkPushes(family.child.userId);
+      expect(pushes).toHaveLength(1);
+      expect(JSON.stringify(pushes[0])).not.toContain(SCHOOL_NAME);
+    });
+
+    it('an 8-character guardian code never confirms a stranger\'s pending child', async () => {
+      const kid = await newFamily(t, 'Begona bola');
+      const other = await newFamily(t, 'Boshqa');
+      const code = await issueCode(t, w.director, w.aziz.id);
+      await childLink(t, kid.child, code);
+      const legacy = await guardianCode();
+      t.fcm.reset();
+
+      expect((await parentLink(t, other.parent, legacy)).statusCode).toBe(200);
+
+      expect((await linkStatus(t, kid.child)).json().student.status).toBe('UNDER_REVIEW');
+      expect((await t.prisma.schoolStudent.findUniqueOrThrow({ where: { id: w.aziz.id } })).childId).toBeNull();
+      expect(await t.prisma.schoolStaffNotification.count({ where: { kind: 'LINK_REVIEW' } })).toBe(1);
+      expect(linkPushes(kid.child.userId)).toHaveLength(0);
+    });
+
     it('keep working exactly as before next to student codes', async () => {
       const family = await newFamily(t);
       const guardian = await createGuardian(t.prisma, w.schoolId, [w.aziz.id]);

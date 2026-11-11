@@ -7,7 +7,8 @@
 //      bildirishnomasi). Ota-ona o'rni band hisoblanadi; tasdiqlanmaguncha bu ota-ona hech qanday o'quvchi ma'lumotiga,
 //      xabarga, davomatga, olib ketish va erta ketish so'roviga kira olmaydi.
 // Bolasi shu o'quvchida UNDER_REVIEW da kutayotgan bo'lsa — vasiy ulangach (hozir yoki xodim tasdiqlaganda) bog'lanish
-// CONFIRMED bo'ladi. 8 belgili vasiy kodlari (`ParentLinksService.redeemCode`) bunga kirmaydi va o'zgarmagan.
+// CONFIRMED bo'ladi. 8 belgili vasiy kodi bilan ulanganda ham shunday (`ParentLinksService.redeemCode`): natija
+// kim birinchi kod kiritganiga bog'liq emas.
 //
 // Qulf tartibi (`link-locks`): avval ota-onaning bolalari, keyin o'quvchi.
 
@@ -99,9 +100,10 @@ export async function createGuardianFromUser(
 /**
  * 6 raqamli kodni ota-ona o'rniga kiritish. Noto'g'ri / muddati o'tgan / yopilgan / ota-ona o'rni BOSHQA ota-onada
  * band kod, yoki shu ota-ona avval rad etilgan kod — `INVITE_INVALID` (chaqiruvchi xato urinishlarni sanaydi).
- * O'z kodini qayta kiritish (vasiy yoki kutayotgan so'rov bor) — o'zgarishsiz.
+ * O'z kodini qayta kiritish (vasiy yoki kutayotgan so'rov bor) — o'zgarishsiz. Qaytadi: shu bilan tasdiqlangan
+ * bolalar (tranzaksiyadan keyin ularga push).
  */
-export async function redeemParentSlot(tx: Tx, audit: SchoolAuditService, userId: string, code: string): Promise<void> {
+export async function redeemParentSlot(tx: Tx, audit: SchoolAuditService, userId: string, code: string): Promise<string[]> {
   const now = new Date();
   const children = await tx.child.findMany({ where: { parentId: userId }, select: { id: true, parentId: true } });
   await acquireLinkLocks(tx, children.map((c) => childLock(c.id)));
@@ -112,7 +114,7 @@ export async function redeemParentSlot(tx: Tx, audit: SchoolAuditService, userId
   });
   // Takroriy so'rov (javob yo'qolgan): ota-ona hali vasiy yoki so'rovi xodim ko'rigida — kod yopilgan bo'lsa ham xato emas.
   // Aloqa keyin uzilgan / so'rov rad etilgan bo'lsa (eski o'rin ishonch bermaydi) kod faol bo'lsa qaytadan ko'rib chiqiladi.
-  if (own && ((await isLinkedGuardian(tx, own.studentId, userId)) || (await hasOpenReview(tx, own.studentId, userId)))) return;
+  if (own && ((await isLinkedGuardian(tx, own.studentId, userId)) || (await hasOpenReview(tx, own.studentId, userId)))) return [];
   const found = await tx.schoolStudentInvite.findFirst({
     where: { code, closedAt: null, expiresAt: { gt: now } },
     select: { id: true, studentId: true },
@@ -137,7 +139,7 @@ export async function redeemParentSlot(tx: Tx, audit: SchoolAuditService, userId
   });
   if (!known) {
     await requestGuardianReview(tx, audit, { userId, student, inviteId: invite.id, now });
-    return;
+    return [];
   }
   await audit.writeExternal(
     student.schoolId,
@@ -151,9 +153,10 @@ export async function redeemParentSlot(tx: Tx, audit: SchoolAuditService, userId
     },
     tx,
   );
-  if (await confirmOwnPendingChild(tx, { student, children, now })) {
-    await auditChildLinked(audit, `Ota-ona: ${known.fullName}`, student, tx);
-  }
+  const confirmed = await confirmOwnPendingChild(tx, { student, children, now });
+  if (!confirmed) return [];
+  await auditChildLinked(audit, `Ota-ona: ${known.fullName}`, student, tx);
+  return [confirmed];
 }
 
 /** (c) Vasiy ulanmaydi: xodim ko'rigi so'rovi (bir ota-onada bitta o'quvchi uchun bitta ochiq) va bildirishnoma. */

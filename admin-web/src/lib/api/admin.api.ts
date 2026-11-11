@@ -8,6 +8,8 @@ import { api } from './client';
 import { normalizePagination } from '@/types/api.types';
 import type {
   AdminNotification,
+  AdminSchool,
+  AdminSchoolCredentials,
   AdminUser,
   AdminUserListItem,
   AdminUserDetail,
@@ -38,6 +40,7 @@ import type {
   Plan,
   Promocode,
   RawPaginated,
+  SchoolStaffRole,
   TwoFactorStatus,
   TwoFactorVerifyResponse,
   Video,
@@ -497,3 +500,46 @@ export const securitySettingsApi = {
   update: (data: { ipAllowlistEnabled?: boolean; ipAllowlist?: string[] }) =>
     api.patch<AdminSecuritySettings>('/admin/security-settings', data),
 };
+
+// ───────────────────────── SCHOOLS (Parvoz maktablari) ─────────────────────────
+// Kontrakt: `manage_schools`; vaqtinchalik parol yaratish / tiklash javobida bir marta qaytadi.
+export interface SchoolListParams {
+  q?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface CreateSchoolPayload {
+  code: string;
+  name: string;
+  shortName?: string;
+  city: string;
+  director: { fullName: string; username: string };
+}
+
+export interface AddSchoolStaffPayload {
+  /** Faqat DIRECTOR yoki PSYCHOLOGIST — qolganlarini direktor panelda qo'shadi. */
+  role: Extract<SchoolStaffRole, 'DIRECTOR' | 'PSYCHOLOGIST'>;
+  fullName: string;
+  username: string;
+  position?: string;
+}
+
+export interface ResetSchoolPasswordPayload {
+  resetTotp?: boolean;
+  /** Faqat xodimning logini yo'q bo'lsa. */
+  username?: string;
+}
+
+export const schoolsApi = {
+  list: (params: SchoolListParams = {}) =>
+    api.get<RawPaginated<AdminSchool>>('/admin/schools', { params }).then(normalizePagination),
+  detail: (id: string) => api.get<AdminSchool>(`/admin/schools/${id}`),
+  create: (data: CreateSchoolPayload) =>
+    api.post<{ school: AdminSchool; credentials: AdminSchoolCredentials }>('/admin/schools', data),
+  addStaff: (schoolId: string, data: AddSchoolStaffPayload) =>
+    api.post<AdminSchoolCredentials>(`/admin/schools/${schoolId}/staff`, data),
+  resetPassword: (schoolId: string, staffId: string, data: ResetSchoolPasswordPayload = {}) =>
+    api.post<AdminSchoolCredentials>(`/admin/schools/${schoolId}/staff/${staffId}/reset-password`, data),
+};
+

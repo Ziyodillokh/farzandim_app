@@ -91,7 +91,7 @@ export const access = {
     slotState: { pending: 'kutilmoqda', review: 'tekshiruvda', confirmed: 'tasdiqlandi', used: 'foydalanildi' },
     underReview: 'Bola kodni kiritdi va tasdiq kutmoqda.',
     openRequests: 'Ulanish soʻrovlariga oʻtish',
-    review: 'Oʻquvchi kodni kiritsa, ulanish ota-onasi ham kiritguncha yoki xodim tasdiqlaguncha tekshiruvda turadi.',
+    review: 'Oʻquvchi kodni kiritsa, ulanish ota-onasi Parvoz Parents orqali ulanguncha (shu kod yoki taklif kodi bilan) yoki xodim tasdiqlaguncha tekshiruvda turadi.',
     created: 'Taklif kodi yaratildi',
     confirmTitle: 'Yangi kod yaratilsinmi?',
     confirmText: 'Hozirgi kod bekor qilinadi — u bilan endi ulanib boʻlmaydi. Yangi kod 24 soat amal qiladi.',

@@ -45,6 +45,9 @@ export const ALL_ADMIN_PERMISSIONS = [
 
   // Security (IP allowlist va xavfsizlik siyosati)
   'manage_security',
+
+  // Parvoz maktablari: yangi maktab + direktor, psixolog hisobi, parolni tiklash
+  'manage_schools',
 ] as const;
 
 export type AdminPermission = (typeof ALL_ADMIN_PERMISSIONS)[number];

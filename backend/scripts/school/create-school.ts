@@ -7,8 +7,8 @@
 // direktor uni almashtiradi.
 
 import { PrismaClient } from '@prisma/client';
-import { randomBytes } from 'node:crypto';
 import { createSchoolWithDirector } from '../../src/school/common/school-bootstrap';
+import { generateTempPassword } from '../../src/school/common/temp-password';
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -22,7 +22,7 @@ async function main(): Promise<void> {
   if (!code || !name || !director) {
     throw new Error('Kerak: --code --name --director [--username] [--city] [--short]');
   }
-  const password = randomBytes(9).toString('base64url');
+  const password = generateTempPassword();
   const prisma = new PrismaClient();
   try {
     const { school, director: staff } = await createSchoolWithDirector(prisma, {

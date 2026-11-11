@@ -74,6 +74,11 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     group: 'Savollar banki',
     permissions: [{ key: 'manage_learning', label: "Growth va Kelajak savollari, o'quv mavzulari" }],
   },
+  {
+    // Backend: yangi maktab + direktor, psixolog hisobi va ularning parolini tiklash.
+    group: 'Maktablar',
+    permissions: [{ key: 'manage_schools', label: 'Maktab ochish, direktor va psixolog hisoblari' }],
+  },
 ];
 
 export const ALL_PERMISSION_KEYS = PERMISSION_GROUPS.flatMap((g) => g.permissions.map((p) => p.key));
