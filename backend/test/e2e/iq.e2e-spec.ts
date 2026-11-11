@@ -163,22 +163,26 @@ describe('IQ API', () => {
     expect(result.ci95[1]).toBeGreaterThan(result.standardScore);
   });
 
-  it('qayta topshirish: 180 kun ichida 409, keyin D forma (normaga kirmaydi)', async () => {
+  it('qayta topshirish: kuniga 1 marta — bugun 409 (ertangi kun boshigacha), ertasi kuni D forma (normaga kirmaydi)', async () => {
     const first = (await start()).json();
     await answerAll(first, 12);
     await complete(first.id);
     const early = await start();
     expect(early.statusCode).toBe(409);
+    // Ertangi Toshkent kuni boshi (UTC+5): kecha bugungi sanaga 1 kun qo'shib, 00:00 +05:00.
+    const tomorrow = new Date(Date.now() + 5 * 3_600_000 + DAY_MS).toISOString().slice(0, 10);
     expect(early.json()).toMatchObject({
       code: 'RETAKE_TOO_SOON',
-      nextAvailableAt: expect.any(String),
+      nextAvailableAt: new Date(`${tomorrow}T00:00:00+05:00`).toISOString(),
     });
     expect((await call(child.token, 'GET', '/iq/overview')).json()).toMatchObject({ canStart: false, active: null });
 
+    // Kecha yakunlangan — bugun yana ochiq.
     await t.prisma.iqSession.update({
       where: { id: first.id },
-      data: { completedAt: new Date(Date.now() - 181 * DAY_MS) },
+      data: { completedAt: new Date(Date.now() - DAY_MS) },
     });
+    expect((await call(child.token, 'GET', '/iq/overview')).json()).toMatchObject({ canStart: true, nextAvailableAt: null });
     const second = (await start()).json();
     expect(second).toMatchObject({ form: 'L1D', status: 'STARTED' });
     const firstIds = new Set(first.items.map((i: { id: string }) => i.id));

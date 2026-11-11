@@ -1,4 +1,4 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, GoneException, NotFoundException } from '@nestjs/common';
 import { ListenSessionsService } from './listen-sessions.service';
 
 /**
@@ -54,73 +54,14 @@ describe('ListenSessionsService — avtorizatsiya', () => {
   });
 
   describe('start', () => {
-    it('FAQAT ota-ona boshlay oladi — begona RAD etiladi', async () => {
-      prisma.child.findUnique.mockResolvedValue({
-        id: CHILD_ID,
-        parentId: PARENT,
-        childUserId: CHILD_USER,
-      });
-      await expect(service.start(CHILD_ID, OUTSIDER)).rejects.toBeInstanceOf(
-        ForbiddenException,
-      );
+    it('funksiya olib tashlangan: hech kimga 410, sessiya va push yo\'q', async () => {
+      prisma.child.findUnique.mockResolvedValue({ id: CHILD_ID, parentId: PARENT, childUserId: CHILD_USER });
+      for (const user of [PARENT, OUTSIDER]) {
+        await expect(service.start(CHILD_ID, user)).rejects.toBeInstanceOf(GoneException);
+      }
       expect(prisma.listenSession.create).not.toHaveBeenCalled();
       expect(fcm.sendPushToUser).not.toHaveBeenCalled();
-    });
-
-    it('bola ulanmagan bo\'lsa boshlab bo\'lmaydi', async () => {
-      prisma.child.findUnique.mockResolvedValue({
-        id: CHILD_ID,
-        parentId: PARENT,
-        childUserId: null,
-      });
-      await expect(service.start(CHILD_ID, PARENT)).rejects.toBeInstanceOf(
-        ForbiddenException,
-      );
-    });
-
-    it('bola topilmasa 404', async () => {
-      prisma.child.findUnique.mockResolvedValue(null);
-      await expect(service.start(CHILD_ID, PARENT)).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
-    });
-
-    it('ota-ona boshlaganda: sessiya yaratiladi + bola uyg\'otiladi', async () => {
-      prisma.child.findUnique.mockResolvedValue({
-        id: CHILD_ID,
-        parentId: PARENT,
-        childUserId: CHILD_USER,
-      });
-      prisma.listenSession.updateMany.mockResolvedValue({ count: 0 });
-      prisma.listenSession.create.mockResolvedValue({
-        id: 's1',
-        childId: CHILD_ID,
-        status: 'PENDING',
-        startedAt: new Date(),
-        endedAt: null,
-        endedBy: null,
-      });
-
-      const res = await service.start(CHILD_ID, PARENT);
-
-      expect(res.status).toBe('PENDING');
-      // Bola qurilmasi uyg'otildi (data-only push).
-      expect(fcm.sendPushToUser).toHaveBeenCalledWith(
-        CHILD_USER,
-        expect.objectContaining({
-          dataOnly: true,
-          data: expect.objectContaining({ type: 'listen_request', sessionId: 's1' }),
-        }),
-      );
-      // Hisobdorlik yozuvi.
-      expect(audit.log).toHaveBeenCalledWith(
-        PARENT,
-        'listen_session',
-        'START',
-        's1',
-        undefined,
-        undefined,
-      );
+      expect(realtime.emitToUser).not.toHaveBeenCalled();
     });
   });
 

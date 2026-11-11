@@ -2,8 +2,8 @@
 // Parvoz IQ test — bola sessiyalari va natijalar (docs/IQ-REJA.md)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Sessiya 24 soat ochiq (davom ettiriladi), keyin ABANDONED. Qayta topshirish
-// 180 kundan keyin, forma almashadi. To'g'ri javob kaliti (`IqItem.answer`)
+// Sessiya 24 soat ochiq (davom ettiriladi), keyin ABANDONED. Qayta topshirish —
+// kuniga 1 marta (Toshkent kuni, `IQ_DAILY_LIMIT`), forma almashadi. To'g'ri javob kaliti (`IqItem.answer`)
 // klientga hech qachon chiqmaydi — `correct` faqat serverda hisoblanadi.
 // Natijada faqat xom javoblar; baho o'qilganda (iq.views `scoreSession`).
 // Bola bo'yicha advisory lock — boshlash / javob / yakunlash navbat bilan.
@@ -189,7 +189,10 @@ export class IqService {
       }),
     ]);
     const history = await this.history(completed);
-    const next = nextAvailableAt(completed[0]?.completedAt ?? null);
+    const next = nextAvailableAt(
+      completed.map((s) => s.completedAt),
+      now,
+    );
     return {
       age,
       last: history[0]?.result ?? null,
@@ -268,7 +271,10 @@ export class IqService {
         orderBy: { completedAt: 'desc' },
         select: { completedAt: true },
       });
-      const next = nextAvailableAt(completed[0]?.completedAt ?? null);
+      const next = nextAvailableAt(
+        completed.map((s) => s.completedAt),
+        now,
+      );
       if (next && next > now) {
         throw new ConflictException({
           message: 'Retake is not available yet',

@@ -1,5 +1,6 @@
 import {
   ForbiddenException,
+  GoneException,
   Injectable,
   Logger,
   NotFoundException,
@@ -21,6 +22,10 @@ import { FcmService } from '../../common/fcm/fcm.service';
  *
  * Qonuniylik: bola qurilmasida "Ota-onangiz tinglamoqda" indikatori doim
  * ko'rinadi (foreground service) va bola istalgan payt to'xtata oladi.
+ *
+ * ⛔ 2026-11-11 dan funksiya OLIB TASHLANDI (egasi qarori): yangi sessiya
+ * boshlanmaydi (`410 FEATURE_REMOVED`), bola uyg'otilmaydi. To'xtatish, tarix
+ * va eskirgan sessiyalarni yopish eski yozuvlar uchun qoladi.
  */
 @Injectable()
 export class ListenSessionsService {
@@ -54,56 +59,12 @@ export class ListenSessionsService {
   /*  Ota-ona eshitishni BOSHLAYDI                                       */
   /* ------------------------------------------------------------------ */
   async start(
-    childId: string,
-    userId: string,
-    request?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
-  ) {
-    const child = await this.prisma.child.findUnique({ where: { id: childId } });
-    if (!child) throw new NotFoundException('Child not found');
-    if (child.parentId !== userId) {
-      throw new ForbiddenException('Only parent can start a listen session');
-    }
-    if (!child.childUserId) {
-      throw new ForbiddenException('Child device not paired');
-    }
-
-    // Eski osilib qolgan sessiyalarni tozalaymiz (bir bolada bitta faol).
-    await this.prisma.listenSession.updateMany({
-      where: { childId, status: { in: ['PENDING', 'ACTIVE'] } },
-      data: { status: 'ENDED', endedAt: new Date(), endedBy: 'superseded' },
-    });
-
-    const now = Date.now();
-    const session = await this.prisma.listenSession.create({
-      data: {
-        parentId: userId,
-        childId,
-        status: 'PENDING',
-        expiresAt: new Date(now + ListenSessionsService.CONNECT_TTL_MS),
-      },
-    });
-
-    // Hisobdorlik: kim, qachon tinglashni boshladi (ovozsiz).
-    await this.audit.log(userId, 'listen_session', 'START', session.id, undefined, request);
-
-    // Bola qurilmasini UYG'OTAMIZ (ilova fonda bo'lsa ham). Bola app bu
-    // push'ni olib: indikatorni ko'rsatadi, mikrofonni yoqadi, WebRTC bilan
-    // ulanadi. dataOnly — ko'rinadigan bildirishnomani bola app o'zi
-    // (foreground service) ko'rsatadi.
-    await this.fcm
-      .sendPushToUser(child.childUserId, {
-        title: '',
-        body: '',
-        dataOnly: true,
-        data: { type: 'listen_request', sessionId: session.id, childId },
-      })
-      .catch((err) => this.logger.warn(`listen wake push failed: ${err}`));
-
-    // Ilova ochiq bo'lsa — WS orqali darhol.
-    this.realtime.emitToUser(child.childUserId, 'listen:incoming', this.serialize(session));
-    this.realtime.emitToUser(userId, 'listen:started', this.serialize(session));
-
-    return this.serialize(session);
+    _childId: string,
+    _userId: string,
+    _request?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
+  ): Promise<never> {
+    // Eski Parvoz Parents versiyalari tugmani hali ko'rsatadi — aniq javob beriladi.
+    throw new GoneException({ code: 'FEATURE_REMOVED', message: 'Live listening has been removed' });
   }
 
   /* ------------------------------------------------------------------ */

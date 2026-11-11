@@ -11,7 +11,7 @@ import { Prisma, SchoolPsychAssignment } from '@prisma/client';
 import { z } from 'zod';
 import { PrismaService } from '../../common/database/prisma.service';
 import { IqBand } from '../../modules/iq/domain/scoring';
-import { RETAKE_DAYS } from '../../modules/iq/domain/levels';
+import { IQ_RESULT_WINDOW_DAYS } from '../../modules/iq/domain/levels';
 import { IqResultView } from '../../modules/iq/iq.views';
 import { IqService } from '../../modules/iq/iq.service';
 import { actorCan, assertCan, assertClassInScope, SchoolActor } from '../auth/school-actor';
@@ -32,7 +32,7 @@ const BANDS: readonly IqBand[] = ['VERY_HIGH', 'HIGH', 'ABOVE_AVERAGE', 'AVERAGE
 const resultsQuerySchema = z.object({ classId: z.string().min(1) });
 
 /** Tayinlash oynasi: ochilishdan 180 kun oldingi natija ham hisoblanadi (umumiy tarix). */
-export const iqWindowStart = (opensAt: Date): Date => new Date(opensAt.getTime() - RETAKE_DAYS * DAY_MS);
+export const iqWindowStart = (opensAt: Date): Date => new Date(opensAt.getTime() - IQ_RESULT_WINDOW_DAYS * DAY_MS);
 
 export interface IqStudentRow {
   studentId: string;

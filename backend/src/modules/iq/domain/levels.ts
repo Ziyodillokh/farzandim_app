@@ -2,7 +2,7 @@
 // Yosh — Kelajak'dagi `childAge` (birthDate → Toshkent kuni, aks holda `age`);
 // fallback YO'Q.
 
-import { DayKey, tashkentDay } from '../../../common/time/tashkent';
+import { addDays, DayKey, tashkentDay, tashkentDayStart } from '../../../common/time/tashkent';
 import { childAge } from '../../kelajak/domain/age';
 
 export const IQ_LEVELS = [1, 2, 3, 4, 5] as const;
@@ -12,9 +12,11 @@ export const OPTION_KEYS: readonly string[] = ['A', 'B', 'C', 'D', 'E', 'F'];
 export const IQ_MIN_AGE = 9;
 export const IQ_MAX_AGE = 20;
 export const FORM_SIZE = 20;
-export const RETAKE_DAYS = 180;
+/** Kuniga yakunlash mumkin bo'lgan IQ testlar soni (Toshkent kuni; egasi qarori, 2026-11-11). */
+export const IQ_DAILY_LIMIT = 1;
+/** Maktab IQ tayinlashi natijasi: shu kunlik oynadagi oxirgi yakunlangan test (docs/IQ-REJA.md, 2-bosqich). */
+export const IQ_RESULT_WINDOW_DAYS = 180;
 export const SESSION_TTL_HOURS = 24;
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 const LEVEL_MAX_AGE: ReadonlyArray<[IqLevel, number]> = [
   [1, 10],
@@ -81,8 +83,14 @@ export const isMixedForm = (form: string): boolean => MIXED_FORMS.some((f) => fo
  */
 export const normKey = (form: string, group: string): string => (isMixedForm(form) ? `mix:${group}` : group);
 
-export function nextAvailableAt(lastCompletedAt: Date | null): Date | null {
-  return lastCompletedAt ? new Date(lastCompletedAt.getTime() + RETAKE_DAYS * DAY_MS) : null;
+/**
+ * Keyingi testni qachon boshlash mumkin: bugun (Toshkent) [IQ_DAILY_LIMIT] ta test yakunlangan bo'lsa — ertangi
+ * kun boshi, aks holda `null` (hozir ochiq). Norma faqat birinchi urinishdan yig'iladi, qayta yechish unga ta'sir qilmaydi.
+ */
+export function nextAvailableAt(completedAts: readonly (Date | null)[], now: Date): Date | null {
+  const today = tashkentDay(now);
+  const doneToday = completedAts.filter((at) => at !== null && tashkentDay(at) === today).length;
+  return doneToday >= IQ_DAILY_LIMIT ? tashkentDayStart(addDays(today, 1)) : null;
 }
 
 /** Ochiq sessiya `SESSION_TTL_HOURS` dan eski — yopiladi. */
