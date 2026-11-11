@@ -7,6 +7,7 @@ import { ParvozWordmark } from '@/components/layout/parvoz-wordmark';
 import { currentMe, subscribeMe } from '@/data/http/session';
 import { useI18n } from '@/i18n';
 import { PasswordChangeForm } from './password-change-form';
+import { PRODUCT_SUB } from '@/lib/brand';
 
 /**
  * http rejim: vaqtinchalik parol bilan kirgan xodim avval o'z parolini
@@ -20,7 +21,7 @@ export function ForcePasswordChange({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-6 flex justify-center">
-          <ParvozWordmark size="lg" sub="School" />
+          <ParvozWordmark size="lg" sub={PRODUCT_SUB} />
         </div>
         <div className="rounded-3xl border bg-card p-6 shadow-glass sm:p-8">
           <div className="mb-5 flex items-start gap-3">

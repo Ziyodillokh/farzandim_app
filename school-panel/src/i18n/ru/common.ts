@@ -1,8 +1,9 @@
+import { PRODUCT_NAME } from '@/lib/brand';
 import type { DeepString } from '../types';
 import type { common as uz } from '../uz/common';
 
 export const common: DeepString<typeof uz> = {
-  appName: 'Parvoz School',
+  appName: PRODUCT_NAME,
   tagline: 'Цифровая экосистема, объединяющая школу, родителей и учеников',
   demoBadge: 'Демо · вымышленные данные',
   save: 'Сохранить',

@@ -12,6 +12,7 @@ import { useClockNow } from '@/features/engine/use-clock';
 import { useSchool } from '@/features/school/hooks';
 import { LOCALES, useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { PRODUCT_SUB } from '@/lib/brand';
 
 function useFullscreen(): [boolean, () => void] {
   const [active, setActive] = useState(false);
@@ -70,7 +71,7 @@ export function KioskHeader() {
       </div>
 
       <div className="flex items-center gap-2">
-        <ParvozWordmark size="sm" sub="School" tone="onDark" className="mr-2 hidden opacity-90 lg:inline-flex" />
+        <ParvozWordmark size="sm" sub={PRODUCT_SUB} tone="onDark" className="mr-2 hidden opacity-90 lg:inline-flex" />
         <span aria-hidden className="mr-1 hidden h-8 w-px bg-white/10 lg:block" />
         <div className="flex h-10 items-center rounded-xl border border-white/10 bg-white/[0.06] p-1">
           {LOCALES.map((l) => (

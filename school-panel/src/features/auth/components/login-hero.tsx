@@ -6,6 +6,7 @@ import { SchoolLogo } from '@/components/common/school-logo';
 import { ParvozWordmark } from '@/components/layout/parvoz-wordmark';
 import { useI18n } from '@/i18n';
 import { useLoginBrand } from '../use-login-brand';
+import { PRODUCT_SUB } from '@/lib/brand';
 
 /** Chap ustun: Parvoz brendi, maktab chipi (yagona), sarlavha va afzalliklar. */
 export function LoginHero() {
@@ -19,8 +20,8 @@ export function LoginHero() {
 
   return (
     <div className="flex flex-col items-center text-center text-white lg:items-start lg:text-left">
-      <ParvozWordmark size="xl" sub="School" tone="onDark" className="hidden lg:inline-flex" />
-      <ParvozWordmark size="lg" sub="School" tone="onDark" className="lg:hidden" />
+      <ParvozWordmark size="xl" sub={PRODUCT_SUB} tone="onDark" className="hidden lg:inline-flex" />
+      <ParvozWordmark size="lg" sub={PRODUCT_SUB} tone="onDark" className="lg:hidden" />
 
       {school !== null && (
         <div className="mt-6 inline-flex max-w-full items-center gap-3 rounded-2xl bg-white/[0.06] py-2 pl-2 pr-4 ring-1 ring-inset ring-white/10 backdrop-blur-md lg:mt-10">
