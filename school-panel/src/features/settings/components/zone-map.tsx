@@ -5,9 +5,12 @@ import 'leaflet/dist/leaflet.css';
 import type { Circle, CircleMarker, Map as LeafletMap } from 'leaflet';
 import { useEffect, useRef } from 'react';
 
-/** Xarita plitkalari — kalitsiz CARTO Voyager (ota-ona ilovasidagi zaxira bilan bir xil). */
-const TILE_URL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-const TILE_ATTRIBUTION = '© OpenStreetMap © CARTO';
+/**
+ * Xarita plitkalari — OpenStreetMap (kalitsiz; panelda hududni belgilash kam so'rov, OSM tile policy doirasida).
+ * CARTO basemaps endi kalitsiz so'rovga «API KEY REQUIRED» plitkasini qaytaradi.
+ */
+const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const TILE_ATTRIBUTION = '© OpenStreetMap contributors';
 const ZONE_COLOR = '#2563eb';
 const START_ZOOM = 16;
 
@@ -40,11 +43,7 @@ export function ZoneMap({ latitude, longitude, radiusM, onPick, label }: Props) 
         zoomControl: true,
         attributionControl: true,
       }).setView([latitude, longitude], START_ZOOM);
-      L.tileLayer(TILE_URL, {
-        attribution: TILE_ATTRIBUTION,
-        subdomains: 'abcd',
-        maxZoom: 20,
-      }).addTo(m);
+      L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, maxZoom: 19 }).addTo(m);
       circle.current = L.circle([latitude, longitude], {
         radius: radiusM,
         color: ZONE_COLOR,
