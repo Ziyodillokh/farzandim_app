@@ -1,6 +1,6 @@
 // Maktab profili, logo va bayram kunlari (panel `schoolService`).
 
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { School, SchoolHoliday, SchoolShift } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { assertCan, SchoolActor } from '../auth/school-actor';
@@ -11,6 +11,7 @@ import {
   LOGO_PATTERN,
   MAX_LOGO_BYTES,
   schoolProfileSchema,
+  schoolZoneSchema,
 } from '../common/school-schemas';
 import { parseOrThrow } from '../common/school-zod';
 
@@ -93,6 +94,46 @@ export class SchoolInfoService {
         tx,
       );
       return toSchoolView(after);
+    });
+  }
+
+  /**
+   * Maktab hududi (markaz + radius). School Mode «faqat hududda» shu bilan ishlaydi: telefon hudud ichida
+   * ekanini qurilmaning o'zi aniqlaydi, joylashuv maktabga yuborilmaydi.
+   */
+  async setZone(actor: SchoolActor, input: unknown): Promise<SchoolView> {
+    assertCan(actor, 'settings.manage');
+    const { latitude, longitude, radiusM } = parseOrThrow(schoolZoneSchema, input);
+    return this.prisma.$transaction(async (tx) => {
+      const school = await tx.school.update({ where: { id: actor.schoolId }, data: { latitude, longitude, zoneRadiusM: radiusM } });
+      await this.audit.write(
+        actor,
+        {
+          module: 'SETTINGS',
+          action: 'school.zone',
+          summary: `Maktab hududi belgilandi (radius ${radiusM} m)`,
+          entityId: school.id,
+          params: { radius: radiusM },
+        },
+        tx,
+      );
+      return toSchoolView(school);
+    });
+  }
+
+  /** Hududni olib tashlash; School Mode «faqat hududda» yoqilgan bo'lsa — 409 (avval o'shani o'chirish kerak). */
+  async clearZone(actor: SchoolActor): Promise<SchoolView> {
+    assertCan(actor, 'settings.manage');
+    return this.prisma.$transaction(async (tx) => {
+      const inUse = await tx.schoolModePolicy.count({ where: { schoolId: actor.schoolId, zoneRequired: true } });
+      if (inUse > 0) throw new ConflictException({ code: 'ZONE_IN_USE', message: 'School Mode requires the school zone' });
+      const school = await tx.school.update({ where: { id: actor.schoolId }, data: { latitude: null, longitude: null, zoneRadiusM: null } });
+      await this.audit.write(
+        actor,
+        { module: 'SETTINGS', action: 'school.zoneRemove', summary: 'Maktab hududi olib tashlandi', entityId: school.id, params: {} },
+        tx,
+      );
+      return toSchoolView(school);
     });
   }
 

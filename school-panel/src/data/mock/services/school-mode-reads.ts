@@ -5,6 +5,7 @@ import { allowedClassIds, assertClassInScope, inScope, latency } from '../contex
 import { getTables } from '../db';
 import { buildIndexes, compareClasses, studentName } from '../lookups';
 import { runListQuery, sortItems } from '../query';
+import { liveEmergency } from '../school-mode-state';
 import {
   bellPhase,
   buildClassRows,
@@ -52,7 +53,7 @@ export const schoolModeReads = {
           restrictedClasses: own.filter((c) => c.state.restricted).length,
         };
       });
-    const e = t.emergency;
+    const e = liveEmergency(t.emergency, now);
     return {
       now: now.toISOString(),
       today,

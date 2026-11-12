@@ -167,6 +167,8 @@ export const audit = {
     school_update_lateThreshold: 'Kechikish chegarasi {minutes} daqiqa etib belgilandi',
     school_logo: 'Maktab logosi yangilandi',
     school_logoRemove: 'Maktab logosi olib tashlandi',
+    school_zone: 'Maktab hududi belgilandi (radius {radius} m)',
+    school_zoneRemove: 'Maktab hududi olib tashlandi',
     announcement_draft: '«{title}» qoralama sifatida saqlandi',
     announcement_update: '«{title}» qoralama sifatida saqlandi',
     announcement_schedule: '«{title}» xabari {at} ga rejalashtirildi',

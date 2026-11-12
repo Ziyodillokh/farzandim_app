@@ -99,20 +99,32 @@ describe('student import — ota-onalar', () => {
 describe('device state', () => {
   const now = new Date('2026-10-20T08:00:00Z');
   const student = { id: 's1', device: 'ANDROID' as const };
-  const child = { pairedAt: now, lastSeenAt: now, accessibilityEnabled: true, screenTimePermission: null };
+  const android = { pairedAt: now, lastSeenAt: now, androidVersion: 'Android 14', usagePermission: true, overlayPermission: true, screenTimePermission: null };
+  const iphone = { pairedAt: now, lastSeenAt: now, androidVersion: 'iOS 17.5', usagePermission: null, overlayPermission: null, screenTimePermission: true };
 
   it('bog\'lanmagan: telefoni yo\'q → NO_PHONE, bor → NO_PERMISSION', () => {
     expect(deviceStateOf({ id: 's1', device: 'NONE' }, null, now)).toEqual({ studentId: 's1', status: 'NO_PHONE', lastSeenAt: null });
     expect(deviceStateOf(student, null, now).status).toBe('NO_PERMISSION');
   });
 
-  it('ruxsat o\'chiq → NO_PERMISSION; jim → OFFLINE; aks holda APPLIED', () => {
-    expect(deviceStateOf(student, { ...child, accessibilityEnabled: false }, now).status).toBe('NO_PERMISSION');
-    expect(deviceStateOf(student, { ...child, screenTimePermission: false }, now).status).toBe('NO_PERMISSION');
-    expect(deviceStateOf(student, { ...child, pairedAt: null }, now).status).toBe('NO_PERMISSION');
+  it('Android: foydalanish ma\'lumotlari yoki ustida ko\'rsatish o\'chiq → NO_PERMISSION (Accessibility shart emas)', () => {
+    expect(deviceStateOf(student, android, now).status).toBe('APPLIED');
+    expect(deviceStateOf(student, { ...android, usagePermission: false }, now).status).toBe('NO_PERMISSION');
+    expect(deviceStateOf(student, { ...android, overlayPermission: false }, now).status).toBe('NO_PERMISSION');
+    // Eski ilova overlay holatini yubormaydi — noma'lum, ruxsat yo'q deb hisoblanmaydi.
+    expect(deviceStateOf(student, { ...android, overlayPermission: null }, now).status).toBe('APPLIED');
+  });
+
+  it('iOS: Ekran vaqti o\'chiq → NO_PERMISSION', () => {
+    expect(deviceStateOf(student, iphone, now).status).toBe('APPLIED');
+    expect(deviceStateOf(student, { ...iphone, screenTimePermission: false }, now).status).toBe('NO_PERMISSION');
+  });
+
+  it('bog\'lanmagan ilova → NO_PERMISSION; jim → OFFLINE; aks holda APPLIED', () => {
+    expect(deviceStateOf(student, { ...android, pairedAt: null }, now).status).toBe('NO_PERMISSION');
     const silent = new Date(now.getTime() - DEVICE_OFFLINE_AFTER_MS - 1);
-    expect(deviceStateOf(student, { ...child, lastSeenAt: silent }, now).status).toBe('OFFLINE');
-    expect(deviceStateOf(student, { ...child, lastSeenAt: null }, now).status).toBe('OFFLINE');
-    expect(deviceStateOf(student, child, now)).toEqual({ studentId: 's1', status: 'APPLIED', lastSeenAt: now.toISOString() });
+    expect(deviceStateOf(student, { ...android, lastSeenAt: silent }, now).status).toBe('OFFLINE');
+    expect(deviceStateOf(student, { ...android, lastSeenAt: null }, now).status).toBe('OFFLINE');
+    expect(deviceStateOf(student, android, now)).toEqual({ studentId: 's1', status: 'APPLIED', lastSeenAt: now.toISOString() });
   });
 });

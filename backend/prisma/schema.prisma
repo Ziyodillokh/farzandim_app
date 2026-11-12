@@ -143,6 +143,9 @@ model Child {
   // iOS: Family Controls (Ekran vaqti) ruxsati — ilovalar cheklovi shusiz
   // ishlamaydi. Bola Sozlamalardan o'chirsa ota-onaga ogohlantirish ketadi.
   screenTimePermission   Boolean? @map("screen_time_permission")
+  // Android: SYSTEM_ALERT_WINDOW ("Boshqa ilovalar ustidan ko'rsatish") — blok
+  // ekrani shusiz chiqmaydi. null = eski ilova (yubormaydi).
+  overlayPermission      Boolean? @map("overlay_permission")
 
   // Qurilma siyosati — "Notanish manbalardan ilovalar" (Play'dan boshqa
   // manbadan o'rnatilgan ilovalarni bloklash). Ota-ona yoqadi/o'chiradi.
@@ -2140,6 +2143,11 @@ model School {
   logo             String?
   academicYear     String       @map("academic_year")
   lateAfterMinutes Int          @default(10) @map("late_after_minutes")
+  /// Maktab hududi markazi (School Mode «faqat hududda» uchun); yo'q — null.
+  latitude         Float?
+  longitude        Float?
+  /// Hudud radiusi, metr (50–1000).
+  zoneRadiusM      Int?         @map("zone_radius_m")
   /// [{ no, start, end }] — o'quv choraklari.
   quarters         Json         @default("[]")
   /// Kiosk QR kodlarini imzolash kaliti (har maktabga alohida).
@@ -2759,6 +2767,8 @@ model SchoolModePolicy {
   shiftIds          String[] @map("shift_ids")
   enabled           Boolean  @default(true)
   relaxDuringBreaks Boolean  @default(true) @map("relax_during_breaks")
+  /// `true` — dars vaqtida FAQAT telefon maktab hududida bo'lsa bloklanadi (qurilma o'zi aniqlaydi).
+  zoneRequired      Boolean  @default(false) @map("zone_required")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
@@ -2796,6 +2806,8 @@ model SchoolEmergency {
   reason    String    @default("")
   byStaffId String?   @map("by_staff_id")
   at        DateTime?
+  /// O'chirish shu vaqtgacha (standart — shu kun oxiri, Toshkent); null — eski yozuv (`at` kuni).
+  until     DateTime?
   updatedAt DateTime  @updatedAt @map("updated_at")
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)

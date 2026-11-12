@@ -15,6 +15,7 @@ export const smMsg = {
   alreadyActive: 'schoolMode.validation.alreadyActive',
   emergencySchoolActive: 'schoolMode.validation.emergencySchoolActive',
   appExists: 'schoolMode.validation.appExists',
+  zoneMissing: 'schoolMode.validation.zoneMissing',
 } as const;
 
 export const BLOCKABLE_CATEGORIES = ['GAME', 'SOCIAL', 'VIDEO'] as const;
@@ -27,6 +28,8 @@ export const policyPatchSchema = z.object({
   enabled: z.boolean().optional(),
   /** Siyosat qo'llanadigan smenalar (sinf → smena → siyosat). */
   shiftIds: z.array(z.string().min(1)).optional(),
+  /** Faqat maktab hududida bloklash (maktab hududi belgilangan bo'lishi shart). */
+  zoneRequired: z.boolean().optional(),
 });
 
 export const allowedAppSchema = z.object({

@@ -43,6 +43,13 @@ export class SchoolModePolicyService {
       const found = await this.prisma.schoolShift.count({ where: { schoolId: actor.schoolId, id: { in: patch.shiftIds } } });
       if (found !== new Set(patch.shiftIds).size) throw invalid('shiftIds: errors.form.required');
     }
+    if (patch.zoneRequired) {
+      const school = await this.prisma.school.findUniqueOrThrow({
+        where: { id: actor.schoolId },
+        select: { latitude: true, longitude: true, zoneRadiusM: true },
+      });
+      if (school.latitude === null || school.longitude === null || !school.zoneRadiusM) throw invalid(`zoneRequired: ${smMsg.zoneMissing}`);
+    }
     const next = await this.prisma.$transaction(async (tx) => {
       const updated = await tx.schoolModePolicy.update({
         where: { id: before.id },
@@ -51,6 +58,7 @@ export class SchoolModePolicyService {
           ...(patch.relaxDuringBreaks !== undefined && { relaxDuringBreaks: patch.relaxDuringBreaks }),
           ...(patch.enabled !== undefined && { enabled: patch.enabled }),
           ...(patch.shiftIds && { shiftIds: [...new Set(patch.shiftIds)] }),
+          ...(patch.zoneRequired !== undefined && { zoneRequired: patch.zoneRequired }),
         },
       });
       await this.audit.write(

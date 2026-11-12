@@ -43,7 +43,10 @@ describe('School Mode', () => {
   async function linkedChild(classId: string): Promise<{ kid: TestChild; studentId: string; parentToken: string; parentUserId: string }> {
     const mom = await createParent(t.prisma);
     const kid = await createChild(t.prisma, mom);
-    await t.prisma.child.update({ where: { id: kid.childId }, data: { lastSeenAt: new Date(), accessibilityEnabled: true } });
+    await t.prisma.child.update({
+      where: { id: kid.childId },
+      data: { lastSeenAt: new Date(), androidVersion: 'Android 14', usagePermission: true, overlayPermission: true },
+    });
     const student = await createStudent(t.prisma, schoolId, classId, { childId: kid.childId });
     await createGuardian(t.prisma, schoolId, [student.id], { linkStatus: 'LINKED', userId: mom.userId });
     await t.prisma.installedApp.createMany({
@@ -183,7 +186,8 @@ describe('School Mode', () => {
   it('qurilmalar va ota-onaga eslatma (faqat ruxsati yo\'q, Parents\'ga ulanganlar)', async () => {
     const ok = await linkedChild(classA);
     const noPerm = await linkedChild(classA);
-    await t.prisma.child.update({ where: { id: noPerm.kid.childId }, data: { accessibilityEnabled: false } });
+    // Android: blok ekrani ruxsati («ustida ko'rsatish») o'chiq — Accessibility endi shart emas.
+    await t.prisma.child.update({ where: { id: noPerm.kid.childId }, data: { overlayPermission: false, accessibilityEnabled: false } });
     const unlinked = await createStudent(t.prisma, schoolId, classB, { firstName: 'Ulanmagan' });
     await createStudent(t.prisma, schoolId, classB, { firstName: 'Telefonsiz', device: 'NONE' });
 
@@ -198,6 +202,86 @@ describe('School Mode', () => {
     expect(push?.body).toContain('Aziz');
     expect(t.fcm.pushesTo(ok.parentUserId)).toHaveLength(0);
     expect((await call(director, 'POST', '/remind', { studentIds: [] })).statusCode).toBe(400);
+  });
+
+  it('favqulodda o\'chirish shu kun oxirigacha: ertasi kuni o\'z-o\'zidan tugaydi', async () => {
+    await lessonAroundNow();
+    await call(director, 'PUT', '/policy', { enabled: true });
+    const { kid } = await linkedChild(classA);
+    const schoolRoutines = async () =>
+      (await routines(kid.token, kid.childId)).json().routines.filter((r: { title: string }) => r.title.startsWith('Maktab'));
+
+    const on = (await call(director, 'POST', '/emergency', { scope: 'SCHOOL', reason: 'Tadbir' })).json();
+    expect(on).toMatchObject({ active: true, until: tashkentDayStart(addDays(tashkentDay(), 1)).toISOString() });
+    expect(await schoolRoutines()).toEqual([]);
+
+    // Kecha yoqilib, o'chirilmay qolgan: muddati o'tgan — School Mode qayta ishlaydi, "o'chirish" endi 409.
+    await t.prisma.schoolEmergency.update({ where: { schoolId }, data: { until: new Date(Date.now() - 60_000) } });
+    await call(director, 'PUT', '/policy', { relaxDuringBreaks: true }); // kesh: maktab versiyasi oshadi
+    expect((await call(director, 'GET', '/overview')).json().emergency).toMatchObject({ active: false, until: null });
+    expect(await schoolRoutines()).toHaveLength(1);
+    expect((await call(director, 'POST', '/emergency/off')).statusCode).toBe(409);
+
+    // `until`siz eski yozuv — yoqilgan kunigina amal qiladi.
+    await t.prisma.schoolEmergency.update({ where: { schoolId }, data: { active: true, until: null, at: new Date(Date.now() - 2 * 86_400_000) } });
+    expect((await call(director, 'GET', '/overview')).json().emergency.active).toBe(false);
+    expect((await call(director, 'POST', '/emergency', { scope: 'CLASS', classIds: [classA], reason: 'Yangi' })).json()).toMatchObject({ active: true, scope: 'CLASS' });
+  });
+
+  it('maktab hududi: belgilash va olib tashlash; «faqat hududda» hududsiz yoqilmaydi; jadvalda hudud', async () => {
+    await lessonAroundNow();
+    const { kid } = await linkedChild(classA);
+    const zone = (method: 'PUT' | 'DELETE', payload?: unknown) =>
+      t.app.inject({ method, url: '/api/school/zone', payload: payload as object, headers: { authorization: `Bearer ${director.token}` } });
+
+    expect((await call(director, 'PUT', '/policy', { enabled: true, zoneRequired: true })).json().message).toBe('zoneRequired: schoolMode.validation.zoneMissing');
+    expect((await zone('PUT', { latitude: 41.31, longitude: 69.28, radiusM: 20 })).json().message).toBe('radiusM: errors.form.radiusRange');
+    expect((await zone('PUT', { latitude: 141, longitude: 69.28, radiusM: 100 })).json().message).toBe('latitude: errors.form.invalidCoordinates');
+
+    const saved = await zone('PUT', { latitude: 41.311081, longitude: 69.240562, radiusM: 120 });
+    expect(saved.statusCode).toBe(200);
+    expect(saved.json()).toMatchObject({ latitude: 41.311081, longitude: 69.240562, zoneRadiusM: 120 });
+    const policy = (await call(director, 'PUT', '/policy', { enabled: true, zoneRequired: true })).json();
+    expect(policy).toMatchObject({ enabled: true, zoneRequired: true });
+
+    const [routine] = (await routines(kid.token, kid.childId)).json().routines.filter((r: { title: string }) => r.title.startsWith('Maktab'));
+    expect(routine.schoolMode.zone).toEqual({ latitude: 41.311081, longitude: 69.240562, radiusM: 120 });
+
+    const inUse = await zone('DELETE');
+    expect(inUse.statusCode).toBe(409);
+    expect(inUse.json().code).toBe('ZONE_IN_USE');
+    await call(director, 'PUT', '/policy', { zoneRequired: false });
+    expect((await zone('DELETE')).json()).toMatchObject({ latitude: null, longitude: null, zoneRadiusM: null });
+    expect(await t.prisma.schoolAuditLog.count({ where: { action: { in: ['school.zone', 'school.zoneRemove'] } } })).toBe(2);
+  });
+
+  it('server ro\'yxati bo\'sh bo\'lsa ham jadval keladi — qurilma toifa bo\'yicha bloklaydi', async () => {
+    await lessonAroundNow();
+    await call(director, 'PUT', '/policy', { enabled: true });
+    const { kid } = await linkedChild(classA);
+    await t.prisma.installedApp.deleteMany({ where: { childId: kid.childId } });
+
+    const [routine] = (await routines(kid.token, kid.childId)).json().routines.filter((r: { title: string }) => r.title.startsWith('Maktab'));
+
+    expect(routine.blockedApps).toEqual([]);
+    expect(routine.schoolMode.blockedCategories).toEqual(['GAME', 'SOCIAL', 'VIDEO']);
+  });
+
+  it('qurilma ruxsatlari: «ustida ko\'rsatish» va «foydalanish ma\'lumotlari» saqlanadi; o\'chirilsa ota-onaga xabar', async () => {
+    const { kid, studentId, parentUserId } = await linkedChild(classA);
+    const deviceInfo = (payload: object) =>
+      t.app.inject({ method: 'POST', url: `/api/children/${kid.childId}/device-info`, payload, headers: { authorization: `Bearer ${kid.token}` } });
+    const status = async () =>
+      (await call(director, 'GET', '/devices')).json().items.find((d: { studentId: string }) => d.studentId === studentId).status;
+
+    expect(await status()).toBe('APPLIED');
+    expect((await deviceInfo({ overlayPermission: false, usagePermission: true })).statusCode).toBe(200);
+    expect(await t.prisma.child.findUniqueOrThrow({ where: { id: kid.childId } })).toMatchObject({ overlayPermission: false });
+    expect(await status()).toBe('NO_PERMISSION');
+    const alert = t.fcm.pushesTo(parentUserId).find((p) => p.data?.type === 'permission_changed');
+    expect(alert?.body).toContain("Boshqa ilovalar ustidan ko'rsatish");
+    await deviceInfo({ overlayPermission: true });
+    expect(await status()).toBe('APPLIED');
   });
 
   it('bola qurilmasi: virtual "Maktab" jadvali — toifalar, ruxsat etilgan ilova, favqulodda, istisno', async () => {
@@ -216,6 +300,8 @@ describe('School Mode', () => {
     const [routine] = await schoolRoutines();
     expect(routine).toMatchObject({ type: 'SCHOOL', isActive: true, source: 'SCHOOL_MODE' });
     expect(routine.blockedApps).toEqual(['com.supercell.clashofclans', 'org.telegram.messenger']);
+    // Qurilma uchun: toifalar (yangi o'yin server ro'yxatiga tushmasdan ham bloklanadi), ruxsat etilganlar, hudud yo'q.
+    expect(routine.schoolMode).toEqual({ blockedCategories: ['GAME', 'SOCIAL', 'VIDEO'], allowedApps: ['YouTube'], zone: null });
     const nowMin = tashkentMinute(new Date());
     expect(routine.startHour * 60 + routine.startMinute).toBeLessThanOrEqual(nowMin);
     expect(routine.endHour * 60 + routine.endMinute).toBeGreaterThan(nowMin);

@@ -5,6 +5,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, SchoolEmergency, SchoolModePolicy, SchoolShift } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
+import { tashkentDay } from '../../common/time/tashkent';
 import { BellPeriod, ShiftLike } from './school-mode-time';
 
 type Db = Prisma.TransactionClient | PrismaService;
@@ -59,17 +60,35 @@ export function toPolicyView(policy: SchoolModePolicy) {
     shiftIds: policy.shiftIds,
     enabled: policy.enabled,
     relaxDuringBreaks: policy.relaxDuringBreaks,
+    zoneRequired: policy.zoneRequired,
   };
 }
 
-export function toEmergencyView(e: SchoolEmergency) {
+/**
+ * Favqulodda o'chirish kuchdami: faol VA muddati o'tmagan. Standart muddat — yoqilgan kun oxiri (Toshkent);
+ * `until`siz eski yozuv — `at` kuni oxirigacha. Muddati o'tgan o'chirish ertasi kuni o'z-o'zidan tugaydi
+ * (School Mode qayta ishlaydi) — direktor uni o'chirishni unutib qo'ysa ham.
+ */
+export function emergencyLive(e: Pick<SchoolEmergency, 'active' | 'until' | 'at'>, now = new Date()): boolean {
+  if (!e.active) return false;
+  if (e.until) return e.until.getTime() > now.getTime();
+  return e.at ? tashkentDay(e.at) === tashkentDay(now) : false;
+}
+
+/** Muddati o'tgan o'chirish — o'chiq ko'rinadi (DB keyingi yoqishda yangilanadi). */
+export const effectiveEmergency = (e: SchoolEmergency, now = new Date()): SchoolEmergency =>
+  emergencyLive(e, now) ? e : { ...e, active: false };
+
+export function toEmergencyView(e: SchoolEmergency, now = new Date()) {
+  const live = effectiveEmergency(e, now);
   return {
-    active: e.active,
-    scope: e.scope === 'CLASS' ? ('CLASS' as const) : ('SCHOOL' as const),
-    classIds: e.classIds,
-    reason: e.reason,
-    byStaffId: e.byStaffId,
-    at: e.at?.toISOString() ?? null,
+    active: live.active,
+    scope: live.scope === 'CLASS' ? ('CLASS' as const) : ('SCHOOL' as const),
+    classIds: live.classIds,
+    reason: live.reason,
+    byStaffId: live.byStaffId,
+    at: live.at?.toISOString() ?? null,
+    until: live.active ? (live.until?.toISOString() ?? null) : null,
   };
 }
 
@@ -111,6 +130,6 @@ export class SchoolModeStore {
       this.policy(schoolId),
       this.emergency(schoolId),
     ]);
-    return { shifts: shifts.map(toShiftLike), holidays, policy, emergency };
+    return { shifts: shifts.map(toShiftLike), holidays, policy, emergency: effectiveEmergency(emergency) };
   }
 }

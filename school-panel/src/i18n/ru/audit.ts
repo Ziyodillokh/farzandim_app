@@ -166,6 +166,8 @@ export const audit: DeepString<typeof uz> = {
     school_update_lateThreshold: 'Порог опоздания установлен: {minutes} мин',
     school_logo: 'Логотип школы обновлён',
     school_logoRemove: 'Логотип школы удалён',
+    school_zone: 'Отмечена территория школы (радиус {radius} м)',
+    school_zoneRemove: 'Территория школы удалена',
     announcement_draft: '«{title}» сохранено как черновик',
     announcement_update: '«{title}» сохранено как черновик',
     announcement_schedule: 'Сообщение «{title}» запланировано на {at}',

@@ -15,6 +15,8 @@ export const msg = {
   endBeforeStart: 'errors.form.endBeforeStart',
   atLeastOne: 'errors.form.selectAtLeastOne',
   duplicatePhone: 'errors.form.duplicatePhone',
+  coordinates: 'errors.form.invalidCoordinates',
+  radius: 'errors.form.radiusRange',
 } as const;
 
 export const requiredText = (max = 120) =>

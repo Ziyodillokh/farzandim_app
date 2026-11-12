@@ -183,9 +183,10 @@ describe('School guardians and parent links', () => {
     // Xodim qurilma holatini ko'radi (foydalanish statistikasi emas).
     const detail = () => staff(director, 'GET', `/students/${student.id}`).then((r) => r.json());
     expect((await detail()).deviceState.status).toBe('OFFLINE');
-    await t.prisma.child.update({ where: { id: kid.childId }, data: { lastSeenAt: new Date(), accessibilityEnabled: false } });
+    // Android: «Foydalanish ma'lumotlari» o'chiq — blok ishlamaydi (Accessibility endi tekshirilmaydi).
+    await t.prisma.child.update({ where: { id: kid.childId }, data: { lastSeenAt: new Date(), androidVersion: 'Android 14', usagePermission: false } });
     expect((await detail()).deviceState.status).toBe('NO_PERMISSION');
-    await t.prisma.child.update({ where: { id: kid.childId }, data: { accessibilityEnabled: true } });
+    await t.prisma.child.update({ where: { id: kid.childId }, data: { usagePermission: true, overlayPermission: true } });
     expect((await detail()).deviceState.status).toBe('APPLIED');
     await t.prisma.child.update({ where: { id: kid.childId }, data: { lastSeenAt: new Date(Date.now() - 3_600_000) } });
     expect((await detail()).deviceState.status).toBe('OFFLINE');

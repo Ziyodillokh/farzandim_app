@@ -13,6 +13,10 @@ export type School = {
   /** Kelgan vaqt smena boshidan shuncha daqiqa kech bo'lsa — "kechikdi". */
   lateAfterMinutes: number;
   quarters: Array<{ no: 1 | 2 | 3 | 4; start: IsoDate; end: IsoDate }>;
+  /** Maktab hududi (School Mode «faqat hududda»): markaz va radius (m). Belgilanmagan — null. */
+  latitude?: number | null;
+  longitude?: number | null;
+  zoneRadiusM?: number | null;
 };
 
 export type BellPeriodKind = 'LESSON' | 'BREAK';

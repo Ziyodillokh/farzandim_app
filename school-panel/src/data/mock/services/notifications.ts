@@ -14,6 +14,7 @@ import { notificationsFor } from '../notify';
 import type { Tables } from '../tables';
 import { audienceTouchesScope, timeOf } from './comms-shared';
 import { unreadOf } from './inbox';
+import { liveEmergency } from '../school-mode-state';
 
 /**
  * Bildirishnomalar markazi: saqlangan signallar (xavfsizlik, test yakunlandi) +
@@ -156,7 +157,7 @@ function messageItems(t: Tables, actor: Actor, nowMs: number): NotificationItem[
 }
 
 function emergencyItems(t: Tables, actor: Actor, now: Date): NotificationItem[] {
-  const e = t.emergency;
+  const e = liveEmergency(t.emergency, now);
   if (!e.active || !roleHas(actor.role, 'schoolMode.view')) return [];
   const allowed = allowedClassIds(actor);
   if (allowed && e.scope === 'CLASS' && !e.classIds.some((id) => allowed.includes(id))) return [];

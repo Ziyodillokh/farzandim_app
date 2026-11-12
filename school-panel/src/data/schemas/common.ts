@@ -17,6 +17,8 @@ export const msg = {
   minutes: 'errors.form.minutesRange',
   login: 'errors.form.invalidLogin',
   duplicatePhone: 'errors.form.duplicatePhone',
+  coordinates: 'errors.form.invalidCoordinates',
+  radius: 'errors.form.radiusRange',
 } as const;
 
 export const requiredText = (max = 120) =>

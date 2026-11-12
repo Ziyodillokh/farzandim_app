@@ -16,6 +16,8 @@ export type SchoolModePolicy = {
   enabled: boolean;
   /** Tanaffusda cheklovni vaqtincha ochish. */
   relaxDuringBreaks: boolean;
+  /** Faqat telefon maktab hududida bo'lsa bloklash (hududni bolaning telefoni o'zi aniqlaydi). */
+  zoneRequired?: boolean;
 };
 
 export type SchoolModeException = {
@@ -42,4 +44,6 @@ export type EmergencyState = {
   reason: string;
   byStaffId: Id | null;
   at: IsoDateTime | null;
+  /** O'chirish shu vaqtgacha (yoqilgan kun oxiri) — ertasi kuni School Mode o'z-o'zidan qayta ishlaydi. */
+  until?: IsoDateTime | null;
 };
