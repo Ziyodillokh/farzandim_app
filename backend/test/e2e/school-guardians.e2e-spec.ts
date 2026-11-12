@@ -97,6 +97,61 @@ describe('School guardians and parent links', () => {
     expect(await t.prisma.schoolAuditLog.count({ where: { module: 'GUARDIANS' } })).toBe(2);
   });
 
+  it('aka-uka: bir telefon — bitta ota-ona yozuvi, bitta taklif kodi, ota-ona ikkalasini ko\'radi', async () => {
+    const pupil = (lastName: string, firstName: string, classId: string) => ({
+      lastName, firstName, gender: 'MALE', birthDate: '2013-05-14', classId, device: 'NONE',
+    });
+    const mother = { fullName: 'Karimova Malika', phone: '+998901234567', relation: 'MOTHER' };
+    const father = { fullName: 'Karimov Akmal', phone: '+998 93 765 43 21', relation: 'FATHER' };
+
+    const first = await staff(director, 'POST', '/students', { ...pupil('Karimov', 'Aziz', classA), guardians: [mother, father] });
+    expect(first.statusCode).toBe(201);
+    expect(first.json()).toMatchObject({ reusedGuardians: [] });
+    expect(first.json().guardianIds).toHaveLength(2);
+
+    const sibling = await staff(director, 'POST', '/students', {
+      ...pupil('Karimova', 'Laylo', classB),
+      guardians: [{ fullName: 'Malika opa', phone: '+998 90 123 45 67', relation: 'OTHER' }],
+    });
+    expect(sibling.statusCode).toBe(201);
+    const mom = await t.prisma.schoolGuardian.findFirstOrThrow({ where: { phone: '+998 90 123 45 67' } });
+    expect(sibling.json().reusedGuardians).toEqual([{ id: mom.id, fullName: 'Karimova Malika' }]);
+    expect(await t.prisma.schoolGuardian.count()).toBe(2);
+    expect(await t.prisma.schoolStudentGuardian.count({ where: { guardianId: mom.id } })).toBe(2);
+    expect(mom).toMatchObject({ fullName: 'Karimova Malika', relation: 'MOTHER' });
+
+    // O'quvchi sahifasidan: shu o'quvchiga qayta — 409; uchinchi farzandga — mavjudi bog'lanadi.
+    const laylo = sibling.json().id as string;
+    const again = await staff(director, 'POST', `/students/${laylo}/guardians`, mother);
+    expect(again.statusCode).toBe(409);
+    expect(again.json().code).toBe('GUARDIAN_ALREADY_LINKED');
+    const third = await createStudent(t.prisma, schoolId, classA);
+    const added = await staff(director, 'POST', `/students/${third.id}/guardians`, mother);
+    expect(added.statusCode).toBe(201);
+    expect(added.json()).toMatchObject({ id: mom.id, reused: true });
+    expect(await t.prisma.schoolGuardian.count()).toBe(2);
+
+    // Bitta kod — ota-ona uchala farzandni ko'radi.
+    const code = (await staff(director, 'POST', `/guardians/${mom.id}/invite`)).json().inviteCode as string;
+    const parentUser = await createParent(t.prisma, { name: 'Malika' });
+    const links = (await parent(parentUser.token, 'POST', '/link', { code })).json().links;
+    expect(links).toHaveLength(1);
+    expect(links[0].students.map((st: { id: string }) => st.id).sort()).toEqual([first.json().id, laylo, third.id].sort());
+  });
+
+  it('ikki ota-onaga bir xil telefon — 400 (aniq maydon bilan)', async () => {
+    const res = await staff(director, 'POST', '/students', {
+      lastName: 'Karimov', firstName: 'Aziz', gender: 'MALE', birthDate: '2013-05-14', classId: classA, device: 'NONE',
+      guardians: [
+        { fullName: 'Karimova Malika', phone: '+998901234567', relation: 'MOTHER' },
+        { fullName: 'Karimov Akmal', phone: '+998 90 123 45 67', relation: 'FATHER' },
+      ],
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().message).toBe('guardians.1.phone: errors.form.duplicatePhone');
+    expect(await t.prisma.schoolStudent.count()).toBe(0);
+  });
+
   it('Parvoz Parents: kod → bog\'lanish → farzand bilan moslash → qurilma holati → uzish', async () => {
     const student = await createStudent(t.prisma, schoolId, classA);
     const guardian = await createGuardian(t.prisma, schoolId, [student.id]);
