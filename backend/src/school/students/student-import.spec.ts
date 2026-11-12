@@ -1,5 +1,5 @@
 import { deviceStateOf, DEVICE_OFFLINE_AFTER_MS } from '../common/device-state';
-import { duplicateKey, normalizeClassName, parseImportRows, toIsoDate } from './student-import';
+import { duplicateKey, normalizeClassName, parseImportRows, parseRelation, toIsoDate } from './student-import';
 
 describe('student import', () => {
   it.each([
@@ -41,6 +41,58 @@ describe('student import', () => {
       { row: 2, data: expect.objectContaining({ lastName: 'Ali', classId: 'c1', gender: 'FEMALE', birthDate: '2014-02-01', device: 'NONE' }) },
     ]);
     expect(skipped).toEqual([{ row: 3, reason: 'class:8-A' }]);
+  });
+});
+
+describe('student import — ota-onalar', () => {
+  const classes = new Map([['7-A', 'c1']]);
+  const base = ['Karimov', 'Aziz', '', '7-A', 'M', '2013-05-14'];
+
+  it.each([
+    ['Ona', 'MOTHER'],
+    ['onasi', 'MOTHER'],
+    ['Мать', 'MOTHER'],
+    ['OTA', 'FATHER'],
+    ['папа', 'FATHER'],
+    ['Buvisi', 'GRANDPARENT'],
+    ['дедушка', 'GRANDPARENT'],
+    ['amaki', 'OTHER'],
+    ['', 'OTHER'],
+  ])('kimligi %s → %s', (input, expected) => {
+    expect(parseRelation(input)).toBe(expected);
+  });
+
+  it('eski 8 ustunli fayl: bitta ota-ona, kimligi «Boshqa»', () => {
+    const { candidates } = parseImportRows([[...base, 'Karimova Malika', '+998 90 123 45 67']], classes, new Set());
+
+    expect(candidates[0]?.data.guardians).toEqual([{ fullName: 'Karimova Malika', phone: '+998 90 123 45 67', relation: 'OTHER' }]);
+  });
+
+  it('kimligi va ikkinchi ota-ona ustunlari', () => {
+    const { candidates } = parseImportRows(
+      [[...base, 'Karimova Malika', '+998901234567', 'ona', 'Karimov Akmal', '+998 93 765 43 21', 'ota']],
+      classes,
+      new Set(),
+    );
+
+    expect(candidates[0]?.data.guardians).toEqual([
+      { fullName: 'Karimova Malika', phone: '+998 90 123 45 67', relation: 'MOTHER' },
+      { fullName: 'Karimov Akmal', phone: '+998 93 765 43 21', relation: 'FATHER' },
+    ]);
+  });
+
+  it('ismi yoki telefoni yo\'q ota-ona e\'tiborga olinmaydi; ikki ota-onaga bir telefon — qator o\'tkaziladi', () => {
+    const { candidates, skipped } = parseImportRows(
+      [
+        [...base, 'Karimova Malika', '', 'ona'],
+        ['Rasulova', 'Madina', '', '7-A', 'F', '2015-09-02', 'Rasulov Bobur', '+998 93 765 43 21', 'ota', 'Rasulova Dilnoza', '+998937654321', 'ona'],
+      ],
+      classes,
+      new Set(),
+    );
+
+    expect(candidates[0]?.data.guardians).toEqual([]);
+    expect(skipped).toEqual([{ row: 2, reason: 'guardians.1.phone: errors.form.duplicatePhone' }]);
   });
 });
 

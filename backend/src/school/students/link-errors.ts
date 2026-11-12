@@ -38,3 +38,7 @@ export const tooManyCorrections = () =>
     { code: 'TOO_MANY_REQUESTS', message: 'Daily correction limit reached' },
     HttpStatus.TOO_MANY_REQUESTS,
   );
+
+/** Xodim shu o'quvchiga allaqachon bog'langan ota-onani (shu telefon) yana qo'shmoqchi. */
+export const guardianAlreadyLinked = () =>
+  new ConflictException({ code: 'GUARDIAN_ALREADY_LINKED', message: 'Guardian is already linked to this student' });

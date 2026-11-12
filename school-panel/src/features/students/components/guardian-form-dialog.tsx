@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 import { FormField } from '@/components/common/form-field';
 import { Button } from '@/components/ui/button';
@@ -26,7 +27,8 @@ export function GuardianFormDialog({ studentId, open, onOpenChange }: { studentI
   }, [open, form]);
 
   const submit = form.handleSubmit(async (values) => {
-    await add.mutateAsync({ studentId, input: values });
+    const added = await add.mutateAsync({ studentId, input: values });
+    if (added.reused) toast.info(t('students.guardianReused', { name: added.fullName }));
     onOpenChange(false);
   });
 

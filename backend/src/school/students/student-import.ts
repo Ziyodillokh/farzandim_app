@@ -1,8 +1,10 @@
 // CSV import qatorlarini tekshirish (sof funksiya): sinf nomi, sana va
 // takrorlar. Ustunlar: [familiya, ism, otasining ismi, sinf (7-A), jinsi
-// (M/F), tug'ilgan sana, ota-ona, telefon].
+// (M/F), tug'ilgan sana, ota-ona, telefon, kimligi, 2-ota-ona, 2-telefon,
+// 2-kimligi]. Oxirgi to'rttasi ixtiyoriy (eski 8 ustunli fayl ham ishlaydi);
+// kimligi bo'sh yoki noma'lum bo'lsa — «Boshqa».
 
-import { StudentCreate, studentCreateSchema } from './students.schemas';
+import { GuardianData, StudentCreate, studentCreateSchema } from './students.schemas';
 
 export interface ImportCandidate {
   row: number;
@@ -41,6 +43,25 @@ export const duplicateKey = (s: { lastName: string; firstName: string; birthDate
 
 const FEMALE = /^(f|q|ж|female)/i;
 
+type Relation = GuardianData['relation'];
+
+const RELATIONS: ReadonlyArray<[RegExp, Relation]> = [
+  [/^(ona|onasi|мать|мама|mother|mom)/i, 'MOTHER'],
+  [/^(ota|otasi|отец|папа|father|dad)/i, 'FATHER'],
+  [/^(buvi|bobo|buvisi|bobosi|бабушка|дедушка|grand)/i, 'GRANDPARENT'],
+];
+
+/** «Ona», «otasi», «бабушка», «MOTHER» → munosabat; bo'sh / noma'lum → `OTHER`. */
+export function parseRelation(value: string): Relation {
+  const text = value.trim();
+  return RELATIONS.find(([re]) => re.test(text))?.[1] ?? 'OTHER';
+}
+
+/** Ism va telefon ikkalasi bo'lsa — ota-ona (aks holda yo'q). */
+function guardianOf(name: string, phone: string, relation: string) {
+  return name && phone ? [{ fullName: name, phone, relation: parseRelation(relation) }] : [];
+}
+
 export function parseImportRows(
   rows: string[][],
   classIdByName: ReadonlyMap<string, string>,
@@ -51,8 +72,20 @@ export function parseImportRows(
   const seen = new Set(existingKeys);
   rows.forEach((cells, i) => {
     const row = i + 1;
-    const [lastName = '', firstName = '', middleName = '', className = '', gender = '', birth = '', guardianName = '', phone = ''] =
-      cells.map((c) => c.trim());
+    const [
+      lastName = '',
+      firstName = '',
+      middleName = '',
+      className = '',
+      gender = '',
+      birth = '',
+      guardianName = '',
+      phone = '',
+      relation = '',
+      guardian2Name = '',
+      phone2 = '',
+      relation2 = '',
+    ] = cells.map((c) => c.trim());
     if (!cells.some((c) => c.trim())) return;
     const classId = classIdByName.get(normalizeClassName(className));
     if (!classId) return skipped.push({ row, reason: `class:${className}` });
@@ -66,7 +99,7 @@ export function parseImportRows(
       gender: FEMALE.test(gender) ? 'FEMALE' : 'MALE',
       birthDate,
       device: 'NONE',
-      guardian: guardianName && phone ? { fullName: guardianName, phone, relation: 'OTHER' } : undefined,
+      guardians: [...guardianOf(guardianName, phone, relation), ...guardianOf(guardian2Name, phone2, relation2)],
     });
     if (!parsed.success) {
       const issue = parsed.error.issues[0];

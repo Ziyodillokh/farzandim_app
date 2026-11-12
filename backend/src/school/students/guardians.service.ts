@@ -17,8 +17,10 @@ import { matchesSearch, runListQuery } from '../common/list-query';
 import { SchoolAuditService } from '../common/school-audit.service';
 import { conflict, forbidden, notFound } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
+import { attachGuardian } from './guardian-attach';
 import { INVITE_TTL_MS, uniqueInviteCode } from './invite-code';
 import { settleUnlinkedChildren } from './link-core';
+import { guardianAlreadyLinked } from './link-errors';
 import { acquireLinkLocks, childLock } from './link-locks';
 import { bestLink, studentName, toGuardianView } from './student-view';
 import { bulkInviteSchema, GuardianFilter, guardianFilterSchema, guardianInputSchema } from './students.schemas';
@@ -153,6 +155,10 @@ export class GuardiansService {
     );
   }
 
+  /**
+   * O'quvchiga ota-ona. Shu telefonli ota-ona maktabda bo'lsa — o'sha bog'lanadi (`reused: true`, aka-uka bitta
+   * taklif kodi bilan ulanadi); u allaqachon shu o'quvchiniki bo'lsa — 409.
+   */
   async addToStudent(actor: SchoolActor, studentId: string, input: unknown) {
     assertCan(actor, 'guardians.link');
     const data = parseOrThrow(guardianInputSchema, input);
@@ -160,21 +166,22 @@ export class GuardiansService {
       const student = await tx.schoolStudent.findFirst({ where: { id: studentId, schoolId: actor.schoolId } });
       if (!student) throw notFound(studentId);
       assertClassInScope(actor, student.classId);
-      const guardian = await tx.schoolGuardian.create({
-        data: { ...data, schoolId: actor.schoolId, students: { create: [{ studentId }] } },
-      });
+      const { guardian, reused, alreadyLinked } = await attachGuardian(tx, actor.schoolId, studentId, data);
+      if (alreadyLinked) throw guardianAlreadyLinked();
       await this.audit.write(
         actor,
         {
           module: 'GUARDIANS',
           action: 'guardian.create',
-          summary: `${studentName(student)}ga ota-ona qo'shildi: ${guardian.fullName}`,
+          summary: reused
+            ? `${studentName(student)}ga mavjud ota-ona bog'landi: ${guardian.fullName}`
+            : `${studentName(student)}ga ota-ona qo'shildi: ${guardian.fullName}`,
           entityId: guardian.id,
           params: { student: studentName(student), name: guardian.fullName },
         },
         tx,
       );
-      return toGuardianView(guardian);
+      return { ...toGuardianView(guardian), reused };
     });
   }
 

@@ -8,6 +8,7 @@ export const errors: DeepString<typeof uz> = {
   CONFLICT: 'Такая запись уже существует',
   UNKNOWN: 'Непредвиденная ошибка. Попробуйте ещё раз',
   detail: {
+    GUARDIAN_ALREADY_LINKED: 'Этот родитель (этот номер) уже привязан к ученику',
     NOT_LINKED: 'Ученик ещё не подключён к детскому профилю Parvoz',
     LOGIN_TAKEN: 'Этот логин занят — выберите другой',
     ALREADY_RESOLVED: 'Запрос уже рассмотрен',
@@ -32,6 +33,7 @@ export const errors: DeepString<typeof uz> = {
     endBeforeStart: 'Время окончания должно быть позже начала',
     selectAtLeastOne: 'Выберите хотя бы один вариант',
     minutesRange: 'Время — от 1 до 240 минут',
+    duplicatePhone: 'У обоих родителей одинаковый номер — у каждого должен быть свой',
     slaMinutesRange: 'Срок — от 15 до 1440 минут',
     slaHoursRange: 'Срок — от 1 до 168 часов',
     deputySame: 'Заместитель должен отличаться от ответственного психолога',

@@ -16,6 +16,7 @@ export const msg = {
   atLeastOne: 'errors.form.selectAtLeastOne',
   minutes: 'errors.form.minutesRange',
   login: 'errors.form.invalidLogin',
+  duplicatePhone: 'errors.form.duplicatePhone',
 } as const;
 
 export const requiredText = (max = 120) =>

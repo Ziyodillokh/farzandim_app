@@ -21,9 +21,27 @@ export const studentInputSchema = z.object({
   device: z.enum(['IOS', 'ANDROID', 'NONE'], { error: msg.required }),
 });
 
-export const studentCreateSchema = studentInputSchema.extend({
-  guardian: guardianInputSchema.optional(),
-});
+/** O'quvchi qo'shilayotganda ko'pi bilan shuncha ota-ona (masalan, ona va ota). */
+export const MAX_CREATE_GUARDIANS = 2;
+
+/**
+ * Yangi o'quvchi + ota-onalari. `guardian` — eski panel (bitta ota-ona), `guardians` — yangisi; ikkalasi
+ * bitta ro'yxatga yig'iladi. Bir xil telefon ikki marta kelmaydi (bitta odam — bitta yozuv).
+ */
+export const studentCreateSchema = studentInputSchema
+  .extend({
+    guardian: guardianInputSchema.optional(),
+    guardians: z.array(guardianInputSchema).max(MAX_CREATE_GUARDIANS, msg.tooLong).optional(),
+  })
+  .transform(({ guardian, guardians, ...student }) => ({
+    ...student,
+    guardians: [...(guardian ? [guardian] : []), ...(guardians ?? [])],
+  }))
+  .refine((s) => s.guardians.length <= MAX_CREATE_GUARDIANS, { path: ['guardians'], error: msg.tooLong })
+  .refine((s) => new Set(s.guardians.map((g) => g.phone)).size === s.guardians.length, {
+    path: ['guardians', 1, 'phone'],
+    error: msg.duplicatePhone,
+  });
 
 /** O'quvchi kartasidagi xodim eslatmasi: 1–1000 belgi (auditga matn yozilmaydi). */
 export const STUDENT_NOTE_MAX = 1000;
