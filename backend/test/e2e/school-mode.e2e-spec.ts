@@ -308,6 +308,25 @@ describe('School Mode', () => {
     expect(routine.schoolMode.blockedCategories).toEqual(['GAME', 'SOCIAL', 'VIDEO']);
   });
 
+  it('telefon yangi ilovalar ro\'yxatini yuborsa keyingi so\'rovda u bloklanadi (kesh kutilmaydi)', async () => {
+    await lessonAroundNow();
+    await call(director, 'PUT', '/policy', { enabled: true });
+    const { kid } = await linkedChild(classA);
+    const blockedNow = async () =>
+      (await routines(kid.token, kid.childId)).json().routines.find((r: { title: string }) => r.title.startsWith('Maktab')).blockedApps;
+    expect(await blockedNow()).not.toContain('com.mojang.minecraftpe');
+
+    const upload = await t.app.inject({
+      method: 'POST',
+      url: `/api/children/${kid.childId}/installed-apps`,
+      headers: { authorization: `Bearer ${kid.token}` },
+      payload: { apps: [{ packageName: 'com.mojang.minecraftpe', appName: 'Minecraft', category: 'GAME' }] },
+    });
+
+    expect(upload.statusCode).toBe(201);
+    expect(await blockedNow()).toContain('com.mojang.minecraftpe');
+  });
+
   it('qurilma ruxsatlari: «ustida ko\'rsatish» va «foydalanish ma\'lumotlari» saqlanadi; o\'chirilsa ota-onaga xabar', async () => {
     const { kid, studentId, parentUserId } = await linkedChild(classA);
     const deviceInfo = (payload: object) =>

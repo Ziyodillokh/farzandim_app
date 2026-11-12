@@ -112,6 +112,11 @@ export class SchoolModeSyncService {
     return routines;
   }
 
+  /** Bola telefoni yangi ilovalar ro'yxatini yubordi — keyingi so'rov yangi ro'yxat bilan hisoblanadi. */
+  forgetChild(childId: string): void {
+    this.cache.delete(childId);
+  }
+
   /**
    * Maktab o'zgarishi: kesh bekor, ta'sir qilgan bog'langan bolalarga jim push
    * (ilova darhol qayta sync qiladi). Best-effort — xato yozuvni buzmaydi.
