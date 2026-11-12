@@ -92,7 +92,7 @@ export const schoolMode = {
     autoEnd: 'Cheklov jadval tugashi bilan avtomatik tugaydi — QR chiqish qayd etilmasa ham.',
     alwaysOpen: 'Qo\'ng\'iroq, SMS va favqulodda aloqa har doim ochiq.',
     holidays: 'Bayram va dam olish kunlari School Mode ishlamaydi.',
-    ios: 'iPhone\'larda cheklov ota-ona Apple Family Sharing orqali tasdiqlagandan keyingina ishlaydi.',
+    ios: 'iPhone\'larda cheklov bolaning iPhone\'ida «Ekran vaqti» ruxsati berilgandan keyin ishlaydi: dars vaqtida ota-ona tanlagan ilovalar yopiladi.',
   },
   schedule: {
     title: 'Qo\'ng\'iroq jadvali',
@@ -168,7 +168,7 @@ export const schoolMode = {
       android: 'Android',
       androidBody: 'Bola telefonidagi Parvoz Growth ilovasining cheklov xizmati jadval bo\'yicha tanlangan toifalarni yopadi. Ota-ona bir marta ruxsat beradi.',
       ios: 'iPhone (iOS)',
-      iosBody: 'Apple Family Controls (Screen Time) orqali ishlaydi. Har bir oila Apple Family Sharing\'da ota-ona tasdig\'ini berishi shart — busiz cheklov qo\'llanmaydi.',
+      iosBody: 'Apple Family Controls (Ekran vaqti) orqali ishlaydi. Bolaning iPhone\'ida Parvoz\'ga «Ekran vaqti» ruxsati berilishi kerak (Face ID yoki parol bilan, Family Sharing shart emas). Dars vaqtida ota-ona shu iPhone\'da tanlagan ilovalar yopiladi; maktab toifalari va «faqat hududda» iPhone\'ga ta\'sir qilmaydi.',
       note: 'Maktab ota-ona Parvoz Parents orqali ko\'radigan shaxsiy nazorat ma\'lumotlarini ko\'rmaydi.',
     },
   },
