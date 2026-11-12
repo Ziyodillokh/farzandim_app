@@ -247,12 +247,53 @@ describe('School Mode', () => {
     const [routine] = (await routines(kid.token, kid.childId)).json().routines.filter((r: { title: string }) => r.title.startsWith('Maktab'));
     expect(routine.schoolMode.zone).toEqual({ latitude: 41.311081, longitude: 69.240562, radiusM: 120 });
 
+    // Hudud o'zgarsa telefon darhol yangisini oladi (kesh bekor + jim push), 60 soniyalik keshni kutmaydi.
+    const spy = jest.spyOn(t.fcm, 'pushChildResync');
+    await settle();
+    spy.mockClear();
+    await zone('PUT', { latitude: 41.3115, longitude: 69.2401, radiusM: 200 });
+    await settle();
+    expect(spy).toHaveBeenCalledWith(kid.userId);
+    const [moved] = (await routines(kid.token, kid.childId)).json().routines.filter((r: { title: string }) => r.title.startsWith('Maktab'));
+    expect(moved.schoolMode.zone).toEqual({ latitude: 41.3115, longitude: 69.2401, radiusM: 200 });
+
     const inUse = await zone('DELETE');
     expect(inUse.statusCode).toBe(409);
     expect(inUse.json().code).toBe('ZONE_IN_USE');
     await call(director, 'PUT', '/policy', { zoneRequired: false });
     expect((await zone('DELETE')).json()).toMatchObject({ latitude: null, longitude: null, zoneRadiusM: null });
-    expect(await t.prisma.schoolAuditLog.count({ where: { action: { in: ['school.zone', 'school.zoneRemove'] } } })).toBe(2);
+    expect(await t.prisma.schoolAuditLog.count({ where: { action: { in: ['school.zone', 'school.zoneRemove'] } } })).toBe(3);
+  });
+
+  it('bugungi bayram kuni qo\'shilsa yoki olib tashlansa telefon darhol qayta sync qiladi', async () => {
+    await lessonAroundNow();
+    await call(director, 'PUT', '/policy', { enabled: true });
+    const { kid } = await linkedChild(classA);
+    const holidays = (method: 'POST' | 'DELETE', url = '', payload?: unknown) =>
+      t.app.inject({ method, url: `/api/school/holidays${url}`, payload: payload as object, headers: { authorization: `Bearer ${director.token}` } });
+    const schoolRoutines = async () =>
+      (await routines(kid.token, kid.childId)).json().routines.filter((r: { title: string }) => r.title.startsWith('Maktab'));
+    expect(await schoolRoutines()).toHaveLength(1);
+    const spy = jest.spyOn(t.fcm, 'pushChildResync');
+    await settle();
+    spy.mockClear();
+
+    const holiday = (await holidays('POST', '', { date: tashkentDay(), name: 'Tadbir kuni' })).json();
+    await settle();
+    expect(spy).toHaveBeenCalledWith(kid.userId);
+    expect(await schoolRoutines()).toEqual([]);
+
+    spy.mockClear();
+    expect((await holidays('DELETE', `/${holiday.id}`)).statusCode).toBe(204);
+    await settle();
+    expect(spy).toHaveBeenCalledWith(kid.userId);
+    expect(await schoolRoutines()).toHaveLength(1);
+
+    // Boshqa kun — bugungi jadvalga ta'sir qilmaydi, push yo'q.
+    spy.mockClear();
+    await holidays('POST', '', { date: addDays(tashkentDay(), 7), name: 'Keyingi hafta' });
+    await settle();
+    expect(spy).not.toHaveBeenCalled();
   });
 
   it('server ro\'yxati bo\'sh bo\'lsa ham jadval keladi — qurilma toifa bo\'yicha bloklaydi', async () => {

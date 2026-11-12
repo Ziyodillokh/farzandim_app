@@ -1,8 +1,10 @@
-// Maktab profili, logo va bayram kunlari (panel `schoolService`).
+// Maktab profili, logo, hudud va bayram kunlari (panel `schoolService`).
+// Bola telefoniga ta'sir qiladigan o'zgarish (hudud, bugungi bayram) — School Mode qayta sync.
 
 import { ConflictException, Injectable } from '@nestjs/common';
 import { School, SchoolHoliday, SchoolShift } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
+import { tashkentDay } from '../../common/time/tashkent';
 import { assertCan, SchoolActor } from '../auth/school-actor';
 import { SchoolAuditService } from '../common/school-audit.service';
 import { conflict, invalid, notFound } from '../common/school-errors';
@@ -14,6 +16,7 @@ import {
   schoolZoneSchema,
 } from '../common/school-schemas';
 import { parseOrThrow } from '../common/school-zod';
+import { SchoolModeSyncService } from '../school-mode/school-mode-sync.service';
 
 export type SchoolView = Omit<School, 'kioskSecret' | 'status' | 'createdAt' | 'updatedAt' | 'code'> & {
   code: string;
@@ -46,6 +49,7 @@ export class SchoolInfoService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: SchoolAuditService,
+    private readonly sync: SchoolModeSyncService,
   ) {}
 
   async get(actor: SchoolActor) {
@@ -104,21 +108,25 @@ export class SchoolInfoService {
   async setZone(actor: SchoolActor, input: unknown): Promise<SchoolView> {
     assertCan(actor, 'settings.manage');
     const { latitude, longitude, radiusM } = parseOrThrow(schoolZoneSchema, input);
-    return this.prisma.$transaction(async (tx) => {
-      const school = await tx.school.update({ where: { id: actor.schoolId }, data: { latitude, longitude, zoneRadiusM: radiusM } });
+    const { school, inUse } = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.school.update({ where: { id: actor.schoolId }, data: { latitude, longitude, zoneRadiusM: radiusM } });
       await this.audit.write(
         actor,
         {
           module: 'SETTINGS',
           action: 'school.zone',
           summary: `Maktab hududi belgilandi (radius ${radiusM} m)`,
-          entityId: school.id,
+          entityId: updated.id,
           params: { radius: radiusM },
         },
         tx,
       );
-      return toSchoolView(school);
+      const required = await tx.schoolModePolicy.count({ where: { schoolId: actor.schoolId, zoneRequired: true } });
+      return { school: updated, inUse: required > 0 };
     });
+    // Hudud faqat «faqat hududda» yoqilganda telefonga boradi — shunda yangi markaz/radius darhol yetsin.
+    if (inUse) void this.sync.resync(actor.schoolId);
+    return toSchoolView(school);
   }
 
   /** Hududni olib tashlash; School Mode «faqat hududda» yoqilgan bo'lsa — 409 (avval o'shani o'chirish kerak). */
@@ -162,30 +170,32 @@ export class SchoolInfoService {
   async addHoliday(actor: SchoolActor, input: unknown) {
     assertCan(actor, 'schoolMode.manage');
     const data = parseOrThrow(holidayInputSchema, input);
-    return this.prisma.$transaction(async (tx) => {
+    const holiday = await this.prisma.$transaction(async (tx) => {
       const exists = await tx.schoolHoliday.findUnique({
         where: { schoolId_date: { schoolId: actor.schoolId, date: data.date } },
       });
       if (exists) throw conflict(data.date);
-      const holiday = await tx.schoolHoliday.create({ data: { schoolId: actor.schoolId, ...data } });
+      const created = await tx.schoolHoliday.create({ data: { schoolId: actor.schoolId, ...data } });
       await this.audit.write(
         actor,
         {
           module: 'SCHOOL_MODE',
           action: 'holiday.create',
           summary: `Bayram kuni qo'shildi: ${data.date} — ${data.name}`,
-          entityId: holiday.id,
+          entityId: created.id,
           params: { date: data.date, name: data.name },
         },
         tx,
       );
-      return toHolidayView(holiday);
+      return created;
     });
+    this.resyncIfToday(actor.schoolId, holiday.date);
+    return toHolidayView(holiday);
   }
 
   async removeHoliday(actor: SchoolActor, id: string): Promise<void> {
     assertCan(actor, 'schoolMode.manage');
-    await this.prisma.$transaction(async (tx) => {
+    const date = await this.prisma.$transaction(async (tx) => {
       const holiday = await tx.schoolHoliday.findFirst({ where: { id, schoolId: actor.schoolId } });
       if (!holiday) throw notFound(id);
       await tx.schoolHoliday.delete({ where: { id } });
@@ -200,6 +210,13 @@ export class SchoolInfoService {
         },
         tx,
       );
+      return holiday.date;
     });
+    this.resyncIfToday(actor.schoolId, date);
+  }
+
+  /** Bugungi bayram School Mode'ni shu zahoti yoqadi/o'chiradi; boshqa kunlar o'z kunida hisoblanadi. */
+  private resyncIfToday(schoolId: string, date: string): void {
+    if (date === tashkentDay()) void this.sync.resync(schoolId);
   }
 }
