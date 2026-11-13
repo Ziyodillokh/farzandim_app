@@ -80,7 +80,7 @@ function SettingRow({ id, title, hint, checked, disabled, onChange }: { id: stri
   );
 }
 
-/** Umumiy: yoqilgan, tanaffusda ochish, qaysi smenalar. */
+/** Umumiy: yoqilgan, tanaffusda ochish, kirgandan boshlab bloklash, qaysi smenalar. */
 export function GeneralSettings({ policy, shifts, canManage, onChange }: Props) {
   const { t } = useI18n();
   const toggleShift = (id: string, on: boolean) =>
@@ -103,6 +103,14 @@ export function GeneralSettings({ policy, shifts, canManage, onChange }: Props) 
           checked={policy.relaxDuringBreaks}
           disabled={!canManage}
           onChange={(relaxDuringBreaks) => onChange({ relaxDuringBreaks })}
+        />
+        <SettingRow
+          id="sm-arrival"
+          title={t('schoolMode.policies.blockFromArrival')}
+          hint={t('schoolMode.policies.blockFromArrivalHint')}
+          checked={policy.blockFromArrival ?? false}
+          disabled={!canManage}
+          onChange={(blockFromArrival) => onChange({ blockFromArrival })}
         />
         <div className="pt-2">
           <p className="text-sm font-medium">{t('schoolMode.policies.shifts')}</p>

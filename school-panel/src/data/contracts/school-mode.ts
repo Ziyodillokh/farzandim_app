@@ -18,6 +18,8 @@ export type SchoolModePolicy = {
   relaxDuringBreaks: boolean;
   /** Faqat telefon maktab hududida bo'lsa bloklash (hududni bolaning telefoni o'zi aniqlaydi). */
   zoneRequired?: boolean;
+  /** Bola maktabga kirganini qayd etgan zahoti (karta, QR, kiosk) dars tugaguncha bloklash. */
+  blockFromArrival?: boolean;
 };
 
 export type SchoolModeException = {

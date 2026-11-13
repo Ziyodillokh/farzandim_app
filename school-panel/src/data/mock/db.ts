@@ -11,6 +11,7 @@ import { buildActivity, CLOSED_WEEKS } from './seed/learning';
 import { buildSubmissions, buildWrittenAssignments } from './seed/homework';
 import { buildAccess } from './seed/access';
 import { buildParentThreads } from './seed/parent-threads';
+import { buildCards } from './seed/cards';
 import { buildNotifications } from './seed/notifications';
 import { buildTimetables } from './seed/timetable';
 import type { DbSnapshot, Tables } from './tables';
@@ -178,6 +179,12 @@ function withAccess(db: DbSnapshot): DbSnapshot {
   return { ...db, tables: { ...db.tables, access, notifications: [...current, ...notifications] } };
 }
 
+/** NFC kartalar: avval saqlangan bazada har o'quvchiga demo karta. */
+function withCards(db: DbSnapshot): DbSnapshot {
+  if (db.tables.cards) return db;
+  return { ...db, tables: { ...db.tables, cards: buildCards(db.tables.students), cardTaps: [] } };
+}
+
 /** Ota-onalar xabarlari: avval saqlangan bazada demo yozishmalar yaratiladi. */
 function withParentThreads(db: DbSnapshot): DbSnapshot {
   if (db.tables.parentThreads) return db;
@@ -196,6 +203,7 @@ const MIGRATIONS: readonly Migration[] = [
   withCareThread,
   withAccess,
   withParentThreads,
+  withCards,
 ];
 
 export function migrate(db: DbSnapshot): DbSnapshot {

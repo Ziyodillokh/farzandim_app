@@ -133,6 +133,31 @@ export function subtractWindow(windows: readonly Window[], cut: Window): Window[
   });
 }
 
+/** Bugungi davomat yozuvi (kirish / chiqish vaqti "HH:MM", Toshkent). */
+export interface PresenceLike {
+  status: string;
+  inAt: string | null;
+  outAt: string | null;
+}
+
+/**
+ * Davomat bo'yicha oynalar: sababli kelmagan — cheklov yo'q; chiqish qayd etilgan bo'lsa —
+ * shu vaqtdan keyin yo'q; «kirgandan boshlab» yoqilgan bo'lsa — kirish vaqtidan birinchi
+ * oynagacha ham (tanaffuslar siyosat bo'yicha qoladi).
+ */
+export function presenceWindows(windows: readonly Window[], presence: PresenceLike | null, blockFromArrival: boolean): Window[] {
+  if (!presence) return [...windows];
+  if (presence.status === 'EXCUSED') return [];
+  let result = [...windows];
+  const first = result[0];
+  if (blockFromArrival && presence.inAt && first) {
+    const arrived = hhmmToMinutes(presence.inAt);
+    if (arrived < first.start) result = [{ start: arrived, end: first.end }, ...result.slice(1)];
+  }
+  if (presence.outAt) result = subtractWindow(result, { start: hhmmToMinutes(presence.outAt), end: DAY_MINUTES });
+  return result;
+}
+
 /** Mutlaq [from, until) — shu Toshkent kunining daqiqalariga (kun chegarasida kesiladi). */
 export function dayWindowOf(day: string, from: Date, until: Date): Window | null {
   const dayStart = tashkentInstant(day, 0).getTime();

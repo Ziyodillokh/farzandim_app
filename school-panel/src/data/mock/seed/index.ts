@@ -4,6 +4,7 @@ import { buildPsychSeed } from '../psych/seed';
 import type { Tables } from '../tables';
 import { buildAccess } from './access';
 import { buildParentThreads } from './parent-threads';
+import { buildCards } from './cards';
 import { buildAudit, buildEarlyExits } from './audit';
 import { buildCareRequests, buildCareSettings, buildQuestions, buildSurveys } from './care';
 import { buildAnnouncements, buildPayments, buildReminders, buildVerifications } from './comms';
@@ -73,6 +74,8 @@ export function generateSeed(seed: number, now: Date): Tables {
     studentNotes: [],
     timetables: buildTimetables(classes, shifts),
     parentThreads: buildParentThreads({ students: people.students, guardians: people.guardians, baseIso }),
+    cards: buildCards(people.students),
+    cardTaps: [],
     sim: { date: '', processedUntilMinute: -1 },
   };
 }

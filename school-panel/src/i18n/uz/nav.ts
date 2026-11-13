@@ -14,6 +14,7 @@ export const nav = {
   attendanceCorrections: 'Tuzatishlar',
   attendanceReports: 'Davomat hisoboti',
   kiosk: 'Kirish nuqtasi',
+  cards: 'NFC kartalar',
   schoolMode: 'School Mode',
   schoolModeLive: 'Jonli holat',
   schoolModeSchedule: 'Qo\'ng\'iroq jadvali',

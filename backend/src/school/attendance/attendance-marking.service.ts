@@ -6,6 +6,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, SchoolClass, SchoolShift, SchoolStudent } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { tashkentDay } from '../../common/time/tashkent';
+import { SchoolModeSyncService } from '../school-mode/school-mode-sync.service';
 import { assertCan, assertClassInScope, classScopeWhere, SchoolActor } from '../auth/school-actor';
 import { SchoolAuditService } from '../common/school-audit.service';
 import { invalid, notFound } from '../common/school-errors';
@@ -42,6 +43,7 @@ export class AttendanceMarkingService {
     private readonly audit: SchoolAuditService,
     private readonly clock: AttendanceClock,
     private readonly notify: AttendanceNotifyService,
+    private readonly schoolMode: SchoolModeSyncService,
   ) {}
 
   /** Xodim qo'lda belgilashi (bugun). Mavjud holatni o'zgartirish — tuzatish (sabab bilan). */
@@ -132,7 +134,10 @@ export class AttendanceMarkingService {
         return { record, changed: true };
       }),
     );
-    if (result.changed) await this.notifyStatus(actor.schoolId, result.record, time);
+    if (result.changed) {
+      await this.notifyStatus(actor.schoolId, result.record, time);
+      await this.schoolMode.refreshStudent(result.record.studentId);
+    }
     return toRecordView(result.record);
   }
 
@@ -175,7 +180,10 @@ export class AttendanceMarkingService {
         return { record, changed: true };
       }),
     );
-    if (result.changed && data.date === today) await this.notifyStatus(actor.schoolId, result.record, tashkentHhmm(now));
+    if (result.changed && data.date === today) {
+      await this.notifyStatus(actor.schoolId, result.record, tashkentHhmm(now));
+      await this.schoolMode.refreshStudent(result.record.studentId);
+    }
     return toRecordView(result.record);
   }
 

@@ -17,6 +17,7 @@ export const nav: DeepString<typeof uz> = {
   attendanceCorrections: 'Исправления',
   attendanceReports: 'Отчёт посещаемости',
   kiosk: 'Пункт входа',
+  cards: 'NFC-карты',
   schoolMode: 'School Mode',
   schoolModeLive: 'Текущий статус',
   schoolModeSchedule: 'Расписание звонков',

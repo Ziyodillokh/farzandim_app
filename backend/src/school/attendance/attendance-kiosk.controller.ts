@@ -3,13 +3,17 @@ import { ApiTags } from '@nestjs/swagger';
 import { Actor, SchoolAuth } from '../auth/decorators';
 import { SchoolActor } from '../auth/school-actor';
 import { AttendanceKioskService } from './attendance-kiosk.service';
+import { CardTapService } from './card-tap.service';
 
 /** Kirish nuqtasi (kiosk) — `attendance.kiosk` ruxsati (navbatchi, admin). */
 @ApiTags('School - Attendance kiosk')
 @SchoolAuth()
 @Controller('school/attendance/kiosk')
 export class AttendanceKioskController {
-  constructor(private readonly kiosk: AttendanceKioskService) {}
+  constructor(
+    private readonly kiosk: AttendanceKioskService,
+    private readonly cards: CardTapService,
+  ) {}
 
   /** Aylanuvchi QR tokeni: `{ token, issuedAt, expiresAt, rotatesInSeconds }`. */
   @Get('token')
@@ -21,6 +25,13 @@ export class AttendanceKioskController {
   @HttpCode(HttpStatus.OK)
   checkIn(@Actor() actor: SchoolActor, @Body() body: unknown) {
     return this.kiosk.checkIn(actor, body);
+  }
+
+  /** NFC karta tegishi: `{ uid?, url?, kioskId?, tappedAt? }` → `{ result, student, time, suspicious, ... }`. */
+  @Post('card-tap')
+  @HttpCode(HttpStatus.OK)
+  cardTap(@Actor() actor: SchoolActor, @Body() body: unknown) {
+    return this.cards.tap(actor, body);
   }
 
   @Get('search')

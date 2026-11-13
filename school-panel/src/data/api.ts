@@ -25,6 +25,7 @@ import { reportsService } from './mock/services/reports';
 import { schoolModeService } from './mock/services/school-mode';
 import { timetableService } from './mock/services/timetable';
 import { inboxService } from './mock/services/inbox';
+import { cardsService } from './mock/services/cards';
 
 import { createHttpApi } from './http';
 import { isHttpMode } from './source';
@@ -53,6 +54,7 @@ const mockApi = {
   access: accessService,
   linkRequests: linkRequestsService,
   inbox: inboxService,
+  cards: cardsService,
   demo: demoService,
 };
 

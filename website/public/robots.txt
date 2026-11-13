@@ -5,5 +5,6 @@ Disallow: /school/
 Disallow: /monitoring/
 Disallow: /maktab/
 Disallow: /link
+Disallow: /k/
 
 Sitemap: https://farzandimedu.uz/sitemap.xml

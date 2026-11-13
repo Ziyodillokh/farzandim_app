@@ -99,6 +99,7 @@ const schoolModeWrites = {
         enabled: patch.enabled ?? before.enabled,
         shiftIds: patch.shiftIds ?? before.shiftIds,
         zoneRequired: patch.zoneRequired ?? before.zoneRequired ?? false,
+        blockFromArrival: patch.blockFromArrival ?? before.blockFromArrival ?? false,
       };
       replacePolicy(t, next);
       writeAudit(t, actor, 'SCHOOL_MODE', 'policy.update', `Cheklov siyosati yangilandi: ${next.name}`, next.id, before, next, { name: next.name });

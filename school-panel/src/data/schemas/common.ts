@@ -19,6 +19,7 @@ export const msg = {
   duplicatePhone: 'errors.form.duplicatePhone',
   coordinates: 'errors.form.invalidCoordinates',
   radius: 'errors.form.radiusRange',
+  cardUid: 'errors.form.invalidCardUid',
 } as const;
 
 export const requiredText = (max = 120) =>

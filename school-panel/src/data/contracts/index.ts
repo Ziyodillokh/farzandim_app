@@ -13,3 +13,4 @@ export * from './notifications';
 export * from './development';
 export * from './timetable';
 export * from './inbox';
+export * from './cards';

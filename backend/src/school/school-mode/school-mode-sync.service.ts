@@ -24,6 +24,7 @@ import {
   emergencyCovers,
   isSchoolDay,
   policyCovers,
+  presenceWindows,
   restrictedWindows,
   subtractWindow,
   Window,
@@ -118,6 +119,25 @@ export class SchoolModeSyncService {
   }
 
   /**
+   * Bitta o'quvchining bugungi davomati o'zgardi (kirdi, chiqdi, belgilandi): faqat uning keshi bekor
+   * va telefoniga jim push — maktabning qolgan bolalari keshi saqlanadi. Kesh javobdan oldin
+   * tozalanadi (keyingi so'rov yangi jadvalni oladi), push fonda ketadi. Best-effort.
+   */
+  async refreshStudent(studentId: string): Promise<void> {
+    try {
+      const student = await this.prisma.schoolStudent.findUnique({
+        where: { id: studentId },
+        select: { childId: true, child: { select: { childUserId: true } } },
+      });
+      if (!student?.childId) return;
+      this.cache.delete(student.childId);
+      void this.fcm.pushChildResync(student.child?.childUserId);
+    } catch (err) {
+      this.logger.warn(`school mode refresh: ${String(err)}`);
+    }
+  }
+
+  /**
    * Maktab o'zgarishi: kesh bekor, ta'sir qilgan bog'langan bolalarga jim push
    * (ilova darhol qayta sync qiladi). Best-effort — xato yozuvni buzmaydi.
    */
@@ -172,7 +192,12 @@ export class SchoolModeSyncService {
     ) {
       return none;
     }
-    const windows = await this.withoutExceptions(student.id, day, restrictedWindows(shift, ctx.policy));
+    const presence = await this.prisma.schoolAttendance.findUnique({
+      where: { studentId_date: { studentId: student.id, date: day } },
+      select: { status: true, inAt: true, outAt: true },
+    });
+    const planned = presenceWindows(restrictedWindows(shift, ctx.policy), presence, ctx.policy.blockFromArrival);
+    const windows = await this.withoutExceptions(student.id, day, planned);
     if (windows.length === 0) return none;
     // Server ro'yxati bo'sh bo'lsa ham (ilovalar hali yuklanmagan / yangi o'yin) jadval qaytadi: qurilma
     // `schoolMode.blockedCategories` bo'yicha o'zi bloklaydi.
@@ -180,7 +205,8 @@ export class SchoolModeSyncService {
     const schoolMode: SchoolModeMeta = {
       blockedCategories: [...ctx.policy.blockedCategories],
       allowedApps: allowedAppsOf(ctx.policy).map((a) => a.name),
-      zone: zoneOf(ctx.policy, student.school),
+      // Kirgan (va hali chiqmagan) bola maktabda — hudud (GPS) sharti kerak emas.
+      zone: presence?.inAt && !presence.outAt ? null : zoneOf(ctx.policy, student.school),
     };
     return {
       schoolId: student.schoolId,

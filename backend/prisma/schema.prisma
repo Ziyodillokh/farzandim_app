@@ -2110,6 +2110,7 @@ enum AttendanceSource {
   KIOSK
   MANUAL
   SYSTEM
+  CARD
 }
 
 enum AttendanceEventKind {
@@ -2152,6 +2153,8 @@ model School {
   quarters         Json         @default("[]")
   /// Kiosk QR kodlarini imzolash kaliti (har maktabga alohida).
   kioskSecret      String       @map("kiosk_secret")
+  /// NFC kartalar (NTAG 424 DNA) kalitlari uchun bosh kalit — shifrlangan (SchoolCryptoService); birinchi kerak bo'lganda yaratiladi.
+  cardKey          String?      @map("card_key")
   status           SchoolStatus @default(ACTIVE)
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime     @updatedAt @map("updated_at")
@@ -2194,6 +2197,8 @@ model School {
   linkCorrections     SchoolLinkCorrection[]
   guardianReviews     SchoolGuardianReview[]
   parentThreads       SchoolParentThread[]
+  cards               SchoolCard[]
+  cardTaps            SchoolCardTap[]
 
   @@map("schools")
 }
@@ -2386,6 +2391,7 @@ model SchoolStudent {
   linkCorrections     SchoolLinkCorrection[]
   guardianReviews     SchoolGuardianReview[]
   parentThreads       SchoolParentThread[]
+  cards               SchoolCard[]
 
   @@unique([schoolId, studentCode])
   @@index([schoolId, classId])
@@ -2635,6 +2641,78 @@ model SchoolParentNotice {
   @@map("school_parent_notices")
 }
 
+/// NFC karta turi: UID — oddiy karta (NTAG21x), faqat seriya raqami, nusxalanishi mumkin;
+/// SUN — NTAG 424 DNA, har tegishda imzolangan kod (AES-CMAC + hisoblagich).
+enum SchoolCardKind {
+  UID
+  SUN
+}
+
+enum SchoolCardStatus {
+  ACTIVE
+  LOST
+  BLOCKED
+}
+
+enum SchoolCardTapResult {
+  IN
+  OUT
+  NONE
+  UNKNOWN
+  BLOCKED
+  INVALID
+  OUTSIDE
+}
+
+/// O'quvchining NFC kartasi (kirish / chiqish). Chipda shaxsiy ma'lumot yo'q.
+model SchoolCard {
+  id            String           @id @default(uuid())
+  schoolId      String           @map("school_id")
+  studentId     String           @map("student_id")
+  /// Chip UID — 14 ta katta hex belgi (7 bayt), ajratgichsiz.
+  uid           String
+  kind          SchoolCardKind
+  /// Kartaga bosilgan raqam (masalan K-000124).
+  number        String
+  status        SchoolCardStatus @default(ACTIVE)
+  /// SUN: oxirgi qabul qilingan tegish hisoblagichi (qayta yuborishga qarshi).
+  lastCounter   Int?             @map("last_counter")
+  lastTapAt     DateTime?        @map("last_tap_at")
+  issuedAt      DateTime         @default(now()) @map("issued_at")
+  blockedAt     DateTime?        @map("blocked_at")
+  blockedReason String?          @map("blocked_reason")
+
+  school  School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student SchoolStudent @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, uid])
+  @@unique([schoolId, number])
+  @@index([studentId])
+  @@map("school_cards")
+}
+
+/// Kioskdagi har bir karta tegishi (natija, shubhali belgisi) — jurnal va firibgarlik nazorati.
+model SchoolCardTap {
+  id         String              @id @default(uuid())
+  schoolId   String              @map("school_id")
+  at         DateTime            @default(now())
+  /// Kiosk qayd etgan vaqt (oflayn navbatdan kech yuborilgan bo'lishi mumkin).
+  tappedAt   DateTime            @map("tapped_at")
+  cardId     String?             @map("card_id")
+  studentId  String?             @map("student_id")
+  uid        String?
+  result     SchoolCardTapResult
+  suspicious Boolean             @default(false)
+  kioskId    String?             @map("kiosk_id")
+  staffId    String?             @map("staff_id")
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, at(sort: Desc)])
+  @@index([schoolId, suspicious])
+  @@map("school_card_taps")
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // Parvoz School (2-to'lqin): xabarlar, School Mode, g'amxo'rlik,
 // psixologik testlar, xodim bildirishnomalari, maktab topshiriqlari.
@@ -2769,6 +2847,8 @@ model SchoolModePolicy {
   relaxDuringBreaks Boolean  @default(true) @map("relax_during_breaks")
   /// `true` — dars vaqtida FAQAT telefon maktab hududida bo'lsa bloklanadi (qurilma o'zi aniqlaydi).
   zoneRequired      Boolean  @default(false) @map("zone_required")
+  /// `true` — bola maktabga kirganini qayd etgan zahoti (karta, QR, kiosk) dars tugaguncha bloklanadi.
+  blockFromArrival  Boolean  @default(false) @map("block_from_arrival")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
