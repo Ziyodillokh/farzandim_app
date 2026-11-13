@@ -85,6 +85,14 @@ export class UpdateDeviceInfoDto {
 
   @ApiPropertyOptional({
     example: true,
+    description: "Android: SYSTEM_ALERT_WINDOW (Boshqa ilovalar ustidan ko'rsatish) ruxsati berilganmi",
+  })
+  @IsOptional()
+  @IsBoolean()
+  overlayPermission?: boolean;
+
+  @ApiPropertyOptional({
+    example: true,
     description: 'iOS: Family Controls (Ekran vaqti) ruxsati berilganmi',
   })
   @IsOptional()

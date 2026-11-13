@@ -9,9 +9,10 @@ import { useCan } from '@/auth/use-session';
 import type { SchoolModePolicy } from '@/data/contracts';
 import { AllowedApps } from '@/features/school-mode/components/allowed-apps';
 import { PlatformExplainer } from '@/features/school-mode/components/platform-explainer';
-import { CategorySettings, GeneralSettings } from '@/features/school-mode/components/policy-settings';
+import { CategorySettings, GeneralSettings, ZoneSetting } from '@/features/school-mode/components/policy-settings';
 import { SafetyCallout } from '@/features/school-mode/components/safety-callout';
 import { useSmPolicy, useSmShifts, useUpdatePolicy } from '@/features/school-mode/hooks';
+import { useSchool } from '@/features/school/hooks';
 import { TILE } from '@/features/school-mode/lib';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
@@ -23,6 +24,8 @@ export default function SchoolModePoliciesPage() {
   const policy = useSmPolicy();
   const shifts = useSmShifts();
   const update = useUpdatePolicy();
+  const school = useSchool().data?.school;
+  const hasZone = school?.latitude != null && school?.longitude != null && Boolean(school?.zoneRadiusM);
 
   const header = <PageHeader title={t('schoolMode.policies.title')} subtitle={t('schoolMode.policies.subtitle')} />;
 
@@ -55,6 +58,7 @@ export default function SchoolModePoliciesPage() {
     relaxDuringBreaks: pending?.relaxDuringBreaks ?? policy.data.relaxDuringBreaks,
     blockedCategories: pending?.blockedCategories ?? policy.data.blockedCategories,
     shiftIds: pending?.shiftIds ?? policy.data.shiftIds,
+    zoneRequired: pending?.zoneRequired ?? policy.data.zoneRequired ?? false,
   };
   const onChange = (patch: Parameters<typeof update.mutate>[0]) => update.mutate(patch);
 
@@ -70,6 +74,7 @@ export default function SchoolModePoliciesPage() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         <div className="space-y-6">
           <GeneralSettings policy={view} shifts={shifts.data ?? []} canManage={canManage} onChange={onChange} />
+          <ZoneSetting policy={view} hasZone={hasZone} radiusM={school?.zoneRadiusM ?? null} canManage={canManage} onChange={onChange} />
           <PlatformExplainer />
         </div>
         <div className="space-y-6">

@@ -14,6 +14,7 @@ import { CARE_TOPIC_LABELS } from '../care/care-labels';
 import { topicLabel } from '../parent-connect/parent-connect.labels';
 import { audienceTouchesScope, loadRoster, toAudience } from '../comms/comms-roster';
 import { GUARDIAN_REVIEW_KIND, LINK_CORRECTION_KIND, LINK_REQUESTS_HREF, LINK_REVIEW_KIND } from '../students/link-notification-ids';
+import { emergencyLive } from '../school-mode/school-mode-store';
 
 export const FEED_LIMIT = 30;
 /**
@@ -288,7 +289,7 @@ export class NotificationsService {
   private async emergency(actor: SchoolActor): Promise<NotificationItem[]> {
     if (!actorCan(actor, 'schoolMode.view')) return [];
     const e = await this.prisma.schoolEmergency.findUnique({ where: { schoolId: actor.schoolId } });
-    if (!e?.active) return [];
+    if (!e || !emergencyLive(e)) return [];
     const allowed = allowedClassIds(actor);
     if (allowed && e.scope === 'CLASS' && !e.classIds.some((id) => allowed.includes(id))) return [];
     const at = e.at ?? e.updatedAt;

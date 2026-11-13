@@ -22,6 +22,21 @@ export const schoolProfileSchema = z.object({
 
 export const holidayInputSchema = z.object({ date: isoDateSchema, name: requiredText(60) });
 
+/** Maktab hududi radiusi (metr): GPS bino ichida 20–50 m adashadi — 50 m dan kichik hudud ishonchsiz. */
+export const ZONE_RADIUS_MIN_M = 50;
+export const ZONE_RADIUS_MAX_M = 1000;
+
+/** Maktab hududi (School Mode «faqat hududda»): markaz va radius. */
+export const schoolZoneSchema = z.object({
+  latitude: z.coerce.number({ error: msg.coordinates }).min(-90, msg.coordinates).max(90, msg.coordinates),
+  longitude: z.coerce.number({ error: msg.coordinates }).min(-180, msg.coordinates).max(180, msg.coordinates),
+  radiusM: z.coerce
+    .number({ error: msg.radius })
+    .int(msg.radius)
+    .min(ZONE_RADIUS_MIN_M, msg.radius)
+    .max(ZONE_RADIUS_MAX_M, msg.radius),
+});
+
 export const classInputSchema = z.object({
   grade: z.coerce.number().int().min(1, msg.required).max(11, msg.required),
   letter: z

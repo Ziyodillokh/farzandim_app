@@ -7,6 +7,7 @@ import {
   Gamepad2,
   GraduationCap,
   Lock,
+  MapPin,
   MessageSquare,
   MessagesSquare,
   Phone,
@@ -14,6 +15,7 @@ import {
   SlidersHorizontal,
   type LucideIcon,
 } from 'lucide-react';
+import Link from 'next/link';
 
 import { SectionCard } from '@/components/common/section-card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -40,6 +42,31 @@ const ALWAYS: ReadonlyArray<[LucideIcon, TKey]> = [
 ];
 
 type Props = { policy: SchoolModePolicy; shifts: ShiftRow[]; canManage: boolean; onChange: (patch: PolicyPatch) => void };
+
+/** «Faqat maktab hududida»: hudud belgilanmagan bo'lsa kalit o'chiq — sozlamalarga havola. */
+export function ZoneSetting({ policy, hasZone, radiusM, canManage, onChange }: Omit<Props, 'shifts'> & { hasZone: boolean; radiusM: number | null }) {
+  const { t } = useI18n();
+  return (
+    <SectionCard icon={<MapPin />} title={t('schoolMode.policies.zoneTitle')} description={t('schoolMode.policies.zoneDescription')}>
+      <div className="space-y-3">
+        <SettingRow
+          id="sm-zone"
+          title={t('schoolMode.policies.zoneRequired')}
+          hint={hasZone ? t('schoolMode.policies.zoneRequiredHint', { radius: radiusM ?? 0 }) : t('schoolMode.policies.zoneMissing')}
+          checked={Boolean(policy.zoneRequired)}
+          disabled={!canManage || (!hasZone && !policy.zoneRequired)}
+          onChange={(zoneRequired) => onChange({ zoneRequired })}
+        />
+        {!hasZone && (
+          <Link href="/settings#school-zone" className="inline-flex text-sm font-medium text-primary hover:underline">
+            {t('schoolMode.policies.zoneSetLink')}
+          </Link>
+        )}
+        <p className="text-xs leading-relaxed text-muted-foreground">{t('schoolMode.policies.zonePrivacy')}</p>
+      </div>
+    </SectionCard>
+  );
+}
 
 function SettingRow({ id, title, hint, checked, disabled, onChange }: { id: string; title: string; hint: string; checked: boolean; disabled: boolean; onChange: (v: boolean) => void }) {
   return (

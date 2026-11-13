@@ -9,6 +9,8 @@ const PERMISSION_LABELS: Record<string, string> = {
   notification: 'Bildirishnoma',
   background: 'Fon rejimi',
   accessibility: 'Maxsus imkoniyatlar',
+  usage: "Foydalanish ma'lumotlari",
+  overlay: "Boshqa ilovalar ustidan ko'rsatish",
   screenTime: 'Ekran vaqti',
 };
 
@@ -21,6 +23,8 @@ export interface IncomingPermissions {
   notificationPermission?: boolean;
   backgroundAllowed?: boolean;
   accessibilityEnabled?: boolean;
+  usagePermission?: boolean;
+  overlayPermission?: boolean;
   screenTimePermission?: boolean;
 }
 
@@ -56,6 +60,8 @@ export class PermissionAlertService {
       notificationPermission: boolean | null;
       backgroundAllowed: boolean | null;
       accessibilityEnabled: boolean | null;
+      usagePermission?: boolean | null;
+      overlayPermission?: boolean | null;
       screenTimePermission: boolean | null;
     },
     next: IncomingPermissions,
@@ -73,6 +79,9 @@ export class PermissionAlertService {
         was: prev.accessibilityEnabled,
         now: next.accessibilityEnabled,
       },
+      // Android blok: ilovani aniqlash (Foydalanish ma'lumotlari) va blok ekrani (ustida ko'rsatish).
+      { key: 'usage', was: prev.usagePermission ?? null, now: next.usagePermission },
+      { key: 'overlay', was: prev.overlayPermission ?? null, now: next.overlayPermission },
       {
         key: 'screenTime',
         was: prev.screenTimePermission,

@@ -10,7 +10,7 @@ import { SchoolAuditService } from '../common/school-audit.service';
 import { conflict, invalid, notFound } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
 import { toExceptionView } from '../students/student-view';
-import { SchoolModeStore, toEmergencyView } from './school-mode-store';
+import { effectiveEmergency, SchoolModeStore, toEmergencyView } from './school-mode-store';
 import { SchoolModeSyncService } from './school-mode-sync.service';
 import { exceptionStatus, hhmmToMinutes, tashkentInstant } from './school-mode-time';
 import { emergencyInputSchema, exceptionInputSchema, smMsg } from './school-mode.schemas';
@@ -117,7 +117,8 @@ export class SchoolModeControlService {
     const data = parseOrThrow(emergencyInputSchema, input);
     const requested = data.scope === 'SCHOOL' ? [] : [...new Set(data.classIds)];
     const next = await this.prisma.$transaction(async (tx) => {
-      const before = await this.store.emergency(actor.schoolId, tx);
+      // Muddati o'tgan (kecha yoqilgan) o'chirish — o'chiq hisoblanadi.
+      const before = effectiveEmergency(await this.store.emergency(actor.schoolId, tx));
       // Butun maktab bo'yicha o'chirish faol — uni sinf so'rovi bilan toraytirib bo'lmaydi.
       if (before.active && before.scope === 'SCHOOL') throw conflict(`scope: ${smMsg.emergencySchoolActive}`);
       const classes = await tx.schoolClass.findMany({ where: { schoolId: actor.schoolId, id: { in: requested } }, select: { id: true, name: true } });
@@ -126,7 +127,16 @@ export class SchoolModeControlService {
       const classIds = merge ? [...new Set([...before.classIds, ...requested])] : requested;
       const updated = await tx.schoolEmergency.update({
         where: { schoolId: actor.schoolId },
-        data: { active: true, scope: data.scope, classIds, reason: data.reason, byStaffId: actor.staffId, at: new Date() },
+        // Shu kun oxirigacha (Toshkent): ertasi kuni School Mode o'z-o'zidan qayta ishlaydi.
+        data: {
+          active: true,
+          scope: data.scope,
+          classIds,
+          reason: data.reason,
+          byStaffId: actor.staffId,
+          at: new Date(),
+          until: tashkentDayStart(addDays(tashkentDay(), 1)),
+        },
       });
       const names = await tx.schoolClass.findMany({ where: { id: { in: classIds } }, select: { name: true }, orderBy: [{ grade: 'asc' }, { letter: 'asc' }] });
       const target = data.scope === 'SCHOOL' ? 'butun maktab' : names.map((c) => c.name).join(', ');
@@ -156,11 +166,11 @@ export class SchoolModeControlService {
   async deactivateEmergency(actor: SchoolActor) {
     assertCan(actor, 'schoolMode.emergency');
     const { before, next } = await this.prisma.$transaction(async (tx) => {
-      const current = await this.store.emergency(actor.schoolId, tx);
+      const current = effectiveEmergency(await this.store.emergency(actor.schoolId, tx));
       if (!current.active) throw conflict('emergency');
       const updated = await tx.schoolEmergency.update({
         where: { schoolId: actor.schoolId },
-        data: { active: false, scope: 'SCHOOL', classIds: [], reason: '', byStaffId: null, at: null },
+        data: { active: false, scope: 'SCHOOL', classIds: [], reason: '', byStaffId: null, at: null, until: null },
       });
       await this.audit.write(
         actor,

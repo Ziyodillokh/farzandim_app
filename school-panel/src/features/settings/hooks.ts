@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { api } from '@/data/api';
-import type { SchoolProfileInput } from '@/data/schemas/school';
+import type { SchoolProfileInput, SchoolZoneInput } from '@/data/schemas/school';
 import { useI18n } from '@/i18n';
 import { errorKey } from '@/lib/errors';
 
@@ -32,6 +32,16 @@ export function useSetLogo() {
     (logo: string | null) => api.school.setLogo(logo),
     (logo) => t(logo ? 'settings.logo.uploaded' : 'settings.logo.removed'),
   );
+}
+
+export function useSetZone() {
+  const { t } = useI18n();
+  return useSettingsMutation((input: SchoolZoneInput) => api.school.setZone(input), () => t('settings.zone.saved'));
+}
+
+export function useClearZone() {
+  const { t } = useI18n();
+  return useSettingsMutation(() => api.school.clearZone(), () => t('settings.zone.removed'));
 }
 
 /** Demo ma'lumotlarni tiklash (sinxron servis) — barcha so'rovlar yangilanadi. */

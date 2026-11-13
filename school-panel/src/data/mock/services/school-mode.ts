@@ -19,6 +19,7 @@ import { clockNow } from '../clock';
 import { assertCan, assertClassInScope, currentActor, latency, newId, writeAudit } from '../context';
 import { transact } from '../db';
 import { studentName } from '../lookups';
+import { endOfDay, liveEmergency } from '../school-mode-state';
 import { INITIAL_EMERGENCY } from '../seed/school-mode';
 import type { Tables } from '../tables';
 import {
@@ -90,12 +91,14 @@ const schoolModeWrites = {
     return transact((t) => {
       const before = requirePolicy(t);
       if (patch.shiftIds?.some((id) => !t.shifts.some((s) => s.id === id))) throw new ServiceError('VALIDATION', 'shiftIds');
+      if (patch.zoneRequired && !hasZone(t.school)) throw new ServiceError('VALIDATION', `zoneRequired: ${smMsg.zoneMissing}`);
       const next: SchoolModePolicy = {
         ...before,
         blockedCategories: patch.blockedCategories ?? before.blockedCategories,
         relaxDuringBreaks: patch.relaxDuringBreaks ?? before.relaxDuringBreaks,
         enabled: patch.enabled ?? before.enabled,
         shiftIds: patch.shiftIds ?? before.shiftIds,
+        zoneRequired: patch.zoneRequired ?? before.zoneRequired ?? false,
       };
       replacePolicy(t, next);
       writeAudit(t, actor, 'SCHOOL_MODE', 'policy.update', `Cheklov siyosati yangilandi: ${next.name}`, next.id, before, next, { name: next.name });
@@ -222,7 +225,8 @@ const schoolModeWrites = {
     assertCan(actor, 'schoolMode.emergency');
     const data = parseOrThrow(emergencyInputSchema, input);
     return transact((t) => {
-      const before = t.emergency;
+      // Muddati o'tgan (kecha yoqilgan) o'chirish — o'chiq hisoblanadi.
+      const before = liveEmergency(t.emergency);
       // Butun maktab bo'yicha o'chirish faol — uni sinf so'rovi bilan toraytirib (yoki jimgina qayta yozib) bo'lmaydi.
       if (before.active && before.scope === 'SCHOOL') throw new ServiceError('CONFLICT', `scope: ${smMsg.emergencySchoolActive}`);
       const requested = data.scope === 'SCHOOL' ? [] : [...new Set(data.classIds)];
@@ -230,7 +234,16 @@ const schoolModeWrites = {
       // Sinf bo'yicha o'chirish faol bo'lsa — yangi sinflar qo'shiladi.
       const merge = before.active && before.scope === 'CLASS' && data.scope === 'CLASS';
       const classIds = merge ? [...new Set([...before.classIds, ...requested])] : requested;
-      const next: EmergencyState = { active: true, scope: data.scope, classIds, reason: data.reason, byStaffId: actor.staffId, at: clockNow().toISOString() };
+      const now = clockNow();
+      const next: EmergencyState = {
+        active: true,
+        scope: data.scope,
+        classIds,
+        reason: data.reason,
+        byStaffId: actor.staffId,
+        at: now.toISOString(),
+        until: endOfDay(now).toISOString(),
+      };
       t.emergency = next;
       const target = data.scope === 'SCHOOL' ? 'butun maktab' : classIds.map((id) => t.classes.find((c) => c.id === id)?.name ?? id).join(', ');
       writeAudit(t, actor, 'SCHOOL_MODE', 'emergency.on', `Favqulodda o'chirish (${target}). Sabab: ${data.reason}`, null, before, next, {
@@ -248,7 +261,7 @@ const schoolModeWrites = {
     const actor = currentActor();
     assertCan(actor, 'schoolMode.emergency');
     return transact((t) => {
-      const before = t.emergency;
+      const before = liveEmergency(t.emergency);
       if (!before.active) throw new ServiceError('CONFLICT', 'emergency');
       const next: EmergencyState = { ...INITIAL_EMERGENCY, classIds: [] };
       t.emergency = next;
@@ -257,5 +270,10 @@ const schoolModeWrites = {
     });
   },
 };
+
+/** Maktab hududi to'liq belgilanganmi. */
+function hasZone(school: Tables['school']): boolean {
+  return school.latitude != null && school.longitude != null && Boolean(school.zoneRadiusM);
+}
 
 export const schoolModeService = { ...schoolModeReads, ...schoolModeWrites };

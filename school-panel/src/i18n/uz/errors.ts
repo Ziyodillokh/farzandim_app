@@ -5,6 +5,7 @@ export const errors = {
   CONFLICT: 'Bunday yozuv allaqachon mavjud',
   UNKNOWN: 'Kutilmagan xatolik. Qayta urinib ko\'ring',
   detail: {
+    ZONE_IN_USE: 'School Mode «faqat hududda» yoqilgan — avval uni o\'chiring, keyin hududni olib tashlang',
     GUARDIAN_ALREADY_LINKED: 'Bu ota-ona (shu telefon raqami) allaqachon shu o\'quvchiga bog\'langan',
     NOT_LINKED: 'Oʻquvchi hali Parvoz bola profiliga ulanmagan',
     LOGIN_TAKEN: 'Bu login band — boshqasini tanlang',
@@ -31,6 +32,8 @@ export const errors = {
     selectAtLeastOne: 'Kamida bittasini tanlang',
     minutesRange: 'Vaqt 1 dan 240 daqiqagacha boʻlishi kerak',
     duplicatePhone: 'Ikkala ota-ona telefoni bir xil — har biri o\'z raqami bilan bo\'lishi kerak',
+    invalidCoordinates: 'Koordinata noto\'g\'ri (kenglik −90…90, uzunlik −180…180)',
+    radiusRange: 'Radius 50 dan 1000 metrgacha bo\'lishi kerak',
     slaMinutesRange: 'Muddat 15 dan 1440 daqiqagacha boʻlishi kerak',
     slaHoursRange: 'Muddat 1 dan 168 soatgacha boʻlishi kerak',
     deputySame: 'Oʻrinbosar masʼul psixologdan boshqa xodim boʻlishi kerak',

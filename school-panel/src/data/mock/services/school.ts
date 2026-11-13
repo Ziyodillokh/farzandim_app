@@ -1,6 +1,13 @@
 import type { Holiday, School, Shift } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
-import { holidayInputSchema, schoolProfileSchema, type HolidayInput, type SchoolProfileInput } from '@/data/schemas/school';
+import {
+  holidayInputSchema,
+  schoolProfileSchema,
+  schoolZoneSchema,
+  type HolidayInput,
+  type SchoolProfileInput,
+  type SchoolZoneInput,
+} from '@/data/schemas/school';
 import { parseOrThrow } from '@/data/schemas/validate';
 import { assertCan, currentActor, latency, writeAudit } from '../context';
 import { getTables, transact } from '../db';
@@ -40,6 +47,35 @@ export const schoolService = {
     return transact((t) => {
       t.school = { ...t.school, logo };
       writeAudit(t, actor, 'SETTINGS', logo ? 'school.logo' : 'school.logoRemove', logo ? 'Maktab logosi yangilandi' : 'Maktab logosi olib tashlandi', t.school.id, null, null, {});
+      return t.school;
+    });
+  },
+
+  /**
+   * Maktab hududi (School Mode «faqat hududda»): markaz + radius. Telefon hududda ekanini bolaning telefoni o'zi
+   * aniqlaydi — maktab joylashuvni ko'rmaydi.
+   */
+  async setZone(input: SchoolZoneInput): Promise<School> {
+    await latency();
+    const actor = currentActor();
+    assertCan(actor, 'settings.manage');
+    const { latitude, longitude, radiusM } = parseOrThrow(schoolZoneSchema, input);
+    return transact((t) => {
+      t.school = { ...t.school, latitude, longitude, zoneRadiusM: radiusM };
+      writeAudit(t, actor, 'SETTINGS', 'school.zone', `Maktab hududi belgilandi (radius ${radiusM} m)`, t.school.id, null, null, { radius: String(radiusM) });
+      return t.school;
+    });
+  },
+
+  /** Hududni olib tashlash; School Mode «faqat hududda» yoqilgan bo'lsa — 409 ZONE_IN_USE. */
+  async clearZone(): Promise<School> {
+    await latency();
+    const actor = currentActor();
+    assertCan(actor, 'settings.manage');
+    return transact((t) => {
+      if (t.policies.some((p) => p.zoneRequired)) throw new ServiceError('CONFLICT', 'School Mode requires the school zone', 'ZONE_IN_USE');
+      t.school = { ...t.school, latitude: null, longitude: null, zoneRadiusM: null };
+      writeAudit(t, actor, 'SETTINGS', 'school.zoneRemove', 'Maktab hududi olib tashlandi', t.school.id, null, null, {});
       return t.school;
     });
   },

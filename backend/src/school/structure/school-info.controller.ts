@@ -44,6 +44,18 @@ export class SchoolInfoController {
     return this.info.setLogo(actor, body?.logo ?? null);
   }
 
+  @Put('zone')
+  @SchoolAuth()
+  setZone(@Actor() actor: SchoolActor, @Body() body: unknown) {
+    return this.info.setZone(actor, body);
+  }
+
+  @Delete('zone')
+  @SchoolAuth()
+  clearZone(@Actor() actor: SchoolActor) {
+    return this.info.clearZone(actor);
+  }
+
   @Post('holidays')
   @SchoolAuth()
   addHoliday(@Actor() actor: SchoolActor, @Body() body: unknown) {

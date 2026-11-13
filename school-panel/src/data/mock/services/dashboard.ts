@@ -18,7 +18,7 @@ import { getTables } from '../db';
 import { compareClasses, studentName } from '../lookups';
 import { activeSafetySignals } from '../notify';
 import { type ParentLinkSummary, parentLinkSummary } from '../parent-links';
-import { classModeState } from '../school-mode-state';
+import { classModeState, liveEmergency } from '../school-mode-state';
 import type { Tables } from '../tables';
 import { attendedRate, resolveRecord, type DayCounts } from './attendance';
 import { computeCareAggregate, defaultSurvey } from './care-aggregate';
@@ -224,7 +224,7 @@ function schoolModeSummary({ tables, actor, classes, studentIds, today, minute, 
   return {
     restrictedClasses: states.filter((s) => s.restricted).length,
     activeClasses: states.filter((s) => s.kind === 'LESSON' || s.kind === 'BREAK').length,
-    emergency: tables.emergency.active,
+    emergency: liveEmergency(tables.emergency).active,
     devices,
     activeExceptions: inScope(actor, tables.exceptions).filter((e) => exceptionStatus(e, nowMs) === 'ACTIVE').length,
   };

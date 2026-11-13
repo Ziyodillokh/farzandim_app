@@ -433,6 +433,9 @@ export class ChildrenService {
     if (dto.usagePermission !== undefined) {
       data.usagePermission = dto.usagePermission;
     }
+    if (dto.overlayPermission !== undefined) {
+      data.overlayPermission = dto.overlayPermission;
+    }
     if (dto.screenTimePermission !== undefined) {
       data.screenTimePermission = dto.screenTimePermission;
     }
@@ -464,6 +467,8 @@ export class ChildrenService {
         notificationPermission: child.notificationPermission,
         backgroundAllowed: child.backgroundAllowed,
         accessibilityEnabled: child.accessibilityEnabled,
+        usagePermission: child.usagePermission,
+        overlayPermission: child.overlayPermission,
         screenTimePermission: child.screenTimePermission,
       },
       {
@@ -471,6 +476,8 @@ export class ChildrenService {
         notificationPermission: dto.notificationPermission,
         backgroundAllowed: dto.backgroundAllowed,
         accessibilityEnabled: dto.accessibilityEnabled,
+        usagePermission: dto.usagePermission,
+        overlayPermission: dto.overlayPermission,
         screenTimePermission: dto.screenTimePermission,
       },
     );

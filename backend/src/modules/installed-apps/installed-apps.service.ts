@@ -8,6 +8,7 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { StorageService } from '../../common/storage/storage.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { BUCKETS } from '../../common/storage/storage.constants';
+import { SchoolModeSyncService } from '../../school/school-mode/school-mode-sync.service';
 import { BatchUpsertAppsDto, InstalledAppDto } from './dto/batch-upsert-apps.dto';
 import { classifyPackage } from './app-category.util';
 
@@ -46,6 +47,7 @@ export class InstalledAppsService {
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
     private readonly audit: AuditService,
+    private readonly schoolMode: SchoolModeSyncService,
   ) {}
 
   private async validateChildAccess(childId: string, userId: string) {
@@ -153,6 +155,8 @@ export class InstalledAppsService {
     });
 
     await this.prisma.$transaction(ops);
+    // School Mode: bugun o'rnatilgan o'yin keyingi sync'dayoq (≤15 s) bloklanadi.
+    this.schoolMode.forgetChild(childId);
 
     await this.audit.log(
       userId,

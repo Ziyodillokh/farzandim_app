@@ -5,6 +5,12 @@
 // ota-ona ularni tahrirlay olmaydi). iOS: ota-ona qurilmada tanlagan
 // ilovalar to'plami (virtual paket) dars oynalarida bloklanadi — tanlov
 // qurilmadan chiqmaydi. O'zgarishda bolaga jim `restrictions_sync` push.
+//
+// `schoolMode` — qurilma uchun qo'shimcha: bloklanadigan toifalar va ruxsat
+// etilgan ilovalar (yangi o'rnatilgan o'yin server ro'yxatiga tushmasdan
+// ham, qurilma toifasi bo'yicha bloklanadi) hamda maktab hududi
+// («faqat hududda» yoqilgan bo'lsa — telefon hududda ekanini qurilmaning
+// o'zi aniqlaydi, joylashuv serverga bu maqsadda yuborilmaydi).
 
 import { Injectable, Logger } from '@nestjs/common';
 import { SchoolModePolicy } from '@prisma/client';
@@ -30,6 +36,21 @@ const SELF_PACKAGE_PREFIXES = ['com.farzandim', 'uz.parvoz'];
 export const SCHOOL_ROUTINE_TITLE = 'Maktab (School Mode)';
 const PUSH_BATCH = 25;
 
+export interface SchoolZone {
+  latitude: number;
+  longitude: number;
+  radiusM: number;
+}
+
+/** Qurilma uchun School Mode tafsilotlari (eski ilovalar e'tiborsiz qoldiradi). */
+export interface SchoolModeMeta {
+  blockedCategories: string[];
+  /** Ruxsat etilgan ilovalar nomi (qurilma ilova nomi bilan solishtiradi). */
+  allowedApps: string[];
+  /** `null` — butun dars vaqti, joylashuvdan qat'i nazar. */
+  zone: SchoolZone | null;
+}
+
 export interface VirtualRoutine {
   id: string;
   childId: string;
@@ -43,8 +64,18 @@ export interface VirtualRoutine {
   isActive: true;
   blockedApps: string[];
   source: 'SCHOOL_MODE';
+  schoolMode: SchoolModeMeta;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/** «Faqat hududda» yoqilgan va maktab hududi belgilangan bo'lsa — hudud. */
+export function zoneOf(
+  policy: Pick<SchoolModePolicy, 'zoneRequired'>,
+  school: { latitude: number | null; longitude: number | null; zoneRadiusM: number | null },
+): SchoolZone | null {
+  if (!policy.zoneRequired || school.latitude === null || school.longitude === null || !school.zoneRadiusM) return null;
+  return { latitude: school.latitude, longitude: school.longitude, radiusM: school.zoneRadiusM };
 }
 
 interface CacheEntry {
@@ -79,6 +110,11 @@ export class SchoolModeSyncService {
     const { schoolId, routines } = await this.compute(childId, day, now);
     this.cache.set(childId, { expiresAt: now.getTime() + CACHE_TTL_MS, day, schoolId, version: this.version(schoolId), routines });
     return routines;
+  }
+
+  /** Bola telefoni yangi ilovalar ro'yxatini yubordi — keyingi so'rov yangi ro'yxat bilan hisoblanadi. */
+  forgetChild(childId: string): void {
+    this.cache.delete(childId);
   }
 
   /**
@@ -118,7 +154,7 @@ export class SchoolModeSyncService {
         schoolId: true,
         classId: true,
         archived: true,
-        school: { select: { status: true } },
+        school: { select: { status: true, latitude: true, longitude: true, zoneRadiusM: true } },
         class: { select: { shiftId: true } },
       },
     });
@@ -138,8 +174,14 @@ export class SchoolModeSyncService {
     }
     const windows = await this.withoutExceptions(student.id, day, restrictedWindows(shift, ctx.policy));
     if (windows.length === 0) return none;
+    // Server ro'yxati bo'sh bo'lsa ham (ilovalar hali yuklanmagan / yangi o'yin) jadval qaytadi: qurilma
+    // `schoolMode.blockedCategories` bo'yicha o'zi bloklaydi.
     const blockedApps = await this.blockedPackages(childId, ctx.policy);
-    if (blockedApps.length === 0) return none;
+    const schoolMode: SchoolModeMeta = {
+      blockedCategories: [...ctx.policy.blockedCategories],
+      allowedApps: allowedAppsOf(ctx.policy).map((a) => a.name),
+      zone: zoneOf(ctx.policy, student.school),
+    };
     return {
       schoolId: student.schoolId,
       routines: windows.map((w, i) => ({
@@ -155,6 +197,7 @@ export class SchoolModeSyncService {
         isActive: true,
         blockedApps,
         source: 'SCHOOL_MODE',
+        schoolMode,
         createdAt: now,
         updatedAt: now,
       })),

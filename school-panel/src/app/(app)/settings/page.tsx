@@ -12,6 +12,7 @@ import { DemoCard } from '@/features/settings/components/demo-card';
 import { LogoCard } from '@/features/settings/components/logo-card';
 import { PreferencesCard } from '@/features/settings/components/preferences-card';
 import { ProfileCard } from '@/features/settings/components/profile-card';
+import { ZoneCard } from '@/features/settings/components/zone-card';
 import { useI18n } from '@/i18n';
 
 export default function SettingsPage() {
@@ -35,6 +36,7 @@ export default function SettingsPage() {
         <div className="grid items-start gap-6 xl:grid-cols-3 animate-fade-in">
           <div className="min-w-0 space-y-6 xl:col-span-2">
             <ProfileCard school={data.school} />
+            <ZoneCard school={data.school} />
             <BrandLinkCard school={data.school} />
             <AcademicCard school={data.school} shifts={data.shifts} />
           </div>
