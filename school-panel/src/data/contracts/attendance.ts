@@ -1,7 +1,7 @@
 import type { HhMm, Id, IsoDate, IsoDateTime } from './common';
 
 export type AttendanceStatus = 'PRESENT' | 'LATE' | 'ABSENT' | 'LEFT_EARLY' | 'EXCUSED';
-export type AttendanceSource = 'QR' | 'KIOSK' | 'MANUAL' | 'SYSTEM';
+export type AttendanceSource = 'QR' | 'KIOSK' | 'MANUAL' | 'SYSTEM' | 'CARD';
 
 export type AttendanceCorrection = {
   at: IsoDateTime;

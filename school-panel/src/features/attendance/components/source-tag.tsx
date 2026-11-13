@@ -1,12 +1,12 @@
 'use client';
 
-import { Cpu, Hand, QrCode, ScanLine, type LucideIcon } from 'lucide-react';
+import { CreditCard, Cpu, Hand, QrCode, ScanLine, type LucideIcon } from 'lucide-react';
 
 import type { AttendanceSource } from '@/data/contracts';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 
-const ICONS: Record<AttendanceSource, LucideIcon> = { QR: QrCode, KIOSK: ScanLine, MANUAL: Hand, SYSTEM: Cpu };
+const ICONS: Record<AttendanceSource, LucideIcon> = { QR: QrCode, KIOSK: ScanLine, MANUAL: Hand, SYSTEM: Cpu, CARD: CreditCard };
 
 /** Qayd manbai: QR / kirish nuqtasi / qo'lda / tizim. `pill` — jadvallarda yumshoq kapsula. */
 export function SourceTag({ source, className, variant = 'pill' }: { source: AttendanceSource; className?: string; variant?: 'pill' | 'plain' }) {

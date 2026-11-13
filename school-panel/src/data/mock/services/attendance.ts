@@ -55,6 +55,38 @@ export type ClassOption = { id: string; name: string; grade: number; shiftId: st
 
 export type KioskStats = { date: IsoDate; expected: number; arrived: number; late: number; recent: FeedItem[] };
 
+const ARRIVAL_REASON: Record<'KIOSK' | 'CARD', string> = { KIOSK: 'Kirish nuqtasida qayd etildi', CARD: 'NFC karta bilan qayd etildi' };
+
+/** Kirishni yozish (kiosk kodi va NFC karta uchun umumiy): yozuv, hodisa, ota-onaga «keldi». */
+export function recordArrival(
+  tables: Tables,
+  byStaffId: string,
+  student: Student,
+  shift: { start: string },
+  source: 'KIOSK' | 'CARD',
+  today: IsoDate,
+  minute: number,
+): AttendanceStatus {
+  const existing = tables.attendance.find((r) => r.date === today && r.studentId === student.id);
+  const late = minute > hhmmToMinutes(shift.start) + tables.school.lateAfterMinutes;
+  const status: AttendanceStatus = late ? 'LATE' : 'PRESENT';
+  const time = minutesToHhmm(Math.floor(minute));
+  if (existing) {
+    existing.corrections.push({ at: clockNow().toISOString(), byStaffId, from: existing.status, to: status, reason: ARRIVAL_REASON[source] });
+    existing.status = status;
+    existing.inAt = time;
+    existing.source = source;
+  } else {
+    tables.attendance.push({ id: `${today}:${student.id}`, date: today, studentId: student.id, classId: student.classId, status, inAt: time, outAt: null, source, corrections: [], parentNotified: true });
+  }
+  tables.attendanceEvents.push({ id: `${today}:${student.id}:IN`, at: clockNow().toISOString(), studentId: student.id, classId: student.classId, kind: 'IN', source, late });
+  const guardian = student.guardianIds.map((id) => tables.guardians.find((g) => g.id === id)).find((g) => g?.linkStatus === 'LINKED');
+  if (guardian) {
+    tables.parentNotifications.push({ id: newId('ntf'), at: clockNow().toISOString(), studentId: student.id, guardianId: guardian.id, kind: 'ARRIVED', delivered: true });
+  }
+  return status;
+}
+
 /**
  * Vaqt bo'yicha (eng yangisi birinchi). `at` ikki ko'rinishda keladi: simulyator —
  * mahalliy ("2026-10-12T08:03:00"), kiosk/xodim — UTC ("…Z"); satr solishtirish
@@ -379,22 +411,7 @@ export const attendanceService = {
       if (!cls || !shift) throw new ServiceError('NOT_FOUND', student.classId);
       const existing = tables.attendance.find((r) => r.date === today && r.studentId === student.id);
       if (existing && existing.inAt) return { student, className: cls.name, status: existing.status, alreadyIn: true };
-      const late = minute > hhmmToMinutes(shift.start) + tables.school.lateAfterMinutes;
-      const status: AttendanceStatus = late ? 'LATE' : 'PRESENT';
-      const time = minutesToHhmm(Math.floor(minute));
-      if (existing) {
-        existing.corrections.push({ at: clockNow().toISOString(), byStaffId: actor.staffId, from: existing.status, to: status, reason: 'Kirish nuqtasida qayd etildi' });
-        existing.status = status;
-        existing.inAt = time;
-        existing.source = 'KIOSK';
-      } else {
-        tables.attendance.push({ id: `${today}:${student.id}`, date: today, studentId: student.id, classId: student.classId, status, inAt: time, outAt: null, source: 'KIOSK', corrections: [], parentNotified: true });
-      }
-      tables.attendanceEvents.push({ id: `${today}:${student.id}:IN`, at: clockNow().toISOString(), studentId: student.id, classId: student.classId, kind: 'IN', source: 'KIOSK', late });
-      const guardian = student.guardianIds.map((id) => tables.guardians.find((g) => g.id === id)).find((g) => g?.linkStatus === 'LINKED');
-      if (guardian) {
-        tables.parentNotifications.push({ id: newId('ntf'), at: clockNow().toISOString(), studentId: student.id, guardianId: guardian.id, kind: 'ARRIVED', delivered: true });
-      }
+      const status = recordArrival(tables, actor.staffId, student, shift, 'KIOSK', today, minute);
       writeAudit(tables, actor, 'ATTENDANCE', 'attendance.kiosk', `${studentName(student)} (${cls.name}) — ${status}`, `${today}:${student.id}`, null, null, {
         name: studentName(student),
         className: cls.name,

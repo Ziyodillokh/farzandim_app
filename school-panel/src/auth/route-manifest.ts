@@ -9,6 +9,7 @@ import {
   CalendarOff,
   ClipboardCheck,
   ClipboardList,
+  CreditCard,
   FileCheck2,
   HeartHandshake,
   History,
@@ -114,6 +115,7 @@ export const ROUTES: readonly RouteDef[] = [
   { path: '/students/link-requests', perm: 'guardians.link', titleKey: 'nav.linkRequests', icon: Link2, group: 'school', badge: 'linkRequests' },
   { path: '/parents', perm: 'guardians.link', titleKey: 'nav.parents', icon: UsersRound, group: 'school' },
   { path: '/parents/print', perm: 'guardians.link', titleKey: 'nav.parents', icon: UsersRound, hidden: true },
+  { path: '/cards', perm: 'students.view', titleKey: 'nav.cards', icon: CreditCard, group: 'school' },
 
   { path: '/reports', perm: 'reports.view', titleKey: 'nav.reports', icon: FileCheck2, group: 'admin' },
   { path: '/reports/print', perm: 'reports.view', titleKey: 'nav.reports', icon: ClipboardList, hidden: true },

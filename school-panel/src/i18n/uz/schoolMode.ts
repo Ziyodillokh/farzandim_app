@@ -134,6 +134,8 @@ export const schoolMode = {
     zoneDescription: 'Dars vaqtida faqat telefon maktab hududida bo\'lsa bloklash',
     zoneRequired: 'Faqat maktab hududida bloklash',
     zoneRequiredHint: 'Telefon maktabdan {radius} m ichida bo\'lsagina dars vaqtida ilovalar cheklanadi (uyda, kasal kunida — yo\'q).',
+    blockFromArrival: 'Kirgandan boshlab bloklash',
+    blockFromArrivalHint: 'Bola karta, QR yoki kiosk orqali kirgani qayd etilishi bilan ilovalar yopiladi — darsdan oldin ham. Chiqish qayd etilsa yoki smena tugasa, cheklov to\'xtaydi.',
     zoneMissing: 'Avval Sozlamalarda maktab hududini belgilang',
     zoneSetLink: 'Maktab hududini belgilash →',
     zonePrivacy: 'Telefon hududdaligini bolaning telefoni o\'zi aniqlaydi — maktab hech kimning joylashuvini ko\'rmaydi. Joylashuv o\'chirilgan bo\'lsa, dars vaqti bo\'yicha bloklanadi.',

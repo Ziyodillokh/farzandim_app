@@ -6,6 +6,10 @@ export const errors = {
   UNKNOWN: 'Kutilmagan xatolik. Qayta urinib ko\'ring',
   detail: {
     ZONE_IN_USE: 'School Mode «faqat hududda» yoqilgan — avval uni o\'chiring, keyin hududni olib tashlang',
+    CARD_TAKEN: 'Bu karta boshqa o\'quvchiga biriktirilgan',
+    CARD_NUMBER_TAKEN: 'Bu karta raqami band — boshqasini kiriting',
+    CARD_CODE_INVALID: 'Karta kodi tekshiruvdan o\'tmadi: boshqa maktab kartasi yoki kalit mos emas',
+    CARD_STUDENT_HAS_ACTIVE: 'O\'quvchida boshqa faol karta bor — avval uni bloklang',
     GUARDIAN_ALREADY_LINKED: 'Bu ota-ona (shu telefon raqami) allaqachon shu o\'quvchiga bog\'langan',
     NOT_LINKED: 'Oʻquvchi hali Parvoz bola profiliga ulanmagan',
     LOGIN_TAKEN: 'Bu login band — boshqasini tanlang',
@@ -34,6 +38,7 @@ export const errors = {
     duplicatePhone: 'Ikkala ota-ona telefoni bir xil — har biri o\'z raqami bilan bo\'lishi kerak',
     invalidCoordinates: 'Koordinata noto\'g\'ri (kenglik −90…90, uzunlik −180…180)',
     radiusRange: 'Radius 50 dan 1000 metrgacha bo\'lishi kerak',
+    invalidCardUid: 'Karta raqami noto\'g\'ri: 8, 14 yoki 20 ta hex belgi (masalan 04:A1:B2:C3:D4:E5:F6)',
     slaMinutesRange: 'Muddat 15 dan 1440 daqiqagacha boʻlishi kerak',
     slaHoursRange: 'Muddat 1 dan 168 soatgacha boʻlishi kerak',
     deputySame: 'Oʻrinbosar masʼul psixologdan boshqa xodim boʻlishi kerak',

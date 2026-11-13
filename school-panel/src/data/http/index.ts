@@ -9,6 +9,7 @@ import { commsHttp } from './services/comms';
 import { developmentHttp } from './services/development';
 import { dashboardHttp, notificationsHttp, reportsHttp, searchHttp } from './services/insights';
 import { inboxHttp } from './services/inbox';
+import { cardsHttp } from './services/cards';
 import { learningHttp } from './services/learning';
 import { profileHttp } from './services/profile';
 import { schoolHttp } from './services/school';
@@ -46,6 +47,7 @@ export function createHttpApi(): Api {
     access: accessHttp,
     linkRequests: linkRequestsHttp,
     inbox: inboxHttp,
+    cards: cardsHttp,
     demo: notAvailable('demo'),
   };
 }

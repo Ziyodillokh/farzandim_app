@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, CheckCircle2, Clock4, Info, XCircle, type LucideIcon } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Clock4, Info, LogOut, WifiOff, XCircle, type LucideIcon } from 'lucide-react';
 import { useEffect } from 'react';
 
 import type { AttendanceStatus } from '@/data/contracts';
@@ -9,8 +9,14 @@ import { cn } from '@/lib/utils';
 
 export const RESULT_HIDE_MS = 4000;
 
+/** Karta kirish nuqtasida rad etilgan holatlar. */
+export type CardRejection = 'UNKNOWN' | 'BLOCKED' | 'INVALID' | 'OUTSIDE';
+
 export type KioskOutcome =
-  | { kind: 'success'; name: string; className: string; status: AttendanceStatus; time: string; already: boolean }
+  | { kind: 'success'; name: string; className: string; status: AttendanceStatus; time: string; already: boolean; suspicious?: boolean }
+  | { kind: 'left'; name: string; className: string; time: string }
+  | { kind: 'card'; result: CardRejection; name: string | null }
+  | { kind: 'queued' }
   | { kind: 'notFound'; code: string }
   | { kind: 'error'; message: string };
 
@@ -24,15 +30,93 @@ const LOOKS: Record<'present' | 'late' | 'already' | 'failed', Look> = {
 };
 
 function lookFor(outcome: KioskOutcome): Look {
-  if (outcome.kind !== 'success') return LOOKS.failed;
-  if (outcome.already) return LOOKS.already;
-  return outcome.status === 'LATE' ? LOOKS.late : LOOKS.present;
+  switch (outcome.kind) {
+    case 'success':
+      if (outcome.already) return LOOKS.already;
+      return outcome.status === 'LATE' ? LOOKS.late : LOOKS.present;
+    case 'left':
+      return { ...LOOKS.already, icon: LogOut };
+    case 'queued':
+      return { ...LOOKS.late, icon: WifiOff };
+    default:
+      return LOOKS.failed;
+  }
+}
+
+function SuccessBody({ outcome, look }: { outcome: Extract<KioskOutcome, { kind: 'success' }>; look: Look }) {
+  const { t } = useI18n();
+  return (
+    <>
+      <p className="mt-6 text-lg font-semibold text-white/70">
+        {outcome.already ? t('attendance.kiosk.alreadyTitle') : outcome.status === 'LATE' ? t('attendance.kiosk.welcomeLate') : t('attendance.kiosk.welcome')}
+      </p>
+      <p className="mt-2 font-display text-4xl font-semibold leading-tight md:text-5xl">{outcome.name}</p>
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-base">
+        <span className="rounded-full bg-white/10 px-4 py-1.5 font-display font-semibold">{outcome.className}</span>
+        <span className={cn('rounded-full px-4 py-1.5 font-semibold', look.ring)}>{t(`enums.attendanceStatus.${outcome.status}`)}</span>
+        <span className="rounded-full bg-white/10 px-4 py-1.5 font-mono font-semibold tabular-nums">{outcome.time}</span>
+      </div>
+      {outcome.already && <p className="mt-4 text-sm text-white/60">{t('attendance.kiosk.alreadyText')}</p>}
+      {outcome.suspicious && (
+        <p className="mx-auto mt-4 flex max-w-md items-center justify-center gap-2 rounded-2xl bg-amber-400/15 px-4 py-2 text-sm font-semibold text-amber-200">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          {t('cards.kiosk.suspicious')}
+        </p>
+      )}
+    </>
+  );
+}
+
+function Body({ outcome, look }: { outcome: KioskOutcome; look: Look }) {
+  const { t } = useI18n();
+  switch (outcome.kind) {
+    case 'success':
+      return <SuccessBody outcome={outcome} look={look} />;
+    case 'left':
+      return (
+        <>
+          <p className="mt-6 text-lg font-semibold text-white/70">{t('cards.kiosk.leftTitle')}</p>
+          <p className="mt-2 font-display text-4xl font-semibold leading-tight md:text-5xl">{outcome.name}</p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-base">
+            <span className="rounded-full bg-white/10 px-4 py-1.5 font-display font-semibold">{outcome.className}</span>
+            <span className="rounded-full bg-white/10 px-4 py-1.5 font-mono font-semibold tabular-nums">{outcome.time}</span>
+          </div>
+        </>
+      );
+    case 'card':
+      return (
+        <>
+          <p className="mt-6 font-display text-3xl font-semibold">{t(`cards.kiosk.result.${outcome.result}.title`)}</p>
+          {outcome.name && <p className="mt-2 text-xl font-semibold text-white/80">{outcome.name}</p>}
+          <p className="mx-auto mt-3 max-w-md text-base text-white/70">{t(`cards.kiosk.result.${outcome.result}.text`)}</p>
+        </>
+      );
+    case 'queued':
+      return (
+        <>
+          <p className="mt-6 font-display text-3xl font-semibold">{t('cards.kiosk.queuedTitle')}</p>
+          <p className="mx-auto mt-3 max-w-md text-base text-white/70">{t('cards.kiosk.queuedText')}</p>
+        </>
+      );
+    case 'notFound':
+      return (
+        <>
+          <p className="mt-6 font-display text-3xl font-semibold">{t('attendance.kiosk.notFoundTitle')}</p>
+          <p className="mx-auto mt-3 max-w-md text-base text-white/70">{t('attendance.kiosk.notFoundText', { code: outcome.code })}</p>
+        </>
+      );
+    default:
+      return (
+        <>
+          <p className="mt-6 font-display text-3xl font-semibold">{t('attendance.kiosk.errorTitle')}</p>
+          <p className="mx-auto mt-3 max-w-md text-base text-white/70">{outcome.message}</p>
+        </>
+      );
+  }
 }
 
 /** Katta natija kartochkasi — 4 soniyadan keyin o'zi yopiladi (yoki bosilsa). */
 export function KioskResult({ outcome, onClose }: { outcome: KioskOutcome; onClose: () => void }) {
-  const { t } = useI18n();
-
   useEffect(() => {
     const id = setTimeout(onClose, RESULT_HIDE_MS);
     return () => clearTimeout(id);
@@ -47,32 +131,7 @@ export function KioskResult({ outcome, onClose }: { outcome: KioskOutcome; onClo
         <div className={cn('mx-auto flex h-24 w-24 items-center justify-center rounded-full', look.ring)}>
           <Icon className="h-14 w-14" strokeWidth={1.75} />
         </div>
-
-        {outcome.kind === 'success' ? (
-          <>
-            <p className="mt-6 text-lg font-semibold text-white/70">
-              {outcome.already ? t('attendance.kiosk.alreadyTitle') : outcome.status === 'LATE' ? t('attendance.kiosk.welcomeLate') : t('attendance.kiosk.welcome')}
-            </p>
-            <p className="mt-2 font-display text-4xl font-semibold leading-tight md:text-5xl">{outcome.name}</p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-base">
-              <span className="rounded-full bg-white/10 px-4 py-1.5 font-display font-semibold">{outcome.className}</span>
-              <span className={cn('rounded-full px-4 py-1.5 font-semibold', look.ring)}>{t(`enums.attendanceStatus.${outcome.status}`)}</span>
-              <span className="rounded-full bg-white/10 px-4 py-1.5 font-mono font-semibold tabular-nums">{outcome.time}</span>
-            </div>
-            {outcome.already && <p className="mt-4 text-sm text-white/60">{t('attendance.kiosk.alreadyText')}</p>}
-          </>
-        ) : outcome.kind === 'notFound' ? (
-          <>
-            <p className="mt-6 font-display text-3xl font-semibold">{t('attendance.kiosk.notFoundTitle')}</p>
-            <p className="mx-auto mt-3 max-w-md text-base text-white/70">{t('attendance.kiosk.notFoundText', { code: outcome.code })}</p>
-          </>
-        ) : (
-          <>
-            <p className="mt-6 font-display text-3xl font-semibold">{t('attendance.kiosk.errorTitle')}</p>
-            <p className="mx-auto mt-3 max-w-md text-base text-white/70">{outcome.message}</p>
-          </>
-        )}
-
+        <Body outcome={outcome} look={look} />
         <div className="absolute inset-x-0 bottom-0 h-1.5 bg-white/5">
           <div className={cn('h-full origin-left', look.bar)} style={{ animation: `kiosk-countdown ${RESULT_HIDE_MS}ms linear forwards` }} />
         </div>

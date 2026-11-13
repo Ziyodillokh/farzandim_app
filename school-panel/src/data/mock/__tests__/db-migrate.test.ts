@@ -16,6 +16,15 @@ describe('demo bazasi migratsiyasi', () => {
     expect(migrated.tables.activity).toEqual(fresh.tables.activity);
   });
 
+  it('NFC kartalar: avvalgi bazaga har o\'quvchiga demo karta qo\'shiladi', () => {
+    const fresh = createFreshSnapshot(new Date(2026, 9, 14, 10));
+    const { cards: _cards, cardTaps: _taps, ...rest } = fresh.tables;
+    const legacy = { ...fresh, tables: rest as typeof fresh.tables };
+    const migrated = migrate(legacy);
+    expect(migrated.tables.cards).toEqual(fresh.tables.cards);
+    expect(migrated.tables.cardTaps).toEqual([]);
+  });
+
   it('yangi baza o\'zgarmaydi (idempotent)', () => {
     const fresh = createFreshSnapshot(new Date(2026, 9, 14, 10));
     expect(migrate(fresh)).toBe(fresh);

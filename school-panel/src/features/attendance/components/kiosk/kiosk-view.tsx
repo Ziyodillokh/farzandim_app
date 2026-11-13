@@ -8,12 +8,21 @@ import { useCan, useSession } from '@/auth/use-session';
 import { Button } from '@/components/ui/button';
 import { ServiceError } from '@/data/contracts';
 import { clockNow } from '@/data/mock/clock';
+import { pickDemoCardUid } from '@/data/mock/demo-cards';
+import { isHttpMode } from '@/data/source';
+import { useCardTap } from '@/features/cards/hooks';
+import type { CardRead } from '@/features/cards/nfc';
+import { kioskId } from '@/features/cards/tap-queue';
+import { playTone } from '@/features/cards/tone';
+import { isRetryable, useTapQueue } from '@/features/cards/use-tap-queue';
 import { signInKioskDuty } from '@/features/engine/kiosk-launch';
 import { useI18n } from '@/i18n';
 import { errorKey } from '@/lib/errors';
 import { useKioskCheckIn, useKioskStats } from '../../hooks';
+import { outcomeFromTap, toneFor } from './kiosk-card';
 import { KioskHeader } from './kiosk-header';
 import { KioskKeypad } from './kiosk-keypad';
+import { KioskNfc } from './kiosk-nfc';
 import { KioskQr } from './kiosk-qr';
 import { KioskResult, type KioskOutcome } from './kiosk-result';
 import { KioskSearch } from './kiosk-search';
@@ -55,6 +64,40 @@ function KioskScreen() {
     [checkIn, formatDate, t],
   );
 
+  const cardTap = useCardTap();
+  const queue = useTapQueue();
+  const { add: enqueue } = queue;
+  // NFC karta: natija katta kartochkada va ovoz bilan; internet yo'q bo'lsa — navbatga.
+  const runCard = useCallback(
+    (read: CardRead) => {
+      const payload = { ...read, kioskId: kioskId(), tappedAt: new Date().toISOString() };
+      cardTap.mutate(payload, {
+        onSuccess: (view) => {
+          const next = outcomeFromTap(view);
+          setOutcome(next);
+          playTone(toneFor(next));
+        },
+        onError: (error) => {
+          if (isRetryable(error)) {
+            enqueue(payload);
+            setOutcome({ kind: 'queued' });
+            playTone('warn');
+            return;
+          }
+          setOutcome({ kind: 'error', message: t(errorKey(error)) });
+          playTone('fail');
+        },
+      });
+    },
+    [cardTap, enqueue, t],
+  );
+
+  // Demo: hali kelmagan o'quvchining kartasini "tegizish" (haqiqiy NFC'siz ko'rsatish uchun).
+  const demoTap = useCallback(() => {
+    const uid = pickDemoCardUid();
+    if (uid) runCard({ uid });
+  }, [runCard]);
+
   const closeResult = useCallback(() => setOutcome(null), []);
 
   return (
@@ -68,6 +111,7 @@ function KioskScreen() {
 
       <div className="relative mx-auto flex min-h-full max-w-[1500px] flex-col gap-4 p-4 md:h-full md:gap-5 md:p-6 xl:gap-6 xl:px-10 xl:py-7">
         <KioskHeader />
+        <KioskNfc onRead={runCard} queued={queue.size} onDemoTap={isHttpMode ? undefined : demoTap} />
         <main className="grid min-h-0 flex-1 items-stretch gap-4 md:grid-cols-2 md:gap-5 xl:gap-6">
           <KioskQr />
           <KioskKeypad

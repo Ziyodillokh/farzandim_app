@@ -1,5 +1,8 @@
 import type {
   Announcement,
+  CardKind,
+  CardStatus,
+  CardTapResult,
   AttendanceEvent,
   AttendanceRecord,
   AuditLog,
@@ -40,6 +43,31 @@ import type {
 } from '@/data/contracts';
 import type { AccessTables } from './access-tables';
 import type { MockParentThread } from './seed/parent-threads';
+
+/** NFC karta (mock): kontrakt ko'rinishi o'quvchi nomlarisiz (ro'yxatda qo'shiladi). */
+export type MockCard = {
+  id: string;
+  number: string;
+  uid: string;
+  kind: CardKind;
+  status: CardStatus;
+  studentId: string;
+  issuedAt: string;
+  lastTapAt: string | null;
+  blockedAt: string | null;
+  blockedReason: string | null;
+};
+
+export type MockCardTap = {
+  id: string;
+  tappedAt: string;
+  cardId: string | null;
+  studentId: string | null;
+  uid: string | null;
+  result: CardTapResult;
+  suspicious: boolean;
+  kioskId: string;
+};
 
 /**
  * Mock bazadagi barcha jadvallar. Yangi jadval qo'shilsa — `db.ts` dagi yumshoq
@@ -94,6 +122,9 @@ export type Tables = {
   access: AccessTables;
   /** Ota-onalar xodimga yozgan xabarlar (har xodim faqat o'zinikini ko'radi). */
   parentThreads: MockParentThread[];
+  /** NFC kartalar va kiosk tegishlari jurnali (max 500). */
+  cards: MockCard[];
+  cardTaps: MockCardTap[];
   /** Simulyator holati: qaysi sana va qaysi daqiqagacha qayta ishlangan. */
   sim: { date: string; processedUntilMinute: number };
 };
