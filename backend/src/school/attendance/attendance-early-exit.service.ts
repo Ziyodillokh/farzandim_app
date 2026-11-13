@@ -10,6 +10,7 @@ import { actorCan, assertCan, assertClassInScope, classScopeWhere, SchoolActor }
 import { SchoolAuditService } from '../common/school-audit.service';
 import { conflict, notFound } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
+import { SchoolModeSyncService } from '../school-mode/school-mode-sync.service';
 import { classNames, staffNames, studentNames } from './attendance-lookups';
 import { AttendanceNotifyService } from './attendance-notify.service';
 import { AttendanceClock } from './attendance-time';
@@ -26,6 +27,7 @@ export class AttendanceEarlyExitService {
     private readonly audit: SchoolAuditService,
     private readonly clock: AttendanceClock,
     private readonly notify: AttendanceNotifyService,
+    private readonly schoolMode: SchoolModeSyncService,
   ) {}
 
   /** Tarix ruxsati bo'lmasa (navbatchi) — faqat bugungilar. */
@@ -150,6 +152,8 @@ export class AttendanceEarlyExitService {
       time: request.time,
       logEarlyExit: approve && request.date === today,
     });
+    // Tasdiqlangan erta ketish chiqish vaqtini yozadi — School Mode shu vaqtdan keyin to'xtaydi.
+    if (approve && request.date === today) await this.schoolMode.refreshStudent(request.studentId);
     return toEarlyExitView(request);
   }
 }

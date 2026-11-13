@@ -59,6 +59,7 @@ export class SchoolModePolicyService {
           ...(patch.enabled !== undefined && { enabled: patch.enabled }),
           ...(patch.shiftIds && { shiftIds: [...new Set(patch.shiftIds)] }),
           ...(patch.zoneRequired !== undefined && { zoneRequired: patch.zoneRequired }),
+          ...(patch.blockFromArrival !== undefined && { blockFromArrival: patch.blockFromArrival }),
         },
       });
       await this.audit.write(

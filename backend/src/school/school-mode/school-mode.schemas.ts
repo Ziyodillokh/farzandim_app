@@ -28,6 +28,8 @@ export const policyPatchSchema = z.object({
   shiftIds: z.array(z.string().min(1)).optional(),
   /** Faqat maktab hududida bloklash (maktab hududi belgilangan bo'lishi shart). */
   zoneRequired: z.boolean().optional(),
+  /** Bola maktabga kirganini qayd etgan zahoti (karta, QR, kiosk) bloklash. */
+  blockFromArrival: z.boolean().optional(),
 });
 
 export const allowedAppSchema = z.object({

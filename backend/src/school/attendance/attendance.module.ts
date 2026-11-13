@@ -4,6 +4,7 @@
 import { Module } from '@nestjs/common';
 import { FcmModule } from '../../common/fcm/fcm.module';
 import { SchoolCoreModule } from '../school-core.module';
+import { SchoolModeModule } from '../school-mode/school-mode.module';
 import { AttendanceAbsenceCron } from './attendance-absence.cron';
 import { AttendanceArrivalService } from './attendance-arrival.service';
 import { AttendanceBoardService } from './attendance-board.service';
@@ -21,15 +22,20 @@ import { AttendanceParentService } from './attendance-parent.service';
 import { AttendanceReportsService } from './attendance-reports.service';
 import { AttendanceClock } from './attendance-time';
 import { AttendanceController } from './attendance.controller';
+import { CardKeyService } from './card-keys.service';
+import { CardTapService } from './card-tap.service';
+import { CardsController } from './cards.controller';
+import { CardsService } from './cards.service';
 
 @Module({
-  imports: [SchoolCoreModule, FcmModule],
+  imports: [SchoolCoreModule, FcmModule, SchoolModeModule],
   controllers: [
     AttendanceController,
     AttendanceKioskController,
     AttendanceHistoryController,
     AttendanceChildController,
     AttendanceParentController,
+    CardsController,
   ],
   providers: [
     AttendanceClock,
@@ -45,6 +51,9 @@ import { AttendanceController } from './attendance.controller';
     AttendanceChildHistoryService,
     AttendanceParentService,
     AttendanceAbsenceCron,
+    CardKeyService,
+    CardsService,
+    CardTapService,
   ],
   exports: [AttendanceBoardService],
 })

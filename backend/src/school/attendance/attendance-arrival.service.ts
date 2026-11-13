@@ -1,5 +1,5 @@
-// Kirish / chiqish yadrosi — xodim kioski (`KIOSK`) va Parvoz Growth QR
-// (`QR`) uchun umumiy. Panel kiosk qoidasi: bugun kirgan bo'lsa — mavjud
+// Kirish / chiqish yadrosi — xodim kioski (`KIOSK`), Parvoz Growth QR (`QR`)
+// va NFC karta (`CARD`) uchun umumiy. Panel kiosk qoidasi: bugun kirgan bo'lsa — mavjud
 // yozuv (`alreadyIn`); kirishsiz yozuv (masalan cron "kelmadi") bo'lsa —
 // tuzatish bilan PRESENT/LATE ga o'tadi; kechikish — smena boshi + lateAfterMinutes.
 
@@ -7,6 +7,7 @@ import { Injectable } from '@nestjs/common';
 import { AttendanceSource, AttendanceStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { tashkentDay } from '../../common/time/tashkent';
+import { SchoolModeSyncService } from '../school-mode/school-mode-sync.service';
 import { isUniqueViolation } from './attendance-lookups';
 import { AttendanceNotifyService } from './attendance-notify.service';
 import { isLateAt, minutesToHhmm, tashkentMinute } from './attendance-time';
@@ -18,7 +19,7 @@ export interface ArrivalContext {
   classId: string | null;
   shiftStart: string;
   lateAfterMinutes: number;
-  source: Extract<AttendanceSource, 'KIOSK' | 'QR'>;
+  source: Extract<AttendanceSource, 'KIOSK' | 'QR' | 'CARD'>;
   /** Kiosk — navbatchi xodim; QR — `SYSTEM_STAFF_ID`. */
   byStaffId: string;
   now: Date;
@@ -35,6 +36,7 @@ type AfterWrite = (tx: Tx, record: RecordWithCorrections) => Promise<void>;
 const ARRIVAL_REASON: Record<ArrivalContext['source'], string> = {
   KIOSK: 'Kirish nuqtasida qayd etildi',
   QR: 'Parvoz QR orqali qayd etildi',
+  CARD: 'NFC karta bilan qayd etildi',
 };
 
 /** Parallel so'rov bir xil (o'quvchi, kun) yozuvini yaratsa — bir marta qayta urinish. */
@@ -52,6 +54,7 @@ export class AttendanceArrivalService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notify: AttendanceNotifyService,
+    private readonly schoolMode: SchoolModeSyncService,
   ) {}
 
   /** Kirishni qayd etish (+ ota-onaga "keldi"/"kechikdi" — faqat yangi kirishda). */
@@ -66,6 +69,8 @@ export class AttendanceArrivalService {
         push: result.record.status === 'LATE' ? 'late' : 'arrived',
         time: result.record.inAt ?? '',
       });
+      // «Kirgandan boshlab bloklash» va hudud sharti kirishga bog'liq — telefon darhol yangilansin.
+      await this.schoolMode.refreshStudent(ctx.studentId);
     }
     return result;
   }
@@ -105,6 +110,7 @@ export class AttendanceArrivalService {
         push: 'left',
         time,
       });
+      await this.schoolMode.refreshStudent(ctx.studentId);
     }
     return record;
   }

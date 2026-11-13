@@ -61,6 +61,7 @@ export function toPolicyView(policy: SchoolModePolicy) {
     enabled: policy.enabled,
     relaxDuringBreaks: policy.relaxDuringBreaks,
     zoneRequired: policy.zoneRequired,
+    blockFromArrival: policy.blockFromArrival,
   };
 }
 

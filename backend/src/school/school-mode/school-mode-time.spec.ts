@@ -4,6 +4,7 @@ import {
   dayWindowOf,
   exceptionStatus,
   numberPeriods,
+  presenceWindows,
   restrictedWindows,
   ShiftLike,
   subtractWindow,
@@ -86,6 +87,29 @@ describe('school mode time', () => {
       { start: at('09:00'), end: at('09:40') },
     ]);
     expect(subtractWindow(windows, { start: at('07:00'), end: at('10:00') })).toEqual([]);
+  });
+
+  it('davomat bo\'yicha oynalar: kirgandan boshlab, chiqqach to\'xtaydi, sababli kelmagan — yo\'q', () => {
+    const lessons = restrictedWindows(shift, policy);
+    const present = { status: 'PRESENT', inAt: '07:40', outAt: null };
+
+    // «Kirgandan boshlab» yoqilgan: 07:40 dan birinchi darsgacha ham; tanaffus ochiqligicha qoladi.
+    expect(presenceWindows(lessons, present, true)).toEqual([
+      { start: at('07:40'), end: at('08:45') },
+      { start: at('08:55'), end: at('09:40') },
+    ]);
+    // Tugma o'chiq yoki dars ichida kirgan — oynalar o'zgarmaydi.
+    expect(presenceWindows(lessons, present, false)).toEqual(lessons);
+    expect(presenceWindows(lessons, { ...present, inAt: '08:20' }, true)).toEqual(lessons);
+    // Chiqish (erta ketish) — shu vaqtdan keyin cheklov yo'q.
+    expect(presenceWindows(lessons, { status: 'LEFT_EARLY', inAt: '07:50', outAt: '09:10' }, true)).toEqual([
+      { start: at('07:50'), end: at('08:45') },
+      { start: at('08:55'), end: at('09:10') },
+    ]);
+    // Sababli kelmagan — shu kuni School Mode yo'q; davomat yozuvi yo'q yoki "kelmadi" — jadval bo'yicha.
+    expect(presenceWindows(lessons, { status: 'EXCUSED', inAt: null, outAt: null }, true)).toEqual([]);
+    expect(presenceWindows(lessons, null, true)).toEqual(lessons);
+    expect(presenceWindows(lessons, { status: 'ABSENT', inAt: null, outAt: null }, true)).toEqual(lessons);
   });
 
   it('istisno — kun daqiqalariga (kun chegarasida kesiladi)', () => {
