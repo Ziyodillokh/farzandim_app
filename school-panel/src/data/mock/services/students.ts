@@ -3,15 +3,20 @@ import type {
   AttendanceRecord,
   DeviceState,
   Guardian,
+  GuardianAdded,
   ListQuery,
   Paginated,
   ParentLinkStatus,
+  ReusedGuardian,
   SchoolModeException,
   Student,
+  StudentCreated,
+  StudentImportResult,
 } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
 import {
   guardianInputSchema,
+  parseRelation,
   studentCreateSchema,
   studentInputSchema,
   type GuardianInput,
@@ -157,6 +162,18 @@ function moveOpenItems(t: Tables, studentId: string, classId: string): void {
   for (const c of t.careRequests) if (c.studentId === studentId && c.status !== 'RESOLVED') c.classId = classId;
 }
 
+/**
+ * Telefon — odamning kaliti (backend `attachGuardian` bilan bir xil): shu raqamli ota-ona bo'lsa, yangi yozuv
+ * ochilmaydi — o'sha qaytadi (aka-uka bitta taklif kodi bilan ulanadi). Mavjud yozuvning ismi o'zgarmaydi.
+ */
+function attachGuardian(t: Tables, input: Omit<Guardian, 'id' | 'linkStatus' | 'inviteCode' | 'inviteExpiresAt' | 'linkedAt'>): { guardian: Guardian; reused: boolean } {
+  const existing = t.guardians.find((g) => g.phone === input.phone);
+  if (existing) return { guardian: existing, reused: true };
+  const guardian: Guardian = { id: newId('grd'), ...input, linkStatus: 'NOT_INVITED', inviteCode: null, inviteExpiresAt: null, linkedAt: null };
+  t.guardians.push(guardian);
+  return { guardian, reused: false };
+}
+
 export const studentsService = {
   /** Filtr va formalar uchun doiradagi sinflar (faqat id va nom) — `students.view` yetarli. */
   async classOptions(): Promise<Array<{ id: string; name: string }>> {
@@ -228,7 +245,7 @@ export const studentsService = {
     };
   },
 
-  async create(input: StudentCreateInput): Promise<Student> {
+  async create(input: StudentCreateInput): Promise<StudentCreated> {
     await latency();
     const actor = currentActor();
     assertCan(actor, 'students.manage');
@@ -236,14 +253,10 @@ export const studentsService = {
     return transact((t) => {
       if (!t.classes.some((c) => c.id === data.classId)) throw new ServiceError('VALIDATION', 'classId');
       const id = newId('stu');
-      const guardianIds: string[] = [];
-      if (data.guardian) {
-        const guardian: Guardian = { id: newId('grd'), ...data.guardian, linkStatus: 'NOT_INVITED', inviteCode: null, inviteExpiresAt: null, linkedAt: null };
-        t.guardians.push(guardian);
-        guardianIds.push(guardian.id);
-      }
-      const { guardian: _guardian, ...fields } = data;
-      void _guardian;
+      const { guardians, ...fields } = data;
+      const attached = guardians.map((g) => attachGuardian(t, g));
+      const reusedGuardians: ReusedGuardian[] = attached.filter((a) => a.reused).map(({ guardian }) => ({ id: guardian.id, fullName: guardian.fullName }));
+      const guardianIds = [...new Set(attached.map((a) => a.guardian.id))];
       const student: Student = {
         id,
         ...fields,
@@ -255,7 +268,7 @@ export const studentsService = {
       t.students.push(student);
       t.devices.push({ studentId: id, status: student.device === 'NONE' ? 'NO_PHONE' : 'NO_PERMISSION', lastSeenAt: null });
       writeAudit(t, actor, 'STUDENTS', 'student.create', `${studentName(student)} qo'shildi`, id, null, student, { name: studentName(student) });
-      return student;
+      return { ...student, reusedGuardians };
     });
   },
 
@@ -292,23 +305,42 @@ export const studentsService = {
     });
   },
 
-  /** CSV import: [familiya, ism, otasining ismi, sinf (7-A), jinsi (M/F), tug'ilgan sana, ota-ona, telefon]. */
-  async importRows(rows: string[][]): Promise<{ created: number; skipped: Array<{ row: number; reason: string }> }> {
+  /**
+   * CSV import: [familiya, ism, otasining ismi, sinf (7-A), jinsi (M/F), tug'ilgan sana, ota-ona, telefon, kimligi,
+   * 2-ota-ona, 2-telefon, 2-kimligi]. Oxirgi to'rttasi ixtiyoriy; telefoni mos ota-ona mavjud yozuvga bog'lanadi.
+   */
+  async importRows(rows: string[][]): Promise<StudentImportResult> {
     const actor = currentActor();
     assertCan(actor, 'students.manage');
     const t = getTables();
     const classByName = new Map(t.classes.map((c) => [c.name.toUpperCase(), c.id]));
     let created = 0;
+    let reusedGuardians = 0;
     const skipped: Array<{ row: number; reason: string }> = [];
     for (const [i, cells] of rows.entries()) {
-      const [lastName = '', firstName = '', middleName = '', className = '', gender = '', birthDate = '', guardianName = '', phone = ''] = cells.map((c) => c.trim());
+      const [
+        lastName = '',
+        firstName = '',
+        middleName = '',
+        className = '',
+        gender = '',
+        birthDate = '',
+        guardianName = '',
+        phone = '',
+        relation = '',
+        guardian2Name = '',
+        phone2 = '',
+        relation2 = '',
+      ] = cells.map((c) => c.trim());
       const classId = classByName.get(className.toUpperCase());
       if (!classId) {
         skipped.push({ row: i + 1, reason: `class:${className}` });
         continue;
       }
+      const guardianOf = (name: string, tel: string, rel: string) =>
+        name && tel ? [{ fullName: name, phone: tel, relation: parseRelation(rel) }] : [];
       try {
-        await studentsService.create({
+        const student = await studentsService.create({
           lastName,
           firstName,
           middleName,
@@ -316,14 +348,15 @@ export const studentsService = {
           gender: /^(f|q|ж|female)/i.test(gender) ? 'FEMALE' : 'MALE',
           birthDate: /^\d{4}-\d{2}-\d{2}$/.test(birthDate) ? birthDate : '2014-01-01',
           device: 'NONE',
-          guardian: guardianName && phone ? { fullName: guardianName, phone, relation: 'OTHER' } : undefined,
+          guardians: [...guardianOf(guardianName, phone, relation), ...guardianOf(guardian2Name, phone2, relation2)],
         });
         created += 1;
+        reusedGuardians += student.reusedGuardians.length;
       } catch (error) {
         skipped.push({ row: i + 1, reason: error instanceof Error ? error.message : 'invalid' });
       }
     }
-    return { created, skipped };
+    return { created, skipped, reusedGuardians };
   },
 
   /** 360° karta: tarix lentasi va xodim eslatmalari (`student-360.ts`). */
@@ -413,7 +446,8 @@ export const guardiansService = {
     });
   },
 
-  async addToStudent(studentId: string, input: GuardianInput): Promise<Guardian> {
+  /** Shu telefonli ota-ona bo'lsa — o'sha bog'lanadi (`reused`); u allaqachon shu o'quvchiniki bo'lsa — 409. */
+  async addToStudent(studentId: string, input: GuardianInput): Promise<GuardianAdded> {
     await latency();
     const actor = currentActor();
     assertCan(actor, 'guardians.link');
@@ -422,14 +456,19 @@ export const guardiansService = {
       const student = t.students.find((s) => s.id === studentId);
       if (!student) throw new ServiceError('NOT_FOUND', studentId);
       assertClassInScope(actor, student.classId);
-      const guardian: Guardian = { id: newId('grd'), ...data, linkStatus: 'NOT_INVITED', inviteCode: null, inviteExpiresAt: null, linkedAt: null };
-      t.guardians.push(guardian);
+      const { guardian, reused } = attachGuardian(t, data);
+      if (student.guardianIds.includes(guardian.id)) {
+        throw new ServiceError('CONFLICT', 'Guardian is already linked to this student', 'GUARDIAN_ALREADY_LINKED');
+      }
       student.guardianIds = [...student.guardianIds, guardian.id];
-      writeAudit(t, actor, 'GUARDIANS', 'guardian.create', `${studentName(student)}ga ota-ona qo'shildi: ${guardian.fullName}`, guardian.id, null, null, {
+      const summary = reused
+        ? `${studentName(student)}ga mavjud ota-ona bog'landi: ${guardian.fullName}`
+        : `${studentName(student)}ga ota-ona qo'shildi: ${guardian.fullName}`;
+      writeAudit(t, actor, 'GUARDIANS', 'guardian.create', summary, guardian.id, null, null, {
         student: studentName(student),
         name: guardian.fullName,
       });
-      return guardian;
+      return { ...guardian, reused };
     });
   },
 

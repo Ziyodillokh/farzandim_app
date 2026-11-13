@@ -1,4 +1,4 @@
-import type { Guardian, Paginated, Student, StudentNote } from '@/data/contracts';
+import type { Guardian, GuardianAdded, Paginated, Student, StudentCreated, StudentImportResult, StudentNote } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
 import type { parentsService } from '@/data/mock/services/parents';
 import type { StudentHistory, StudentNoteRow } from '@/data/mock/services/student-360';
@@ -28,10 +28,10 @@ export const studentsHttp: Students = {
   list: (filter = {}) => http<Paginated<StudentRow>>('GET', '/school/students', { query: filter }),
   exportRows,
   get: (studentId) => http<StudentDetail>('GET', `/school/students/${id(studentId)}`),
-  create: (input: StudentCreateInput) => http<Student>('POST', '/school/students', { body: input }),
+  create: (input: StudentCreateInput) => http<StudentCreated>('POST', '/school/students', { body: input }),
   update: (studentId, input: StudentInput) => http<Student>('PUT', `/school/students/${id(studentId)}`, { body: input }),
   setArchived: (studentId, archived) => http<Student>('PUT', `/school/students/${id(studentId)}/archived`, { body: { archived } }),
-  importRows: (rows) => http<Awaited<ReturnType<Students['importRows']>>>('POST', '/school/students/import', { body: { rows } }),
+  importRows: (rows) => http<StudentImportResult>('POST', '/school/students/import', { body: { rows } }),
   history: (studentId) => http<StudentHistory>('GET', `/school/students/${id(studentId)}/history`),
   notes: (studentId) => http<StudentNoteRow[]>('GET', `/school/students/${id(studentId)}/notes`),
   addNote: (studentId, text) => http<StudentNote>('POST', `/school/students/${id(studentId)}/notes`, { body: { text } }),
@@ -45,7 +45,7 @@ export const guardiansHttp: Guardians = {
   /** Demo: haqiqiy rejimda ota-ona kodni Parvoz Parents ilovasida o'zi kiritadi. */
   simulateLink: () => Promise.reject(new ServiceError('UNKNOWN', 'demo-only')),
   unlink: (guardianId) => http<Guardian>('POST', `/school/guardians/${id(guardianId)}/unlink`),
-  addToStudent: (studentId, input: GuardianInput) => http<Guardian>('POST', `/school/students/${id(studentId)}/guardians`, { body: input }),
+  addToStudent: (studentId, input: GuardianInput) => http<GuardianAdded>('POST', `/school/students/${id(studentId)}/guardians`, { body: input }),
   update: (guardianId, input: GuardianInput) => http<Guardian>('PUT', `/school/guardians/${id(guardianId)}`, { body: input }),
 };
 

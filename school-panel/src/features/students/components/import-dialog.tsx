@@ -15,9 +15,26 @@ import { errorKey } from '@/lib/errors';
 /** Birinchi qator sarlavhami (shablondagi "Familiya" / "Фамилия" / "Last name")? */
 const HEADER_RE = /^(familiya|фамилия|last ?name)$/i;
 
+const TEMPLATE_HEADERS = [
+  'Familiya',
+  'Ism',
+  'Otasining ismi',
+  'Sinf',
+  'Jinsi',
+  'Tug\'ilgan sana',
+  'Ota-ona',
+  'Telefon',
+  'Kimligi',
+  '2-ota-ona',
+  '2-telefon',
+  '2-kimligi',
+];
+
+/** Namuna: ikki ota-ona; uchinchi qator — aka-uka (telefon bir xil — ota-ona bitta yozuv bo'lib qoladi). */
 const TEMPLATE_ROWS = [
-  ['Karimov', 'Aziz', 'Akmal o\'g\'li', '7-A', 'M', '2013-05-14', 'Karimova Malika', '+998 90 123 45 67'],
-  ['Rasulova', 'Madina', 'Bobur qizi', '5-B', 'F', '2015-09-02', 'Rasulov Bobur', '+998 93 765 43 21'],
+  ['Karimov', 'Aziz', 'Akmal o\'g\'li', '7-A', 'M', '2013-05-14', 'Karimova Malika', '+998 90 123 45 67', 'ona', 'Karimov Akmal', '+998 93 765 43 21', 'ota'],
+  ['Rasulova', 'Madina', 'Bobur qizi', '5-B', 'F', '2015-09-02', 'Rasulov Bobur', '+998 94 555 12 34', 'ota', '', '', ''],
+  ['Karimova', 'Laylo', 'Akmal qizi', '5-B', 'F', '2015-03-03', 'Karimova Malika', '+998 90 123 45 67', 'ona', '', '', ''],
 ];
 
 export function ImportDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
@@ -45,6 +62,7 @@ export function ImportDialog({ open, onOpenChange }: { open: boolean; onOpenChan
     try {
       const result = await api.students.importRows(rows);
       toast.success(t('students.import.result', { created: result.created, skipped: result.skipped.length }));
+      if (result.reusedGuardians > 0) toast.info(t('students.import.resultReused', { count: result.reusedGuardians }));
       void queryClient.invalidateQueries();
       onOpenChange(false);
       setRows(null);
@@ -73,16 +91,11 @@ export function ImportDialog({ open, onOpenChange }: { open: boolean; onOpenChan
           variant="link"
           className="h-auto justify-start p-0"
           onClick={() =>
-            downloadCsv('parvoz-import-namuna', TEMPLATE_ROWS, [
-              'Familiya',
-              'Ism',
-              'Otasining ismi',
-              'Sinf',
-              'Jinsi',
-              'Tug\'ilgan sana',
-              'Ota-ona',
-              'Telefon',
-            ].map((header, i) => ({ header, value: (row: string[]) => row[i] ?? '' })))
+            downloadCsv(
+              'parvoz-import-namuna',
+              TEMPLATE_ROWS,
+              TEMPLATE_HEADERS.map((header, i) => ({ header, value: (row: string[]) => row[i] ?? '' })),
+            )
           }
         >
           {t('students.import.template')}

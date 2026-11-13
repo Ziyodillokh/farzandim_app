@@ -1,6 +1,8 @@
 // O'quvchini qo'shish / tahrirlash / arxivlash va CSV import. Sinf
 // almashganda bugungi va ochiq yozuvlar yangi sinfga ko'chadi (doira
 // tekshiruvlari shu ustunni o'qiydi); o'tgan kunlar tarixi eski sinfda qoladi.
+// Ota-onalar telefon bo'yicha birlashtiriladi (`attachGuardian`): aka-ukaning
+// onasi bitta yozuv bo'lib qoladi.
 
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
@@ -11,6 +13,7 @@ import { assertCan, SchoolActor } from '../auth/school-actor';
 import { SchoolAuditService } from '../common/school-audit.service';
 import { conflict, invalid, notFound } from '../common/school-errors';
 import { parseOrThrow } from '../common/school-zod';
+import { attachGuardian } from './guardian-attach';
 import { duplicateKey, normalizeClassName, parseImportRows } from './student-import';
 import { studentName, toStudentView } from './student-view';
 import {
@@ -43,7 +46,7 @@ export class StudentsWriteService {
     return this.prisma.$transaction(async (tx) => {
       await this.assertClass(tx, actor, data.classId);
       const codes = await this.takenCodes(tx, actor.schoolId);
-      const student = await this.insert(tx, actor, data, codes);
+      const { student, reusedGuardians } = await this.insert(tx, actor, data, codes);
       const view = toStudentView(student);
       await this.audit.write(
         actor,
@@ -57,7 +60,7 @@ export class StudentsWriteService {
         },
         tx,
       );
-      return view;
+      return { ...view, reusedGuardians };
     });
   }
 
@@ -131,12 +134,15 @@ export class StudentsWriteService {
     ]);
     const classIdByName = new Map(classes.map((c) => [normalizeClassName(c.name), c.id]));
     const { candidates, skipped } = parseImportRows(rows, classIdByName, new Set(existing.map(duplicateKey)));
+    let reusedGuardians = 0;
     for (let i = 0; i < candidates.length; i += IMPORT_CHUNK) {
       const chunk = candidates.slice(i, i + IMPORT_CHUNK);
-      await this.prisma.$transaction(
+      reusedGuardians += await this.prisma.$transaction(
         async (tx) => {
           const codes = await this.takenCodes(tx, actor.schoolId);
-          for (const c of chunk) await this.insert(tx, actor, c.data, codes);
+          let reused = 0;
+          for (const c of chunk) reused += (await this.insert(tx, actor, c.data, codes)).reusedGuardians.length;
+          return reused;
         },
         { timeout: 60_000 },
       );
@@ -148,7 +154,7 @@ export class StudentsWriteService {
       summary: `CSV import: ${created} ta o'quvchi qo'shildi, ${skipped.length} ta qator o'tkazib yuborildi`,
       params: { created, skipped: skipped.length },
     });
-    return { created, skipped };
+    return { created, skipped, reusedGuardians };
   }
 
   // ── Ichki ──────────────────────────────────────────────────────────
@@ -163,22 +169,22 @@ export class StudentsWriteService {
     return new Set(rows.map((r) => r.studentCode));
   }
 
+  /** O'quvchi va uning ota-onalari; `reusedGuardians` — telefoni mos kelib qayta ishlatilgan mavjud ota-onalar. */
   private async insert(tx: Tx, actor: SchoolActor, data: StudentCreate, codes: Set<string>) {
-    const { guardian, ...fields } = data;
+    const { guardians, ...fields } = data;
     const studentCode = newStudentCode(codes);
     codes.add(studentCode);
-    return tx.schoolStudent.create({
-      data: {
-        ...fields,
-        schoolId: actor.schoolId,
-        studentCode,
-        enrolledAt: tashkentDay(),
-        ...(guardian && {
-          guardians: { create: [{ guardian: { create: { ...guardian, schoolId: actor.schoolId } } }] },
-        }),
-      },
-      include: guardianIdsInclude,
+    const { id } = await tx.schoolStudent.create({
+      data: { ...fields, schoolId: actor.schoolId, studentCode, enrolledAt: tashkentDay() },
+      select: { id: true },
     });
+    const reusedGuardians: Array<{ id: string; fullName: string }> = [];
+    for (const input of guardians) {
+      const { guardian, reused } = await attachGuardian(tx, actor.schoolId, id, input);
+      if (reused) reusedGuardians.push({ id: guardian.id, fullName: guardian.fullName });
+    }
+    const student = await tx.schoolStudent.findUniqueOrThrow({ where: { id }, include: guardianIdsInclude });
+    return { student, reusedGuardians };
   }
 }
 

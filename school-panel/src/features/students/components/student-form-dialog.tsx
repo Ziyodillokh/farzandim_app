@@ -1,8 +1,10 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Plus, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Controller, useForm, type UseFormReturn } from 'react-hook-form';
+import { toast } from 'sonner';
 
 import { FormField } from '@/components/common/form-field';
 import { Button } from '@/components/ui/button';
@@ -11,11 +13,18 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import type { Student } from '@/data/contracts';
-import { studentCreateSchema, type StudentCreateInput } from '@/data/schemas/students';
+import {
+  isGuardianDraftFilled,
+  studentCreateFormSchema,
+  type GuardianDraft,
+  type StudentCreateFormValues,
+} from '@/data/schemas/students';
 import { useI18n } from '@/i18n';
 import { useClassOptions, useCreateStudent, useUpdateStudent } from '../hooks';
 
-type FormValues = StudentCreateInput & { guardianName?: string; guardianPhone?: string; guardianRelation?: 'MOTHER' | 'FATHER' | 'GRANDPARENT' | 'OTHER' };
+type FormValues = StudentCreateFormValues;
+
+const emptyGuardian = (relation: GuardianDraft['relation']): GuardianDraft => ({ fullName: '', phone: '+998 ', relation });
 
 const EMPTY: FormValues = {
   lastName: '',
@@ -25,9 +34,7 @@ const EMPTY: FormValues = {
   birthDate: '2014-01-01',
   classId: '',
   device: 'ANDROID',
-  guardianName: '',
-  guardianPhone: '+998 ',
-  guardianRelation: 'MOTHER',
+  guardians: [emptyGuardian('MOTHER'), emptyGuardian('FATHER')],
 };
 
 /** Yangi o'quvchi yoki tahrirlash (student berilsa). */
@@ -49,15 +56,17 @@ export function StudentFormDialog({
   const editing = Boolean(student);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(studentCreateSchema.omit({ guardian: true })),
+    resolver: zodResolver(studentCreateFormSchema),
     defaultValues: EMPTY,
   });
+  const [secondOpen, setSecondOpen] = useState(false);
 
   // Formani faqat ochilganda to'ldiramiz: jonli simulyator so'rovlarni tez-tez
   // yangilaydi va `student` obyekti almashadi — yozilayotgan matn o'chmasin.
   const wasOpen = useRef(false);
   useEffect(() => {
     if (open && !wasOpen.current) {
+      setSecondOpen(false);
       form.reset(
         student
           ? { ...EMPTY, ...student, middleName: student.middleName }
@@ -74,18 +83,28 @@ export function StudentFormDialog({
   }, [open, student, defaultClassId, classes.data, form]);
 
   const submit = form.handleSubmit(async (values) => {
-    const { guardianName, guardianPhone, guardianRelation, ...fields } = values;
+    const { guardians, ...fields } = values;
     if (student) {
       await update.mutateAsync({ id: student.id, input: fields });
     } else {
-      const hasGuardian = Boolean(guardianName?.trim()) && (guardianPhone?.replace(/\D/g, '').length ?? 0) > 3;
-      await create.mutateAsync({
+      const created = await create.mutateAsync({
         ...fields,
-        guardian: hasGuardian ? { fullName: guardianName ?? '', phone: guardianPhone ?? '', relation: guardianRelation ?? 'OTHER' } : undefined,
+        guardians: guardians
+          .filter(isGuardianDraftFilled)
+          .map((g) => ({ fullName: g.fullName.trim(), phone: g.phone, relation: g.relation })),
       });
+      if (created.reusedGuardians.length > 0) {
+        toast.info(t('students.guardiansReused', { names: created.reusedGuardians.map((g) => g.fullName).join(', ') }));
+      }
     }
     onOpenChange(false);
   });
+
+  const removeSecond = () => {
+    form.setValue('guardians.1', emptyGuardian('FATHER'));
+    form.clearErrors('guardians.1');
+    setSecondOpen(false);
+  };
 
   const { errors } = form.formState;
   const pending = create.isPending || update.isPending;
@@ -175,34 +194,25 @@ export function StudentFormDialog({
             <>
               <Separator />
               <p className="text-sm font-semibold">{t('students.fields.guardianSection')}</p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <FormField label={t('students.fields.guardianName')} htmlFor="guardianName">
-                  <Input id="guardianName" {...form.register('guardianName')} />
-                </FormField>
-                <FormField label={t('students.fields.guardianPhone')} htmlFor="guardianPhone" hint="+998 90 123 45 67">
-                  <Input id="guardianPhone" inputMode="tel" {...form.register('guardianPhone')} />
-                </FormField>
-              </div>
-              <FormField label={t('students.fields.relation')}>
-                <Controller
-                  control={form.control}
-                  name="guardianRelation"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(['MOTHER', 'FATHER', 'GRANDPARENT', 'OTHER'] as const).map((r) => (
-                          <SelectItem key={r} value={r}>
-                            {t(`enums.relation.${r}`)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </FormField>
+              <GuardianFields form={form} index={0} />
+              {secondOpen ? (
+                <>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold">{t('students.fields.guardian2Section')}</p>
+                    <Button type="button" variant="ghost" size="sm" onClick={removeSecond}>
+                      <X />
+                      {t('students.fields.removeGuardian')}
+                    </Button>
+                  </div>
+                  <GuardianFields form={form} index={1} />
+                </>
+              ) : (
+                <Button type="button" variant="outline" size="sm" className="justify-self-start" onClick={() => setSecondOpen(true)}>
+                  <Plus />
+                  {t('students.fields.addSecondGuardian')}
+                </Button>
+              )}
+              <p className="text-xs text-muted-foreground">{t('students.fields.guardianReuseHint')}</p>
             </>
           )}
 
@@ -217,5 +227,43 @@ export function StudentFormDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Bitta ota-ona: F.I.Sh., telefon va kimligi (`guardians.<index>`). */
+function GuardianFields({ form, index }: { form: UseFormReturn<FormValues>; index: 0 | 1 }) {
+  const { t } = useI18n();
+  const errors = form.formState.errors.guardians?.[index];
+  return (
+    <>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FormField label={t('students.fields.guardianName')} htmlFor={`guardian-${index}-name`} error={errors?.fullName}>
+          <Input id={`guardian-${index}-name`} {...form.register(`guardians.${index}.fullName`)} />
+        </FormField>
+        <FormField label={t('students.fields.guardianPhone')} htmlFor={`guardian-${index}-phone`} error={errors?.phone} hint="+998 90 123 45 67">
+          <Input id={`guardian-${index}-phone`} inputMode="tel" {...form.register(`guardians.${index}.phone`)} />
+        </FormField>
+      </div>
+      <FormField label={t('students.fields.relation')}>
+        <Controller
+          control={form.control}
+          name={`guardians.${index}.relation`}
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(['MOTHER', 'FATHER', 'GRANDPARENT', 'OTHER'] as const).map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {t(`enums.relation.${r}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </FormField>
+    </>
   );
 }

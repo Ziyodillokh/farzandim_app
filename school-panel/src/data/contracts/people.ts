@@ -14,6 +14,22 @@ export type Guardian = {
   linkedAt: IsoDateTime | null;
 };
 
+/** Telefoni mos kelib qayta ishlatilgan mavjud ota-ona (aka-uka bitta yozuv va bitta taklif kodi bilan). */
+export type ReusedGuardian = { id: Id; fullName: string };
+
+/** Yangi o'quvchi javobi: qayta ishlatilgan ota-onalar bilan. */
+export type StudentCreated = Student & { reusedGuardians: ReusedGuardian[] };
+
+/** O'quvchiga ota-ona qo'shish javobi: `reused` — shu telefonli mavjud ota-ona bog'landi. */
+export type GuardianAdded = Guardian & { reused: boolean };
+
+export type StudentImportResult = {
+  created: number;
+  skipped: Array<{ row: number; reason: string }>;
+  /** Telefoni mos kelib mavjud ota-onaga bog'langanlar soni. */
+  reusedGuardians: number;
+};
+
 export type Student = {
   id: Id;
   lastName: string;

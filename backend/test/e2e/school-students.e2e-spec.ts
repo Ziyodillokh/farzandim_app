@@ -149,7 +149,7 @@ describe('School students', () => {
   it('CSV import: yaroqli qatorlar, sabablari bilan o\'tkazilganlar, takrorlar', async () => {
     await createStudent(t.prisma, schoolId, classA, { lastName: 'Bor', firstName: 'Oldin', birthDate: '2013-01-01' });
     const rows = [
-      ['Karimov', 'Aziz', 'Akmal o\'g\'li', '7-a', 'M', '2013-05-14', 'Karimova Malika', '+998 90 123 45 67'],
+      ['Karimov', 'Aziz', 'Akmal o\'g\'li', '7-a', 'M', '2013-05-14', 'Karimova Malika', '+998 90 123 45 67', 'ona', 'Karimov Akmal', '+998937654321', 'ota'],
       ['Rasulova', 'Madina', '', '7B', 'Q', '02.09.2013', '', ''],
       ['Rasulova', 'Madina', '', '7-B', 'F', '2013-09-02', '', ''],
       ['Bor', 'Oldin', '', '7-A', 'M', '2013-01-01', '', ''],
@@ -157,24 +157,31 @@ describe('School students', () => {
       ['Sana', 'Xato', '', '7-A', 'M', '2013-02-30', '', ''],
       ['Tel', 'Xato', '', '7-A', 'M', '2013-02-03', 'Ota', '123'],
       ['', '', ''],
+      ['Karimova', 'Laylo', '', '7-B', 'F', '2015-03-03', 'Malika', '+998901234567', 'onasi'],
     ];
     const res = await call(director, 'POST', '/import', { rows });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({
-      created: 2,
+      created: 3,
       skipped: [
         { row: 3, reason: 'duplicate' },
         { row: 4, reason: 'duplicate' },
         { row: 5, reason: 'class:9-V' },
         { row: 6, reason: 'birthDate' },
-        { row: 7, reason: 'guardian.phone: errors.form.invalidPhone' },
+        { row: 7, reason: 'guardians.0.phone: errors.form.invalidPhone' },
       ],
+      reusedGuardians: 1,
     });
     const madina = await t.prisma.schoolStudent.findFirstOrThrow({ where: { firstName: 'Madina' } });
     expect(madina).toMatchObject({ gender: 'FEMALE', birthDate: '2013-09-02', classId: classB });
-    expect(await t.prisma.schoolGuardian.count()).toBe(1);
+    // Ona va ota — ikkita yozuv; Laylo (opa-singil) onaga bog'landi, yangi yozuv ochilmadi.
+    const guardians = await t.prisma.schoolGuardian.findMany({ orderBy: { createdAt: 'asc' }, include: { students: true } });
+    expect(guardians.map((g) => [g.fullName, g.relation, g.students.length])).toEqual([
+      ['Karimova Malika', 'MOTHER', 2],
+      ['Karimov Akmal', 'FATHER', 1],
+    ]);
     const audit = await t.prisma.schoolAuditLog.findFirstOrThrow({ where: { action: 'student.import' } });
-    expect(audit.params).toEqual({ created: 2, skipped: 5 });
+    expect(audit.params).toEqual({ created: 3, skipped: 5 });
     expect((await call(director, 'POST', '/import', { rows: [] })).statusCode).toBe(400);
   });
 

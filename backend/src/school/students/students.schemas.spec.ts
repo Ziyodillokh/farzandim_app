@@ -1,4 +1,4 @@
-import { linkCorrectionSchema, redeemSchema, studentCodeSchema } from './students.schemas';
+import { linkCorrectionSchema, redeemSchema, studentCodeSchema, studentCreateSchema } from './students.schemas';
 
 const UUID = '3f9c1c1e-6a1b-4c1e-9d5e-0a3f4b6c7d8e';
 
@@ -61,5 +61,38 @@ describe('linkCorrectionSchema', () => {
     ['numeric note', { note: 5 }],
   ])('rejects %s', (_name, patch) => {
     expect(linkCorrectionSchema.safeParse({ ...valid, ...patch }).success).toBe(false);
+  });
+});
+
+describe('studentCreateSchema (ota-onalar bilan)', () => {
+  const student = {
+    lastName: 'Karimov',
+    firstName: 'Aziz',
+    gender: 'MALE',
+    birthDate: '2013-05-14',
+    classId: 'c1',
+    device: 'NONE',
+  };
+  const mother = { fullName: 'Karimova Malika', phone: '+998901234567', relation: 'MOTHER' };
+  const father = { fullName: 'Karimov Akmal', phone: '+998 93 765 43 21', relation: 'FATHER' };
+
+  it('eski panel: bitta `guardian` ro\'yxatga aylanadi, telefon normallashadi', () => {
+    const parsed = studentCreateSchema.parse({ ...student, guardian: mother });
+
+    expect(parsed.guardians).toEqual([{ ...mother, phone: '+998 90 123 45 67' }]);
+    expect(parsed).not.toHaveProperty('guardian');
+  });
+
+  it('ikki ota-ona; ota-onasiz ham bo\'ladi', () => {
+    expect(studentCreateSchema.parse({ ...student, guardians: [mother, father] }).guardians).toHaveLength(2);
+    expect(studentCreateSchema.parse(student).guardians).toEqual([]);
+  });
+
+  it('uchinchi ota-ona yoki bir xil telefon — xato', () => {
+    const three = studentCreateSchema.safeParse({ ...student, guardian: mother, guardians: [father, { ...father, phone: '+998 99 111 22 33' }] });
+    const same = studentCreateSchema.safeParse({ ...student, guardians: [mother, { ...father, phone: '+998 90 123 45 67' }] });
+
+    expect(three.success).toBe(false);
+    expect(same.error?.issues[0]).toMatchObject({ path: ['guardians', 1, 'phone'], message: 'errors.form.duplicatePhone' });
   });
 });
