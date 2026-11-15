@@ -19,6 +19,7 @@ import {
   restoreClock,
 } from './kirish-fixtures';
 import { createTestApp, TestApp } from './test-app';
+import { ROTATION_GRACE_MS } from '../../src/modules/auth/session-rotation';
 
 const PARENT_PASSWORD = 'Ota-ona-parol1';
 
@@ -279,6 +280,10 @@ describe('Kirish K1: mavjud oqimlar buzilmasligi (regressiya)', () => {
 
       const refreshed = await api(t, 'POST', '/auth/refresh', { payload: { refreshToken: body.refreshToken } });
       expect(refreshed.statusCode).toBe(200);
+      await t.prisma.userSession.update({
+        where: { id: claims.sid as string },
+        data: { rotatedAt: new Date(Date.now() - ROTATION_GRACE_MS - 1000) },
+      });
       expect((await api(t, 'POST', '/auth/refresh', { payload: { refreshToken: body.refreshToken } })).statusCode).toBe(401);
 
       expect((await api(t, 'POST', '/auth/logout', { token: refreshed.json().accessToken })).statusCode).toBe(200);

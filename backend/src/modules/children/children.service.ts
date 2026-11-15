@@ -29,6 +29,7 @@ import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { verifyChildAvatarSignature } from '../../common/helpers/child-avatar-signature';
 import { stripImageMetadata } from '../../common/helpers/image-metadata';
 import { ChildDataPurgeService } from '../child-data-purge/child-data-purge.service';
+import { reliableUsagePermission } from './usage-permission';
 
 /** Bola rasmi proksisiga kirish ma'lumotlari (token yoki imzo). */
 export interface AvatarImageAccess {
@@ -430,8 +431,11 @@ export class ChildrenService {
     if (dto.accessibilityEnabled !== undefined) {
       data.accessibilityEnabled = dto.accessibilityEnabled;
     }
-    if (dto.usagePermission !== undefined) {
-      data.usagePermission = dto.usagePermission;
+    // Eski Android ilovaning fon dvigateli doim `false` yuboradi — ishonchli
+    // qiymatgina saqlanadi va ogohlantirishga beriladi (usage-permission.ts).
+    const usagePermission = reliableUsagePermission(dto.usagePermission, dto.appVersion ?? child.appVersion);
+    if (usagePermission !== undefined) {
+      data.usagePermission = usagePermission;
     }
     if (dto.overlayPermission !== undefined) {
       data.overlayPermission = dto.overlayPermission;
@@ -476,7 +480,7 @@ export class ChildrenService {
         notificationPermission: dto.notificationPermission,
         backgroundAllowed: dto.backgroundAllowed,
         accessibilityEnabled: dto.accessibilityEnabled,
-        usagePermission: dto.usagePermission,
+        usagePermission,
         overlayPermission: dto.overlayPermission,
         screenTimePermission: dto.screenTimePermission,
       },

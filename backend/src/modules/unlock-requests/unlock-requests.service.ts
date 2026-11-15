@@ -365,6 +365,11 @@ export class UnlockRequestsService {
           },
         })
         .catch((err) => this.logger.warn({ err }, 'unlock_decision push failed'));
+      // Yuqoridagi push notification blokli: ilova fonda bo'lsa Android uni
+      // o'zi ko'rsatadi va ilovaga bermaydi. Tasdiq (qo'shimcha vaqt) darhol
+      // kuchga kirishi uchun alohida sof data `restrictions_sync` ham ketadi
+      // (Android'da native → fon jarayoni sinxroni, iOS'da fon yangilanishi).
+      if (approved) void this.fcm.pushChildResync(request.child.childUserId);
     }
 
     await this.prisma.notification.create({

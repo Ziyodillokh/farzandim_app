@@ -12,6 +12,7 @@ import { BatchUpsertUsageDto } from './dto/batch-upsert-usage.dto';
 import { GameOpenDto } from './dto/game-open.dto';
 import { ListAppUsageDto } from './dto/list-app-usage.dto';
 import { tr } from '../../common/i18n/notification-i18n';
+import { GameNoticeGate } from './game-notice-gate';
 
 // O'zbekiston (Toshkent) UTC+5 — DST yo'q. Kun chegarasi shu vaqt bilan.
 const TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1000;
@@ -60,6 +61,9 @@ function tashkentDayKey(offsetDays = 0): string {
 
 @Injectable()
 export class AppUsageService {
+  /** «O'yin ochildi» push'larini takrorlash va eskilardan himoya (game-notice-gate.ts). */
+  private readonly gameNotices = new GameNoticeGate();
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
@@ -75,8 +79,11 @@ export class AppUsageService {
    */
   async gameOpen(childId: string, userId: string, dto: GameOpenDto) {
     const child = await this.validateChildAccess(childId, userId);
+    if (!this.gameNotices.shouldNotify(child.id, dto.packageName, dto.openedAt)) {
+      return { ok: true, notified: false };
+    }
     void this.notifyGamePlay(child, dto.packageName, dto.appName);
-    return { ok: true };
+    return { ok: true, notified: true };
   }
 
   private async notifyGamePlay(

@@ -19,6 +19,7 @@ import {
   restoreClock,
 } from './kirish-fixtures';
 import { createTestApp, TestApp } from './test-app';
+import { ROTATION_GRACE_MS } from '../../src/modules/auth/session-rotation';
 
 const MIN = 60_000;
 const INVALID = { statusCode: 401, code: 'INVALID_CREDENTIALS', message: 'Invalid credentials' };
@@ -127,15 +128,24 @@ describe('Kirish K1: bola kirishi (login / parol)', () => {
       expect(me.json()).toMatchObject({ id: child.childId, educationLanguage: null });
     });
 
-    it('rotates the refresh token (same sid); a reused old refresh token is refused', async () => {
+    it('rotates the refresh token (same sid); the old one works only inside the grace window', async () => {
       const session = await loginThroughSetup(t, cred);
 
       const next = await refresh(session.refreshToken);
 
       expect(next.statusCode).toBe(200);
       expect(decode(t, next.json().accessToken)).toMatchObject({ sid: session.sessionId, role: 'CHILD' });
+      // Parallel refresh (bir telefondagi ikki jarayon) — imtiyoz ichida joriy juft qaytadi, sessiya yopilmaydi.
+      const raced = await refresh(session.refreshToken);
+      expect(raced.statusCode).toBe(200);
+      expect(decode(t, raced.json().accessToken)).toMatchObject({ sid: session.sessionId });
+      await t.prisma.userSession.update({
+        where: { id: session.sessionId },
+        data: { rotatedAt: new Date(Date.now() - ROTATION_GRACE_MS - 1000) },
+      });
       const reused = await refresh(session.refreshToken);
       expect(reused.statusCode).toBe(401);
+      expect(reused.json()).toMatchObject({ message: 'Session rotated' });
       expect((await refresh(next.json().refreshToken)).statusCode).toBe(200);
     });
 

@@ -1541,6 +1541,10 @@ model UserSession {
   // ASOSIY qurilma belgisi (faqat 'LOGIN' sessiyalar): bolada hozirgi asosiy qurilma bo'lmasa, yangi sessiya
   // ASOSIY bo'ladi. Sessiya yopilganda belgi tozalanadi.
   isMain        Boolean @default(false) @map("is_main")
+  // Rotatsiya imtiyozi: bir qurilmadagi ikki jarayon bir vaqtda refresh qilsa, yutqazgani oldingi
+  // jti bilan qisqa vaqt ichida joriy juftni oladi (sessiya o'zidan yopilmaydi).
+  prevJti       String?   @map("prev_jti")
+  rotatedAt     DateTime? @map("rotated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
