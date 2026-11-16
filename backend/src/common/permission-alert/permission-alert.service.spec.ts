@@ -1,4 +1,4 @@
-import { PermissionAlertService } from './permission-alert.service';
+import { ALERT_COOLDOWN_MS, PermissionAlertService } from './permission-alert.service';
 
 /**
  * Bola telefonida muhim ruxsat o'chganda ota-onaga ogohlantirish. iOS'da
@@ -16,12 +16,12 @@ describe('PermissionAlertService — Ekran vaqti', () => {
   };
 
   let fcm: { sendPushToUser: jest.Mock };
-  let prisma: { notification: { create: jest.Mock } };
+  let prisma: { notification: { create: jest.Mock; findMany: jest.Mock } };
   let service: PermissionAlertService;
 
   beforeEach(() => {
     fcm = { sendPushToUser: jest.fn().mockResolvedValue(undefined) };
-    prisma = { notification: { create: jest.fn() } };
+    prisma = { notification: { create: jest.fn(), findMany: jest.fn().mockResolvedValue([]) } };
     service = new PermissionAlertService(prisma as never, fcm as never);
   });
 
@@ -62,5 +62,42 @@ describe('PermissionAlertService — Ekran vaqti', () => {
 
     const [, payload] = fcm.sendPushToUser.mock.calls[0];
     expect(payload.body).not.toContain('iPhone');
+  });
+
+  it("6 soat ichida shu ruxsat bo'yicha ogohlantirilgan bo'lsa push takrorlanmaydi", async () => {
+    prisma.notification.findMany.mockResolvedValue([
+      { data: { type: 'permission_changed', permissions: ['Joylashuv'] } },
+    ]);
+
+    await service.checkCrossings(CHILD, ALL_GRANTED, { locationPermission: false });
+
+    expect(fcm.sendPushToUser).not.toHaveBeenCalled();
+    expect(prisma.notification.create).not.toHaveBeenCalled();
+    const [query] = prisma.notification.findMany.mock.calls[0];
+    expect(query.where).toMatchObject({ childId: CHILD.id, type: 'PERMISSION_CHANGED' });
+    const since: Date = query.where.createdAt.gte;
+    expect(Date.now() - since.getTime()).toBeGreaterThanOrEqual(ALERT_COOLDOWN_MS - 1000);
+  });
+
+  it('yaqinda ogohlantirilmagan ruxsatlar uchun push baribir ketadi', async () => {
+    prisma.notification.findMany.mockResolvedValue([
+      { data: { type: 'permission_changed', permissions: ['Joylashuv'] } },
+      { data: null },
+    ]);
+
+    await service.checkCrossings(CHILD, ALL_GRANTED, {
+      locationPermission: false,
+      notificationPermission: false,
+    });
+
+    expect(fcm.sendPushToUser).toHaveBeenCalledTimes(1);
+    const [, payload] = fcm.sendPushToUser.mock.calls[0];
+    expect(payload.data.permissions).toBe('Bildirishnoma');
+  });
+
+  it("o'zgarish bo'lmasa bazaga so'rov ham yuborilmaydi", async () => {
+    await service.checkCrossings(CHILD, ALL_GRANTED, { locationPermission: true });
+
+    expect(prisma.notification.findMany).not.toHaveBeenCalled();
   });
 });

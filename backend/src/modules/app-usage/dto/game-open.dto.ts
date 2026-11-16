@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsISO8601, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 /**
  * Bola qurilmasi o'yin (CATEGORY_GAME) foreground'ga chiqqanini xabar qiladi.
@@ -17,4 +17,10 @@ export class GameOpenDto {
   @IsNotEmpty()
   @MaxLength(255)
   appName!: string;
+
+  /** O'yin ochilgan vaqt (qurilma). Oflayn navbatdan kech kelgan eski xabar push qilinmaydi. */
+  @ApiPropertyOptional({ example: '2026-11-14T08:00:00.000Z' })
+  @IsOptional()
+  @IsISO8601()
+  openedAt?: string;
 }

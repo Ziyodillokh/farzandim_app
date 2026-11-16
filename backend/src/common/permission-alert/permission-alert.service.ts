@@ -14,6 +14,9 @@ const PERMISSION_LABELS: Record<string, string> = {
   screenTime: 'Ekran vaqti',
 };
 
+/** Bir ruxsat bo'yicha takroriy ogohlantirishlar orasidagi eng kam vaqt. */
+export const ALERT_COOLDOWN_MS = 6 * 60 * 60 * 1000;
+
 /** iOS Ekran vaqti o'chsa ilovalar cheklovi umuman ishlamaydi — aniq aytamiz. */
 const SCREEN_TIME_NOTE = " iPhone'da ilovalar cheklovi hozir ishlamayapti.";
 
@@ -90,9 +93,16 @@ export class PermissionAlertService {
     ];
 
     // Faqat true → false (o'chirildi). null (noma'lum) yoki false→* — e'tiborsiz.
-    const revokedKeys = checks
+    const crossedKeys = checks
       .filter((c) => c.was === true && c.now === false)
       .map((c) => c.key);
+    if (crossedKeys.length === 0) return;
+
+    // Bir ruxsat bo'yicha ALERT_COOLDOWN_MS ichida bir martadan ortiq emas:
+    // holat tez-tez almashsa (masalan bir telefondagi ikki jarayon turli
+    // qiymat yuborsa) ota-ona push bilan ko'milmasin.
+    const alreadyAlerted = await this.recentlyAlertedLabels(child.id);
+    const revokedKeys = crossedKeys.filter((key) => !alreadyAlerted.has(PERMISSION_LABELS[key]));
     const revoked = revokedKeys.map((key) => PERMISSION_LABELS[key]);
 
     if (revoked.length === 0) return;
@@ -127,5 +137,26 @@ export class PermissionAlertService {
         data: { type: 'permission_changed', permissions: revoked },
       },
     });
+  }
+
+  /** So'nggi ALERT_COOLDOWN_MS ichida ogohlantirilgan ruxsatlar (nomlari). */
+  private async recentlyAlertedLabels(childId: string): Promise<Set<string>> {
+    const recent = await this.prisma.notification.findMany({
+      where: {
+        childId,
+        type: NotificationType.PERMISSION_CHANGED,
+        createdAt: { gte: new Date(Date.now() - ALERT_COOLDOWN_MS) },
+      },
+      select: { data: true },
+    });
+    const labels = new Set<string>();
+    for (const row of recent) {
+      const permissions = (row.data as { permissions?: unknown } | null)?.permissions;
+      if (!Array.isArray(permissions)) continue;
+      for (const label of permissions) {
+        if (typeof label === 'string') labels.add(label);
+      }
+    }
+    return labels;
   }
 }

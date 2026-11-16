@@ -7,19 +7,19 @@ import { FcmService } from '../fcm/fcm.service';
 /**
  * Bola shu sekunddan ortiq heartbeat yubormasa "aloqa uzildi" deb hisoblanadi.
  *
- * AVVAL 30 daqiqa edi (reboot lag, Doze ~15min timer paketlash, OEM FGS kill
- * uchun konservativ). Endi TEZ aniqlash kerak: ota-ona force-stop / internet
- * uzilishini bir necha daqiqada bilishi shart. Heartbeat foreground-service
- * (wakelock bilan) ichida ~30-60s da ketadi, demak 2 daqiqalik ostona xavfsiz.
+ * 2 daqiqalik ostona bola ilovasi protsessorni doim uyg'oq ushlagan paytga
+ * (wakelock, ~20-60s heartbeat) mo'ljallangan edi — bu batareyani tez
+ * tugatardi. Bola ilovasi 1.0.20 dan telefon uxlashiga yo'l qo'yadi:
+ * heartbeat har ~5 daqiqada (AlarmManager), Doze'da Android uni ~9-10
+ * daqiqagacha cho'zishi mumkin. 15 daqiqa — shu oraliqdan keyin ham soxta
+ * "aloqa uzildi" bermaydigan eng qisqa ostona. Ota-ona ilovasining "onlayn"
+ * chegarasi ham shunga moslangan.
  *
- * False-positive (vaqtinchalik Doze/reboot) "aloqa tiklandi" push bilan
- * yumshatiladi: qisqa uzilishdan keyin bola qaytsa, ota-ona darhol "tiklandi"
- * xabarini oladi. Agar real qurilmalarda false-positive ko'p chiqsa,
- * CONNECTION_LOST_SECONDS env-ni oshiring (masalan 300 = 5 daqiqa).
+ * CONNECTION_LOST_SECONDS env bilan o'zgartirish mumkin.
  */
 const _envSeconds = Number(process.env.CONNECTION_LOST_SECONDS);
 export const CONNECTION_LOST_SECONDS =
-  Number.isFinite(_envSeconds) && _envSeconds > 0 ? _envSeconds : 120;
+  Number.isFinite(_envSeconds) && _envSeconds > 0 ? _envSeconds : 900;
 
 /** Eski export — endi sekunddan hisoblanadi (boshqa modul ishlatishi mumkin). */
 export const CONNECTION_LOST_MINUTES = Math.max(

@@ -48,6 +48,7 @@ import {
 import { tr } from '../../common/i18n/notification-i18n';
 import { isReviewFamilyCode } from '../../common/helpers/review-family-codes';
 import { announceSessionsClosed, closeSessions } from './session-revocation';
+import { rotateSessionJti } from './session-rotation';
 
 // Session access request (2-qurilma limit) — 15 daqiqa amal qiladi.
 const SESSION_ACCESS_TTL_MS = 15 * 60 * 1000;
@@ -1383,19 +1384,14 @@ export class AuthService {
       // CHIQIB KETARDI. Bu 15 daqiqalik access token har tugaganda takror
       // bo'lardi (foydalanuvchi shikoyati: "o'zidan o'zi chiqib ketyapti").
       //
-      // ENDI: revoke QILMAYMIZ — shunchaki rad etamiz (401). Yutqazgan isolate
-      // storage'dagi YANGI (rotatsiyalangan) tokenni o'qib davom etadi (klient
-      // tomonda tuzatilgan). Xavfsizlik saqlanadi: o'g'irlangan eski token jti
-      // mos kelmagani uchun baribir yangi token ololmaydi; "hamma joydan
-      // chiqish" esa tokenVersion + session.revokedAt orqali ishlaydi.
-      if (payload.rjti && session.jti !== payload.rjti) {
-        throw new UnauthorizedException('Session rotated');
-      }
-      newRjti = randomUUID();
-      await this.prisma.userSession.update({
-        where: { id: session.id },
-        data: { jti: newRjti, lastSeenAt: new Date() },
-      });
+      // ENDI: revoke QILMAYMIZ. Yutqazgan so'rov oldingi jti bilan
+      // ROTATION_GRACE_MS ichida kelsa — joriy juftni oladi (idempotent);
+      // undan keyin kelsa 401 'Session rotated' (klient storage'dagi yangi
+      // tokenni o'qib davom etadi). Rotatsiya atomik: ikki parallel refresh
+      // ikkalasi ham "yutib", bazadagi jti va telefondagi token turli
+      // javoblardan qolib ketmasligi uchun (keyinroq o'zidan chiqib ketish).
+      // "Hamma joydan chiqish" tokenVersion + session.revokedAt orqali ishlaydi.
+      newRjti = await rotateSessionJti(this.prisma, session, payload.rjti);
     }
 
     const newPayload: JwtPayload = {
