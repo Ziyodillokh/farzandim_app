@@ -61,7 +61,15 @@ class HealthPlugin(private var channel: MethodChannel? = null) :
     override fun onAttachedToEngine(
             @NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
     ) {
-        scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+        // Parvoz: himoya to'ri — korutin ichida ushlanmagan Health Connect xatosi
+        // (masalan xizmatga ulanishda RemoteException) ilovani yiqitmasin.
+        scope = CoroutineScope(
+                SupervisorJob() +
+                        Dispatchers.Main +
+                        CoroutineExceptionHandler { _, e ->
+                            Log.w("FLUTTER_HEALTH::ERROR", "Unhandled Health Connect error", e)
+                        }
+        )
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, CHANNEL_NAME)
         channel?.setMethodCallHandler(this)
         context = flutterPluginBinding.applicationContext

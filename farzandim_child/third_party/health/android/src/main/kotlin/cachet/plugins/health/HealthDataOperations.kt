@@ -55,12 +55,13 @@ class HealthDataOperations(
         }
 
         scope.launch {
-            result.success(
-                    healthConnectClient
-                            .permissionController
-                            .getGrantedPermissions()
-                            .containsAll(permList),
-            )
+            val granted = guardedCheck("hasPermissions") {
+                healthConnectClient
+                        .permissionController
+                        .getGrantedPermissions()
+                        .containsAll(permList)
+            }
+            result.success(granted)
         }
     }
 
@@ -91,7 +92,10 @@ class HealthDataOperations(
     fun revokePermissions(call: MethodCall, result: Result) {
         scope.launch {
             Log.i("FLUTTER_HEALTH", "Revoking all Health Connect permissions")
-            healthConnectClient.permissionController.revokeAllPermissions()
+            guardedCheck("revokePermissions") {
+                healthConnectClient.permissionController.revokeAllPermissions()
+                true
+            }
         }
         result.success(true)
     }
@@ -106,11 +110,12 @@ class HealthDataOperations(
     @OptIn(ExperimentalFeatureAvailabilityApi::class)
     fun isHealthDataHistoryAvailable(call: MethodCall, result: Result) {
         scope.launch {
-            result.success(
-                    healthConnectClient.features.getFeatureStatus(
-                            HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_HISTORY
-                    ) == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
-            )
+            val available = guardedCheck("isHealthDataHistoryAvailable") {
+                healthConnectClient.features.getFeatureStatus(
+                        HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_HISTORY
+                ) == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
+            }
+            result.success(available)
         }
     }
 
@@ -123,12 +128,13 @@ class HealthDataOperations(
      */
     fun isHealthDataHistoryAuthorized(call: MethodCall, result: Result) {
         scope.launch {
-            result.success(
-                    healthConnectClient
-                            .permissionController
-                            .getGrantedPermissions()
-                            .containsAll(listOf(PERMISSION_READ_HEALTH_DATA_HISTORY)),
-            )
+            val granted = guardedCheck("isHealthDataHistoryAuthorized") {
+                healthConnectClient
+                        .permissionController
+                        .getGrantedPermissions()
+                        .containsAll(listOf(PERMISSION_READ_HEALTH_DATA_HISTORY))
+            }
+            result.success(granted)
         }
     }
 
@@ -142,11 +148,12 @@ class HealthDataOperations(
     @OptIn(ExperimentalFeatureAvailabilityApi::class)
     fun isHealthDataInBackgroundAvailable(call: MethodCall, result: Result) {
         scope.launch {
-            result.success(
-                    healthConnectClient.features.getFeatureStatus(
-                            HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_IN_BACKGROUND
-                    ) == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
-            )
+            val available = guardedCheck("isHealthDataInBackgroundAvailable") {
+                healthConnectClient.features.getFeatureStatus(
+                        HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_IN_BACKGROUND
+                ) == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
+            }
+            result.success(available)
         }
     }
 
@@ -159,12 +166,13 @@ class HealthDataOperations(
      */
     fun isHealthDataInBackgroundAuthorized(call: MethodCall, result: Result) {
         scope.launch {
-            result.success(
-                    healthConnectClient
-                            .permissionController
-                            .getGrantedPermissions()
-                            .containsAll(listOf(PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND)),
-            )
+            val granted = guardedCheck("isHealthDataInBackgroundAuthorized") {
+                healthConnectClient
+                        .permissionController
+                        .getGrantedPermissions()
+                        .containsAll(listOf(PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND))
+            }
+            result.success(granted)
         }
     }
 
@@ -293,4 +301,19 @@ class HealthDataOperations(
 
         return permList
     }
+
+    /**
+     * Parvoz: Health Connect xizmatiga ulanib bo'lmasa (`RemoteException` —
+     * xizmat yo'q, yangilanmoqda yoki o'chirilgan) `getGrantedPermissions()`
+     * kabi chaqiruvlar xato tashlaydi. Asl plaginda bu korutinlar himoyasiz
+     * edi: xato Main thread'ga chiqib ILOVANI YIQITARDI (Play: 1.0.9 da
+     * `ServiceConnection.connect` crash). Endi xato loglanadi va `false`.
+     */
+    private suspend fun guardedCheck(name: String, block: suspend () -> Boolean): Boolean =
+            try {
+                block()
+            } catch (e: Exception) {
+                Log.w("FLUTTER_HEALTH::ERROR", "$name failed: ${e.javaClass.simpleName}: ${e.message}")
+                false
+            }
 }
