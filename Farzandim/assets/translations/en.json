@@ -237,7 +237,16 @@
       "openRestrictions": "Open restrictions",
       "openSchedules": "Open schedules",
       "giveTime": "Grant time",
-      "deny": "Deny"
+      "deny": "Deny",
+      "openChildSettings": "Open child settings",
+      "openSchool": "Open School",
+      "openAnnouncements": "Open announcement",
+      "openAttendance": "View attendance",
+      "openEarlyExits": "View requests",
+      "openPayments": "View payments",
+      "openGrowth": "View results",
+      "openCredentials": "Open sign-in details",
+      "openThread": "Open conversation"
     },
     "unlock": {
       "granted": "Granted {minutes} minutes.",
@@ -395,7 +404,15 @@
     "donBalance": "DON balance",
     "dailySteps": "Daily steps",
     "dailyStreak": "Daily streak",
-    "streakDays": "{count} days"
+    "streakDays": "{count} days",
+    "school": {
+      "inviteTitle": "Have a school invite code?",
+      "inviteSubtitle": "Enter it to see attendance and announcements here",
+      "matchTitle": "Link the student to your child",
+      "matchSubtitle": "Students not linked yet: {count}",
+      "matchCta": "Link",
+      "unread": "{count} new"
+    }
   },
   "schedules": {
     "headerTitle": "Schedules",
@@ -705,7 +722,9 @@
       "accessibility": "Accessibility",
       "granted": "Granted",
       "denied": "Denied",
-      "unknown": "Unknown"
+      "unknown": "Unknown",
+      "usage": "Usage access",
+      "overlay": "Display over other apps"
     },
     "headerTitle": "Device settings",
     "sectionDevice": "DEVICE",
@@ -1040,6 +1059,10 @@
         "title": "My children",
         "subtitle": "{count} children"
       },
+      "school": {
+        "title": "School",
+        "subtitle": "Invite code, announcements, attendance"
+      },
       "sessions": {
         "title": "Active sessions",
         "subtitle": "{count} active sessions"
@@ -1197,7 +1220,18 @@
     "from": "from",
     "to": "to",
     "timePickerTitle": "Set time",
-    "saved": "Schedule added"
+    "saved": "Schedule added",
+    "iosBlockSwitch": "Block iPhone apps during this time",
+    "iosBlockHint": "The apps your child selected on the iPhone will be blocked during this time window",
+    "iosMinWindow": "On iPhone a schedule must be at least 15 minutes long",
+    "iosAppsBlocked": "iPhone apps are blocked",
+    "iosAppsNotBlocked": "iPhone apps are not blocked",
+    "iosSheetTitle": "iPhone apps",
+    "appsLabel": "Apps to block",
+    "updated": "Schedule updated",
+    "deleted": "Schedule deleted",
+    "deleteTitle": "Delete schedule",
+    "deleteContent": "Delete the \"{name}\" schedule?"
   },
   "chat": {
     "title": "Chats",
@@ -1653,7 +1687,7 @@
     "heroTitle": "Total DON earned",
     "fromSources": "from {count} sources",
     "empty": "No DON earned yet",
-    "emptySubtitle": "Your child earns DON by taking steps, listening to audiobooks and joining quizzes — it will show up here.",
+    "emptySubtitle": "Your child earns DON by taking steps, practising daily and joining quizzes — it will show up here.",
     "times": "{count} times",
     "today": "Today",
     "yesterday": "Yesterday",
@@ -1728,5 +1762,800 @@
     "no_ads_full": "No ads",
     "priority_support": "Priority support",
     "family_sharing": "Family sharing"
+  },
+  "iosChild": {
+    "howItWorksTitle": "How control works on iPhone",
+    "howItWorksBody": "Under Apple's rules, the app list and screen time on an iPhone are not visible to you. Your child picks the apps to control on their own iPhone in Parvoz → Screen Time. Here you block the \"iPhone: selected apps\" entry or set a daily limit on it — it applies to those selected apps.",
+    "screenTimeHint": "iPhone screen time stats are only visible on the child's phone (Apple rule)",
+    "appsHint": "The list of apps on the iPhone and the time spent in them are not visible to parents (Apple rule)",
+    "blockBanner": "On iPhone your child picks the apps themselves (Parvoz → Screen Time). If you block \"iPhone: selected apps\", those selected apps stay blocked at all times.",
+    "limitBanner": "On iPhone your child picks the apps themselves (Parvoz → Screen Time). The limit you set applies to those selected apps.",
+    "uninstallSubtitle": "Deleting apps on the iPhone is forbidden (including Parvoz)",
+    "permissionLabel": "Screen Time permission",
+    "permissionOn": "Enabled",
+    "permissionOff": "Disabled",
+    "permissionUnknown": "Unknown"
+  },
+  "school": {
+    "title": "School",
+    "classLabel": "Class {name}",
+    "errorTitle": "Couldn't load",
+    "home": {
+      "emptyTitle": "Connect with your school",
+      "emptySubtitle": "With the invite code from your school, you will follow your child's attendance, school announcements and payment reminders here.",
+      "enterCode": "Enter invite code",
+      "addAnother": "Add another school",
+      "noStudents": "No students are assigned to you at this school yet.",
+      "matchedTo": "Child: {child}",
+      "notMatched": "Not linked to a child",
+      "linkedByOther": "Linked by another family member",
+      "match": "Link to a child",
+      "changeMatch": "Change",
+      "pickStudent": "Which student?",
+      "unlink": "Disconnect",
+      "unlinkTitle": "Disconnect from the school?",
+      "unlinkBody": "Announcements, attendance and payment reminders from {school} will no longer come to this app. To reconnect, you will need a new code from the school.",
+      "unlinkConfirm": "Disconnect",
+      "unlinked": "School disconnected",
+      "pendingReview": "Waiting for the school to confirm. Your child’s details will appear here afterwards.",
+      "pendingShort": "Awaiting confirmation",
+      "needsMatch": "Match to your child",
+      "schoolKids": "Children: {count}",
+      "tiles": {
+        "announcementsNew": "{count} new",
+        "announcementsNone": "No new announcements",
+        "paymentsDue": "Unpaid",
+        "paymentsDueA11y": "Payments, {count} unpaid",
+        "paymentsChecking": "Being checked",
+        "paymentsNext": "In {days} days",
+        "paymentsNone": "No reminders",
+        "paymentsHint": "Reminders and receipts",
+        "attendanceToday": "Today: {came} / {total} arrived",
+        "attendanceA11y": "Attendance, {came} of {total} arrived today",
+        "attendanceNoLessons": "No lessons today",
+        "attendanceHint": "Monthly calendar",
+        "contact": "Contact",
+        "contactBody": "Homeroom teacher and school"
+      }
+    },
+    "link": {
+      "title": "Connect to a school",
+      "heading": "Enter the invite code",
+      "body": "Your school gives you a 6-digit code, an 8-character code or a QR code. Once connected, your child's attendance, school announcements and payment reminders will come to this app.",
+      "codeLabel": "Invite code",
+      "codeHint": "123456 or XXXX-XXXX",
+      "scan": "Scan QR code",
+      "submit": "Connect",
+      "success": "School connected",
+      "scanTitle": "Scan the QR code",
+      "scanHint": "Place the QR code from your school inside the frame",
+      "invalidQr": "This QR code is not a school invite. Scan the code your school gave you.",
+      "cameraError": "Couldn't open the camera. Allow camera access or enter the code manually.",
+      "keyboardLetters": "Letter keyboard",
+      "keyboardDigits": "Number keyboard",
+      "fromLinkHint": "The code came from a link. Check it, then tap “Connect”."
+    },
+    "match": {
+      "title": "Which of your children is {student}?",
+      "explain": "Choose your child — school attendance and messages will appear on their page.",
+      "progress": "{current} / {total}",
+      "none": "None — don't link",
+      "currentlyWith": "Currently: {student}",
+      "save": "Save",
+      "later": "Later",
+      "saved": "Student linked to your child",
+      "removed": "Link removed",
+      "linkedByOther": "Another family member has linked this student to their child. If it needs changing, please agree with them.",
+      "noChildren": "First add your child to the app, then link the student to them.",
+      "addChild": "Add a child"
+    },
+    "attendance": {
+      "title": "Attendance",
+      "inAt": "In {time}",
+      "outAt": "Out {time}",
+      "status": {
+        "present": "Present",
+        "late": "Late",
+        "absent": "Absent",
+        "leftEarly": "Left early",
+        "excused": "Excused",
+        "pending": "Not marked yet",
+        "holiday": "Day off",
+        "unknown": "No data"
+      },
+      "rate": "Attendance rate",
+      "noMarks": "No days have been marked this month yet.",
+      "days": "Days",
+      "noDays": "There have been no school days this month yet.",
+      "today": "Today",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "avgArrival": "Average arrival",
+      "streak": "On time in a row",
+      "legend": "Legend",
+      "monthSummary": "{attended} of {marked} school days",
+      "dayIn": "Arrived",
+      "dayOut": "Left",
+      "dayNoRecord": "Not marked",
+      "writeReason": "Tell the class teacher why",
+      "reasonPrefill": "Hello! On {date} {student} could not come to school. Reason: ",
+      "askLate": "Write to the class teacher",
+      "overview": "Overall statistics"
+    },
+    "announcements": {
+      "title": "Announcements",
+      "emptyTitle": "No announcements yet",
+      "emptyBody": "When the school sends an announcement, it will appear here and you'll get a notification.",
+      "important": "Important",
+      "unread": "Unread",
+      "unreadCount": "Unread announcements: {count}",
+      "loadMore": "Load more",
+      "fromPush": "From a notification",
+      "filter": {
+        "all": "All",
+        "unread": "Unread",
+        "important": "Important"
+      },
+      "group": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "week": "This week",
+        "earlier": "Earlier"
+      },
+      "audience": {
+        "school": "Whole school",
+        "classes": "Class {classes}",
+        "personal": "To you personally"
+      },
+      "emptyFilter": "No announcements in this filter",
+      "markAll": "Mark all as read",
+      "detailTitle": "Announcement",
+      "from": "From",
+      "to": "To",
+      "sentAt": "Sent",
+      "school": "School",
+      "ask": "Ask the class teacher",
+      "askPrefill": "I have a question about the announcement \"{title}\": ",
+      "copy": "Copy text",
+      "copied": "Copied",
+      "importantBanner": "Important announcement — please read carefully",
+      "notFound": "Announcement not found. Refresh the list."
+    },
+    "earlyExit": {
+      "title": "Early pickup",
+      "new": "New request",
+      "sheetTitle": "Early pickup request",
+      "sheetSubtitle": "The school will review the request and reply",
+      "todayOnly": "The request is for today only. You'll get a notification when the school approves or declines it.",
+      "student": "Student",
+      "time": "Pickup time",
+      "timeHint": "Choose a time",
+      "reason": "Reason",
+      "reasonHint": "For example: a doctor's appointment",
+      "pickupBy": "Who will pick up",
+      "pickupHint": "For example: mother — Malika",
+      "submit": "Send request",
+      "sent": "Request sent to the school",
+      "emptyTitle": "No requests yet",
+      "emptyBody": "If you need to pick your child up before classes end, send the school a request here.",
+      "pickupLine": "Picked up by: {name}",
+      "bySchool": "Added by school staff",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Declined",
+        "unknown": "Unknown"
+      }
+    },
+    "payments": {
+      "title": "Payments",
+      "emptyTitle": "No payment reminders",
+      "emptyBody": "When the school sets a payment date, it will appear here.",
+      "nextDate": "Next payment date",
+      "dateLine": "Payment date: {date}",
+      "prepaid": "Paid in advance: {count} mo.",
+      "paused": "Reminders paused",
+      "note": "The school sets the payment date. If you have already paid, let the school know with “I've paid, please check”.",
+      "verify": "I've paid, please check",
+      "verifyPending": "Being checked",
+      "verifyTitle": "Payment check",
+      "verifyLabel": "Message to the school",
+      "verifyHint": "For example: paid on November 3 via Click",
+      "verifyNote": "The school will check the payment and reply. You'll get a notification when they answer.",
+      "verifySubmit": "Send",
+      "verifySent": "Your request was sent to the school",
+      "pin": {
+        "title": "Payment is due today",
+        "overdue": "Payment date has passed",
+        "body": "{school}: payment date for {children} — {date}.",
+        "checking": "The school is checking your payment.",
+        "open": "Go to payments"
+      },
+      "status": {
+        "upcoming": "{count} days left",
+        "today": "Payment is due today",
+        "overdue": "{count} days overdue",
+        "paused": "Reminders paused",
+        "checking": "Being checked",
+        "prepaid": "Prepaid {count} mo."
+      },
+      "childrenLabel": "Children",
+      "history": "History",
+      "historyEmpty": "No records yet",
+      "action": {
+        "created": "Payment reminder created",
+        "shifted": "The school updated the payment date",
+        "paused": "Reminders paused",
+        "resumed": "Reminders resumed",
+        "verified": "Payment confirmed",
+        "unknown": "Change"
+      },
+      "requestSent": "You wrote \"I have paid\"",
+      "schoolAnswered": "School's reply",
+      "askAdmin": "Ask the administration",
+      "askAdminPrefill": "I have a question about payment: ",
+      "info": "Parvoz doesn't take payments. Check the amount and payment details with the school.",
+      "method": "Payment method",
+      "methods": {
+        "click": "Click",
+        "payme": "Payme",
+        "uzum": "Uzum",
+        "card": "Bank card",
+        "cash": "Cash",
+        "transfer": "Bank transfer"
+      },
+      "months": "For which month(s)",
+      "extra": "Extra note",
+      "extraHint": "Optional",
+      "preview": "Text the school will get",
+      "composed": {
+        "method": "Payment method: {value}.",
+        "months": "Month: {value}."
+      },
+      "verifyNeed": "Choose a payment method or add a note.",
+      "methodOnline": "Online",
+      "methodOffline": "Cash",
+      "yearLabel": "{from}–{to} school year",
+      "proofTitle": "Attach the transfer screenshot",
+      "proofHint": "Attach the receipt screenshot from your payment app — the school confirms faster.",
+      "proofPick": "Choose photo",
+      "proofChange": "Replace",
+      "proofRemove": "Remove",
+      "proofAttached": "Receipt attached",
+      "proofNeed": "For online payments, attach the receipt screenshot.",
+      "proofTooBig": "The photo is too large (max 8 MB).",
+      "cashHint": "No photo is needed for cash. Note whom and when you paid.",
+      "cashNoteHint": "e.g. paid at the office on 10 November",
+      "hasReceipt": "With receipt",
+      "chooseMethod": "Choose a payment method first."
+    },
+    "errors": {
+      "validation": "Please check the details and try again.",
+      "inviteFormat": "The code is 6 digits or 8 characters (Latin letters and digits). Please check it and try again.",
+      "inviteInvalid": "This code didn't work: it's incorrect or has expired. Ask the school for a new code.",
+      "tooManyAttempts": "Too many attempts. Please wait a little and try again.",
+      "studentNotFound": "Student not found. Please refresh the list.",
+      "childNotFound": "Child not found. Please refresh the list.",
+      "linkedElsewhere": "Another family member has already matched this student to their child.",
+      "linkNotFound": "This school connection has already been removed.",
+      "notFound": "Nothing was found. Please refresh the list.",
+      "earlyExitPending": "Today's request has already been sent and is still being reviewed.",
+      "verificationOpen": "The school is already reviewing your request for this payment.",
+      "conflict": "This action couldn't be completed right now. Refresh the list and try again.",
+      "unavailable": "This section isn't available yet. Please try again later.",
+      "server": "Temporary server issue. Please try again a bit later.",
+      "contactUnavailable": "This staff member is not available right now. Refresh the list.",
+      "rateLimited": "Too many messages today. Please try again tomorrow."
+    },
+    "todayAt": "Today, {time}",
+    "verifications": {
+      "title": "My requests",
+      "answer": "School's reply",
+      "status": {
+        "open": "Under review",
+        "answered": "Answered",
+        "closed": "Closed",
+        "unknown": "Unknown"
+      }
+    },
+    "mode": {
+      "permissionTitle": "School: phone mode",
+      "permissionBodyAndroid": "For the lesson-time phone mode to work, open the Parvoz child app on {child}'s phone and turn on two permissions: Usage access and Display over other apps.",
+      "permissionBodyIos": "For the lesson-time phone mode to work, open the Parvoz child app on {child}'s iPhone and allow Screen Time.",
+      "permissionHint": "You can check whether the permission is on in the child's settings.",
+      "openSettings": "Child settings",
+      "gotIt": "Got it"
+    },
+    "connect": {
+      "title": "Contact the school",
+      "newReplies": "{count} new replies",
+      "group": {
+        "classTeacher": "Class teacher",
+        "leadership": "Leadership",
+        "support": "Psychological support",
+        "subject": "Subject teachers"
+      },
+      "role": {
+        "director": "Principal",
+        "admin": "Administration",
+        "homeroom": "Class teacher",
+        "psychologist": "Psychologist",
+        "teacher": "Teacher",
+        "unknown": "Staff"
+      },
+      "roleHint": {
+        "director": "School policy, suggestions and serious matters",
+        "admin": "Payments, documents and certificates",
+        "homeroom": "Everyday matters: attendance, tasks, progress",
+        "psychologist": "Mood, relationships, bullying — confidential",
+        "teacher": "Subject questions and extra lessons",
+        "unknown": "School staff"
+      },
+      "myThreads": "My messages",
+      "newReply": "New reply",
+      "waiting": "Awaiting reply",
+      "answered": "Replied",
+      "resolved": "Resolved",
+      "privacy": "Only the staff member you choose reads your message.",
+      "confidential": "Confidential: only the psychologist reads it — not even the leadership.",
+      "emptyTitle": "No contacts yet",
+      "emptyBody": "Once the school connects staff to the Parvoz panel, they will appear here.",
+      "openChat": "Open conversation",
+      "composeTitle": "Message",
+      "composeTo": "{name} · {role}",
+      "composeHint": "Edit the text to fit — then send.",
+      "placeholder": "Write your message…",
+      "send": "Send",
+      "sent": "Message sent",
+      "unavailable": "This staff member is not available right now.",
+      "seen": "Seen",
+      "delivered": "Sent",
+      "you": "You",
+      "aboutStudent": "{name} · {className}",
+      "student": "Student",
+      "noHomeroom": "The class teacher hasn't joined the Parvoz panel yet. You can write to another staff member.",
+      "threadEmpty": "No messages yet",
+      "replyTime": "Staff usually reply within a school day.",
+      "topic": {
+        "absence": {
+          "title": "Will be absent",
+          "body": "Hello! My child {student} can't come to school today. Reason: ",
+          "hint": "Illness or another reason"
+        },
+        "earlyPickup": {
+          "title": "Early pickup",
+          "body": "Hello! I need to pick up {student} early today, at __:__. Reason: ",
+          "hint": "Pick up before classes end"
+        },
+        "homework": {
+          "title": "Homework",
+          "body": "Hello! I have a question about {student}'s homework: ",
+          "hint": "A question about the task"
+        },
+        "progress": {
+          "title": "Progress",
+          "body": "Hello! How is {student} doing? What should we pay attention to?",
+          "hint": "Grades and progress"
+        },
+        "meeting": {
+          "title": "Meeting",
+          "body": "Hello! Could we meet in person about {student}? A convenient time for me: ",
+          "hint": "Set up a face-to-face talk"
+        },
+        "behavior": {
+          "title": "Behaviour",
+          "body": "Hello! I'd like to talk about {student}'s behaviour at school: ",
+          "hint": "Conduct and relationships in class"
+        },
+        "wellbeing": {
+          "title": "Wellbeing",
+          "body": "Hello! Lately I've been worried about {student}'s mood. Could we talk?",
+          "hint": "Mood, worries, changes"
+        },
+        "bullying": {
+          "title": "Bullying concern",
+          "body": "Hello! I'm worried that {student} is being bullied at school. Here's what happened: ",
+          "hint": "Pressure or humiliation"
+        },
+        "advice": {
+          "title": "Advice",
+          "body": "Hello! I'd like a psychologist's advice about {student}: ",
+          "hint": "Advice from the psychologist"
+        },
+        "payment": {
+          "title": "Payment",
+          "body": "Hello! I have a question about payment: ",
+          "hint": "Amount, due date, receipt"
+        },
+        "document": {
+          "title": "Document",
+          "body": "Hello! I need a certificate for {student}: ",
+          "hint": "Certificates and documents"
+        },
+        "suggestion": {
+          "title": "Suggestion",
+          "body": "Hello! I have a suggestion for the school: ",
+          "hint": "An idea for the school"
+        },
+        "problem": {
+          "title": "Problem",
+          "body": "Hello! I'd like to report a problem: ",
+          "hint": "Something that needs fixing"
+        },
+        "thanks": {
+          "title": "Thanks",
+          "body": "Hello! Thank you so much for your care for {student}!",
+          "hint": "Kind words and thanks"
+        },
+        "extraLesson": {
+          "title": "Extra lesson",
+          "body": "Hello! Would extra lessons be possible for {student}?",
+          "hint": "Extra practice"
+        },
+        "other": {
+          "title": "Write my own",
+          "body": "Hello! ",
+          "hint": "A free message in your own words"
+        }
+      },
+      "writeSection": "Write a message",
+      "orTemplate": "Or pick a ready template"
+    },
+    "overview": {
+      "title": "My child at school",
+      "quarter": "Term {n}",
+      "year": "School year",
+      "since": "since {date}",
+      "attendance": "Attendance",
+      "rateCaption": "Attended {attended} of {marked} school days",
+      "noMarks": "No marked days in this period yet.",
+      "yourChild": "Your child",
+      "classAvg": "Class average",
+      "classHidden": "The class average is hidden for small classes.",
+      "avgArrival": "Average arrival",
+      "streak": "On time in a row",
+      "streakDays": "{count} days",
+      "weeks": "Weekly trend",
+      "weeksHint": "Last 8 weeks, attendance %",
+      "tasks": "Written tasks",
+      "tasksEmpty": "No written tasks in this period.",
+      "tasksSubmitted": "{submitted} of {total} submitted",
+      "classSubmit": "Class submission: {rate}%",
+      "state": {
+        "todo": "To do",
+        "overdue": "Overdue",
+        "submitted": "Being checked",
+        "returned": "Returned",
+        "accepted": "Accepted"
+      },
+      "due": "Due: {date}",
+      "dueToday": "Due today",
+      "dueTomorrow": "Due tomorrow",
+      "growth": "By subject (Parvoz Growth)",
+      "growthHint": "Daily tests, last 30 days",
+      "growthEmpty": "Once your child solves tests in Parvoz Growth, subject results appear here.",
+      "growthNotLinked": "When the student is linked to your child's Parvoz Growth profile, subject results appear here too.",
+      "growthOpen": "Details",
+      "actions": "Quick actions",
+      "writeTeacher": "Write to the class teacher",
+      "history": "Attendance history",
+      "earlyExit": "Early pickup request",
+      "privacy": "No rankings: your child is compared only with the class average.",
+      "late": "Late",
+      "absent": "Absent",
+      "leftEarly": "Left early",
+      "excused": "Excused",
+      "present": "On time",
+      "development": "Development — Parvoz tests",
+      "developmentHint": "IQ and interests (Kelajak) test results. Screening, not a diagnosis.",
+      "wellbeing": "Wellbeing",
+      "wellbeingTitle": "Confidential — for the child's trust",
+      "wellbeingBody": "What the child writes to the psychologist and their psychological test answers are not shown to parents — otherwise the child stops speaking openly. If there is a concern, the psychologist contacts you directly.",
+      "writePsychologist": "Write to the psychologist"
+    }
+  },
+  "growth": {
+    "title": "Learning growth",
+    "period7": "7 days",
+    "period30": "30 days",
+    "periodLabel": "Period",
+    "periodTitle": "Last {days} days",
+    "overall": "Average score",
+    "vsPrevious": "vs the previous {days} days",
+    "answers": "{correct}/{total} correct",
+    "tests": "Tests",
+    "activeDays": "Active days",
+    "streak": "Days in a row",
+    "bySubject": "By subject",
+    "subjectTests": "Tests: {count}",
+    "strong": "Strongest subject",
+    "focus": "Worth practising",
+    "focusHint": "Reviewing this subject together will help the score grow quickly.",
+    "noTests": {
+      "title": "No tests in this period",
+      "body": "When your child solves daily tests in the Parvoz Growth app, the results appear here."
+    },
+    "noProfile": {
+      "title": "Grade and subjects not chosen",
+      "body": "Choose a grade and subjects so daily tests fit your child.",
+      "action": "Choose"
+    },
+    "editProfile": "Change",
+    "results": "Recent results",
+    "resultsEmpty": "No results yet.",
+    "loadMore": "Show more",
+    "daily": "Daily",
+    "unavailable": "Learning growth is not available yet. Please try again later.",
+    "card": {
+      "summary": "Last {days} days · tests: {count} · average {percent}",
+      "empty": "Daily test results and progress by subject"
+    },
+    "profile": {
+      "title": "Grade and subjects",
+      "subtitle": "Daily tests are matched to this grade and these subjects.",
+      "grade": "Grade",
+      "gradeValue": "Grade {grade}",
+      "subjects": "Subjects",
+      "subjectsCount": "{count}/{max}",
+      "pickGradeFirst": "Choose a grade first to see the subjects taught in it.",
+      "maxHint": "You can choose up to {max} subjects. Remove one to add another.",
+      "save": "Save",
+      "saved": "Saved"
+    },
+    "subjects": {
+      "math": "Math",
+      "english": "English",
+      "native": "Native language",
+      "history": "History",
+      "biology": "Biology",
+      "geography": "Geography",
+      "physics": "Physics",
+      "chemistry": "Chemistry",
+      "informatics": "Computer science",
+      "russian": "Russian",
+      "unknown": "Other subject"
+    }
+  },
+  "kelajak": {
+    "title": "Future paths",
+    "unavailable": "The Future paths section isn't available yet. Please try again later.",
+    "disclaimer": "Results are based on your child's own answers and offer guidance, not a final career verdict.",
+    "card": {
+      "title": "Interests and future",
+      "interests": "Strong interest: {names}",
+      "forming": "{count} tests done — interests are still taking shape",
+      "empty": "No answers yet — questions are in “Today's tests” in Parvoz Growth",
+      "ageRequired": "Add your child's age — questions are picked by age"
+    },
+    "link": {
+      "title": "Interests and future",
+      "body": "Interests, strengths and directions worth trying"
+    },
+    "header": {
+      "ageGroup": "Age group {group}",
+      "sessions": "Tests completed",
+      "lastActivity": "Last activity",
+      "noActivity": "Not yet"
+    },
+    "interests": {
+      "title": "Interests",
+      "hint": "Directions your child shows strong interest in, based on their answers. Not a verdict — just ideas to try.",
+      "try": "Worth trying",
+      "forming": "There aren't enough answers yet to talk about directions. As your child keeps taking tests, their interests will become clearer."
+    },
+    "strengths": {
+      "title": "Strengths"
+    },
+    "growthAreas": {
+      "title": "Areas to develop"
+    },
+    "careerLab": {
+      "title": "Career Lab",
+      "hint": "Activities your child has tried and how they felt about them",
+      "liked": "Liked",
+      "neutral": "Neutral",
+      "disliked": "Didn't enjoy much",
+      "next": "What to try next"
+    },
+    "support": {
+      "titleWatch": "Keep an eye on their mood",
+      "titleSupport": "Your support matters now",
+      "areas": "Topics",
+      "day": "Answers from: {date}",
+      "talkTitle": "How to talk",
+      "talk1": "Pick a calm moment and ask an open question: “How was your day?”",
+      "talk2": "Listen carefully, without blame or scolding.",
+      "talk3": "Let your child know they can always come to you.",
+      "fallback": "In recent answers your child noted some difficulties. This is not a diagnosis — just a signal to pay attention."
+    },
+    "progress": {
+      "title": "Changes",
+      "hint": "Latest result compared with the previous one",
+      "first": "First result",
+      "same": "No change",
+      "rising": "Rising interests"
+    },
+    "next": {
+      "title": "Next step"
+    },
+    "empty": {
+      "title": "No answers yet",
+      "body": "When your child answers the questions in “Today's tests” in the Parvoz Growth app, their interests and strengths will appear here."
+    },
+    "age": {
+      "requiredTitle": "Your child's age is missing",
+      "requiredBody": "Questions are picked by age. Add the date of birth — then your child can answer the questions.",
+      "requiredAction": "Add age",
+      "outOfRangeTitle": "This section is for ages 7–18",
+      "outOfRangeBody": "The questions are designed for children aged 7 to 18. If the age is wrong, you can edit it.",
+      "outOfRangeAction": "Edit age"
+    }
+  },
+  "iq": {
+    "card": {
+      "title": "Logical thinking test",
+      "provisional": "Provisional",
+      "percentile": "Scored higher than {p}% of peers",
+      "score": "Standard score: {score}",
+      "scoreCi": "Standard score: {score} (95% range: {lo}–{hi})",
+      "correct": "{correct}/{total} correct · {date}",
+      "previous": "Previous result: higher than {p}% of peers ({date})",
+      "retake": "Next attempt from {date}",
+      "disclaimer": "A screening, not a diagnosis. The result is not a final judgement of your child's ability — mood and tiredness affect it too."
+    },
+    "band": {
+      "veryHigh": "Very high",
+      "high": "High",
+      "aboveAverage": "Above average",
+      "average": "Average",
+      "belowAverage": "Slightly below average",
+      "growthZone": "Growth zone"
+    },
+    "kind": {
+      "FIGURAL": "Patterns",
+      "NUMERIC": "Numbers",
+      "VERBAL": "Words",
+      "LOGIC": "Logic"
+    }
+  },
+  "childCredentials": {
+    "login": {
+      "tooShort": "The login must be at least 4 characters.",
+      "tooLong": "The login can be at most 24 characters.",
+      "badStart": "The login must start with a lowercase Latin letter.",
+      "badChars": "Only lowercase Latin letters, digits, a dot and an underscore (_) are allowed.",
+      "invalidFormat": "That login didn't work. Enter another one or leave the field empty."
+    },
+    "errors": {
+      "loginTaken": "This login is taken. Enter another one or leave the field empty.",
+      "validation": "Please check the details and try again.",
+      "notFound": "Child not found. Refresh the list.",
+      "unavailable": "This section isn't available yet. Please try again later.",
+      "tooMany": "Too many attempts. Wait a little and try again.",
+      "server": "A temporary server problem. Please try again shortly.",
+      "noPassword": "Couldn't get the password. Please try again.",
+      "requestGone": "This request has already been handled. The list was refreshed."
+    },
+    "entry": "Sign-in details",
+    "entrySubtitle": "Your child's login and password",
+    "title": "Sign-in details",
+    "fallbackChildName": "Child",
+    "none": {
+      "title": "No login and password yet",
+      "body": "With a login and password, {name} can sign in to Parvoz from any phone. The phone connected now and its controls stay as they are.",
+      "action": "Create login and password"
+    },
+    "card": {
+      "login": "Login",
+      "copyLogin": "Copy login",
+      "loginCopied": "Login copied",
+      "issuedBy": "Created by",
+      "issuedByParent": "You",
+      "issuedBySchool": "School",
+      "issuedAt": "Created",
+      "lastLogin": "Last sign-in",
+      "neverLoggedIn": "Hasn't signed in yet",
+      "statusPending": "Waiting for first sign-in",
+      "statusActive": "Active",
+      "pendingHint": "{name} signs in with the temporary password and sets their own right away.",
+      "reset": "Reset password",
+      "resetHint": "If your child forgot the password, give them a new temporary one.",
+      "tempExpires": "Temporary password is valid until {date}"
+    },
+    "load": {
+      "failedTitle": "Couldn't load sign-in details"
+    },
+    "issue": {
+      "title": "Create login and password",
+      "subtitle": "A temporary password will be created for {name}. They set their own at the first sign-in.",
+      "loginLabel": "Login (optional)",
+      "loginHint": "aziza.k24",
+      "loginHelp": "Leave it empty and the system picks one. 4–24 characters: lowercase Latin letters, digits, a dot and an underscore.",
+      "submit": "Create password"
+    },
+    "reset": {
+      "title": "Reset password",
+      "recoverTitle": "Recover password",
+      "subtitle": "A new temporary password will be created for {name}. The old one stops working.",
+      "signOut": "Sign out of other devices",
+      "signOutOn": "Your child will be signed out on all devices. The phone you connected is signed out too — you'll need to connect it again (with a QR code or the family code).",
+      "signOutOff": "Only the password changes. Your child's devices stay signed in.",
+      "submit": "Reset password",
+      "recoverSubmit": "Recover password"
+    },
+    "reveal": {
+      "title": "Sign-in details are ready",
+      "subtitle": "Login and temporary password for {name}",
+      "login": "Login",
+      "password": "Temporary password",
+      "copyLogin": "Copy login",
+      "copyPassword": "Copy password",
+      "copyAll": "Copy text",
+      "share": "Send to child",
+      "copied": "Copied",
+      "warnTitle": "The password is shown only once",
+      "warnBody": "You won't be able to see it again after closing this window. If you take a screenshot, delete it once you've sent the password.",
+      "signedOutNote": "Your child's other devices will be signed out. If the phone you connected gets signed out too, open \"My children\", pick your child and tap \"Reconnect child\" to connect it again.",
+      "done": "Done",
+      "confirmTitle": "Did you save the password?",
+      "confirmBody": "It won't be shown again after you close this window. If needed, you can create a new one.",
+      "confirmStay": "Back",
+      "confirmClose": "Close",
+      "shareSubject": "Parvoz — sign-in details",
+      "shareMessage": "Hi {name}! Sign in to the Parvoz app with these details:\n\nLogin: {login}\nTemporary password: {password}\n\nYou'll set your own password the first time you sign in.",
+      "shareMessageNoName": "Hi! Sign in to the Parvoz app with these details:\n\nLogin: {login}\nTemporary password: {password}\n\nYou'll set your own password the first time you sign in."
+    },
+    "recovery": {
+      "title": "Password recovery requests",
+      "tileTitle": "{name} forgot the password",
+      "tileBody": "Give a new temporary password or reject this request.",
+      "requestedAt": "Requested: {time}",
+      "viaSchool": "Sent via school",
+      "restore": "Recover password",
+      "reject": "Reject",
+      "rejectTitle": "Reject this request?",
+      "rejectBody": "The password stays the same. If your child didn't send this request, rejecting it is the right call.",
+      "rejectConfirm": "Reject",
+      "rejected": "Request rejected",
+      "loadFailed": "Couldn't load password recovery requests."
+    }
+  },
+  "home": {
+    "tabs": {
+      "school": "School",
+      "control": "Control",
+      "profile": "Profile"
+    },
+    "start": {
+      "title": "Welcome!",
+      "subtitle": "How will you use Parvoz? You can add the other one later.",
+      "schoolTitle": "My child’s school uses Parvoz",
+      "schoolBody": "Connect with the code or QR from the school — your child’s phone isn’t needed.",
+      "schoolPoint1": "Attendance: know right away when they arrive and leave",
+      "schoolPoint2": "Announcements, payments and early pick-up requests",
+      "schoolAction": "Connect to school",
+      "phoneTitle": "Connect my child’s phone",
+      "phoneBody": "Install Parvoz Growth on your child’s phone and connect it with the family code.",
+      "phonePoint1": "Location, screen time and app limits",
+      "phonePoint2": "Learning progress and chat with your child",
+      "phoneAction": "Add a child",
+      "both": "Use both together — school and home in one app.",
+      "later": "Later"
+    },
+    "control": {
+      "emptySubtitle": "Works with Parvoz Growth on your child’s phone: location, screen time, learning and chat.",
+      "schoolLink": "School uses Parvoz? Connect in the School tab",
+      "children": "Children",
+      "switchChild": "Switch child"
+    },
+    "school": {
+      "emptySubtitle": "Connect to the school — attendance, announcements and payments will be here.",
+      "codeWhereTitle": "Where do I get the code?",
+      "codeWhereBody": "Ask the class teacher or the school office: the code is given on paper or with a QR in a message from the school.",
+      "today": "Today",
+      "sections": "Sections",
+      "schools": "Schools",
+      "className": "Class {name}"
+    }
   }
 }

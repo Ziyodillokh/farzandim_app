@@ -28,9 +28,14 @@ on:
         description: "versionCode (bo'sh qoldirilsa: 1000 + run raqami)"
         required: false
         default: ''
+      build_name:
+        description: "Versiya nomi (masalan 1.0.14). Bo'sh — 1.0.<run raqami>"
+        required: false
+        default: ''
 
 env:
-  FLUTTER_VERSION: '3.44.0'
+  # Ota-ona ilovasi shu Flutter versiyasida sinalgan (lokal APK'lar 1.0.5–1.0.14).
+  FLUTTER_VERSION: '3.41.9'
   TEST_DOMAIN: farzandimedu.uz
   # Play'dagi mavjud ota-ona versionCode'laridan yuqori boshlanish nuqtasi.
   VERSION_CODE_BASE: 1000
@@ -182,6 +187,7 @@ jobs:
           MAPBOX_PUBLIC_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
           YANDEX_MAPS_KEY: ${{ secrets.YANDEX_MAPS_KEY }}
           INPUT_VERSION_CODE: ${{ github.event.inputs.version_code }}
+          INPUT_BUILD_NAME: ${{ github.event.inputs.build_name }}
           RUN_NUMBER: ${{ github.run_number }}
         run: |
           set -e
@@ -192,6 +198,8 @@ jobs:
             VC=$(( VERSION_CODE_BASE + RUN_NUMBER ))
           fi
           echo "versionCode = $VC"
+          BUILD_NAME="${INPUT_BUILD_NAME:-1.0.$RUN_NUMBER}"
+          echo "versionName = $BUILD_NAME"
 
           # Mapbox maven auth (native SDK yuklab olish uchun).
           mkdir -p ~/.gradle
@@ -202,7 +210,7 @@ jobs:
           build() {
             flutter build appbundle --release \
               --build-number="$VC" \
-              --build-name="1.0.$RUN_NUMBER" \
+              --build-name="$BUILD_NAME" \
               --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
               --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN} \
               --dart-define=MAPBOX_PUBLIC_TOKEN=${MAPBOX_PUBLIC_TOKEN} \

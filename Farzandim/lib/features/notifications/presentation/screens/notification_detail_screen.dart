@@ -18,6 +18,7 @@ import 'package:farzandim/features/notifications/presentation/widgets/notificati
     show appIconProxyUrl;
 import 'package:farzandim/features/notifications/presentation/widgets/unlock_decision_sheet.dart';
 import 'package:farzandim/features/pair_requests/data/repositories/backend_pair_request_repository.dart';
+import 'package:farzandim/features/school/presentation/school_push.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
@@ -277,12 +278,20 @@ class _Actions extends ConsumerWidget {
             ),
         ];
       case NotificationType.appLimit:
-      case NotificationType.permissionChanged:
         return [
           if (hasChild)
             primary(
               'notifications.actions.openRestrictions'.tr(),
               () => context.push(AppRoutes.appRestrictionsPath(n.childId)),
+            ),
+        ];
+      case NotificationType.permissionChanged:
+        // Ruxsat holati Bola sozlamalarida ko'rinadi (ekran vaqtida emas).
+        return [
+          if (hasChild)
+            primary(
+              'notifications.actions.openChildSettings'.tr(),
+              () => context.push(AppRoutes.childSettingsPath(n.childId)),
             ),
         ];
       case NotificationType.game:
@@ -335,6 +344,34 @@ class _Actions extends ConsumerWidget {
             'notifications.review'.tr(),
             () => context.push(AppRoutes.sessionAccessApprove),
           ),
+        ];
+      case NotificationType.childRecoveryRequest:
+      case NotificationType.childCredentials:
+        return [
+          if (hasChild)
+            primary(
+              'notifications.actions.openCredentials'.tr(),
+              () => context.push(AppRoutes.childCredentialsPath(n.childId)),
+            ),
+        ];
+      case NotificationType.schoolAttendance:
+      case NotificationType.schoolEarlyExit:
+      case NotificationType.schoolAnnouncement:
+      case NotificationType.schoolReminder:
+      case NotificationType.schoolPayment:
+      case NotificationType.schoolVerification:
+      case NotificationType.schoolMessage:
+      case NotificationType.schoolLink:
+      case NotificationType.schoolMode:
+      case NotificationType.learningReport:
+        // Maktab eslatmasida (API yo'q) tugma bo'lmaydi.
+        final target = schoolPushTarget(n);
+        return [
+          if (target != null)
+            primary(
+              target.labelKey.tr(),
+              () => context.push(target.route, extra: target.extra),
+            ),
         ];
     }
   }

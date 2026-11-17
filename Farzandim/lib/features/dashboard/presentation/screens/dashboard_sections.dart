@@ -6,9 +6,17 @@ part of 'dashboard_screen.dart';
 /// chap-tepada Messenger, o'ng-tepada bildirishnoma. Orqada nozik ko'k yog'du
 /// va jinsga qarab tarqoq ikonalar (o'g'il=mototsikl, qiz=kapalak).
 class _Header extends ConsumerWidget {
-  const _Header({required this.child});
+  const _Header({
+    required this.child,
+    required this.children,
+    required this.selectedIndex,
+  });
 
   final Child child;
+
+  /// Barcha farzandlar — ism bosilganda almashtirish varag'i.
+  final List<Child> children;
+  final int selectedIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -82,6 +90,7 @@ class _Header extends ConsumerWidget {
                 width: 20,
                 height: 20,
               ),
+              showDot: ref.watch(chatUnreadTotalProvider) > 0,
               onTap: () => context.push(AppRoutes.chatList),
             ),
           ),
@@ -152,11 +161,41 @@ class _Header extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  child.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: _unb(24, ls: -0.7),
+                // Ism — farzandlar varag'i (almashtirish / qo'shish).
+                Semantics(
+                  button: true,
+                  label: 'home.control.switchChild'.tr(),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _showChildSwitcher(
+                      context,
+                      ref,
+                      children,
+                      selectedIndex,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 48),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              child.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: _unb(24, ls: -0.7),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Icon(
+                            SolarIconsOutline.altArrowDown,
+                            size: 22,
+                            color: _dim,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Row(
@@ -303,10 +342,10 @@ class _HeaderButton extends StatelessWidget {
 /// Parvoz "secondary shisha" yuzasi (kontent o'lchamida) — pastki tugmalar
 /// uchun (onboarding'dagi shisha tugma bilan bir xil til).
 class _Glass extends StatelessWidget {
-  const _Glass({required this.child, this.radius = 999});
+  const _Glass({required this.child});
 
   final Widget child;
-  final double radius;
+  static const double radius = 999;
 
   @override
   Widget build(BuildContext context) {
@@ -530,8 +569,54 @@ class _LocationCard extends ConsumerWidget {
 
 // ════════════════════════ EKRAN VAQTI KARTASI ════════════════════════
 
+/// Ekran vaqti kartasi. iPhone bola ilovasi haqiqiy ekran vaqtini yubormaydi
+/// (Apple qoidasi), shu sabab iOS'da statistika provayderlari UMUMAN
+/// kuzatilmaydi (behuda polling yo'q) va "0 min" / "Ma'lumot yig'ilmoqda…"
+/// o'rniga sababi ko'rsatiladi.
 class _ScreenTimeCard extends ConsumerWidget {
   const _ScreenTimeCard({required this.childId});
+
+  final String childId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isIos = ref.watch(
+      childByIdProvider(childId).select((c) => c?.isIosDevice ?? false),
+    );
+    return isIos
+        ? _IosScreenTimeCard(childId: childId)
+        : _AndroidScreenTimeCard(childId: childId);
+  }
+}
+
+/// iPhone: statistika yo'q — tushuntirish matni (karta bosilsa nazorat
+/// ekraniga o'tadi, u yerda iPhone nazorati qanday ishlashi yozilgan).
+class _IosScreenTimeCard extends StatelessWidget {
+  const _IosScreenTimeCard({required this.childId});
+
+  final String childId;
+
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      minHeight: 220,
+      onTap: () => context.push(AppRoutes.appRestrictionsPath(childId)),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('dashboard.screenTimeLabel'.tr(), style: _pop(14, c: _dim)),
+          const Icon(Icons.phone_iphone, size: 34, color: Colors.white),
+          Text('iosChild.screenTimeHint'.tr(), style: _pop(13, c: _dim)),
+        ],
+      ),
+    );
+  }
+}
+
+class _AndroidScreenTimeCard extends ConsumerWidget {
+  const _AndroidScreenTimeCard({required this.childId});
 
   final String childId;
 
@@ -1169,185 +1254,131 @@ class _AddChildButton extends ConsumerWidget {
   }
 }
 
-// ════════════════════════ PASTKI BAR (shisha) ════════════════════════
+// ════════════════════════ FARZANDLAR VARAG'I ════════════════════════
 
-/// Suzuvchi pastki panel — ulangan bolalar almashtirgich + Sozlamalar
-/// (ikkalasi ham Parvoz secondary shisha fonida).
-class _BottomBar extends StatelessWidget {
-  const _BottomBar({
+/// Header'dagi ism bosilganda: farzandlar ro'yxati (faoli belgilangan) va
+/// «Farzand qo'shish» (chegaraga yetmagan bo'lsa).
+Future<void> _showChildSwitcher(
+  BuildContext context,
+  WidgetRef ref,
+  List<Child> children,
+  int selectedIndex,
+) {
+  return showModalBottomSheet<void>(
+    useRootNavigator: true,
+    context: context,
+    useSafeArea: true,
+    isScrollControlled: true,
+    backgroundColor: const Color(0xFF0B1016),
+    barrierColor: Colors.black.withValues(alpha: 0.55),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (sheetContext) => _ChildSwitcherSheet(
+      children: children,
+      selectedIndex: selectedIndex,
+      onSelect: (i) {
+        ref.read(selectedChildIndexProvider.notifier).state = i;
+        Navigator.of(sheetContext).pop();
+      },
+      onAdd: () {
+        Navigator.of(sheetContext).pop();
+        guardAddChild(context, ref);
+      },
+    ),
+  );
+}
+
+class _ChildSwitcherSheet extends StatelessWidget {
+  const _ChildSwitcherSheet({
     required this.children,
     required this.selectedIndex,
     required this.onSelect,
+    required this.onAdd,
   });
 
   final List<Child> children;
   final int selectedIndex;
   final ValueChanged<int> onSelect;
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      // Kontent nav ortida yumshoq fonga so'nadi.
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0x0000060A), _bg, _bg],
-          stops: [0, 0.55, 1],
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 28, 16, 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              child: _Glass(
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text('home.control.children'.tr(), style: _unb(18)),
+          ),
+          const SizedBox(height: 14),
+          for (var i = 0; i < children.length; i++) ...[
+            _ChildRow(
+              child: children[i],
+              active: i == selectedIndex,
+              onTap: () => onSelect(i),
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (children.length < _kMaxChildren)
+            Semantics(
+              button: true,
+              child: GestureDetector(
+                onTap: onAdd,
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(_radius),
+                    border: Border.all(color: _cardBorder),
+                  ),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      for (var i = 0; i < children.length; i++)
-                        _SwitcherItem(
-                          child: children[i],
-                          active: i == selectedIndex,
-                          onTap: () => onSelect(i),
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _cardBg,
                         ),
-                      // 1 yoki 2 bola bo'lsa "+" (qo'shish); 3 ta bo'lsa yo'q.
-                      if (children.length < _kMaxChildren)
-                        const _AddSwitcherButton(),
+                        child: const Icon(
+                          SolarIconsBold.addCircle,
+                          size: 24,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'dashboard.emptyState.addButton'.tr(),
+                        style: _pop(15, w: FontWeight.w600),
+                      ),
                     ],
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: () => context.push(AppRoutes.settings),
-              behavior: HitTestBehavior.opaque,
-              child: const _Glass(
-                radius: 26,
-                child: SizedBox(
-                  width: 52,
-                  height: 52,
-                  child: Icon(
-                    SolarIconsBold.settings,
-                    size: 24,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
 }
 
-/// Almashtirgich "+" — yangi bola qo'shish (faqat bolalar < 3 bo'lganda).
-class _AddSwitcherButton extends ConsumerWidget {
-  const _AddSwitcherButton();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return GestureDetector(
-      onTap: () => guardAddChild(context, ref),
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 44,
-        height: 44,
-        margin: const EdgeInsets.only(left: 2),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white.withValues(alpha: 0.08),
-        ),
-        child: const Icon(
-          SolarIconsBold.addCircle,
-          size: 22,
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
-}
-
-/// Uzun ismni chap tomonga silliq surib ko'rsatuvchi matn (marquee). Ism
-/// [maxWidth]'dan kalta bo'lsa oddiy matn; uzun bo'lsa avtomatik suriladi.
-class _MarqueeText extends StatefulWidget {
-  const _MarqueeText({
-    required this.text,
-    required this.style,
-    required this.maxWidth,
-  });
-
-  final String text;
-  final TextStyle style;
-  final double maxWidth;
-
-  @override
-  State<_MarqueeText> createState() => _MarqueeTextState();
-}
-
-class _MarqueeTextState extends State<_MarqueeText>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2800),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tp = TextPainter(
-      text: TextSpan(text: widget.text, style: widget.style),
-      maxLines: 1,
-      textDirection: Directionality.of(context),
-    )..layout();
-    final label = Text(
-      widget.text,
-      maxLines: 1,
-      softWrap: false,
-      overflow: TextOverflow.visible,
-      style: widget.style,
-    );
-    final overflow = tp.width - widget.maxWidth;
-    if (overflow <= 0) return label;
-
-    return ClipRect(
-      child: SizedBox(
-        width: widget.maxWidth,
-        child: AnimatedBuilder(
-          animation: _ctrl,
-          builder: (context, child) {
-            final t = Curves.easeInOut.transform(_ctrl.value);
-            return Transform.translate(
-              offset: Offset(-overflow * t, 0),
-              child: child,
-            );
-          },
-          child: Align(alignment: Alignment.centerLeft, child: label),
-        ),
-      ),
-    );
-  }
-}
-
-/// Almashtirgichdagi bitta bola — faol bo'lsa avatar + ism, aks holda avatar.
-class _SwitcherItem extends StatelessWidget {
-  const _SwitcherItem({
+class _ChildRow extends StatelessWidget {
+  const _ChildRow({
     required this.child,
     required this.active,
     required this.onTap,
@@ -1359,32 +1390,50 @@ class _SwitcherItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-        padding: active
-            ? const EdgeInsets.fromLTRB(4, 4, 14, 4)
-            : const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: active ? Colors.white.withValues(alpha: 0.16) : null,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ChildAvatar(child: child, size: 44, showBorder: false),
-            if (active) ...[
-              const SizedBox(width: 8),
-              _MarqueeText(
-                text: child.name,
-                style: _pop(16, w: FontWeight.w500),
-                maxWidth: 110,
+    final device = child.deviceModel?.trim() ?? '';
+    return Semantics(
+      button: true,
+      selected: active,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: active ? _blue.withValues(alpha: 0.14) : _cardBg,
+            borderRadius: BorderRadius.circular(_radius),
+            border: Border.all(
+              color: active ? _blue.withValues(alpha: 0.6) : _cardBorder,
+            ),
+          ),
+          child: Row(
+            children: [
+              ChildAvatar(child: child, size: 48, showBorder: false),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      child.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: _pop(16, w: FontWeight.w600),
+                    ),
+                    if (device.isNotEmpty)
+                      Text(
+                        device,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: _pop(13, c: _dim),
+                      ),
+                  ],
+                ),
               ),
+              if (active)
+                const Icon(SolarIconsBold.checkCircle, size: 24, color: _blue),
             ],
-          ],
+          ),
         ),
       ),
     );

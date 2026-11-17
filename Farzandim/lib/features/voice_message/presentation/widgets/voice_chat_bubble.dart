@@ -80,6 +80,7 @@ class VoiceChatBubble extends ConsumerWidget {
   void _showMessageMenu(BuildContext context, WidgetRef ref) {
     HapticFeedback.mediumImpact();
     showModalBottomSheet<void>(
+      useRootNavigator: true,
       context: context,
       backgroundColor: const Color(0xFF15181E),
       shape: const RoundedRectangleBorder(
@@ -137,6 +138,7 @@ class VoiceChatBubble extends ConsumerWidget {
 
   Future<void> _editMessage(BuildContext context, WidgetRef ref) async {
     final newText = await showModalBottomSheet<String>(
+      useRootNavigator: true,
       context: context,
       backgroundColor: const Color(0xFF15181E),
       isScrollControlled: true,

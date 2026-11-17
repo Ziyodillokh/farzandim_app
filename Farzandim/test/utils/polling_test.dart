@@ -15,8 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 ProviderContainer makeContainer() {
   final container = ProviderContainer(
     overrides: [
-      appLifecycleProvider
-          .overrideWith((ref) => AppLifecycleState.resumed),
+      appLifecycleProvider.overrideWith((ref) => AppLifecycleState.resumed),
     ],
   );
   addTearDown(container.dispose);
@@ -25,8 +24,7 @@ ProviderContainer makeContainer() {
 
 const tick = Duration(milliseconds: 60);
 
-Future<void> wait(int ms) =>
-    Future<void>.delayed(Duration(milliseconds: ms));
+Future<void> wait(int ms) => Future<void>.delayed(Duration(milliseconds: ms));
 
 void main() {
   group('pollFetchStream', () {
@@ -51,61 +49,67 @@ void main() {
       ]);
     });
 
-    test('kesh YO`Q + birinchi fetch xato → provider error (retry UI)',
-        () async {
-      final container = makeContainer();
-      final provider = StreamProvider<List<int>>(
-        (ref) => pollFetchStream<List<int>>(
-          ref,
-          interval: const Duration(minutes: 1),
-          fetch: () async => throw Exception('tarmoq'),
-        ),
-      );
-      container.listen(provider, (_, __) {});
-      await wait(50);
-      expect(container.read(provider).hasError, isTrue);
-    });
+    test(
+      'kesh YO`Q + birinchi fetch xato → provider error (retry UI)',
+      () async {
+        final container = makeContainer();
+        final provider = StreamProvider<List<int>>(
+          (ref) => pollFetchStream<List<int>>(
+            ref,
+            interval: const Duration(minutes: 1),
+            fetch: () async => throw Exception('tarmoq'),
+          ),
+        );
+        container.listen(provider, (_, __) {});
+        await wait(50);
+        expect(container.read(provider).hasError, isTrue);
+      },
+    );
 
-    test('kesh BOR + birinchi fetch xato → kesh saqlanadi, error YO`Q',
-        () async {
-      final container = makeContainer();
-      final provider = StreamProvider<List<int>>(
-        (ref) => pollFetchStream<List<int>>(
-          ref,
-          interval: const Duration(minutes: 1),
-          fetch: () async => throw Exception('tarmoq'),
-          readCache: () async => [7],
-        ),
-      );
-      container.listen(provider, (_, __) {});
-      await wait(50);
-      final state = container.read(provider);
-      expect(state.hasError, isFalse);
-      expect(state.requireValue, [7]);
-    });
+    test(
+      'kesh BOR + birinchi fetch xato → kesh saqlanadi, error YO`Q',
+      () async {
+        final container = makeContainer();
+        final provider = StreamProvider<List<int>>(
+          (ref) => pollFetchStream<List<int>>(
+            ref,
+            interval: const Duration(minutes: 1),
+            fetch: () async => throw Exception('tarmoq'),
+            readCache: () async => [7],
+          ),
+        );
+        container.listen(provider, (_, __) {});
+        await wait(50);
+        final state = container.read(provider);
+        expect(state.hasError, isFalse);
+        expect(state.requireValue, [7]);
+      },
+    );
 
-    test('swallowFirstError: xato yutiladi, keyingi poll qiymat beradi',
-        () async {
-      final container = makeContainer();
-      var calls = 0;
-      final provider = StreamProvider<List<int>>(
-        (ref) => pollFetchStream<List<int>>(
-          ref,
-          interval: tick,
-          fetch: () async {
-            calls++;
-            if (calls == 1) throw Exception('birinchi xato');
-            return [calls];
-          },
-          swallowFirstError: true,
-        ),
-      );
-      container.listen(provider, (_, __) {});
-      await wait(250);
-      final state = container.read(provider);
-      expect(state.hasError, isFalse);
-      expect(state.hasValue, isTrue);
-    });
+    test(
+      'swallowFirstError: xato yutiladi, keyingi poll qiymat beradi',
+      () async {
+        final container = makeContainer();
+        var calls = 0;
+        final provider = StreamProvider<List<int>>(
+          (ref) => pollFetchStream<List<int>>(
+            ref,
+            interval: tick,
+            fetch: () async {
+              calls++;
+              if (calls == 1) throw Exception('birinchi xato');
+              return [calls];
+            },
+            swallowFirstError: true,
+          ),
+        );
+        container.listen(provider, (_, __) {});
+        await wait(250);
+        final state = container.read(provider);
+        expect(state.hasError, isFalse);
+        expect(state.hasValue, isTrue);
+      },
+    );
 
     test('isSame dedup: o`zgarmagan natija yield QILINMAYDI', () async {
       final container = makeContainer();
@@ -117,8 +121,7 @@ void main() {
           fetch: () async => [1, 2, 3], // har safar teng ro'yxat
           isSame: (a, b) =>
               a.length == b.length &&
-              List.generate(a.length, (i) => a[i] == b[i])
-                  .every((x) => x),
+              List.generate(a.length, (i) => a[i] == b[i]).every((x) => x),
         ),
       );
       container.listen(provider, (_, next) {
@@ -153,12 +156,9 @@ void main() {
   });
 
   group('pollTickStream', () {
-    test('darhol 0, keyin har intervalda o`sadi; dispose to`xtatadi',
-        () async {
+    test('darhol 0, keyin har intervalda o`sadi; dispose to`xtatadi', () async {
       final container = makeContainer();
-      final provider = StreamProvider<int>(
-        (ref) => pollTickStream(ref, tick),
-      );
+      final provider = StreamProvider<int>((ref) => pollTickStream(ref, tick));
       final seen = <int>[];
       final sub = container.listen(provider, (_, next) {
         if (next.hasValue) seen.add(next.requireValue);

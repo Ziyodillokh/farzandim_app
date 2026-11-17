@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/utils/app_brand.dart';
 import 'package:flutter/foundation.dart';
 
 /// Bola qurilmasidagi bitta ilova uchun ota-ona belgilagan cheklov.
@@ -52,4 +53,17 @@ class AppRestriction {
       namedArgs: {'hours': '$h', 'minutes': '$m'},
     );
   }
+}
+
+/// Cheklovlar ro'yxatini bola platformasiga moslash.
+extension AppRestrictionListX on List<AppRestriction> {
+  /// iPhone bola: faqat virtual [kIosSelectionPackage] cheklovi hisobga
+  /// olinadi — oldingi (Android) juftlikdan qolgan cheklovlar iPhone'da hech
+  /// narsa qilmaydi. Android bola: ro'yxat o'zgarmaydi.
+  List<AppRestriction> forPlatform({required bool isIos}) => isIos
+      ? [
+          for (final r in this)
+            if (r.packageName == kIosSelectionPackage) r,
+        ]
+      : this;
 }

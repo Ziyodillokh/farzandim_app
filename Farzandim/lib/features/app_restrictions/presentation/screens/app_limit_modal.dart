@@ -254,6 +254,7 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
     setState(() => _mode = _LimitMode.limit);
     var picked = Duration(minutes: _limitMinutes);
     final result = await showModalBottomSheet<Duration>(
+      useRootNavigator: true,
       context: context,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(

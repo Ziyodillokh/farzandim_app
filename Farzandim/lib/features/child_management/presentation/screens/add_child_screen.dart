@@ -177,6 +177,7 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
 
   Future<void> _pickGender() async {
     final picked = await showModalBottomSheet<Gender>(
+      useRootNavigator: true,
       context: context,
       backgroundColor: _surface,
       shape: const RoundedRectangleBorder(
@@ -210,6 +211,7 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
   /// Profil rasmini tanlash — galereya yoki kamera (sheet) → bytes state'ga.
   Future<void> _pickPhoto() async {
     final source = await showModalBottomSheet<ImageSource>(
+      useRootNavigator: true,
       context: context,
       backgroundColor: _surface,
       shape: const RoundedRectangleBorder(

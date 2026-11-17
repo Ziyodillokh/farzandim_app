@@ -1,0 +1,621 @@
+{
+  "age": {
+    "status": "OK",
+    "age": 11,
+    "ageGroup": "10-12"
+  },
+  "sessionsCompleted": 7,
+  "lastCompletedAt": "2026-10-21T04:05:52.146Z",
+  "categories": [
+    {
+      "category": "learning",
+      "name": {
+        "uz": "Fanlar va o‘rganish tajribasi",
+        "ru": "Предметы и опыт обучения",
+        "en": "Subjects and learning experience"
+      },
+      "score": 0,
+      "answered": 4
+    },
+    {
+      "category": "school_quality",
+      "name": {
+        "uz": "Maktab sifati va darslar",
+        "ru": "Школа и уроки",
+        "en": "School and lessons"
+      },
+      "score": 13,
+      "answered": 4
+    },
+    {
+      "category": "teacher_relation",
+      "name": {
+        "uz": "O‘qituvchi bilan munosabat",
+        "ru": "Отношения с учителями",
+        "en": "Relationship with teachers"
+      },
+      "score": 6,
+      "answered": 4
+    },
+    {
+      "category": "social_self",
+      "name": {
+        "uz": "Ijtimoiy ko‘nikmalar va o‘zini anglash",
+        "ru": "Социальные навыки и самопознание",
+        "en": "Social skills and self-awareness"
+      },
+      "score": 100,
+      "answered": 5
+    },
+    {
+      "category": "career_planning",
+      "name": {
+        "uz": "Kasbga tayyorgarlik va rejalashtirish",
+        "ru": "Подготовка к профессии и планирование",
+        "en": "Career readiness and planning"
+      },
+      "score": 100,
+      "answered": 4
+    },
+    {
+      "category": "personal_traits",
+      "name": {
+        "uz": "Shaxsiy xususiyatlar",
+        "ru": "Личные качества",
+        "en": "Personal traits"
+      },
+      "score": 100,
+      "answered": 5
+    }
+  ],
+  "interests": {
+    "dimensions": [
+      {
+        "code": "R",
+        "name": {
+          "uz": "Amaliy",
+          "ru": "Практический",
+          "en": "Realistic"
+        },
+        "score": 0,
+        "answered": 3
+      },
+      {
+        "code": "I",
+        "name": {
+          "uz": "Tadqiqotchi",
+          "ru": "Исследовательский",
+          "en": "Investigative"
+        },
+        "score": 100,
+        "answered": 2
+      },
+      {
+        "code": "A",
+        "name": {
+          "uz": "Ijodiy",
+          "ru": "Творческий",
+          "en": "Artistic"
+        },
+        "score": 100,
+        "answered": 3
+      },
+      {
+        "code": "S",
+        "name": {
+          "uz": "Ijtimoiy",
+          "ru": "Социальный",
+          "en": "Social"
+        },
+        "score": 100,
+        "answered": 2
+      },
+      {
+        "code": "E",
+        "name": {
+          "uz": "Tashabbuskor",
+          "ru": "Предприимчивый",
+          "en": "Enterprising"
+        },
+        "score": 0,
+        "answered": 3
+      },
+      {
+        "code": "C",
+        "name": {
+          "uz": "Tartibli",
+          "ru": "Организационный",
+          "en": "Conventional"
+        },
+        "score": 0,
+        "answered": 2
+      }
+    ],
+    "top": [
+      "A",
+      "I",
+      "S"
+    ],
+    "reliable": true
+  },
+  "insights": {
+    "strengths": [
+      {
+        "key": "social_self",
+        "title": {
+          "uz": "Muloqot va o‘zini anglash",
+          "ru": "Общение и самопознание",
+          "en": "Social skills and self-awareness"
+        }
+      },
+      {
+        "key": "career_planning",
+        "title": {
+          "uz": "Kelajakni rejalashtirish",
+          "ru": "Планирование будущего",
+          "en": "Planning for the future"
+        }
+      },
+      {
+        "key": "personal_traits",
+        "title": {
+          "uz": "Shaxsiy fazilatlar",
+          "ru": "Личные качества",
+          "en": "Personal strengths"
+        }
+      }
+    ],
+    "interests": [
+      {
+        "code": "A",
+        "title": {
+          "uz": "Ijodiy yo‘nalish",
+          "ru": "Творческое направление",
+          "en": "Creative direction"
+        },
+        "body": {
+          "uz": "Yangi g‘oyalar, tasvir, so‘z va ovoz orqali fikr ifodalashga qiziqish yuqori. Quyidagi yo‘nalishlarni sinab ko‘rish mumkin.",
+          "ru": "Высокий интерес к новым идеям и самовыражению через образы, слова и звук. Можно попробовать такие направления.",
+          "en": "Strong interest in new ideas and expressing thoughts through images, words and sound. These directions are worth trying."
+        },
+        "suggestions": [
+          {
+            "uz": "dizayn",
+            "ru": "дизайн",
+            "en": "design"
+          },
+          {
+            "uz": "san’at va musiqa",
+            "ru": "искусство и музыка",
+            "en": "art and music"
+          },
+          {
+            "uz": "jurnalistika va yozuvchilik",
+            "ru": "журналистика и писательство",
+            "en": "journalism and writing"
+          },
+          {
+            "uz": "media va video",
+            "ru": "медиа и видео",
+            "en": "media and video"
+          }
+        ]
+      },
+      {
+        "code": "I",
+        "title": {
+          "uz": "Tadqiqotchi yo‘nalish",
+          "ru": "Исследовательское направление",
+          "en": "Investigative direction"
+        },
+        "body": {
+          "uz": "Savol berish, tahlil qilish va muammolarni yechishga qiziqish yuqori. Quyidagi yo‘nalishlarni sinab ko‘rish mumkin.",
+          "ru": "Высокий интерес к вопросам, анализу и решению задач. Можно попробовать такие направления.",
+          "en": "Strong interest in asking questions, analysing and solving problems. These directions are worth trying."
+        },
+        "suggestions": [
+          {
+            "uz": "dasturlash",
+            "ru": "программирование",
+            "en": "programming"
+          },
+          {
+            "uz": "tabiiy fanlar va tajribalar",
+            "ru": "естественные науки и эксперименты",
+            "en": "science and experiments"
+          },
+          {
+            "uz": "ma’lumotlar tahlili",
+            "ru": "анализ данных",
+            "en": "data analysis"
+          },
+          {
+            "uz": "tibbiyot va biologiya",
+            "ru": "медицина и биология",
+            "en": "medicine and biology"
+          }
+        ]
+      },
+      {
+        "code": "S",
+        "title": {
+          "uz": "Ijtimoiy yo‘nalish",
+          "ru": "Социальное направление",
+          "en": "Social direction"
+        },
+        "body": {
+          "uz": "Odamlarga yordam berish, tushuntirish va birga ishlashga qiziqish yuqori. Quyidagi yo‘nalishlarni sinab ko‘rish mumkin.",
+          "ru": "Высокий интерес к помощи людям, объяснению и совместной работе. Можно попробовать такие направления.",
+          "en": "Strong interest in helping people, explaining things and working together. These directions are worth trying."
+        },
+        "suggestions": [
+          {
+            "uz": "ta’lim va murabbiylik",
+            "ru": "образование и наставничество",
+            "en": "education and mentoring"
+          },
+          {
+            "uz": "tibbiyot va g‘amxo‘rlik",
+            "ru": "медицина и забота",
+            "en": "healthcare and care"
+          },
+          {
+            "uz": "psixologiya",
+            "ru": "психология",
+            "en": "psychology"
+          },
+          {
+            "uz": "ijtimoiy loyihalar",
+            "ru": "социальные проекты",
+            "en": "social projects"
+          }
+        ]
+      }
+    ],
+    "likedDirections": [
+      {
+        "activity": {
+          "uz": "Mahsulot yoki maket yaratish",
+          "ru": "Создание изделия или макета",
+          "en": "Building a product or model"
+        },
+        "code": "R"
+      },
+      {
+        "activity": {
+          "uz": "Reja va tartib talab qiladigan ish",
+          "ru": "Задание на порядок и план",
+          "en": "A task that needs order and planning"
+        },
+        "code": "C"
+      }
+    ],
+    "triedDirections": [
+      {
+        "activity": {
+          "uz": "Jamoaviy loyiha",
+          "ru": "Командный проект",
+          "en": "Team project"
+        },
+        "code": "S",
+        "verdict": "neutral"
+      },
+      {
+        "activity": {
+          "uz": "Mahsulot yoki maket yaratish",
+          "ru": "Создание изделия или макета",
+          "en": "Building a product or model"
+        },
+        "code": "R",
+        "verdict": "liked"
+      },
+      {
+        "activity": {
+          "uz": "Mavzuni boshqalarga tushuntirish",
+          "ru": "Объяснить тему другим",
+          "en": "Explaining a topic to others"
+        },
+        "code": "S",
+        "verdict": "disliked"
+      },
+      {
+        "activity": {
+          "uz": "Reja va tartib talab qiladigan ish",
+          "ru": "Задание на порядок и план",
+          "en": "A task that needs order and planning"
+        },
+        "code": "C",
+        "verdict": "liked"
+      }
+    ],
+    "growthAreas": [
+      {
+        "key": "learning",
+        "title": {
+          "uz": "O‘rganish odatlari",
+          "ru": "Учебные привычки",
+          "en": "Learning habits"
+        },
+        "tip": {
+          "uz": "Har kuni ozgina vaqt qiziq mavzuni o‘rganib, tushunganlarini qisqa yozib borish foydali.",
+          "ru": "Полезно каждый день немного изучать интересную тему и коротко записывать понятое.",
+          "en": "A little time each day on an interesting topic, with short notes on what was understood, helps."
+        }
+      },
+      {
+        "key": "school_quality",
+        "title": {
+          "uz": "Maktabdagi tajriba",
+          "ru": "Опыт в школе",
+          "en": "School experience"
+        },
+        "tip": {
+          "uz": "Darslarda nima yoqishi va nima qiyinligi haqida o‘qituvchi yoki ishonchli kattalar bilan gaplashish mumkin.",
+          "ru": "Можно поговорить с учителем или взрослым, которому доверяешь, о том, что на уроках нравится, а что трудно.",
+          "en": "Talking with a teacher or a trusted adult about what feels good and what is hard in class can help."
+        }
+      },
+      {
+        "key": "teacher_relation",
+        "title": {
+          "uz": "O‘qituvchilar bilan muloqot",
+          "ru": "Общение с учителями",
+          "en": "Talking with teachers"
+        },
+        "tip": {
+          "uz": "Tushunmagan narsani o‘qituvchidan so‘rashdan tortinmaslik muloqotni osonlashtiradi.",
+          "ru": "Не стесняться спрашивать учителя о непонятном — так общаться становится легче.",
+          "en": "Asking the teacher about anything unclear makes communication easier."
+        }
+      },
+      {
+        "key": "safety_rules",
+        "title": {
+          "uz": "Xavfsizlik qoidalari",
+          "ru": "Правила безопасности",
+          "en": "Safety rules"
+        },
+        "tip": {
+          "uz": "Xavfli vaziyatda nima qilish, kimga murojaat qilish va internetda shaxsiy ma’lumotni qanday asrashni kattalar bilan birga takrorlab chiqish foydali.",
+          "ru": "Полезно вместе со взрослыми повторить, что делать в опасной ситуации, к кому обращаться и как защищать личные данные в интернете.",
+          "en": "It helps to go over with an adult what to do in a risky situation, whom to turn to, and how to keep personal information safe online."
+        }
+      }
+    ],
+    "next": [
+      {
+        "kind": "career_lab",
+        "testType": "career_lab",
+        "externalId": null,
+        "title": {
+          "uz": "Yangi faoliyatni sinab ko‘rish",
+          "ru": "Попробовать новое занятие",
+          "en": "Try a new activity"
+        },
+        "body": {
+          "uz": "Qiziqishlarga mos faoliyat: Kichik tajriba o‘tkazish. Sinab ko‘rgach, taassurotni Career Lab’da baholash mumkin.",
+          "ru": "Занятие по интересам: Небольшой эксперимент. После пробы впечатления можно оценить в Career Lab.",
+          "en": "An activity that matches the interests: Running a small experiment. After trying it, rate the experience in Career Lab."
+        }
+      }
+    ]
+  },
+  "support": {
+    "level": "support",
+    "areas": [
+      {
+        "key": "safety",
+        "name": {
+          "uz": "Xavfsizlik va bullying",
+          "ru": "Безопасность и буллинг",
+          "en": "Safety and bullying"
+        }
+      },
+      {
+        "key": "wellbeing",
+        "name": {
+          "uz": "Ruhiy farovonlik va stress",
+          "ru": "Эмоциональное благополучие и стресс",
+          "en": "Wellbeing and stress"
+        }
+      }
+    ],
+    "day": "2026-10-18",
+    "guidance": {
+      "uz": "Farzandingiz so‘nggi javoblarida bir nechta qiyinchilikni belgiladi. Bu tashxis emas, lekin e’tibor va qo‘llab-quvvatlash muhim. Farzandingiz bilan xotirjam gaplashing, uni tinglang va ayblamang. Xavotir saqlansa, maktab psixologi yoki mutaxassis bilan maslahatlashing.",
+      "ru": "В последних ответах ребёнок отметил несколько трудностей. Это не диагноз, но важны внимание и поддержка. Спокойно поговорите с ребёнком, выслушайте его и не обвиняйте. Если беспокойство сохраняется, обратитесь к школьному психологу или специалисту.",
+      "en": "In recent answers your child noted several difficulties. This is not a diagnosis, but attention and support matter. Talk calmly with your child, listen and avoid blame. If concerns persist, consult the school psychologist or a specialist."
+    }
+  },
+  "progress": {
+    "categories": [
+      {
+        "category": "learning",
+        "name": {
+          "uz": "Fanlar va o‘rganish tajribasi",
+          "ru": "Предметы и опыт обучения",
+          "en": "Subjects and learning experience"
+        },
+        "latest": 0,
+        "previous": null,
+        "delta": null,
+        "points": [
+          {
+            "day": "2026-10-17",
+            "score": 0
+          }
+        ]
+      },
+      {
+        "category": "school_quality",
+        "name": {
+          "uz": "Maktab sifati va darslar",
+          "ru": "Школа и уроки",
+          "en": "School and lessons"
+        },
+        "latest": 25,
+        "previous": 0,
+        "delta": 25,
+        "points": [
+          {
+            "day": "2026-10-17",
+            "score": 0
+          },
+          {
+            "day": "2026-10-21",
+            "score": 25
+          }
+        ]
+      },
+      {
+        "category": "teacher_relation",
+        "name": {
+          "uz": "O‘qituvchi bilan munosabat",
+          "ru": "Отношения с учителями",
+          "en": "Relationship with teachers"
+        },
+        "latest": 0,
+        "previous": null,
+        "delta": null,
+        "points": [
+          {
+            "day": "2026-10-17",
+            "score": 0
+          }
+        ]
+      },
+      {
+        "category": "social_self",
+        "name": {
+          "uz": "Ijtimoiy ko‘nikmalar va o‘zini anglash",
+          "ru": "Социальные навыки и самопознание",
+          "en": "Social skills and self-awareness"
+        },
+        "latest": 100,
+        "previous": 100,
+        "delta": 0,
+        "points": [
+          {
+            "day": "2026-10-17",
+            "score": 100
+          },
+          {
+            "day": "2026-10-21",
+            "score": 100
+          }
+        ]
+      },
+      {
+        "category": "career_planning",
+        "name": {
+          "uz": "Kasbga tayyorgarlik va rejalashtirish",
+          "ru": "Подготовка к профессии и планирование",
+          "en": "Career readiness and planning"
+        },
+        "latest": 100,
+        "previous": 100,
+        "delta": 0,
+        "points": [
+          {
+            "day": "2026-10-19",
+            "score": 100
+          },
+          {
+            "day": "2026-10-21",
+            "score": 100
+          }
+        ]
+      },
+      {
+        "category": "personal_traits",
+        "name": {
+          "uz": "Shaxsiy xususiyatlar",
+          "ru": "Личные качества",
+          "en": "Personal traits"
+        },
+        "latest": 100,
+        "previous": null,
+        "delta": null,
+        "points": [
+          {
+            "day": "2026-10-17",
+            "score": 100
+          }
+        ]
+      }
+    ],
+    "interests": [
+      {
+        "code": "R",
+        "name": {
+          "uz": "Amaliy",
+          "ru": "Практический",
+          "en": "Realistic"
+        },
+        "latest": 0,
+        "previous": 0,
+        "delta": 0
+      },
+      {
+        "code": "I",
+        "name": {
+          "uz": "Tadqiqotchi",
+          "ru": "Исследовательский",
+          "en": "Investigative"
+        },
+        "latest": 100,
+        "previous": 100,
+        "delta": 0
+      },
+      {
+        "code": "A",
+        "name": {
+          "uz": "Ijodiy",
+          "ru": "Творческий",
+          "en": "Artistic"
+        },
+        "latest": 100,
+        "previous": 100,
+        "delta": 0
+      },
+      {
+        "code": "S",
+        "name": {
+          "uz": "Ijtimoiy",
+          "ru": "Социальный",
+          "en": "Social"
+        },
+        "latest": 100,
+        "previous": 0,
+        "delta": 100
+      },
+      {
+        "code": "E",
+        "name": {
+          "uz": "Tashabbuskor",
+          "ru": "Предприимчивый",
+          "en": "Enterprising"
+        },
+        "latest": 0,
+        "previous": 0,
+        "delta": 0
+      },
+      {
+        "code": "C",
+        "name": {
+          "uz": "Tartibli",
+          "ru": "Организационный",
+          "en": "Conventional"
+        },
+        "latest": 0,
+        "previous": 0,
+        "delta": 0
+      }
+    ]
+  },
+  "disclaimer": {
+    "uz": "Natijalar bolaning o‘z javoblariga asoslangan va yo‘nalish uchun tavsiya, qat’iy kasb hukmi emas. Farovonlik savollari tashxis vositasi emas. Savollar ekspert ko‘rigi va pilot sinovdan o‘tmoqda.",
+    "ru": "Результаты основаны на ответах ребёнка и служат ориентиром, а не окончательным выбором профессии. Вопросы о самочувствии не являются инструментом диагностики. Вопросы проходят экспертную проверку и пилотное тестирование.",
+    "en": "Results are based on the child’s own answers and offer guidance for exploring directions, not a final career verdict. Wellbeing questions are not a diagnostic tool. The questions are undergoing expert review and pilot testing."
+  }
+}

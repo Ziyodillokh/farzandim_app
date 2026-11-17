@@ -62,16 +62,33 @@ class UnlockRequestSync with WidgetsBindingObserver {
           _onSocketEvent,
           onError: (Object e) => debugPrint('UnlockRequestSync ws: $e'),
         );
+    // Bola so'rovni bekor qildi — qaror tugmalari bilan qolib ketmasin.
+    _cancelSub = _ref
+        .read(socketClientProvider)
+        .eventStream('unlock_request:cancelled')
+        .listen(
+          _onCancelled,
+          onError: (Object e) => debugPrint('UnlockRequestSync ws: $e'),
+        );
+  }
+
+  void _onCancelled(dynamic payload) {
+    final id = payload is Map ? payload['id'] : null;
+    if (id is! String || id.isEmpty) return;
+    _ref.read(notificationsProvider.notifier).removeUnlockRequest(id);
   }
 
   final Ref _ref;
   StreamSubscription<dynamic>? _wsSub;
+  StreamSubscription<dynamic>? _cancelSub;
 
   /// Kuzatuvchi va WS obunasini yopadi (provider dispose bo'lganda).
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_wsSub?.cancel());
     _wsSub = null;
+    unawaited(_cancelSub?.cancel());
+    _cancelSub = null;
   }
 
   @override

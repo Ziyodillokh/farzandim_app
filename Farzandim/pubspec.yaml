@@ -99,7 +99,6 @@ dependencies:
   # SVG renderer — brand logolari va custom ikonkalar uchun
   # (Apple, Google, va h.k. — assets/icons/*.svg).
   flutter_svg: ^2.0.10
-
   # Koordinata → manzil (reverse geocoding) — MOBILDA platforma geocoder'i
   # (OS, kalitsiz, tez/lokal). Google HTTP Geocoding cheklov/sekinligini
   # chetlab o'tadi. Web qo'llamaydi → u yerda HTTP fallback (GeocodingService).

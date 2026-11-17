@@ -7,13 +7,15 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/cache/swr_cache.dart';
-import 'package:farzandim/core/network/dio_client.dart' show onSessionExpired;
+import 'package:farzandim/core/network/dio_client.dart'
+    show kAuthRevokedExtra, onSessionExpired;
 import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/features/auth/data/models/auth_models.dart';
 import 'package:farzandim/features/auth/data/repositories/backend_auth_repository.dart';
 import 'package:farzandim/features/auth/data/repositories/backend_session_access_repository.dart'
     show DeviceLimitException;
 import 'package:farzandim/features/auth/data/services/social_sign_in_service.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 sealed class BackendAuthState {
@@ -61,15 +63,21 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
         state = const AuthAnonymous();
         // Sessiya tugadi — xavfsizlik uchun disk-kesh ham tozalanadi.
         unawaited(SwrCache.clearAll());
+        unawaited(_repo.clearCachedUser());
       }
     };
     // Auto-bootstrap: app ochilganda saqlangan token tekshiriladi.
     // AuthUnknown → AuthAuthenticated yoki AuthAnonymous'ga o'tadi.
-    bootstrap();
+    _bootstrapDone = bootstrap();
   }
 
   final BackendAuthRepository _repo;
   final SocialSignInService _social;
+  late final Future<void> _bootstrapDone;
+
+  /// Ishga tushishdagi tekshiruv tugashi (testlar kutadi).
+  @visibleForTesting
+  Future<void> get bootstrapDone => _bootstrapDone;
 
   /// Startup'da chaqiriladi. Tokens bor-yo'qligini tekshiradi va saqlangan
   /// user bo'lsa optimistik ravishda darhol "kirgan" holatga o'tadi.
@@ -114,8 +122,12 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
         state = const AuthAnonymous();
       }
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        // Token o'lik (refresh ham muvaffaqiyatsiz) — chiqamiz.
+      // FAQAT server sessiyani aniq bekor qilganda (refresh 401) chiqamiz.
+      // Tarmoq/server xatosi (deploy paytidagi 502, internet uzilishi) yoki
+      // boshqa 401 sessiya tugaganini ANGLATMAYDI — foydalanuvchi login'ga
+      // chiqarilmaydi, keyingi so'rovda qayta uriniladi.
+      if (e.requestOptions.extra[kAuthRevokedExtra] == true) {
+        // Token o'lik (refresh ham rad etildi) — chiqamiz.
         await _repo.logout();
         // Bu chiqish yo'lida ham kesh tozalanadi.
         await SwrCache.clearAll();

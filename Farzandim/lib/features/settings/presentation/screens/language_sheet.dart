@@ -44,6 +44,7 @@ const _langs = <_Lang>[
 /// Ilova tili varag'ini ochadi.
 Future<void> showLanguageSheet(BuildContext context) {
   return showModalBottomSheet<void>(
+    useRootNavigator: true,
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,

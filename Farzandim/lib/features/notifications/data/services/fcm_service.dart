@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:farzandim/features/notifications/data/repositories/backend_fcm_repository.dart';
+import 'package:farzandim/features/school/presentation/school_push.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -248,13 +249,7 @@ class FcmService {
       if (title != null) 'title': title,
       if (body != null) 'message': body,
     });
-    await _localNotifications.show(
-      id,
-      title,
-      body,
-      details,
-      payload: payload,
-    );
+    await _localNotifications.show(id, title, body, details, payload: payload);
   }
 
   Future<String> _getOrCreateDeviceId() async {
@@ -300,10 +295,10 @@ class FcmService {
 /// ilovadan chiqib ketardi. Endi dashboard asos qilinib ustiga `push` —
 /// "orqaga" har doim dashboard'ga qaytadi.
 void handleFcmTap(AppNotification notif, GoRouter router) {
-  void open(String path) {
+  void open(String path, {Object? extra}) {
     router
       ..go(AppRoutes.dashboard)
-      ..push(path);
+      ..push(path, extra: extra);
   }
 
   switch (notif.type) {
@@ -351,9 +346,11 @@ void handleFcmTap(AppNotification notif, GoRouter router) {
       // Qaror varag'i bildirishnomalar ekranidagi kartochkadan ochiladi.
       open(AppRoutes.notifications);
     case NotificationType.permissionChanged:
-      // Ruxsat holati — cheklovlar/qurilma ekraniga (yo'q bo'lsa ro'yxat).
+      // Ruxsat holati — Bola sozlamalariga (iPhone'da "Ekran vaqti ruxsati"
+      // shu yerda ko'rinadi); ekran vaqti statistikasiga emas. Child yo'q
+      // bo'lsa — bildirishnomalar ro'yxati.
       if (notif.childId.isNotEmpty) {
-        open(AppRoutes.appRestrictionsPath(notif.childId));
+        open(AppRoutes.childSettingsPath(notif.childId));
       } else {
         open(AppRoutes.notifications);
       }
@@ -363,5 +360,35 @@ void handleFcmTap(AppNotification notif, GoRouter router) {
     case NotificationType.offline:
     case NotificationType.online:
       open(AppRoutes.notifications);
+    case NotificationType.childRecoveryRequest:
+    case NotificationType.childCredentials:
+      // Bola "parolni unutdim" dedi yoki maktab kirish ma'lumotini
+      // berdi — shu bolaning "Kirish ma'lumotlari"
+      // ekrani (tiklash yoki rad etish). Bola noma'lum bo'lsa — ro'yxat.
+      if (notif.childId.isNotEmpty) {
+        open(AppRoutes.childCredentialsPath(notif.childId));
+      } else {
+        open(AppRoutes.notifications);
+      }
+    case NotificationType.schoolAttendance:
+    case NotificationType.schoolEarlyExit:
+    case NotificationType.schoolAnnouncement:
+    case NotificationType.schoolReminder:
+    case NotificationType.schoolPayment:
+    case NotificationType.schoolVerification:
+    case NotificationType.schoolMessage:
+    case NotificationType.schoolLink:
+    case NotificationType.schoolMode:
+    case NotificationType.learningReport:
+      // Maktab/Growth ekrani; eslatma (API yo'q) yoki bolasiz Growth
+      // push'i — bildirishnomaning o'z sahifasi.
+      final target = schoolPushTarget(notif);
+      if (target != null) {
+        open(target.route, extra: target.extra);
+      } else {
+        router
+          ..go(AppRoutes.dashboard)
+          ..push(AppRoutes.notificationDetail, extra: notif);
+      }
   }
 }

@@ -31,6 +31,7 @@ class PhotoSourceBottomSheet extends StatelessWidget {
   /// `ImageSource?` qaytaradi.
   static Future<ImageSource?> show(BuildContext context) {
     return showModalBottomSheet<ImageSource>(
+      useRootNavigator: true,
       context: context,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(

@@ -20,10 +20,13 @@ import 'package:farzandim/features/app_restrictions/presentation/providers/app_u
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
 import 'package:farzandim/features/child_management/data/models/default_avatar.dart';
 import 'package:farzandim/features/child_management/data/models/gender.dart';
+import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_chart.dart';
 import 'package:farzandim/features/gamification/data/models/leaderboard_models.dart';
 import 'package:farzandim/features/gamification/presentation/providers/gamification_provider.dart';
 import 'package:farzandim/features/gamification/presentation/providers/leaderboard_provider.dart';
+import 'package:farzandim/features/growth/presentation/widgets/growth_report_card.dart';
+import 'package:farzandim/shared/widgets/ios_info_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -104,6 +107,11 @@ class ReportsScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
                 children: [
                   _StatGrid(childId: childId),
+                  // Growth (kunlik testlar) — mavjud bo'lmasa joy olmaydi.
+                  GrowthReportCard(
+                    childId: childId,
+                    padding: const EdgeInsets.only(top: 12),
+                  ),
                   const SizedBox(height: 12),
                   _DonCard(childId: childId),
                   const SizedBox(height: 18),
@@ -396,6 +404,12 @@ class _ScreenTimeSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // iPhone bola ekran vaqtini yubormaydi (Apple qoidasi) — "ma'lumot yo'q"
+    // o'rniga sababi; statistika provayderlari kuzatilmaydi.
+    final isIos = ref.watch(
+      childByIdProvider(childId).select((c) => c?.isIosDevice ?? false),
+    );
+    if (isIos) return IosInfoCard(message: 'iosChild.screenTimeHint'.tr());
     final weekly =
         ref.watch(weeklyChildUsageProvider(childId)).valueOrNull ?? const [];
     // Oxirgi 7 kun (bugundan orqaga) — har kun uchun totalMs.
@@ -541,6 +555,10 @@ class _TopAppsCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isIos = ref.watch(
+      childByIdProvider(childId).select((c) => c?.isIosDevice ?? false),
+    );
+    if (isIos) return IosInfoCard(message: 'iosChild.appsHint'.tr());
     final usage = ref.watch(todayUsageProvider(childId)).valueOrNull;
     final apps = (usage?.displayApps ?? const <AppUsageEntry>[])
         .take(5)

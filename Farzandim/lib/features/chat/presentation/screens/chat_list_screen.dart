@@ -74,7 +74,6 @@ class ChatListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final children = ref.watch(sortedChildrenForVoiceProvider);
     return Scaffold(
       backgroundColor: _bg,
       body: SafeArea(
@@ -105,20 +104,32 @@ class ChatListScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            Expanded(
-              child: children.isEmpty
-                  ? _Empty()
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
-                      itemCount: children.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (context, i) =>
-                          _ChatTile(child: children[i]),
-                    ),
-            ),
+            const Expanded(child: ChatListBody()),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Farzandlar bilan chatlar ro'yxati (ekran va Xabarlar tabi uchun).
+class ChatListBody extends ConsumerWidget {
+  const ChatListBody({
+    this.padding = const EdgeInsets.fromLTRB(16, 6, 16, 24),
+    super.key,
+  });
+
+  final EdgeInsets padding;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final children = ref.watch(sortedChildrenForVoiceProvider);
+    if (children.isEmpty) return _Empty();
+    return ListView.separated(
+      padding: padding,
+      itemCount: children.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (context, i) => _ChatTile(child: children[i]),
     );
   }
 }

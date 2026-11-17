@@ -57,6 +57,7 @@ Future<bool?> showConnectChildSheet(
   Child? initialChild,
 }) {
   return showModalBottomSheet<bool>(
+    useRootNavigator: true,
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,

@@ -112,8 +112,24 @@ class _AppIconWidgetState extends State<AppIconWidget> {
     return _buildFallback(radius);
   }
 
+  /// iPhone virtual yozuvi ("tanlangan ilovalar") uchun harf-avatar o'rniga
+  /// telefon belgisi (brend rangi fonida).
+  Widget _buildIosFallback(BorderRadius radius) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: appAvatarColor(packageName),
+        borderRadius: radius,
+      ),
+      alignment: Alignment.center,
+      child: Icon(Icons.phone_iphone, color: Colors.white, size: size * 0.58),
+    );
+  }
+
   /// Ikon yo'q — brend rangli harf-avatar (friendly nom bosh harfi).
   Widget _buildFallback(BorderRadius radius) {
+    if (packageName == kIosSelectionPackage) return _buildIosFallback(radius);
     final color = appAvatarColor(packageName);
     // WCAG: ~0.179 — qora va oq matn teng kontrast beradigan chegara; undan
     // yorug' fonda qora, qorong'ida oq matn (har doim o'qiladi).

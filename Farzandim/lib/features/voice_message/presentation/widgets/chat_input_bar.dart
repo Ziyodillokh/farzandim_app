@@ -134,6 +134,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
     FocusScope.of(context).unfocus();
     HapticFeedback.selectionClick();
     showModalBottomSheet<void>(
+      useRootNavigator: true,
       context: context,
       backgroundColor: _pSheetBg,
       shape: const RoundedRectangleBorder(

@@ -71,6 +71,7 @@ final dioClientProvider = Provider<Dio>((ref) {
 // ─── 1. AuthInterceptor ────────────────────────────────────────────────
 // Har request'ga `Authorization: Bearer <token>` header qo'shadi.
 // Token yo'q bo'lsa header'siz ketadi — public endpoint'lar uchun OK.
+// Xotira xato bersa so'rov OSILIB QOLMAYDI (handler.next doim chaqiriladi).
 class _AuthInterceptor extends Interceptor {
   _AuthInterceptor(this._storage);
 
@@ -86,17 +87,60 @@ class _AuthInterceptor extends Interceptor {
       handler.next(options);
       return;
     }
-    final token = await _storage.readAccessToken();
-    if (token != null && token.isNotEmpty) {
-      options.headers['Authorization'] = 'Bearer $token';
+    try {
+      final token = await _storage.readAccessToken();
+      if (token != null && token.isNotEmpty) {
+        options.headers['Authorization'] = 'Bearer $token';
+      }
+    } catch (_) {
+      // Token o'qilmadi — header'siz ketadi; 401 bo'lsa refresh qayta urinadi.
     }
     handler.next(options);
   }
 }
 
+/// `extra` belgisi: refresh tarmoq/server xatosi sabab bajarilmadi — 401
+/// sessiya tugaganini ANGLATMAYDI (chaqiruvchi foydalanuvchini chiqarmasin).
+const kAuthUnavailableExtra = '_authUnavailable';
+
+/// `extra` belgisi: server sessiyani ANIQ bekor qildi (refresh 401) —
+/// tokenlar o'chirildi va [onSessionExpired] chaqirildi.
+const kAuthRevokedExtra = '_authRevoked';
+
+/// Refresh natijasi.
+enum _RefreshResult { refreshed, revoked, unavailable }
+
+/// Refresh kutish vaqtlari (testlarda nolga tushiriladi).
+class RefreshTuning {
+  RefreshTuning._();
+
+  /// Tarmoq/server xatosida qayta urinishlar — server imtiyozi (60 s) ichida.
+  @visibleForTesting
+  static List<Duration> retryDelays = const [
+    Duration(seconds: 2),
+    Duration(seconds: 6),
+  ];
+
+  /// "Session rotated" dan keyin boshqa yozuv tugashini kutish.
+  @visibleForTesting
+  static Duration rotatedRecheckDelay = const Duration(seconds: 1);
+
+  /// Bitta refresh so'rovi uchun yuborish/qabul timeout'i. Server javobni
+  /// yo'qotgan holatda ham barcha urinishlar (connect 10 s bilan) birinchi
+  /// rotatsiyadan keyingi 60 s imtiyoz ichida serverga yetadi.
+  static const requestTimeout = Duration(seconds: 12);
+}
+
 // ─── 2. RefreshInterceptor ─────────────────────────────────────────────
 // 401 ushlanganda /api/auth/refresh chaqiradi, yangi token oladi va
 // asl request'ni retry qiladi. Concurrent 401'lar uchun bitta refresh.
+//
+// Tokenlar FAQAT server sessiyani aniq bekor qilganda o'chiriladi
+// (SESSION_REVOKED, "Token revoked", "Invalid refresh token", "User not found
+// or inactive"). Tarmoq uzilishi, 5xx yoki javob yo'qolishi foydalanuvchini
+// login'ga chiqarmaydi: refresh serverning 60 s imtiyozi ichida qayta
+// uriniladi. "Session rotated" — avval xotirada yangiroq token bormi
+// tekshiriladi (boshqa so'rov allaqachon yangilagan bo'lishi mumkin).
 class _RefreshInterceptor extends Interceptor {
   _RefreshInterceptor({required this.dio, required this.tokenStorage});
 
@@ -104,7 +148,7 @@ class _RefreshInterceptor extends Interceptor {
   final TokenStorage tokenStorage;
 
   // Refresh in-flight'ni nazorat qiladi (race condition oldini olish).
-  Completer<String?>? _refreshCompleter;
+  Completer<_RefreshResult>? _refreshCompleter;
 
   @override
   Future<void> onError(
@@ -120,96 +164,163 @@ class _RefreshInterceptor extends Interceptor {
     }
 
     try {
-      final newAccess = await _refreshAccessToken();
-      if (newAccess == null) {
-        // Refresh yo'q yoki muvaffaqiyatsiz — original xatoni qaytarish
-        handler.next(err);
+      // Boshqa so'rov tokenni allaqachon yangilagan bo'lsa — refresh'siz.
+      final used = _bearerOf(err.requestOptions);
+      final current = await tokenStorage.readAccessToken();
+      if (current != null && current.isNotEmpty && current != used) {
+        handler.resolve(await _retry(err.requestOptions, current));
         return;
       }
 
-      // Asl request'ni yangi token bilan retry qilamiz.
-      final retryOptions = err.requestOptions
-        ..headers['Authorization'] = 'Bearer $newAccess'
-        ..extra['_retried'] = true;
-
-      final response = await dio.fetch<dynamic>(retryOptions);
-      handler.resolve(response);
+      final result = await _refresh();
+      if (result != _RefreshResult.refreshed) {
+        final flag = result == _RefreshResult.revoked
+            ? kAuthRevokedExtra
+            : kAuthUnavailableExtra;
+        err.requestOptions.extra[flag] = true;
+        handler.next(err);
+        return;
+      }
+      final newAccess = await tokenStorage.readAccessToken();
+      if (newAccess == null || newAccess.isEmpty) {
+        handler.next(err);
+        return;
+      }
+      handler.resolve(await _retry(err.requestOptions, newAccess));
+    } on DioException catch (e) {
+      // Takroriy so'rov xatosi o'z zanjiridan allaqachon o'tgan — keyingi
+      // interceptor'lar (tarif oynasi, log) ikkinchi marta ishlamasin.
+      handler.reject(e);
     } catch (_) {
       handler.next(err);
     }
   }
 
+  Future<Response<dynamic>> _retry(RequestOptions options, String token) {
+    final retryOptions = options
+      ..headers['Authorization'] = 'Bearer $token'
+      ..extra['_retried'] = true;
+    return dio.fetch<dynamic>(retryOptions);
+  }
+
+  static String? _bearerOf(RequestOptions options) {
+    final header = options.headers['Authorization'];
+    if (header is! String || !header.startsWith('Bearer ')) return null;
+    return header.substring('Bearer '.length);
+  }
+
   /// Concurrent 401'lar bir vaqtda refresh chaqirmasligi uchun
   /// Completer orqali ulashilgan future.
-  Future<String?> _refreshAccessToken() async {
-    if (_refreshCompleter != null) {
-      // Boshqa request allaqachon refresh qilmoqda — uni kutamiz
-      return _refreshCompleter!.future;
-    }
-
-    final completer = Completer<String?>();
+  Future<_RefreshResult> _refresh() {
+    final inFlight = _refreshCompleter;
+    if (inFlight != null) return inFlight.future;
+    final completer = Completer<_RefreshResult>();
     _refreshCompleter = completer;
+    _doRefresh()
+        .then(
+          completer.complete,
+          onError: (_) {
+            completer.complete(_RefreshResult.unavailable);
+          },
+        )
+        .whenComplete(() => _refreshCompleter = null);
+    return completer.future;
+  }
 
-    try {
-      final refreshToken = await tokenStorage.readRefreshToken();
-      if (refreshToken == null || refreshToken.isEmpty) {
-        completer.complete(null);
-        return null;
+  Future<_RefreshResult> _doRefresh() async {
+    var stored = await tokenStorage.readRefreshToken();
+    if (stored == null || stored.isEmpty) {
+      // Kesh bo'sh — xotiradan qayta o'qiymiz; baribir yo'q bo'lsa bu
+      // "chiqilgan" EMAS (xotira xatosi bo'lishi mumkin) — refresh yo'q.
+      await tokenStorage.reload();
+      stored = await tokenStorage.readRefreshToken();
+      if (stored == null || stored.isEmpty) {
+        return _RefreshResult.unavailable;
       }
+    }
+    var refreshToken = stored;
 
-      // Refresh request — interceptor chiqib ketmasligi uchun extra flag
-      final response = await dio.post<Map<String, dynamic>>(
-        '/auth/refresh',
-        data: {'refreshToken': refreshToken},
-        options: Options(extra: {'_skipAuth': true}),
-      );
+    var attempt = 0;
+    var triedNewer = false;
+    while (true) {
+      try {
+        final response = await dio.post<Map<String, dynamic>>(
+          '/auth/refresh',
+          data: {'refreshToken': refreshToken},
+          options: Options(
+            extra: {'_skipAuth': true},
+            sendTimeout: RefreshTuning.requestTimeout,
+            receiveTimeout: RefreshTuning.requestTimeout,
+          ),
+        );
+        final data = response.data;
+        final newAccess = data?['accessToken'] as String?;
+        if (newAccess == null || newAccess.isEmpty) {
+          return _RefreshResult.unavailable;
+        }
+        if (await _isSuperseded(refreshToken)) return _supersededResult();
+        await tokenStorage.updateTokens(
+          accessToken: newAccess,
+          refreshToken: data?['refreshToken'] as String?,
+        );
+        return _RefreshResult.refreshed;
+      } on DioException catch (e) {
+        final code = e.response?.statusCode;
+        final transient =
+            code == null || code >= 500 || code == 408 || code == 429;
+        if (transient) {
+          // Javob yo'qolgan bo'lsa server allaqachon rotatsiya qilgan bo'lishi
+          // mumkin — imtiyoz (60 s) ichida qayta urinish joriy juftni beradi.
+          final delays = RefreshTuning.retryDelays;
+          if (attempt >= delays.length) return _RefreshResult.unavailable;
+          await Future<void>.delayed(delays[attempt]);
+          attempt++;
+          continue;
+        }
+        // Backend /auth/refresh faqat 401 bilan rad etadi; 400/403 kabi
+        // javoblar proksi/infratuzilmadan — sessiya holati noma'lum.
+        if (code != 401) return _RefreshResult.unavailable;
 
-      final data = response.data;
-      if (data == null) {
-        completer.complete(null);
-        return null;
+        if (_isRotated(e.response?.data) && !triedNewer) {
+          // Boshqa yangilash (shu ilovada) yangi juftni yozayotgan bo'lishi
+          // mumkin — biroz kutib xotiradan o'qiymiz.
+          triedNewer = true;
+          await Future<void>.delayed(RefreshTuning.rotatedRecheckDelay);
+          await tokenStorage.reload();
+          final newer = await tokenStorage.readRefreshToken();
+          if (newer != null && newer.isNotEmpty && newer != refreshToken) {
+            refreshToken = newer;
+            continue;
+          }
+        }
+        if (await _isSuperseded(refreshToken)) return _supersededResult();
+        // Sessiya haqiqatan tugagan (bekor qilingan, muddati o'tgan yoki
+        // rotatsiya imtiyozdan keyin) — login.
+        try {
+          await tokenStorage.clear();
+        } finally {
+          onSessionExpired?.call();
+        }
+        return _RefreshResult.revoked;
       }
-
-      final newAccess = data['accessToken'] as String?;
-      final newRefresh = data['refreshToken'] as String?;
-
-      if (newAccess == null) {
-        completer.complete(null);
-        return null;
-      }
-
-      await tokenStorage.updateAccessToken(newAccess);
-      if (newRefresh != null) {
-        await tokenStorage.updateRefreshToken(newRefresh);
-      }
-
-      completer.complete(newAccess);
-      return newAccess;
-    } on DioException catch (e) {
-      // MUHIM (P0-2): tokenlarni FAQAT refresh endpoint'i ANIQ 401/403
-      // qaytarganda o'chiramiz (refresh token haqiqatan bekor). Timeout,
-      // DNS, backend deploy paytidagi 502/503 kabi VAQTINCHA xatolarda
-      // clear qilinsa — 30-kunlik sessiya yo'qolib OMMAVIY JIM LOGOUT
-      // bo'lardi (deploy oynasida minglab user birdan chiqib ketadi).
-      // Transient xatoda tokenlar saqlanadi — keyingi 401'da refresh
-      // avtomatik qayta uriniladi (finally _refreshCompleter=null).
-      final code = e.response?.statusCode;
-      if (code == 401 || code == 403) {
-        await tokenStorage.clear();
-        // Zombi holatdan chiqish: auth state'ni darhol xabardor qilamiz —
-        // router login'ga olib boradi (avval foydalanuvchi ekranlarda
-        // qolib hamma so'rov jim 401 bo'laverardi).
-        onSessionExpired?.call();
-      }
-      completer.complete(null);
-      return null;
-    } catch (_) {
-      completer.complete(null);
-      return null;
-    } finally {
-      _refreshCompleter = null;
     }
   }
+
+  /// Refresh davomida (kutish, qayta urinish) xotiradagi token almashgan:
+  /// foydalanuvchi chiqib-kirgan yoki boshqa yozuv yangilagan — bu eski
+  /// natija yangi sessiyani o'chirmasin va ustiga yozilmasin.
+  Future<bool> _isSuperseded(String flightToken) async =>
+      await tokenStorage.readRefreshToken() != flightToken;
+
+  Future<_RefreshResult> _supersededResult() async {
+    final current = await tokenStorage.readRefreshToken();
+    return current != null && current.isNotEmpty
+        ? _RefreshResult.refreshed
+        : _RefreshResult.unavailable;
+  }
+
+  static bool _isRotated(Object? data) =>
+      data is Map && data['message'] == 'Session rotated';
 }
 
 /// Sessiya tugaganda (refresh token bekor — 401/403) chaqiriladigan global

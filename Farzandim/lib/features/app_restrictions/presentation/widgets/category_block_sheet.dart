@@ -24,6 +24,7 @@ class CategoryBlockSheet extends ConsumerStatefulWidget {
 
   static Future<void> show(BuildContext context, String childId) {
     return showModalBottomSheet<void>(
+      useRootNavigator: true,
       context: context,
       backgroundColor: AppColors.surface,
       isScrollControlled: true,

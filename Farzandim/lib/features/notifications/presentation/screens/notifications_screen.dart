@@ -12,6 +12,7 @@ import 'package:farzandim/features/notifications/data/models/app_notification.da
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/features/notifications/presentation/screens/sos_sheet.dart';
 import 'package:farzandim/features/notifications/presentation/widgets/notifications_list_view.dart';
+import 'package:farzandim/features/school/presentation/widgets/school_payment_pin.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,6 +48,33 @@ class NotificationsScreen extends ConsumerWidget {
   /// `NotificationsScreen` konstruktor.
   const NotificationsScreen({super.key});
 
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      backgroundColor: _bg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _Header(onBack: () => context.pop()),
+            const SizedBox(height: 6),
+            const Expanded(child: NotificationsBody()),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Bildirishnomalar ro'yxati (ekran va Xabarlar tabi uchun): xususiy maktab
+/// to'lovi kelgan bo'lsa — eng tepada, yopilmaydi.
+class NotificationsBody extends ConsumerWidget {
+  const NotificationsBody({
+    this.padding = const EdgeInsets.fromLTRB(20, 4, 20, 24),
+    super.key,
+  });
+
+  final EdgeInsets padding;
+
   void _onTap(BuildContext context, WidgetRef ref, AppNotification n) {
     ref.read(notificationsProvider.notifier).markAsRead(n.id);
     // Chat xabari (ovozli/matn/video) — avval bu holat umuman
@@ -77,26 +105,19 @@ class NotificationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(notificationsProvider);
-
-    return Scaffold(
-      backgroundColor: _bg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _Header(onBack: () => context.pop()),
-            const SizedBox(height: 6),
-            Expanded(
-              child: items.isEmpty
-                  ? const _Empty()
-                  : NotificationsListView(
-                      items: items,
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-                      onTap: (n) => _onTap(context, ref, n),
-                    ),
-            ),
-          ],
+    return Column(
+      children: [
+        const SchoolPaymentPin(padding: EdgeInsets.fromLTRB(20, 4, 20, 4)),
+        Expanded(
+          child: items.isEmpty
+              ? const _Empty()
+              : NotificationsListView(
+                  items: items,
+                  padding: padding,
+                  onTap: (n) => _onTap(context, ref, n),
+                ),
         ),
-      ),
+      ],
     );
   }
 }

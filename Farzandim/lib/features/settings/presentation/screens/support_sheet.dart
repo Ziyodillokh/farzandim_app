@@ -46,6 +46,7 @@ TextStyle _pop(
 /// Qo'llab-quvvatlash varag'ini ochadi.
 Future<void> showSupportSheet(BuildContext context) {
   return showModalBottomSheet<void>(
+    useRootNavigator: true,
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,

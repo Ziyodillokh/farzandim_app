@@ -53,6 +53,7 @@ Future<void> showEmailEditSheet(BuildContext context) => _show(context, false);
 
 Future<void> _show(BuildContext context, bool isPhone) {
   return showModalBottomSheet<void>(
+    useRootNavigator: true,
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,

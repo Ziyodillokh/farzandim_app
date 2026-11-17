@@ -1,6 +1,7 @@
 // "Tizim so'zlamalari" — Parvoz dizayn. Tepada orqa tugma + sarlavha,
-// so'ng premium tarif banneri (Batafsil → Parvoz Premium sahifasi) va 6 ta
-// sozlama qatori: Akkount, Faol sessiyalar, Bildirishnomalar, Ilova tili,
+// so'ng premium tarif banneri (Batafsil → Parvoz Premium sahifasi) va
+// sozlama qatorlari: Akkount, Bolalarim, Maktab (faqat backend'da maktab
+// bo'limi bo'lsa), Faol sessiyalar, Bildirishnomalar, Ilova tili,
 // Qo'llab quvvatlash, Biz haqimizda.
 //
 // Chiqish / hisobni o'chirish "Akkount" (profil) sahifasiga ko'chirildi.
@@ -9,8 +10,11 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/features/home/presentation/home_shell.dart';
 import 'package:farzandim/features/profile/presentation/screens/profile_screen.dart';
+import 'package:farzandim/features/school/presentation/providers/school_providers.dart';
 import 'package:farzandim/features/settings/presentation/providers/language_provider.dart';
 import 'package:farzandim/features/settings/presentation/providers/sessions_provider.dart';
 import 'package:farzandim/features/settings/presentation/screens/language_sheet.dart';
@@ -49,8 +53,11 @@ TextStyle _pop(
 
 /// Tizim so'zlamalari bosh ekrani.
 class SettingsScreen extends ConsumerWidget {
-  /// `SettingsScreen` konstruktor.
-  const SettingsScreen({super.key});
+  /// `SettingsScreen` konstruktor. [asTab] — Profil tabi (orqaga tugmasi
+  /// yo'q, akkaunt kartasi, pastda tab paneli uchun joy).
+  const SettingsScreen({this.asTab = false, super.key});
+
+  final bool asTab;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -61,18 +68,32 @@ class SettingsScreen extends ConsumerWidget {
         .watch(childrenProvider)
         .maybeWhen(data: (list) => list.length, orElse: () => 0);
     final langLabel = AppLanguage.fromCode(context.locale.languageCode).label;
+    // Maktab bo'limi backend'da bo'lsagina (404 `code`siz → yashirin).
+    final schoolAvailable = ref.watch(schoolAvailableProvider);
 
     return Scaffold(
       backgroundColor: _bg,
       body: SafeArea(
         child: Column(
           children: [
-            _Header(onBack: () => Navigator.of(context).pop()),
+            if (asTab)
+              const _TabHeader()
+            else
+              _Header(onBack: () => Navigator.of(context).pop()),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+                padding: EdgeInsets.fromLTRB(
+                  12,
+                  8,
+                  12,
+                  asTab ? kHomeNavReserve : 24,
+                ),
                 child: Column(
                   children: [
+                    if (asTab) ...[
+                      _AccountCard(onTap: () => showAccountSheet(context)),
+                      const SizedBox(height: 16),
+                    ],
                     _PremiumBanner(
                       onTap: () => context.push(AppRoutes.premium),
                     ),
@@ -92,6 +113,15 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       onTap: () => context.push(AppRoutes.settingsChildren),
                     ),
+                    if (schoolAvailable) ...[
+                      const SizedBox(height: 4),
+                      _SettingRow(
+                        icon: SolarIconsBold.squareAcademicCap,
+                        title: 'settings.rows.school.title'.tr(),
+                        subtitle: 'settings.rows.school.subtitle'.tr(),
+                        onTap: () => context.go(AppRoutes.school),
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     _SettingRow(
                       icon: SolarIconsBold.devices,
@@ -138,7 +168,106 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
+// ════════════ Profil tabi: sarlavha va akkaunt kartasi ════════════
+class _TabHeader extends StatelessWidget {
+  const _TabHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Semantics(
+          header: true,
+          child: Text('home.tabs.profile'.tr(), style: _unb(26)),
+        ),
+      ),
+    );
+  }
+}
+
+/// Ota-onaning o'zi: ism, telefon / pochta — bosilsa akkaunt varag'i.
+class _AccountCard extends ConsumerWidget {
+  const _AccountCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(backendAuthProvider);
+    final user = auth is AuthAuthenticated ? auth.user : null;
+    final name = user?.displayName?.trim() ?? '';
+    final contact = (user?.phone?.trim().isNotEmpty ?? false)
+        ? user!.phone!.trim()
+        : (user?.email?.trim() ?? '');
+    final initial = name.isEmpty ? '?' : name.characters.first.toUpperCase();
+    return Semantics(
+      button: true,
+      label: name.isEmpty ? 'settings.rows.account.title'.tr() : name,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            color: _card,
+            border: Border.all(color: const Color(0x1AFFFFFF)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF3C82FF), Color(0xFF216BFF)],
+                  ),
+                ),
+                child: Text(initial, style: _unb(22)),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name.isEmpty ? 'settings.rows.account.title'.tr() : name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: _unb(17),
+                    ),
+                    if (contact.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        contact,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13.5,
+                          color: Colors.white.withValues(alpha: .6),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(
+                SolarIconsOutline.altArrowRight,
+                size: 20,
+                color: Colors.white.withValues(alpha: .5),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ════════════ Sarlavha (orqa + markazlashgan matn) ════════════
@@ -205,7 +334,8 @@ class _PremiumBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 204,
+      // Kamida 204 — katta shriftda matn sig'maguncha karta o'sadi.
+      constraints: const BoxConstraints(minHeight: 204),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
@@ -219,6 +349,8 @@ class _PremiumBanner extends StatelessWidget {
         ),
       ),
       child: Stack(
+        // Mazmun kartaning to'liq balandligini oladi (spaceBetween ishlaydi).
+        fit: StackFit.passthrough,
         children: [
           // Ichki xira rangli porlash (ko'k→siyan→binafsha aurora).
           Positioned(

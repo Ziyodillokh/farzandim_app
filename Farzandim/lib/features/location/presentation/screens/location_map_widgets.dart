@@ -101,6 +101,7 @@ Future<void> _openChildPicker(
   Child current,
 ) async {
   final selected = await showModalBottomSheet<Child>(
+    useRootNavigator: true,
     context: context,
     backgroundColor: const Color(0xFF0A1018),
     shape: const RoundedRectangleBorder(

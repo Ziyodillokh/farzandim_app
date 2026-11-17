@@ -5,7 +5,8 @@
 // Sozlamalar → "Bolalarim" bosilganda ochiladi. Har bola karta: avatar +
 // ism + qurilma • batareya + chevron. Pastda "+ Bola qo'shish". Karta
 // bosilsa "Akkount" varag'i: ism / telefon / tug'ilgan yili (qalam →
-// tahrirlash ekrani) + Bolani qayta ulash (ulanish varag'i).
+// tahrirlash ekrani) + QR kod, Bolani qayta ulash (ulanish varag'i) va
+// Kirish ma'lumotlari (bolaning login va paroli).
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
@@ -73,7 +74,7 @@ class ChildrenManagementScreen extends ConsumerWidget {
                       if (context.canPop()) {
                         context.pop();
                       } else {
-                        context.go(AppRoutes.settings);
+                        context.go(AppRoutes.profile);
                       }
                     },
                   ),
@@ -240,9 +241,10 @@ Future<void> _showAccountSheet(
   WidgetRef ref,
   Child child,
 ) async {
-  // Sheet natija qaytaradi: 'qr' | 'reconnect' — ishlov TASHQI kontekstda
-  // (sheet yopilgach uning contexti o'lik bo'ladi).
+  // Sheet natija qaytaradi: 'qr' | 'reconnect' | 'credentials' — ishlov
+  // TASHQI kontekstda (sheet yopilgach uning contexti o'lik bo'ladi).
   final action = await showModalBottomSheet<String>(
+    useRootNavigator: true,
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
@@ -257,6 +259,10 @@ Future<void> _showAccountSheet(
       childId: child.id,
       childName: child.name,
     );
+    return;
+  }
+  if (action == 'credentials') {
+    await context.push<void>(AppRoutes.childCredentialsPath(child.id));
     return;
   }
   if (action == 'reconnect') {
@@ -308,7 +314,7 @@ class _AccountSheet extends StatelessWidget {
         color: _sheetBg,
         child: SafeArea(
           top: false,
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -349,7 +355,7 @@ class _AccountSheet extends StatelessWidget {
                   value: _birthLabel,
                   onEdit: openEdit,
                 ),
-                const SizedBox(height: 70),
+                const SizedBox(height: 40),
                 _SheetPillButton(
                   icon: SolarIconsOutline.qrCode,
                   label: 'childManagement.account.generateQr'.tr(),
@@ -360,6 +366,12 @@ class _AccountSheet extends StatelessWidget {
                   icon: SolarIconsOutline.restart,
                   label: 'childManagement.account.reconnect'.tr(),
                   onTap: () => Navigator.of(context).pop('reconnect'),
+                ),
+                const SizedBox(height: 10),
+                _SheetPillButton(
+                  icon: SolarIconsOutline.key,
+                  label: 'childCredentials.entry'.tr(),
+                  onTap: () => Navigator.of(context).pop('credentials'),
                 ),
               ],
             ),

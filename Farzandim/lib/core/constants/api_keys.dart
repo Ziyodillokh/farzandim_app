@@ -36,11 +36,11 @@ class ApiKeys {
 
   /// Mapbox public token (`pk.…`) — OQ xarita render (raster plitka).
   /// Runtime `assets/env.json` ustun; bo'lmasa compile-time (`--dart-define`);
-  /// u ham bo'lmasa bo'sh → xarita CARTO light (kalitsiz, oq) ga tushadi.
+  /// u ham bo'lmasa bo'sh → xarita OpenStreetMap (kalitsiz) ga tushadi.
   ///
   /// Faqat HAQIQIY token qaytadi: Mapbox pk tokenlari JWT — `pk.eyJ` bilan
   /// boshlanadi. Placeholder (`pk.BU_YERGA...`) `pk.eyJ` emas → bo'sh
-  /// qaytadi → 401/buzuq plitka o'rniga CARTO oq fallback ishlaydi.
+  /// qaytadi → 401/buzuq plitka o'rniga OpenStreetMap zaxirasi ishlaydi.
   static String get mapboxPublicToken =>
       _mapboxPublicToken.startsWith('pk.eyJ') ? _mapboxPublicToken : '';
 

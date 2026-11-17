@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/network/dio_client.dart'
+    show kAuthUnavailableExtra;
 
 /// Istalgan xatodan foydalanuvchiga ko'rsatsa bo'ladigan LOKALIZATSIYALANGAN
 /// xabar yasaydi (EH-08). Avval loyihada bu mantiq 3 joyda har xil imzo
@@ -11,6 +13,7 @@ import 'package:easy_localization/easy_localization.dart';
 ///    o'zbekcha yozmaydi (auth-guard/validation xabarlari inglizcha) —
 ///    kontekst aniq xabar talab qilsa chaqiruvchi statusni O'ZI oldin
 ///    tekshirsin (masalan app_limit repo 401'ni o'zi map qiladi).
+/// 0. Token yangilash tarmoq xatosi sabab bajarilmagan 401 — internet yo'q.
 /// 2. Javob umuman kelmagan (`response == null`) — internet yo'q.
 /// 3. Chaqiruvchining `fallback`i — kontekstli xabar har doim status-kod
 ///    xabaridan ustun (login'dagi message'siz 401 "sessiya tugadi" emas,
@@ -20,6 +23,11 @@ import 'package:easy_localization/easy_localization.dart';
 /// `.tr()` kalitlari `assets/translations/*.json` dagi `errors.*` guruhida.
 String friendlyError(Object error, {String? fallback}) {
   if (error is DioException) {
+    // Token yangilash tarmoq/server xatosi sabab bajarilmadi — sessiya
+    // joyida, "qaytadan kiring" deyish noto'g'ri.
+    if (error.requestOptions.extra[kAuthUnavailableExtra] == true) {
+      return 'errors.noInternet'.tr();
+    }
     final data = error.response?.data;
     if (data is Map<String, dynamic>) {
       final msg = data['message'];

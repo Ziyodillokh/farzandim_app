@@ -164,6 +164,7 @@ class _AppList extends StatelessWidget {
 
   void _openModal(BuildContext context, AppCombined app) {
     showModalBottomSheet<void>(
+      useRootNavigator: true,
       context: context,
       backgroundColor: AppColors.surface,
       isScrollControlled: true,

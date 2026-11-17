@@ -317,12 +317,20 @@ class ParvozPrimaryButton extends StatelessWidget {
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      label,
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
+                    // Tor ekran / katta shriftda yozuv kesilmaydi, biroz
+                    // kichrayadi (tugma balandligi qat'iy).
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                     if (showArrow) ...[
@@ -398,8 +406,12 @@ class ParvozTextField extends StatefulWidget {
     this.hint,
     this.onChanged,
     this.prefix,
+    this.suffix,
     this.inputFormatters,
     this.maxLength,
+    this.textCapitalization = TextCapitalization.none,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
     super.key,
   });
 
@@ -410,8 +422,19 @@ class ParvozTextField extends StatefulWidget {
   final String? hint;
   final ValueChanged<String>? onChanged;
   final Widget? prefix;
+
+  /// O'ng tomondagi ixtiyoriy element (masalan klaviatura almashtirgich).
+  final Widget? suffix;
   final List<TextInputFormatter>? inputFormatters;
   final int? maxLength;
+
+  /// Klaviatura registri (masalan kodlar uchun `characters`).
+  final TextCapitalization textCapitalization;
+
+  /// Kod kabi maydonlarda `false` — avtotuzatish va takliflar matnni
+  /// buzmasin.
+  final bool autocorrect;
+  final bool enableSuggestions;
 
   @override
   State<ParvozTextField> createState() => _ParvozTextFieldState();
@@ -491,6 +514,9 @@ class _ParvozTextFieldState extends State<ParvozTextField> {
                       keyboardType: widget.keyboardType,
                       inputFormatters: widget.inputFormatters,
                       maxLength: widget.maxLength,
+                      textCapitalization: widget.textCapitalization,
+                      autocorrect: widget.autocorrect,
+                      enableSuggestions: widget.enableSuggestions,
                       onChanged: widget.onChanged,
                       cursorColor: ParvozColors.blue,
                       style: GoogleFonts.poppins(
@@ -522,6 +548,10 @@ class _ParvozTextFieldState extends State<ParvozTextField> {
                     ),
                   ),
                 ),
+                if (widget.suffix != null) ...[
+                  const SizedBox(width: 10),
+                  widget.suffix!,
+                ],
                 if (widget.obscure)
                   GestureDetector(
                     onTap: () => setState(() => _hidden = !_hidden),

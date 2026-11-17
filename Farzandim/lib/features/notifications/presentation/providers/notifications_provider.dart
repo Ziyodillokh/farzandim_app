@@ -189,6 +189,17 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>>
     unawaited(_persist());
   }
 
+  /// Bola bekor qilgan «qo'shimcha vaqt» so'rovi ro'yxatdan olib tashlanadi
+  /// (endi qaror berib bo'lmaydi).
+  void removeUnlockRequest(String unlockRequestId) {
+    final next = state
+        .where((n) => n.data?['unlockRequestId'] != unlockRequestId)
+        .toList();
+    if (next.length == state.length) return;
+    state = next;
+    unawaited(_persist());
+  }
+
   /// Hamma xabarlarni o'chirish.
   void clearAll() {
     state = const [];

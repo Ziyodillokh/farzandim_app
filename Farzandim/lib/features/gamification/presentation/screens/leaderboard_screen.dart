@@ -210,6 +210,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
   void _showHelp() {
     showModalBottomSheet<void>(
+      useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

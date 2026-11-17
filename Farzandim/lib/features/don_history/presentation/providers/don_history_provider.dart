@@ -18,6 +18,11 @@ final donHistoryProvider = FutureProvider.autoDispose
       return raw
           .whereType<Map<String, dynamic>>()
           .map(DonHistoryEntry.fromJson)
-          .where((e) => e.don > 0)
+          .where((e) => e.don > 0 && !kHiddenDonTypes.contains(e.type))
           .toList();
     });
+
+/// Ko'rsatilmaydigan DON turlari: egasi qarori bilan (2026-11-07) audiokitob
+/// (`BOOK_READ`) va videodarslar (`OTHER` — `completeVideo`) platformada
+/// ko'rinmaydi. Qaytarish uchun to'plamni bo'shating.
+const kHiddenDonTypes = {'BOOK_READ', 'OTHER'};

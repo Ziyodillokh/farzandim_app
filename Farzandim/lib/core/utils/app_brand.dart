@@ -9,8 +9,16 @@
 
 import 'package:flutter/material.dart';
 
+/// iPhone'dagi bola qurilmasi yuboradigan YAGONA virtual "ilova" yozuvi.
+///
+/// Apple qoidasiga ko'ra iOS bola haqiqiy o'rnatilgan ilovalar/ekran vaqtini
+/// yubormaydi. Buning o'rniga shu paket nomi bilan bitta yozuv keladi; ota-ona
+/// unga qo'ygan limit/blok iPhone'da bola O'ZI tanlagan ilovalarga qo'llanadi.
+const kIosSelectionPackage = 'uz.parvoz.growth.ios-selected-apps';
+
 /// Mashhur ilovalar: packageName → ko'rinadigan nom.
 const Map<String, String> _brandNames = {
+  kIosSelectionPackage: 'iPhone',
   'org.telegram.messenger': 'Telegram',
   'org.thunderdog.challegram': 'Telegram X',
   'com.whatsapp': 'WhatsApp',
@@ -56,6 +64,7 @@ const Map<String, String> _brandNames = {
 
 /// Mashhur ilovalar uchun brend rangi (harf-avatar foni).
 const Map<String, Color> _brandColors = {
+  kIosSelectionPackage: Color(0xFF1C1C1E),
   'org.telegram.messenger': Color(0xFF29A9EB),
   'org.thunderdog.challegram': Color(0xFF29A9EB),
   'com.whatsapp': Color(0xFF25D366),

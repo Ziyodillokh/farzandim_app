@@ -56,6 +56,7 @@ class SosSheet {
   /// Modalni ochadi.
   static Future<void> show(BuildContext context, AppNotification notif) {
     return showModalBottomSheet<void>(
+      useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

@@ -1097,6 +1097,7 @@ class _PayMethodSheet extends StatelessWidget {
     required String priceLabel,
   }) {
     return showModalBottomSheet<String>(
+      useRootNavigator: true,
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,

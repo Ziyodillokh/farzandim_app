@@ -63,6 +63,7 @@ TextStyle _pop(
 /// "Akkount" bottom sheet'ini ochadi.
 Future<void> showAccountSheet(BuildContext context) {
   return showModalBottomSheet<void>(
+    useRootNavigator: true,
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
@@ -156,6 +157,7 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
     if (_uploading) return;
     // Manba tanlash (galereya / kamera).
     final source = await showModalBottomSheet<ImageSource>(
+      useRootNavigator: true,
       context: context,
       backgroundColor: _bg,
       barrierColor: Colors.black.withValues(alpha: 0.55),

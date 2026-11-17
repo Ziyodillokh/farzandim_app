@@ -161,4 +161,17 @@ class _WebTokenStorage extends TokenStorage {
     final r = p.getString(_kRefresh);
     return r != null && r.isNotEmpty;
   }
+
+  @override
+  Future<bool> isSessionDefinitelyMissing() async => !(await hasValidSession());
+
+  @override
+  Future<TokenReadResult> reload() async =>
+      await hasValidSession() ? TokenReadResult.found : TokenReadResult.absent;
+
+  @override
+  Future<void> updateTokens({String? accessToken, String? refreshToken}) async {
+    if (accessToken != null) await updateAccessToken(accessToken);
+    if (refreshToken != null) await updateRefreshToken(refreshToken);
+  }
 }

@@ -237,7 +237,16 @@
       "openRestrictions": "Cheklovlarga o'tish",
       "openSchedules": "Jadvalga o'tish",
       "giveTime": "Vaqt ber",
-      "deny": "Rad et"
+      "deny": "Rad et",
+      "openChildSettings": "Bola sozlamalariga o'tish",
+      "openSchool": "Maktab sahifasini ochish",
+      "openAnnouncements": "E'lonni ochish",
+      "openAttendance": "Davomatni ko'rish",
+      "openEarlyExits": "So'rovlarni ko'rish",
+      "openPayments": "To'lovlarni ko'rish",
+      "openGrowth": "Natijalarni ko'rish",
+      "openCredentials": "Kirish ma'lumotlarini ochish",
+      "openThread": "Yozishmani ochish"
     },
     "unlock": {
       "granted": "{minutes} daqiqa ruxsat berildi.",
@@ -395,7 +404,15 @@
     "donBalance": "DON balansi",
     "dailySteps": "Kunlik qadamlar",
     "dailyStreak": "Kunlik rivojlanish",
-    "streakDays": "{count} kun"
+    "streakDays": "{count} kun",
+    "school": {
+      "inviteTitle": "Maktab taklif kodi bormi?",
+      "inviteSubtitle": "Kodni kiriting — davomat va e'lonlar shu yerda ko'rinadi",
+      "matchTitle": "O'quvchini farzandingizga bog'lang",
+      "matchSubtitle": "{count} ta o'quvchi hali bog'lanmagan",
+      "matchCta": "Bog'lash",
+      "unread": "{count} yangi"
+    }
   },
   "schedules": {
     "headerTitle": "Jadvallar",
@@ -705,7 +722,9 @@
       "accessibility": "Maxsus imkoniyatlar",
       "granted": "Berilgan",
       "denied": "Rad etilgan",
-      "unknown": "Noma'lum"
+      "unknown": "Noma'lum",
+      "usage": "Foydalanish ma'lumotlari",
+      "overlay": "Boshqa ilovalar ustidan ko'rsatish"
     },
     "headerTitle": "Qurilma sozlamalari",
     "sectionDevice": "QURILMA",
@@ -1040,6 +1059,10 @@
         "title": "Bolalarim",
         "subtitle": "{count} ta bola"
       },
+      "school": {
+        "title": "Maktab",
+        "subtitle": "Taklif kodi, e'lonlar, davomat"
+      },
       "sessions": {
         "title": "Faol sessiyalar",
         "subtitle": "{count} ta faol sessiya"
@@ -1197,7 +1220,18 @@
     "from": "dan",
     "to": "gacha",
     "timePickerTitle": "Vaqt belgilash",
-    "saved": "Rejim qo'shildi"
+    "saved": "Rejim qo'shildi",
+    "iosBlockSwitch": "Shu vaqtda iPhone ilovalarini bloklash",
+    "iosBlockHint": "Bola iPhone'da tanlagan ilovalar shu vaqt oralig'ida bloklanadi",
+    "iosMinWindow": "iPhone'da rejim kamida 15 daqiqa bo'lishi kerak",
+    "iosAppsBlocked": "iPhone ilovalari bloklanadi",
+    "iosAppsNotBlocked": "iPhone ilovalari bloklanmaydi",
+    "iosSheetTitle": "iPhone ilovalari",
+    "appsLabel": "Bloklanadigan ilovalar",
+    "updated": "Rejim yangilandi",
+    "deleted": "Rejim o'chirildi",
+    "deleteTitle": "Rejimni o'chirish",
+    "deleteContent": "«{name}» rejimi o'chirilsinmi?"
   },
   "chat": {
     "title": "Chatlar",
@@ -1653,7 +1687,7 @@
     "heroTitle": "Jami yig'ilgan DON",
     "fromSources": "{count} xil manbadan",
     "empty": "Hali DON yig'ilmagan",
-    "emptySubtitle": "Bola qadam bosib, audiokitob eshitib yoki testda qatnashib DON yig'adi — bu yerda ko'rinadi.",
+    "emptySubtitle": "Bola qadam bosib, kunlik mashq qilib yoki testda qatnashib DON yig'adi — bu yerda ko'rinadi.",
     "times": "{count} marta",
     "today": "Bugun",
     "yesterday": "Kecha",
@@ -1728,5 +1762,800 @@
     "no_ads_full": "Reklamasiz",
     "priority_support": "Ustuvor qo'llab-quvvatlash",
     "family_sharing": "Oila bilan ulashish"
+  },
+  "iosChild": {
+    "howItWorksTitle": "iPhone'da nazorat qanday ishlaydi",
+    "howItWorksBody": "Apple qoidasiga ko'ra iPhone'dagi ilovalar ro'yxati va ekran vaqti sizga ko'rinmaydi. Bola o'z iPhone'ida Parvoz → Ekran vaqti bo'limida nazorat qilinadigan ilovalarni tanlaydi. Bu yerda esa «iPhone: tanlangan ilovalar» yozuvini bloklaysiz yoki unga kunlik limit qo'yasiz — u shu tanlangan ilovalarga qo'llanadi.",
+    "screenTimeHint": "iPhone ekran vaqti statistikasi faqat bolaning telefonida ko'rinadi (Apple qoidasi)",
+    "appsHint": "iPhone'dagi ilovalar ro'yxati va ularda o'tkazilgan vaqt ota-onaga ko'rinmaydi (Apple qoidasi)",
+    "blockBanner": "iPhone'da bola ilovalarni o'zi tanlaydi (Parvoz → Ekran vaqti). «iPhone: tanlangan ilovalar»ni bloklasangiz, shu tanlangan ilovalar doimo bloklanadi.",
+    "limitBanner": "iPhone'da bola ilovalarni o'zi tanlaydi (Parvoz → Ekran vaqti). Qo'ygan limitingiz shu tanlangan ilovalarga qo'llanadi.",
+    "uninstallSubtitle": "iPhone'da ilovalarni o'chirish taqiqlanadi (Parvoz ham)",
+    "permissionLabel": "Ekran vaqti ruxsati",
+    "permissionOn": "Yoqilgan",
+    "permissionOff": "O'chirilgan",
+    "permissionUnknown": "Noma'lum"
+  },
+  "school": {
+    "title": "Maktab",
+    "classLabel": "{name} sinf",
+    "errorTitle": "Yuklab bo'lmadi",
+    "home": {
+      "emptyTitle": "Maktabingiz bilan bog'laning",
+      "emptySubtitle": "Maktab bergan taklif kodi bilan farzandingizning davomati, maktab e'lonlari va to'lov eslatmalarini shu yerda kuzatasiz.",
+      "enterCode": "Taklif kodini kiritish",
+      "addAnother": "Yana maktab qo'shish",
+      "noStudents": "Bu maktabda sizga hali o'quvchi biriktirilmagan.",
+      "matchedTo": "Farzand: {child}",
+      "notMatched": "Farzandga bog'lanmagan",
+      "linkedByOther": "Oilangizning boshqa a'zosi bog'lagan",
+      "match": "Farzandga bog'lash",
+      "changeMatch": "O'zgartirish",
+      "pickStudent": "Qaysi o'quvchi?",
+      "unlink": "Aloqani uzish",
+      "unlinkTitle": "Maktab bilan aloqani uzasizmi?",
+      "unlinkBody": "{school} e'lonlari, davomati va to'lov eslatmalari endi bu ilovaga kelmaydi. Qayta ulanish uchun maktabdan yangi kod olishingiz kerak bo'ladi.",
+      "unlinkConfirm": "Uzish",
+      "unlinked": "Maktab bilan aloqa uzildi",
+      "pendingReview": "Maktab tasdiqlashini kutmoqda. Tasdiqlangach farzandingiz maʼlumotlari shu yerda koʻrinadi.",
+      "pendingShort": "Tasdiq kutilmoqda",
+      "needsMatch": "Farzandga bog'lash kerak",
+      "schoolKids": "{count} ta farzand",
+      "tiles": {
+        "announcementsNew": "{count} ta yangi",
+        "announcementsNone": "Yangi e'lon yo'q",
+        "paymentsDue": "To'lanmagan",
+        "paymentsDueA11y": "To'lovlar, {count} ta to'lanmagan",
+        "paymentsChecking": "Tekshirilmoqda",
+        "paymentsNext": "{days} kundan keyin",
+        "paymentsNone": "Eslatma yo'q",
+        "paymentsHint": "Eslatmalar va cheklar",
+        "attendanceToday": "Bugun: {came} / {total} keldi",
+        "attendanceA11y": "Davomat, bugun {total} tadan {came} tasi keldi",
+        "attendanceNoLessons": "Bugun dars yo'q",
+        "attendanceHint": "Oylik jadval",
+        "contact": "Bog'lanish",
+        "contactBody": "Sinf rahbari va maktab"
+      }
+    },
+    "link": {
+      "title": "Maktabga ulanish",
+      "heading": "Taklif kodini kiriting",
+      "body": "Maktab sizga 6 xonali raqamli kod, 8 belgili kod yoki QR kod beradi. Ulangach, farzandingizning davomati, maktab e'lonlari va to'lov eslatmalari shu ilovaga keladi.",
+      "codeLabel": "Taklif kodi",
+      "codeHint": "123456 yoki XXXX-XXXX",
+      "scan": "QR kodni skanerlash",
+      "submit": "Ulanish",
+      "success": "Maktab bilan bog'landingiz",
+      "scanTitle": "QR kodni skanerlang",
+      "scanHint": "Maktab bergan QR kodni ramka ichiga joylashtiring",
+      "invalidQr": "Bu QR kod maktab taklifi emas. Maktab bergan QR kodni skanerlang.",
+      "cameraError": "Kamerani ochib bo'lmadi. Kameraga ruxsat bering yoki kodni qo'lda kiriting.",
+      "keyboardLetters": "Harfli klaviatura",
+      "keyboardDigits": "Raqamli klaviatura",
+      "fromLinkHint": "Kod havoladan olindi. Maktab va kodni tekshirib, «Ulanish»ni bosing."
+    },
+    "match": {
+      "title": "{student} qaysi farzandingiz?",
+      "explain": "Farzandingizni tanlang — maktab davomati va xabarlari uning sahifasida ko'rinadi.",
+      "progress": "{current} / {total}",
+      "none": "Hech biri — bog'lamaslik",
+      "currentlyWith": "Hozir: {student}",
+      "save": "Saqlash",
+      "later": "Keyinroq",
+      "saved": "O'quvchi farzandingizga bog'landi",
+      "removed": "Bog'lash olib tashlandi",
+      "linkedByOther": "Bu o'quvchini oilangizning boshqa a'zosi o'z farzandiga bog'lagan. O'zgartirish kerak bo'lsa, u bilan kelishib oling.",
+      "noChildren": "Avval farzandingizni ilovaga qo'shing, so'ng o'quvchini unga bog'laysiz.",
+      "addChild": "Farzand qo'shish"
+    },
+    "attendance": {
+      "title": "Davomat",
+      "inAt": "Kirish {time}",
+      "outAt": "Chiqish {time}",
+      "status": {
+        "present": "Keldi",
+        "late": "Kechikib keldi",
+        "absent": "Kelmadi",
+        "leftEarly": "Erta ketdi",
+        "excused": "Sababli",
+        "pending": "Hali belgilanmagan",
+        "holiday": "Dam olish kuni",
+        "unknown": "Ma'lumot yo'q"
+      },
+      "rate": "Kelish foizi",
+      "noMarks": "Bu oyda hali belgilangan kun yo'q.",
+      "days": "Kunlar",
+      "noDays": "Bu oyda hali o'quv kuni bo'lmagan.",
+      "today": "Bugun",
+      "previousMonth": "Oldingi oy",
+      "nextMonth": "Keyingi oy",
+      "avgArrival": "O'rtacha kelish",
+      "streak": "O'z vaqtida ketma-ket",
+      "legend": "Belgilar",
+      "monthSummary": "{marked} o'quv kunidan {attended} kun",
+      "dayIn": "Kirdi",
+      "dayOut": "Chiqdi",
+      "dayNoRecord": "Belgilanmagan",
+      "writeReason": "Sababini sinf rahbariga yozish",
+      "reasonPrefill": "Assalomu alaykum, ustoz. {date} kuni {student} darsga kela olmadi. Sababi: ",
+      "askLate": "Sinf rahbariga yozish",
+      "overview": "Umumiy statistika"
+    },
+    "announcements": {
+      "title": "E'lonlar",
+      "emptyTitle": "Hozircha e'lon yo'q",
+      "emptyBody": "Maktab e'lon yuborganda u shu yerda paydo bo'ladi va sizga xabar keladi.",
+      "important": "Muhim",
+      "unread": "O'qilmagan",
+      "unreadCount": "{count} ta o'qilmagan e'lon",
+      "loadMore": "Yana yuklash",
+      "fromPush": "Bildirishnomadan",
+      "filter": {
+        "all": "Barchasi",
+        "unread": "O'qilmagan",
+        "important": "Muhim"
+      },
+      "group": {
+        "today": "Bugun",
+        "yesterday": "Kecha",
+        "week": "Shu hafta",
+        "earlier": "Oldinroq"
+      },
+      "audience": {
+        "school": "Butun maktab",
+        "classes": "{classes} sinf",
+        "personal": "Shaxsan sizga"
+      },
+      "emptyFilter": "Bu filtrda e'lon yo'q",
+      "markAll": "Hammasini o'qildi",
+      "detailTitle": "E'lon",
+      "from": "Kimdan",
+      "to": "Kimga",
+      "sentAt": "Yuborilgan",
+      "school": "Maktab",
+      "ask": "Sinf rahbariga savol berish",
+      "askPrefill": "«{title}» e'loni bo'yicha savolim bor: ",
+      "copy": "Matnni nusxalash",
+      "copied": "Nusxalandi",
+      "importantBanner": "Muhim e'lon — diqqat bilan o'qing",
+      "notFound": "E'lon topilmadi. Ro'yxatni yangilab ko'ring."
+    },
+    "earlyExit": {
+      "title": "Erta ketish",
+      "new": "Yangi so'rov",
+      "sheetTitle": "Erta ketish so'rovi",
+      "sheetSubtitle": "Maktab so'rovni ko'rib chiqib, javob beradi",
+      "todayOnly": "So'rov faqat bugungi kun uchun yuboriladi. Maktab tasdiqlasa yoki rad etsa, sizga xabar keladi.",
+      "student": "O'quvchi",
+      "time": "Ketish vaqti",
+      "timeHint": "Vaqtni tanlang",
+      "reason": "Sabab",
+      "reasonHint": "Masalan: shifokor qabuliga boramiz",
+      "pickupBy": "Kim olib ketadi",
+      "pickupHint": "Masalan: onasi — Malika",
+      "submit": "So'rov yuborish",
+      "sent": "So'rov maktabga yuborildi",
+      "emptyTitle": "Hali so'rov yo'q",
+      "emptyBody": "Farzandingizni darsdan oldinroq olib ketmoqchi bo'lsangiz, maktabga shu yerdan so'rov yuboring.",
+      "pickupLine": "Olib ketadi: {name}",
+      "bySchool": "Maktab xodimi kiritgan",
+      "status": {
+        "pending": "Kutilmoqda",
+        "approved": "Tasdiqlandi",
+        "rejected": "Rad etildi",
+        "unknown": "Noma'lum"
+      }
+    },
+    "payments": {
+      "title": "To'lovlar",
+      "emptyTitle": "To'lov eslatmalari yo'q",
+      "emptyBody": "Maktab to'lov sanasini belgilaganda u shu yerda ko'rinadi.",
+      "nextDate": "Keyingi to'lov sanasi",
+      "dateLine": "To'lov sanasi: {date}",
+      "prepaid": "Oldindan to'langan: {count} oy",
+      "paused": "Eslatmalar to'xtatilgan",
+      "note": "To'lov sanasini maktab belgilaydi. To'lovni amalga oshirgan bo'lsangiz, «To'laganman, tekshiring» orqali maktabga xabar bering.",
+      "verify": "To'laganman, tekshiring",
+      "verifyPending": "Tekshirilmoqda",
+      "verifyTitle": "To'lovni tekshirish",
+      "verifyLabel": "Maktabga xabar",
+      "verifyHint": "Masalan: 3-noyabr kuni Click orqali to'ladim",
+      "verifyNote": "Maktab to'lovni tekshirib, javob beradi. Javob kelganda sizga xabar keladi.",
+      "verifySubmit": "Yuborish",
+      "verifySent": "So'rovingiz maktabga yuborildi",
+      "pin": {
+        "title": "Bugun to'lov kuni",
+        "overdue": "To'lov sanasi o'tdi",
+        "body": "{school}: {children} uchun to'lov sanasi — {date}.",
+        "checking": "Maktab to'lovingizni tekshiryapti.",
+        "open": "To'lovlarga o'tish"
+      },
+      "status": {
+        "upcoming": "{count} kun qoldi",
+        "today": "Bugun to'lov kuni",
+        "overdue": "{count} kun o'tdi",
+        "paused": "Eslatmalar to'xtatilgan",
+        "checking": "Tekshirilmoqda",
+        "prepaid": "{count} oy oldindan"
+      },
+      "childrenLabel": "Farzandlar",
+      "history": "Tarix",
+      "historyEmpty": "Hali yozuv yo'q",
+      "action": {
+        "created": "To'lov eslatmasi yaratildi",
+        "shifted": "Maktab to'lov sanasini yangiladi",
+        "paused": "Eslatmalar to'xtatildi",
+        "resumed": "Eslatmalar qayta yoqildi",
+        "verified": "To'lov tasdiqlandi",
+        "unknown": "O'zgarish"
+      },
+      "requestSent": "Siz «To'laganman» deb yozdingiz",
+      "schoolAnswered": "Maktab javobi",
+      "askAdmin": "Ma'muriyatga savol",
+      "askAdminPrefill": "To'lov bo'yicha savolim bor: ",
+      "info": "Parvoz to'lov qabul qilmaydi. To'lov summasi va rekvizitlarni maktabdan aniqlang.",
+      "method": "To'lov usuli",
+      "methods": {
+        "click": "Click",
+        "payme": "Payme",
+        "uzum": "Uzum",
+        "card": "Bank kartasi",
+        "cash": "Naqd",
+        "transfer": "Bank o'tkazmasi"
+      },
+      "months": "Qaysi oy(lar) uchun",
+      "extra": "Qo'shimcha izoh",
+      "extraHint": "Ixtiyoriy",
+      "preview": "Maktabga boradigan matn",
+      "composed": {
+        "method": "To'lov usuli: {value}.",
+        "months": "Oy: {value}."
+      },
+      "verifyNeed": "To'lov usulini yoki izohni kiriting.",
+      "methodOnline": "Onlayn",
+      "methodOffline": "Naqd",
+      "yearLabel": "{from}–{to} o'quv yili",
+      "proofTitle": "O'tkazma rasmini yuboring",
+      "proofHint": "To'lov ilovasidagi chek (skrinshot) rasmini biriktiring — maktab to'lovni tezroq tasdiqlaydi.",
+      "proofPick": "Rasm tanlash",
+      "proofChange": "Almashtirish",
+      "proofRemove": "O'chirish",
+      "proofAttached": "Chek rasmi biriktirildi",
+      "proofNeed": "Onlayn to'lovda chek rasmini biriktiring.",
+      "proofTooBig": "Rasm juda katta (8 MB dan oshmasin).",
+      "cashHint": "Naqd to'lovda rasm kerak emas. Kimga va qachon berganingizni izohda yozing.",
+      "cashNoteHint": "Masalan: 10-noyabr kuni kotibiyatga berdim",
+      "hasReceipt": "Chek rasmi bilan",
+      "chooseMethod": "Avval to'lov usulini tanlang."
+    },
+    "errors": {
+      "validation": "Ma'lumotlarni tekshirib, qaytadan urinib ko'ring.",
+      "inviteFormat": "Kod 6 ta raqamdan yoki 8 ta belgidan (lotin harflari va raqamlar) iborat. Tekshirib, qayta kiriting.",
+      "inviteInvalid": "Bu kod ishlamadi: u noto'g'ri yoki muddati o'tgan. Maktabdan yangi kod so'rang.",
+      "tooManyAttempts": "Urinishlar juda ko'p bo'ldi. Biroz kutib, qaytadan urinib ko'ring.",
+      "studentNotFound": "O'quvchi topilmadi. Ro'yxatni yangilab ko'ring.",
+      "childNotFound": "Farzand topilmadi. Ro'yxatni yangilab ko'ring.",
+      "linkedElsewhere": "Bu o'quvchini oilangizning boshqa a'zosi o'z farzandiga bog'lagan.",
+      "linkNotFound": "Bu maktab bilan aloqa allaqachon uzilgan.",
+      "notFound": "Ma'lumot topilmadi. Ro'yxatni yangilab ko'ring.",
+      "earlyExitPending": "Bugun uchun yuborilgan so'rov hali ko'rib chiqilmoqda.",
+      "verificationOpen": "Bu to'lov bo'yicha so'rovingiz maktabda ko'rib chiqilmoqda.",
+      "conflict": "Bu amalni hozir bajarib bo'lmadi. Ro'yxatni yangilab, qayta urinib ko'ring.",
+      "unavailable": "Bu bo'lim hozircha mavjud emas. Keyinroq qayta urinib ko'ring.",
+      "server": "Serverda vaqtinchalik nosozlik. Birozdan so'ng qayta urinib ko'ring.",
+      "contactUnavailable": "Bu xodim bilan aloqa hozir mavjud emas. Ro'yxatni yangilab ko'ring.",
+      "rateLimited": "Bugun juda ko'p xabar yuborildi. Ertaga qayta urinib ko'ring."
+    },
+    "todayAt": "Bugun, {time}",
+    "verifications": {
+      "title": "So'rovlarim",
+      "answer": "Maktab javobi",
+      "status": {
+        "open": "Ko'rib chiqilmoqda",
+        "answered": "Javob berildi",
+        "closed": "Yopilgan",
+        "unknown": "Noma'lum"
+      }
+    },
+    "mode": {
+      "permissionTitle": "Maktab: telefon tartibi",
+      "permissionBodyAndroid": "Dars vaqtidagi telefon tartibi ishlashi uchun {child} telefonida Parvoz bola ilovasini oching va ikki ruxsatni yoqing: «Foydalanish ma'lumotlariga kirish» va «Boshqa ilovalar ustidan ko'rsatish».",
+      "permissionBodyIos": "Dars vaqtidagi telefon tartibi ishlashi uchun {child} iPhone'ida Parvoz bola ilovasini oching va «Ekran vaqti» ruxsatini bering.",
+      "permissionHint": "Ruxsat yoqilganini bola sozlamalarida ko'rishingiz mumkin.",
+      "openSettings": "Bola sozlamalari",
+      "gotIt": "Tushunarli"
+    },
+    "connect": {
+      "title": "Maktab bilan bog'lanish",
+      "newReplies": "{count} ta yangi javob",
+      "group": {
+        "classTeacher": "Sinf rahbari",
+        "leadership": "Rahbariyat",
+        "support": "Psixologik yordam",
+        "subject": "Fan o'qituvchilari"
+      },
+      "role": {
+        "director": "Direktor",
+        "admin": "Ma'muriyat",
+        "homeroom": "Sinf rahbari",
+        "psychologist": "Psixolog",
+        "teacher": "O'qituvchi",
+        "unknown": "Xodim"
+      },
+      "roleHint": {
+        "director": "Maktab siyosati, taklif va jiddiy masalalar",
+        "admin": "To'lovlar, hujjatlar va ma'lumotnomalar",
+        "homeroom": "Kundalik masalalar: davomat, vazifalar, o'zlashtirish",
+        "psychologist": "Kayfiyat, munosabatlar, bulling — maxfiy suhbat",
+        "teacher": "Fan bo'yicha savollar va qo'shimcha darslar",
+        "unknown": "Maktab xodimi"
+      },
+      "myThreads": "Murojaatlarim",
+      "newReply": "Yangi javob",
+      "waiting": "Javob kutilmoqda",
+      "answered": "Javob berildi",
+      "resolved": "Hal qilindi",
+      "privacy": "Xabaringizni faqat siz tanlagan xodim o'qiydi.",
+      "confidential": "Maxfiy: xabarni faqat psixologning o'zi o'qiydi — rahbariyat ham ko'rmaydi.",
+      "emptyTitle": "Kontaktlar hali yo'q",
+      "emptyBody": "Maktab xodimlarni Parvoz panelga ulagach, ular shu yerda ko'rinadi.",
+      "openChat": "Yozishmani ochish",
+      "composeTitle": "Xabar",
+      "composeTo": "{name} · {role}",
+      "composeHint": "Matnni o'zingizga moslab tahrirlang — keyin yuboring.",
+      "placeholder": "Xabaringizni yozing…",
+      "send": "Yuborish",
+      "sent": "Xabar yuborildi",
+      "unavailable": "Bu xodim bilan aloqa hozir mavjud emas.",
+      "seen": "O'qildi",
+      "delivered": "Yuborildi",
+      "you": "Siz",
+      "aboutStudent": "{name} · {className}",
+      "student": "O'quvchi",
+      "noHomeroom": "Sinf rahbari hali Parvoz panelga ulanmagan. Boshqa xodimga yozishingiz mumkin.",
+      "threadEmpty": "Hali xabar yo'q",
+      "replyTime": "Odatda ish kuni davomida javob beriladi.",
+      "topic": {
+        "absence": {
+          "title": "Darsga kelmaydi",
+          "body": "Assalomu alaykum, ustoz. Farzandim {student} bugun darsga kela olmaydi. Sababi: ",
+          "hint": "Kasallik yoki boshqa sabab"
+        },
+        "earlyPickup": {
+          "title": "Erta olib ketaman",
+          "body": "Assalomu alaykum. Bugun {student}ni darsdan erta olib ketishim kerak. Soat __:__ da kelaman. Sababi: ",
+          "hint": "Darsdan oldinroq olib ketish"
+        },
+        "homework": {
+          "title": "Uy vazifasi",
+          "body": "Assalomu alaykum, ustoz. {student}ning uy vazifasi bo'yicha savolim bor: ",
+          "hint": "Vazifa bo'yicha savol"
+        },
+        "progress": {
+          "title": "O'zlashtirish",
+          "body": "Assalomu alaykum. {student}ning o'zlashtirishi qanday? Nimalarga e'tibor berishimiz kerak?",
+          "hint": "Baholar va o'zlashtirish"
+        },
+        "meeting": {
+          "title": "Uchrashuv",
+          "body": "Assalomu alaykum. {student} haqida yuzma-yuz gaplashsak bo'ladimi? Menga qulay vaqt: ",
+          "hint": "Yuzma-yuz suhbat belgilash"
+        },
+        "behavior": {
+          "title": "Xulq-atvor",
+          "body": "Assalomu alaykum. {student}ning maktabdagi xulq-atvori haqida gaplashmoqchi edim: ",
+          "hint": "Sinfdagi xulq va munosabat"
+        },
+        "wellbeing": {
+          "title": "Kayfiyat va holat",
+          "body": "Assalomu alaykum. So'nggi paytda {student}ning kayfiyati meni xavotirga solyapti. Maslahatlashsak bo'ladimi?",
+          "hint": "Kayfiyat, xavotir, o'zgarishlar"
+        },
+        "bullying": {
+          "title": "Bulling xavotiri",
+          "body": "Assalomu alaykum. {student}ga maktabda tazyiq bo'layotganidan xavotirdaman. Vaziyat shunday: ",
+          "hint": "Tazyiq yoki kamsitish holati"
+        },
+        "advice": {
+          "title": "Maslahat",
+          "body": "Assalomu alaykum. {student} bo'yicha psixolog maslahati kerak: ",
+          "hint": "Psixolog bilan maslahat"
+        },
+        "payment": {
+          "title": "To'lov",
+          "body": "Assalomu alaykum. To'lov bo'yicha savolim bor: ",
+          "hint": "Summa, muddat va chek"
+        },
+        "document": {
+          "title": "Hujjat / ma'lumotnoma",
+          "body": "Assalomu alaykum. {student} uchun ma'lumotnoma kerak edi: ",
+          "hint": "Ma'lumotnoma va hujjatlar"
+        },
+        "suggestion": {
+          "title": "Taklif",
+          "body": "Assalomu alaykum. Maktab uchun bir taklifim bor: ",
+          "hint": "Maktab uchun g'oya"
+        },
+        "problem": {
+          "title": "Muammo",
+          "body": "Assalomu alaykum. Bir muammo haqida xabar bermoqchiman: ",
+          "hint": "Hal qilinishi kerak bo'lgan masala"
+        },
+        "thanks": {
+          "title": "Minnatdorchilik",
+          "body": "Assalomu alaykum. {student}ga ko'rsatayotgan e'tiboringiz uchun katta rahmat!",
+          "hint": "Iliq so'z va rahmat"
+        },
+        "extraLesson": {
+          "title": "Qo'shimcha dars",
+          "body": "Assalomu alaykum, ustoz. {student} uchun qo'shimcha dars bo'lishi mumkinmi?",
+          "hint": "Qo'shimcha mashg'ulot"
+        },
+        "other": {
+          "title": "O'zim yozaman",
+          "body": "Assalomu alaykum. ",
+          "hint": "Erkin xabar — o'z so'zlaringiz bilan"
+        }
+      },
+      "writeSection": "Xabar yozish",
+      "orTemplate": "Yoki tayyor shablonni tanlang"
+    },
+    "overview": {
+      "title": "Farzandim maktabda",
+      "quarter": "{n}-chorak",
+      "year": "O'quv yili",
+      "since": "{date} dan",
+      "attendance": "Davomat",
+      "rateCaption": "{marked} o'quv kunidan {attended} kun keldi",
+      "noMarks": "Bu davrda hali belgilangan kun yo'q.",
+      "yourChild": "Farzandingiz",
+      "classAvg": "Sinf o'rtachasi",
+      "classHidden": "Sinf o'rtachasi kichik sinflarda ko'rsatilmaydi.",
+      "avgArrival": "O'rtacha kelish",
+      "streak": "O'z vaqtida, ketma-ket",
+      "streakDays": "{count} kun",
+      "weeks": "Haftalik dinamika",
+      "weeksHint": "Oxirgi 8 hafta, kelish foizi",
+      "tasks": "Yozma vazifalar",
+      "tasksEmpty": "Bu davrda yozma vazifa berilmagan.",
+      "tasksSubmitted": "{submitted} / {total} topshirildi",
+      "classSubmit": "Sinfda topshirish: {rate}%",
+      "state": {
+        "todo": "Bajarilmagan",
+        "overdue": "Muddati o'tgan",
+        "submitted": "Tekshirilmoqda",
+        "returned": "Qaytarildi",
+        "accepted": "Qabul qilindi"
+      },
+      "due": "Muddat: {date}",
+      "dueToday": "Bugun topshiriladi",
+      "dueTomorrow": "Ertaga topshiriladi",
+      "growth": "Fanlar bo'yicha (Parvoz Growth)",
+      "growthHint": "Oxirgi 30 kundagi kunlik testlar",
+      "growthEmpty": "Bola Parvoz Growth'da test yechgach, fanlar bo'yicha natijalar shu yerda ko'rinadi.",
+      "growthNotLinked": "O'quvchi farzandingizning Parvoz Growth profiliga bog'lansa, fanlar bo'yicha natijalar ham shu yerda bo'ladi.",
+      "growthOpen": "Batafsil",
+      "actions": "Tezkor amallar",
+      "writeTeacher": "Sinf rahbariga yozish",
+      "history": "Davomat tarixi",
+      "earlyExit": "Erta ketish so'rovi",
+      "privacy": "Reyting yo'q: farzandingiz faqat sinf o'rtachasi bilan solishtiriladi.",
+      "late": "Kechikdi",
+      "absent": "Kelmadi",
+      "leftEarly": "Erta ketdi",
+      "excused": "Sababli",
+      "present": "O'z vaqtida",
+      "development": "Rivojlanish — Parvoz testlari",
+      "developmentHint": "IQ va qiziqishlar (Kelajak) testlari natijalari. Skrining, tashxis emas.",
+      "wellbeing": "Ruhiy holat",
+      "wellbeingTitle": "Maxfiy — bolaning ishonchi uchun",
+      "wellbeingBody": "Bolaning psixologga yozganlari va psixologik test javoblari ota-onaga ko'rsatilmaydi: aks holda bola ochiq gapirmay qo'yadi. Xavotirli holat bo'lsa, psixolog siz bilan o'zi bog'lanadi.",
+      "writePsychologist": "Psixologga yozish"
+    }
+  },
+  "growth": {
+    "title": "Bilim o'sishi",
+    "period7": "7 kun",
+    "period30": "30 kun",
+    "periodLabel": "Davr",
+    "periodTitle": "So'nggi {days} kun",
+    "overall": "O'rtacha natija",
+    "vsPrevious": "oldingi {days} kunga nisbatan",
+    "answers": "{correct}/{total} to'g'ri",
+    "tests": "Testlar",
+    "activeDays": "Faol kunlar",
+    "streak": "Ketma-ket kunlar",
+    "bySubject": "Fanlar bo'yicha",
+    "subjectTests": "{count} ta test",
+    "strong": "Eng yaxshi fan",
+    "focus": "Mashq qilishga arziydi",
+    "focusHint": "Bu fanni birga takrorlasangiz, natija tez o'sadi.",
+    "noTests": {
+      "title": "Bu davrda test yechilmagan",
+      "body": "Farzandingiz Parvoz Growth ilovasida kunlik testlarni yechganda natijalar shu yerda ko'rinadi."
+    },
+    "noProfile": {
+      "title": "Sinf va fanlar tanlanmagan",
+      "body": "Sinf va fanlarni tanlang — kunlik testlar farzandingizga moslanadi.",
+      "action": "Tanlash"
+    },
+    "editProfile": "O'zgartirish",
+    "results": "Oxirgi natijalar",
+    "resultsEmpty": "Hali natija yo'q.",
+    "loadMore": "Yana ko'rsatish",
+    "daily": "Kunlik",
+    "unavailable": "Bilim o'sishi bo'limi hozircha mavjud emas. Keyinroq qayta urinib ko'ring.",
+    "card": {
+      "summary": "So'nggi {days} kun · {count} ta test · o'rtacha {percent}",
+      "empty": "Kunlik testlar natijalari va fanlar bo'yicha o'sish"
+    },
+    "profile": {
+      "title": "Sinf va fanlar",
+      "subtitle": "Kunlik testlar shu sinf va fanlarga moslanadi.",
+      "grade": "Sinf",
+      "gradeValue": "{grade}-sinf",
+      "subjects": "Fanlar",
+      "subjectsCount": "{count}/{max}",
+      "pickGradeFirst": "Avval sinfni tanlang — keyin shu sinfda o'qitiladigan fanlar chiqadi.",
+      "maxHint": "Ko'pi bilan {max} ta fan tanlash mumkin. Boshqasini qo'shish uchun bittasini olib tashlang.",
+      "save": "Saqlash",
+      "saved": "Saqlandi"
+    },
+    "subjects": {
+      "math": "Matematika",
+      "english": "Ingliz tili",
+      "native": "Ona tili",
+      "history": "Tarix",
+      "biology": "Biologiya",
+      "geography": "Geografiya",
+      "physics": "Fizika",
+      "chemistry": "Kimyo",
+      "informatics": "Informatika",
+      "russian": "Rus tili",
+      "unknown": "Boshqa fan"
+    }
+  },
+  "kelajak": {
+    "title": "Kelajak",
+    "unavailable": "Kelajak bo'limi hozircha mavjud emas. Keyinroq qayta urinib ko'ring.",
+    "disclaimer": "Natijalar farzandingizning o'z javoblariga asoslangan va yo'nalish uchun tavsiya, qat'iy kasb hukmi emas.",
+    "card": {
+      "title": "Kelajak yo'nalishlari",
+      "interests": "Qiziqish yuqori: {names}",
+      "forming": "{count} ta test yechildi — qiziqishlar hali shakllanmoqda",
+      "empty": "Hali javob yo'q — savollar Parvoz Growth'dagi «Bugungi testlar» bo'limida",
+      "ageRequired": "Yoshini kiriting — savollar yoshiga mos tanlanadi"
+    },
+    "link": {
+      "title": "Kelajak yo'nalishlari",
+      "body": "Qiziqishlar, kuchli tomonlar va sinab ko'rsa bo'ladigan yo'nalishlar"
+    },
+    "header": {
+      "ageGroup": "{group} yosh guruhi",
+      "sessions": "Yechilgan testlar",
+      "lastActivity": "Oxirgi faollik",
+      "noActivity": "Hali yo'q"
+    },
+    "interests": {
+      "title": "Qiziqishlar",
+      "hint": "Farzandingiz javoblariga ko'ra qiziqishi yuqori bo'lgan yo'nalishlar. Bu hukm emas — sinab ko'rish uchun g'oyalar.",
+      "try": "Sinab ko'rishi mumkin",
+      "forming": "Yo'nalishlar haqida aytishga hali javoblar yetarli emas. Farzandingiz testlarni davom ettirsa, qiziqishlari aniqroq ko'rinadi."
+    },
+    "strengths": {
+      "title": "Kuchli tomonlar"
+    },
+    "growthAreas": {
+      "title": "Rivojlantirish mumkin bo'lgan jihatlar"
+    },
+    "careerLab": {
+      "title": "Career Lab",
+      "hint": "Farzandingiz sinab ko'rgan faoliyatlar va ulardan olgan taassurotlari",
+      "liked": "Yoqdi",
+      "neutral": "Fikri o'rtacha",
+      "disliked": "Unchalik yoqmadi",
+      "next": "Keyingi sinov"
+    },
+    "support": {
+      "titleWatch": "Kayfiyatiga e'tibor bering",
+      "titleSupport": "Farzandingizga qo'llab-quvvatlash muhim",
+      "areas": "Mavzular",
+      "day": "Javoblar sanasi: {date}",
+      "talkTitle": "Suhbat uchun maslahat",
+      "talk1": "Xotirjam vaqtni tanlang va ochiq savol bering: «Bugun kuning qanday o'tdi?»",
+      "talk2": "Diqqat bilan tinglang, ayblamang va tanbeh bermang.",
+      "talk3": "Farzandingizga har doim sizga murojaat qilishi mumkinligini ayting.",
+      "fallback": "Farzandingiz so'nggi javoblarida ba'zi qiyinchiliklarni belgiladi. Bu tashxis emas — e'tibor berish uchun signal, xolos."
+    },
+    "progress": {
+      "title": "O'zgarishlar",
+      "hint": "Oxirgi natija oldingisi bilan solishtirildi",
+      "first": "Birinchi natija",
+      "same": "O'zgarmadi",
+      "rising": "Qiziqishi ortayotgan yo'nalishlar"
+    },
+    "next": {
+      "title": "Keyingi tavsiya"
+    },
+    "empty": {
+      "title": "Hali javob yo'q",
+      "body": "Farzandingiz Parvoz Growth ilovasidagi «Bugungi testlar» bo'limida Kelajak savollariga javob berganda, qiziqishlari va kuchli tomonlari shu yerda ko'rinadi."
+    },
+    "age": {
+      "requiredTitle": "Farzandingiz yoshi kiritilmagan",
+      "requiredBody": "Savollar yoshga mos tanlanadi. Tug'ilgan sanasini kiriting — shundan keyin farzandingiz Kelajak savollariga javob bera oladi.",
+      "requiredAction": "Yoshini kiritish",
+      "outOfRangeTitle": "Bu bo'lim 7–18 yoshli bolalar uchun",
+      "outOfRangeBody": "Savollar 7 yoshdan 18 yoshgacha bo'lgan bolalarga mo'ljallangan. Yosh noto'g'ri kiritilgan bo'lsa, uni tahrirlashingiz mumkin.",
+      "outOfRangeAction": "Yoshni tahrirlash"
+    }
+  },
+  "iq": {
+    "card": {
+      "title": "Mantiqiy fikrlash testi",
+      "provisional": "Taxminiy",
+      "percentile": "Tengdoshlarining {p}% idan yuqori natija",
+      "score": "Standart ball: {score}",
+      "scoreCi": "Standart ball: {score} (95% oraliq: {lo}–{hi})",
+      "correct": "{correct}/{total} to'g'ri javob · {date}",
+      "previous": "Oldingi natija: tengdoshlarining {p}% idan yuqori ({date})",
+      "retake": "Keyingi urinish: {date} dan boshlab",
+      "disclaimer": "Skrining, tashxis emas. Natija bolaning qobiliyati haqida yakuniy xulosa emas — kayfiyat va charchoq ham ta'sir qiladi."
+    },
+    "band": {
+      "veryHigh": "Juda yuqori daraja",
+      "high": "Yuqori daraja",
+      "aboveAverage": "O'rtachadan yuqori",
+      "average": "O'rtacha daraja",
+      "belowAverage": "O'rtachadan biroz past",
+      "growthZone": "Rivojlanish zonasi"
+    },
+    "kind": {
+      "FIGURAL": "Naqsh",
+      "NUMERIC": "Sonlar",
+      "VERBAL": "So'zlar",
+      "LOGIC": "Mantiq"
+    }
+  },
+  "childCredentials": {
+    "login": {
+      "tooShort": "Login kamida 4 ta belgidan iborat bo'lsin.",
+      "tooLong": "Login ko'pi bilan 24 ta belgidan iborat bo'lsin.",
+      "badStart": "Login kichik lotin harfidan boshlanishi kerak.",
+      "badChars": "Faqat kichik lotin harflari, raqamlar, nuqta va pastki chiziq (_) mumkin.",
+      "invalidFormat": "Login mos kelmadi. Boshqa login yozing yoki maydonni bo'sh qoldiring."
+    },
+    "errors": {
+      "loginTaken": "Bu login band. Boshqa login yozing yoki maydonni bo'sh qoldiring.",
+      "validation": "Ma'lumotlarni tekshirib, qaytadan urinib ko'ring.",
+      "notFound": "Bola topilmadi. Ro'yxatni yangilab ko'ring.",
+      "unavailable": "Bu bo'lim hozircha mavjud emas. Keyinroq qayta urinib ko'ring.",
+      "tooMany": "Urinishlar juda ko'p bo'ldi. Biroz kutib, qaytadan urinib ko'ring.",
+      "server": "Serverda vaqtinchalik nosozlik. Birozdan so'ng qayta urinib ko'ring.",
+      "noPassword": "Parolni olib bo'lmadi. Qayta urinib ko'ring.",
+      "requestGone": "Bu so'rov allaqachon hal qilingan. Ro'yxat yangilandi."
+    },
+    "entry": "Kirish ma'lumotlari",
+    "entrySubtitle": "Bolaning logini va paroli",
+    "title": "Kirish ma'lumotlari",
+    "fallbackChildName": "Bola",
+    "none": {
+      "title": "Hali login va parol berilmagan",
+      "body": "Login va parol bilan {name} Parvoz ilovasiga istalgan telefondan kira oladi. Hozir ulangan telefon va nazorat sozlamalari o'zgarmaydi.",
+      "action": "Login va parol berish"
+    },
+    "card": {
+      "login": "Login",
+      "copyLogin": "Loginni nusxalash",
+      "loginCopied": "Login nusxalandi",
+      "issuedBy": "Kim bergan",
+      "issuedByParent": "Siz",
+      "issuedBySchool": "Maktab",
+      "issuedAt": "Berilgan vaqt",
+      "lastLogin": "Oxirgi kirish",
+      "neverLoggedIn": "Hali kirmagan",
+      "statusPending": "Birinchi kirish kutilmoqda",
+      "statusActive": "Faol",
+      "pendingHint": "{name} vaqtinchalik parol bilan kiradi va darhol o'z parolini o'rnatadi.",
+      "reset": "Parolni yangilash",
+      "resetHint": "Bola parolni unutgan bo'lsa, yangi vaqtinchalik parol bering.",
+      "tempExpires": "Vaqtinchalik parol {date} gacha amal qiladi"
+    },
+    "load": {
+      "failedTitle": "Kirish ma'lumotlarini yuklab bo'lmadi"
+    },
+    "issue": {
+      "title": "Login va parol berish",
+      "subtitle": "{name} uchun vaqtinchalik parol yaratiladi. U birinchi kirishda o'z parolini o'rnatadi.",
+      "loginLabel": "Login (ixtiyoriy)",
+      "loginHint": "aziza.k24",
+      "loginHelp": "Bo'sh qoldirsangiz, tizim o'zi tanlaydi. 4–24 belgi: kichik lotin harflari, raqamlar, nuqta va pastki chiziq.",
+      "submit": "Parol yaratish"
+    },
+    "reset": {
+      "title": "Parolni yangilash",
+      "recoverTitle": "Parolni tiklash",
+      "subtitle": "{name} uchun yangi vaqtinchalik parol yaratiladi. Eski parol ishlamay qoladi.",
+      "signOut": "Boshqa qurilmalardan chiqarish",
+      "signOutOn": "Bolaning barcha qurilmalari tizimdan chiqadi. Siz ulagan telefon ham chiqadi — uni qayta ulash kerak bo'ladi (QR kod yoki oila kodi bilan).",
+      "signOutOff": "Faqat parol almashadi. Bolaning qurilmalari tizimda qoladi.",
+      "submit": "Parolni yangilash",
+      "recoverSubmit": "Parolni tiklash"
+    },
+    "reveal": {
+      "title": "Kirish ma'lumotlari tayyor",
+      "subtitle": "{name} uchun login va vaqtinchalik parol",
+      "login": "Login",
+      "password": "Vaqtinchalik parol",
+      "copyLogin": "Loginni nusxalash",
+      "copyPassword": "Parolni nusxalash",
+      "copyAll": "Matnni nusxalash",
+      "share": "Bolaga yuborish",
+      "copied": "Nusxalandi",
+      "warnTitle": "Parol faqat bir marta ko'rsatiladi",
+      "warnBody": "Bu oyna yopilgach uni qayta ko'ra olmaysiz. Skrinshot olsangiz, bolaga yuborgach o'chirib tashlang.",
+      "signedOutNote": "Bolaning boshqa qurilmalari tizimdan chiqariladi. Siz ulagan telefon ham chiqib qolsa, uni qayta ulash uchun «Bolalarim» bo'limida bolani tanlab, «Bolani qayta ulash» ni bosing.",
+      "done": "Tayyor",
+      "confirmTitle": "Parolni saqlab oldingizmi?",
+      "confirmBody": "Oyna yopilgach parol qayta ko'rsatilmaydi. Kerak bo'lsa, yangi parol yaratasiz.",
+      "confirmStay": "Orqaga",
+      "confirmClose": "Yopish",
+      "shareSubject": "Parvoz — kirish ma'lumotlari",
+      "shareMessage": "Salom, {name}! Parvoz ilovasiga shu ma'lumotlar bilan kir:\n\nLogin: {login}\nVaqtinchalik parol: {password}\n\nBirinchi kirishda o'z parolingni o'rnatasan.",
+      "shareMessageNoName": "Salom! Parvoz ilovasiga shu ma'lumotlar bilan kir:\n\nLogin: {login}\nVaqtinchalik parol: {password}\n\nBirinchi kirishda o'z parolingni o'rnatasan."
+    },
+    "recovery": {
+      "title": "Parol tiklash so'rovlari",
+      "tileTitle": "{name} parolni unutdi",
+      "tileBody": "Yangi vaqtinchalik parol bering yoki bu so'rovni rad eting.",
+      "requestedAt": "So'rov vaqti: {time}",
+      "viaSchool": "Maktab orqali yuborilgan",
+      "restore": "Parolni tiklash",
+      "reject": "Rad etish",
+      "rejectTitle": "So'rovni rad etasizmi?",
+      "rejectBody": "Parol o'zgarmaydi. Bu so'rovni bola yubormagan bo'lsa, rad etish to'g'ri.",
+      "rejectConfirm": "Rad etish",
+      "rejected": "So'rov rad etildi",
+      "loadFailed": "Parol tiklash so'rovlarini yuklab bo'lmadi."
+    }
+  },
+  "home": {
+    "tabs": {
+      "school": "Maktab",
+      "control": "Nazorat",
+      "profile": "Profil"
+    },
+    "start": {
+      "title": "Xush kelibsiz!",
+      "subtitle": "Parvoz'dan qanday foydalanasiz? Ikkinchisini keyin ham qo'shishingiz mumkin.",
+      "schoolTitle": "Farzandim maktabi Parvoz'da",
+      "schoolBody": "Maktab bergan kod yoki QR bilan ulaning — farzandingizning telefoni shart emas.",
+      "schoolPoint1": "Davomat: keldi-ketdi xabari darhol",
+      "schoolPoint2": "E'lonlar, to'lovlar va erta olib ketish so'rovi",
+      "schoolAction": "Maktabga ulanish",
+      "phoneTitle": "Farzandim telefonini ulash",
+      "phoneBody": "Farzandingiz telefoniga Parvoz Growth o'rnating va oila kodi bilan ulang.",
+      "phonePoint1": "Joylashuv, ekran vaqti va ilovalar cheklovi",
+      "phonePoint2": "O'qish natijalari va farzand bilan chat",
+      "phoneAction": "Farzand qo'shish",
+      "both": "Ikkalasini birga ishlatsangiz — maktab va uy bitta ilovada.",
+      "later": "Keyinroq"
+    },
+    "control": {
+      "emptySubtitle": "Farzandingiz telefonidagi Parvoz Growth bilan ishlaydi: joylashuv, ekran vaqti, o'qish va chat.",
+      "schoolLink": "Maktabi Parvoz'dami? Maktab tabidan ulaning",
+      "children": "Farzandlar",
+      "switchChild": "Farzandni almashtirish"
+    },
+    "school": {
+      "emptySubtitle": "Maktab bilan bog'laning — davomat, e'lonlar va to'lovlar shu yerda bo'ladi.",
+      "codeWhereTitle": "Kodni qayerdan olaman?",
+      "codeWhereBody": "Sinf rahbari yoki maktab ma'muriyatidan so'rang: kod qog'ozda yoki maktab yuborgan xabarda QR bilan beriladi.",
+      "today": "Bugun",
+      "sections": "Bo'limlar",
+      "schools": "Maktablar",
+      "className": "{name} sinf"
+    }
   }
 }

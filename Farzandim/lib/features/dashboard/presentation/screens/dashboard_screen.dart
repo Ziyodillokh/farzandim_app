@@ -19,11 +19,17 @@ import 'package:farzandim/features/gamification/data/models/leaderboard_models.d
 import 'package:farzandim/features/gamification/presentation/providers/gamification_provider.dart';
 import 'package:farzandim/features/gamification/presentation/providers/leaderboard_provider.dart';
 import 'package:farzandim/features/gamification/presentation/widgets/ranking_avatar.dart';
+import 'package:farzandim/features/home/presentation/home_shell.dart';
+import 'package:farzandim/features/home/presentation/start_screen.dart';
+import 'package:farzandim/features/iq/presentation/iq_dashboard_card.dart';
+import 'package:farzandim/features/kelajak/presentation/widgets/kelajak_dashboard_card.dart';
 import 'package:farzandim/features/location/presentation/providers/child_location_provider.dart';
 import 'package:farzandim/features/location/presentation/providers/child_place_provider.dart';
 import 'package:farzandim/features/location/presentation/widgets/request_location_button.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/features/notifications/presentation/screens/notifications_sheet.dart';
+import 'package:farzandim/features/school/presentation/providers/school_refresh.dart';
+import 'package:farzandim/features/school/presentation/widgets/school_dashboard_card.dart';
 import 'package:farzandim/features/settings/data/entitlement.dart';
 import 'package:farzandim/features/settings/presentation/plan_gate.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
@@ -180,40 +186,52 @@ class _ErrorState extends StatelessWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
+/// Farzand hali yo'q: Nazorat nima beradi va qanday ulanadi; maktabi
+/// Parvoz'da bo'lsa — Maktab tabiga yo'l.
+class _EmptyState extends ConsumerWidget {
   const _EmptyState();
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-      child: Column(
-        children: [
-          const Spacer(),
-          Container(
-            width: 96,
-            height: 96,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: _cardBg,
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, kHomeNavReserve + 12),
+      children: [
+        Semantics(
+          header: true,
+          child: Text('home.tabs.control'.tr(), style: _unb(26)),
+        ),
+        const SizedBox(height: 8),
+        Text('home.control.emptySubtitle'.tr(), style: _pop(14.5, c: _dim)),
+        const SizedBox(height: 22),
+        StartOptionCard(
+          icon: SolarIconsBold.smartphone,
+          color: const Color(0xFF22C55E),
+          title: 'home.start.phoneTitle'.tr(),
+          body: 'home.start.phoneBody'.tr(),
+          points: [
+            'home.start.phonePoint1'.tr(),
+            'home.start.phonePoint2'.tr(),
+          ],
+          action: 'home.start.phoneAction'.tr(),
+          onTap: () => guardAddChild(context, ref),
+        ),
+        const SizedBox(height: 18),
+        Center(
+          child: TextButton.icon(
+            onPressed: () => context.go(AppRoutes.school),
+            icon: const Icon(
+              SolarIconsBold.squareAcademicCap,
+              size: 20,
+              color: _blue,
             ),
-            child: const Icon(
-              SolarIconsBold.userPlus,
-              size: 44,
-              color: Colors.white,
+            label: Text(
+              'home.control.schoolLink'.tr(),
+              textAlign: TextAlign.center,
+              style: _pop(14, w: FontWeight.w600, c: _blue),
             ),
           ),
-          const SizedBox(height: 24),
-          Text(
-            'dashboard.emptyState.message'.tr(),
-            textAlign: TextAlign.center,
-            style: _pop(15, c: _dim),
-          ),
-          const SizedBox(height: 24),
-          const _AddChildButton(),
-          const Spacer(),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -246,6 +264,9 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
       // Tarif (entitlement)ni qayta o'qiymiz — tarmoq blip'ida `free`ga
       // qamalib qolgan bo'lsa (fail-open bilan birga) tuzatiladi.
       ref.invalidate(entitlementProvider);
+      // Maktab: bugungi davomat va e'lonlar fonda o'zgargan bo'lishi mumkin
+      // (WS event yo'q).
+      invalidateSchoolData(ref.invalidate);
     }
   }
 
@@ -256,17 +277,23 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
   }
 
   /// Tepadan tortilganda tanlangan bolaning provayderlarini qayta o'qiydi.
-  Future<void> _onRefresh(String childId) async {
+  ///
+  /// iPhone bola haqiqiy ekran vaqtini yubormaydi (Apple qoidasi) — uning
+  /// uchun bugungi foydalanish so'rovi yuborilmaydi ([isIos]).
+  Future<void> _onRefresh(String childId, {bool isIos = false}) async {
     ref.read(childrenRefreshTickProvider.notifier).state++;
     ref
-      ..invalidate(todayUsageProvider(childId))
       ..invalidate(weeklyChildUsageProvider(childId))
       ..invalidate(childProfileProvider(childId))
       ..invalidate(childLocationProvider(childId));
+    invalidateSchoolData(ref.invalidate);
+    refreshKelajakCard(ref, childId);
+    refreshIqCard(ref, childId);
+    if (!isIos) ref.invalidate(todayUsageProvider(childId));
     try {
       await Future.wait([
         ref.read(childrenProvider.future),
-        ref.read(todayUsageProvider(childId).future),
+        if (!isIos) ref.read(todayUsageProvider(childId).future),
       ]).timeout(const Duration(seconds: 8));
     } catch (_) {
       // Tarmoq xatosi/timeout — spinner baribir yopiladi.
@@ -286,15 +313,18 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
         RefreshIndicator(
           color: _blue,
           backgroundColor: _cardBg,
-          onRefresh: () => _onRefresh(child.id),
+          onRefresh: () => _onRefresh(child.id, isIos: child.isIosDevice),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            // Pastki padding = bottom bar (≈92) + bo'shliq, oxirgi karta
-            // suzuvchi nav ostida qolmaydi.
-            padding: const EdgeInsets.only(bottom: 120),
+            // Pastki joy — tab paneli (oxirgi karta panel ostida qolmaydi).
+            padding: const EdgeInsets.only(bottom: kHomeNavReserve + 12),
             child: Column(
               children: [
-                _Header(child: child),
+                _Header(
+                  child: child,
+                  children: children,
+                  selectedIndex: selectedIndex,
+                ),
                 // Yangi versiya mavjud bo'lsa (soft-update) — header ostida
                 // yumshoq taklif banneri. upToDate/force holatida ko'rinmaydi.
                 const UpdateBanner(),
@@ -306,6 +336,9 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                   child: Column(
                     children: [
                       _LocationCard(child: child),
+                      SchoolDashboardCard(childId: child.id),
+                      KelajakDashboardCard(childId: child.id),
+                      IqDashboardCard(childId: child.id),
                       const SizedBox(height: 4),
                       IntrinsicHeight(
                         child: Row(
@@ -365,19 +398,6 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                 ),
               ],
             ),
-          ),
-        ),
-
-        // Pastki suzuvchi nav — bolalar almashtirgich + sozlamalar.
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: _BottomBar(
-            children: children,
-            selectedIndex: selectedIndex,
-            onSelect: (i) =>
-                ref.read(selectedChildIndexProvider.notifier).state = i,
           ),
         ),
       ],

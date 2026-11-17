@@ -40,6 +40,7 @@ TextStyle _pop(
 /// Login (kirish ma'lumotlari) varag'ini ochadi.
 Future<void> showLoginEditSheet(BuildContext context) {
   return showModalBottomSheet<void>(
+    useRootNavigator: true,
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,

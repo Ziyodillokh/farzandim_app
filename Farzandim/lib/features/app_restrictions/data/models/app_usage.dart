@@ -1,3 +1,4 @@
+import 'package:farzandim/core/utils/app_brand.dart';
 import 'package:flutter/foundation.dart';
 
 /// Bola qurilmasidagi bitta ilova ustida foydalanish ma'lumoti.
@@ -77,6 +78,19 @@ class AppUsageEntry {
     if (m == 0) return '$h soat';
     return '$h soat $m daq';
   }
+}
+
+/// Ilovalar ro'yxatini bola platformasiga moslash.
+extension AppUsageEntryListX on List<AppUsageEntry> {
+  /// iPhone bola: faqat virtual [kIosSelectionPackage] yozuvi qoladi — oldingi
+  /// (Android) juftlikdan qolgan eski ilovalar iPhone'da hech narsa qilmaydi.
+  /// Android bola: ro'yxat o'zgarmaydi.
+  List<AppUsageEntry> forPlatform({required bool isIos}) => isIos
+      ? [
+          for (final e in this)
+            if (e.packageName == kIosSelectionPackage) e,
+        ]
+      : this;
 }
 
 /// Bir kunlik foydalanish ma'lumotlari — bola ilovasi fonda davriy

@@ -86,6 +86,7 @@ class UnlockDecisionSheet extends StatelessWidget {
     String? reason,
   }) {
     return showModalBottomSheet<UnlockDecision>(
+      useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

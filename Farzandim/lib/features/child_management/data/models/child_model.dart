@@ -3,6 +3,10 @@ import 'package:farzandim/features/child_management/data/models/default_avatar.d
 import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:flutter/foundation.dart';
 
+/// Bola qurilmasi shu muddatda heartbeat yuborgan bo'lsa "onlayn" hisoblanadi
+/// (backend `CONNECTION_LOST_SECONDS` = 900 s bilan bir xil).
+const Duration kChildOnlineWindow = Duration(minutes: 15);
+
 /// Bola ma'lumotlari modeli.
 ///
 /// **Immutable** — bir marta yaratilgach o'zgarmaydi. Mutate qilish o'rniga
@@ -82,6 +86,11 @@ class Child {
     final accessibilityEnabled = json['accessibilityEnabled'] as bool?;
     // Ekran vaqti manbasi — PACKAGE_USAGE_STATS ruxsati.
     final usagePermission = json['usagePermission'] as bool?;
+    // Blok ekrani ruxsati ("ustida ko'rsatish") — eski backend yubormaydi.
+    final overlayPermission = json['overlayPermission'] as bool?;
+    // iPhone: Screen Time (Family Controls) ruxsati. Eski backend yubormaydi →
+    // `null` ("noma'lum"); Android bolada ham doim `null`.
+    final screenTimePermission = json['screenTimePermission'] as bool?;
     // Backend top-level fields'dan deviceInfo wrapper yaratamiz.
     final hasDeviceData =
         batteryLevel != null ||
@@ -94,7 +103,9 @@ class Child {
         notificationPermission != null ||
         backgroundAllowed != null ||
         accessibilityEnabled != null ||
-        usagePermission != null;
+        usagePermission != null ||
+        overlayPermission != null ||
+        screenTimePermission != null;
     return Child(
       id: json['id'] as String,
       name: (json['name'] as String?) ?? '',
@@ -127,6 +138,8 @@ class Child {
               backgroundAllowed: backgroundAllowed,
               accessibilityEnabled: accessibilityEnabled,
               usagePermission: usagePermission,
+              overlayPermission: overlayPermission,
+              screenTimePermission: screenTimePermission,
             )
           : null,
       lastSeenAt: _parseIso8601(json['lastSeenAt']),
@@ -268,28 +281,49 @@ class Child {
   // ─── Jonli holat (heartbeat-aware) ──────────────────────────────────
   // Avval status har joyda har xil edi: dashboard/ro'yxat faqat `isConnected`
   // (pairing bayrog'i) ga qarardi → aloqa uzilsa ham "yashil" ko'rinardi.
-  // Endi YAGONA mantiq: "online" = ulangan VA oxirgi heartbeat 3 daqiqa ichida.
-  // Ostona backend ConnectionMonitor (CONNECTION_LOST_SECONDS≈120s) bilan
-  // moslashtirilgan: dashboard "aloqa uzildi" holati va ota-onaga keladigan
-  // "aloqa uzildi" push deyarli bir vaqtda chiqadi (avval 5 daq edi — UI hali
-  // "online" ko'rsatib turganda push kelib nomuvofiqlik bo'lardi).
+  // Endi YAGONA mantiq: "online" = ulangan VA oxirgi heartbeat
+  // [kChildOnlineWindow] ichida. Ostona backend ConnectionMonitor
+  // (CONNECTION_LOST_SECONDS=900s) bilan AYNAN mos: dashboard "aloqa uzildi"
+  // holati va ota-onaga keladigan "aloqa uzildi" push bir vaqtda chiqadi.
+  //
+  // Nega 15 daqiqa: bola ilovasi 1.0.20 dan telefon uxlashiga yo'l qo'yadi
+  // (batareya), heartbeat har ~5 daqiqada keladi va Doze'da ~10 daqiqagacha
+  // cho'zilishi mumkin. 2 daqiqalik eski ostona bunda soxta "aloqa uzildi"
+  // berardi.
 
   /// Bola qurilmasi HOZIR jonli onlaynmi — `isConnected` (pairing) VA oxirgi
-  /// heartbeat (`lastSeenAt`/`deviceInfo.lastSeen`) 2 daqiqa ichida bo'lishi
-  /// shart. Heartbeat to'xtasa `false`. Ostona backend ConnectionMonitor
-  /// (CONNECTION_LOST_SECONDS=120s) bilan AYNAN mos — avval 3 daqiqa edi va
-  /// backend "aloqa uzildi" push yuborganda UI hali "online" ko'rsatib turardi.
+  /// heartbeat (`lastSeenAt`/`deviceInfo.lastSeen`) [kChildOnlineWindow]
+  /// ichida bo'lishi shart. Heartbeat to'xtasa `false`.
   bool get isLiveOnline {
     final seen = lastSeenAt ?? deviceInfo?.lastSeen;
     return isConnected &&
         seen != null &&
-        DateTime.now().difference(seen) < const Duration(minutes: 2);
+        DateTime.now().difference(seen) < kChildOnlineWindow;
   }
 
-  /// Ulangan, lekin heartbeat 3 daqiqadan beri jim — "Aloqa uzildi" holati
-  /// (oddiy "Ulanmagan"dan farqli; PDF M11). `false` bo'lsa: yo jonli onlayn,
-  /// yo umuman ulanmagan.
+  /// Ulangan, lekin heartbeat [kChildOnlineWindow] dan beri jim — "Aloqa
+  /// uzildi" holati (oddiy "Ulanmagan"dan farqli; PDF M11). `false` bo'lsa:
+  /// yo jonli onlayn, yo umuman ulanmagan.
   bool get isConnectionLost => isConnected && !isLiveOnline;
+
+  // ─── Platforma (iOS / Android) ──────────────────────────────────────
+  // iPhone'dagi bola ilovasi haqiqiy o'rnatilgan ilovalar/ekran vaqtini
+  // YUBORMAYDI (Apple qoidasi) — faqat bitta virtual `kIosSelectionPackage`
+  // yozuvi. Shu sabab ota-ona UI'si platformaga qarab boshqacha ishlaydi.
+
+  /// Bola qurilmasi iPhone/iPad'mi. Aniqlash tartibi:
+  /// 1) `deviceInfo.androidVersion` ("iOS 18.2", "iPadOS 17") `ios`/`ipados`
+  ///    bilan boshlansa → `true`; `android` bilan boshlansa → `false`;
+  /// 2) aks holda qurilma modeli (`iPhone 15`, `iPad`) bo'yicha;
+  /// 3) hech narsa noma'lum bo'lsa → `false` (Android deb hisoblanadi).
+  bool get isIosDevice => detectIosDevice(
+    osVersion: deviceInfo?.androidVersion,
+    deviceModel: deviceModel ?? deviceInfo?.deviceModel,
+  );
+
+  /// iPhone Screen Time (Family Controls) ruxsati: `true` — berilgan,
+  /// `false` — o'chirilgan, `null` — noma'lum (Android yoki eski backend).
+  bool? get screenTimePermission => deviceInfo?.screenTimePermission;
 
   /// Backend REST POST/PUT uchun JSON (Sprint 4.4).
   ///
@@ -438,4 +472,17 @@ class Child {
   String toString() =>
       'Child(id: $id, name: $name, age: $age, gender: $gender, '
       'familyCode: $familyCode, hasPhoto: $hasCustomPhoto)';
+}
+
+/// Qurilma iPhone/iPad ekanini OS versiyasi va model nomidan aniqlaydi
+/// (`Child.isIosDevice` shu funksiyaga tayanadi — sof funksiya, testlanadi).
+///
+/// OS versiyasi (`iOS 18.2`, `iPadOS 17`, `Android 14`) modeldan ustun:
+/// u aniq bo'lsa model qaralmaydi. Ikkalasi ham noma'lum bo'lsa → `false`.
+bool detectIosDevice({String? osVersion, String? deviceModel}) {
+  final os = (osVersion ?? '').trim().toLowerCase();
+  if (os.startsWith('ios') || os.startsWith('ipados')) return true;
+  if (os.startsWith('android')) return false;
+  final model = (deviceModel ?? '').trim().toLowerCase();
+  return model.startsWith('iphone') || model.startsWith('ipad');
 }

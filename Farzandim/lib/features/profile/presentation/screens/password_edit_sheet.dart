@@ -54,6 +54,7 @@ enum _PwMode { change, reset }
 /// Parolni tahrirlash varag'ini ochadi.
 Future<void> showPasswordEditSheet(BuildContext context) {
   return showModalBottomSheet<void>(
+    useRootNavigator: true,
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,

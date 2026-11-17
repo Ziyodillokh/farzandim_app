@@ -1,0 +1,63 @@
+{
+  "age": {
+    "status": "OK",
+    "age": 11,
+    "ageGroup": "10-12"
+  },
+  "sessionsCompleted": 1,
+  "lastCompletedAt": "2026-10-21T04:05:52.251Z",
+  "categories": [],
+  "interests": null,
+  "insights": {
+    "strengths": [],
+    "interests": [],
+    "likedDirections": [],
+    "triedDirections": [],
+    "growthAreas": [],
+    "next": [
+      {
+        "kind": "take_test",
+        "testType": "career",
+        "externalId": null,
+        "title": {
+          "uz": "Kasbiy qiziqishlar testi",
+          "ru": "Тест профессиональных интересов",
+          "en": "Career interests test"
+        },
+        "body": {
+          "uz": "Qiziqishlar profilini to‘ldirish uchun “Kasbiy qiziqishlar” testini yechish tavsiya etiladi.",
+          "ru": "Чтобы дополнить профиль интересов, рекомендуем пройти тест «Профессиональные интересы».",
+          "en": "Take the “Career interests” test to complete the interests profile."
+        }
+      }
+    ]
+  },
+  "support": {
+    "level": "watch",
+    "areas": [
+      {
+        "key": "wellbeing",
+        "name": {
+          "uz": "Ruhiy farovonlik va stress",
+          "ru": "Эмоциональное благополучие и стресс",
+          "en": "Wellbeing and stress"
+        }
+      }
+    ],
+    "day": "2026-10-21",
+    "guidance": {
+      "uz": "Farzandingiz so‘nggi javoblarida ba’zi qiyinchiliklarni belgiladi. Bu tashxis emas — e’tibor berish uchun signal, xolos. Xotirjam vaziyatda kayfiyati va kuni haqida so‘rang va tanbehsiz tinglang.",
+      "ru": "В последних ответах ребёнок отметил некоторые трудности. Это не диагноз — лишь повод быть внимательнее. В спокойной обстановке спросите о настроении и прошедшем дне и выслушайте без упрёков.",
+      "en": "In recent answers your child noted some difficulties. This is not a diagnosis — just a signal to pay attention. In a calm moment, ask about their mood and day, and listen without judgement."
+    }
+  },
+  "progress": {
+    "categories": [],
+    "interests": []
+  },
+  "disclaimer": {
+    "uz": "Natijalar bolaning o‘z javoblariga asoslangan va yo‘nalish uchun tavsiya, qat’iy kasb hukmi emas. Farovonlik savollari tashxis vositasi emas. Savollar ekspert ko‘rigi va pilot sinovdan o‘tmoqda.",
+    "ru": "Результаты основаны на ответах ребёнка и служат ориентиром, а не окончательным выбором профессии. Вопросы о самочувствии не являются инструментом диагностики. Вопросы проходят экспертную проверку и пилотное тестирование.",
+    "en": "Results are based on the child’s own answers and offer guidance for exploring directions, not a final career verdict. Wellbeing questions are not a diagnostic tool. The questions are undergoing expert review and pilot testing."
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "age": {
+    "status": "OK",
+    "age": 11,
+    "ageGroup": "10-12"
+  },
+  "sessionsCompleted": 0,
+  "lastCompletedAt": null,
+  "categories": [],
+  "interests": null,
+  "insights": {
+    "strengths": [],
+    "interests": [],
+    "likedDirections": [],
+    "triedDirections": [],
+    "growthAreas": [],
+    "next": [
+      {
+        "kind": "take_test",
+        "testType": "career",
+        "externalId": null,
+        "title": {
+          "uz": "Kasbiy qiziqishlar testi",
+          "ru": "Тест профессиональных интересов",
+          "en": "Career interests test"
+        },
+        "body": {
+          "uz": "Qiziqishlar profilini to‘ldirish uchun “Kasbiy qiziqishlar” testini yechish tavsiya etiladi.",
+          "ru": "Чтобы дополнить профиль интересов, рекомендуем пройти тест «Профессиональные интересы».",
+          "en": "Take the “Career interests” test to complete the interests profile."
+        }
+      },
+      {
+        "kind": "take_test",
+        "testType": "wellbeing",
+        "externalId": null,
+        "title": {
+          "uz": "Kayfiyat tekshiruvi",
+          "ru": "Проверка настроения",
+          "en": "Mood check-in"
+        },
+        "body": {
+          "uz": "Bir necha qisqa savol — kayfiyat va o‘zini qanday his qilish haqida.",
+          "ru": "Несколько коротких вопросов о настроении и самочувствии.",
+          "en": "A few short questions about mood and how things are going."
+        }
+      }
+    ]
+  },
+  "support": null,
+  "progress": {
+    "categories": [],
+    "interests": []
+  },
+  "disclaimer": {
+    "uz": "Natijalar bolaning o‘z javoblariga asoslangan va yo‘nalish uchun tavsiya, qat’iy kasb hukmi emas. Farovonlik savollari tashxis vositasi emas. Savollar ekspert ko‘rigi va pilot sinovdan o‘tmoqda.",
+    "ru": "Результаты основаны на ответах ребёнка и служат ориентиром, а не окончательным выбором профессии. Вопросы о самочувствии не являются инструментом диагностики. Вопросы проходят экспертную проверку и пилотное тестирование.",
+    "en": "Results are based on the child’s own answers and offer guidance for exploring directions, not a final career verdict. Wellbeing questions are not a diagnostic tool. The questions are undergoing expert review and pilot testing."
+  }
+}

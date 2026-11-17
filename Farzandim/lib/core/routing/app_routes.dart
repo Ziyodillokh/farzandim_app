@@ -29,8 +29,19 @@ class AppRoutes {
   /// Akkauntga qo'shilish — boshqa qurilmaga QR orqali ulanish.
   static const String addAccount = '/add-account';
 
-  /// Asosiy ekran — auth qilingan foydalanuvchilar uchun.
+  /// Kirgandan keyingi yo'naltiruvchi: oila holatiga qarab «Qanday
+  /// boshlaymiz?», Maktab yoki Nazorat tabi.
+  static const String home = '/home';
+
+  /// «Qanday boshlaymiz?» — farzand va maktab hali yo'q yangi ota-ona.
+  static const String start = '/start';
+
+  /// Nazorat tabi — farzandlar telefoni (joylashuv, ekran vaqti, ...).
+  /// Eski nom saqlangan: ko'p ekran va push shu manzilga qaytadi.
   static const String dashboard = '/dashboard';
+
+  /// Profil tabi — akkaunt, farzandlar, obuna va sozlamalar.
+  static const String profile = '/profile';
 
   /// Yangi bola qo'shish formi.
   static const String addChild = '/add-child';
@@ -51,6 +62,13 @@ class AppRoutes {
   static const String childSettingsPattern = '/child-settings/:childId';
 
   static String childSettingsPath(String childId) => '/child-settings/$childId';
+
+  /// Bolaning kirish ma'lumotlari: login va parol berish/yangilash va
+  /// bolaning "parolni unutdim" so'rovlari (push `CHILD_RECOVERY_REQUEST`).
+  static const String childCredentialsPattern = '/child-credentials/:childId';
+
+  static String childCredentialsPath(String childId) =>
+      '/child-credentials/$childId';
 
   /// Manzillar (geo-zonalar) o'rnatish — wizard 3-qadam (nazoratdan keyin).
   /// Navigatsiya uchun [addressesSetupPath]'dan foydalaning.
@@ -204,8 +222,7 @@ class AppRoutes {
   static const String controlPolicyPattern = '/control-policy/:childId';
 
   /// Berilgan bola id'si uchun Nazorat siyosati path.
-  static String controlPolicyPath(String childId) =>
-      '/control-policy/$childId';
+  static String controlPolicyPath(String childId) => '/control-policy/$childId';
 
   /// Bola jadvali (Schedules feature — Firestore CRUD).
   /// `:childId` — qaysi bolaning jadvallari (per-child).
@@ -249,4 +266,112 @@ class AppRoutes {
   /// Pair requests per child (Sprint 4.4.25).
   static const String pairRequestsPattern = '/pair-requests/:childId';
   static String pairRequestsPath(String childId) => '/pair-requests/$childId';
+
+  // ─── Parvoz School (maktab), Growth va Kelajak ──────────────────
+
+  /// Maktab bosh sahifasi — maktablar, o'quvchilar va bo'limlar.
+  static const String school = '/school';
+
+  /// School Mode eslatmasi (push `SCHOOL_MODE_REMIND`): maktab sahifasi
+  /// o'quvchi uchun kerakli qadamni (moslash / ulash / ruxsat) ochadi.
+  static String schoolRemindPath(String studentId) =>
+      _withQuery(school, {'remind': studentId});
+
+  /// Maktab taklif kodini kiritish (yoki QR skanerlash).
+  static const String schoolLink = '/school/link';
+
+  /// Kod oldindan to'ldirilgan ulanish sahifasi (deep link'dan).
+  static String schoolLinkPath({String? code}) => code == null
+      ? schoolLink
+      : Uri(path: schoolLink, queryParameters: {'code': code}).toString();
+
+  /// Taklif havolasi (`https://farzandimedu.uz/link?code=…`) — deep link.
+  /// Sahifa yo'q: router kodni eslab qoladi va maktabga ulanishga olib boradi.
+  static const String inviteLink = '/link';
+
+  /// Maktab e'lonlari.
+  static const String schoolAnnouncements = '/school/announcements';
+
+  /// E'lonlar, push'dagi e'lon ochilgan holda ([focus] — `announcementId`).
+  /// Push matni URL'ga YOZILMAYDI (tashqi havola bilan soxta "e'lon"
+  /// ko'rsatib bo'lmasin) — u `GoRouter` `extra`sida keladi
+  /// (`SchoolAnnouncementPreview`).
+  static String schoolAnnouncementsPath({String? focus}) =>
+      _withQuery(schoolAnnouncements, {'focus': ?focus});
+
+  /// To'lov eslatmalari va "to'laganman" so'rovlari.
+  static const String schoolPayments = '/school/payments';
+
+  /// To'lovlar, [verification] so'rovi ajratilgan holda (push
+  /// `SCHOOL_VERIFICATION_ANSWERED`).
+  static String schoolPaymentsPath({String? verification}) =>
+      _withQuery(schoolPayments, {'verification': ?verification});
+
+  /// Erta ketish so'rovlari.
+  static const String schoolEarlyExits = '/school/early-exits';
+
+  /// O'quvchining oylik davomati (`?month=YYYY-MM` ixtiyoriy — berilmasa
+  /// joriy oy). Navigatsiya uchun [schoolAttendancePath].
+  static const String schoolAttendancePattern = '/school/attendance/:studentId';
+
+  static String schoolAttendancePath(String studentId, {String? month}) {
+    final path = '/school/attendance/$studentId';
+    return month == null
+        ? path
+        : '$path?month=${Uri.encodeQueryComponent(month)}';
+  }
+
+  /// Bitta e'lon (ro'yxatdan `extra` bilan; push / havola — id bo'yicha).
+  static const String schoolAnnouncementPattern =
+      '/school/announcements/:announcementId';
+
+  static String schoolAnnouncementPath(String announcementId) =>
+      '/school/announcements/${Uri.encodeComponent(announcementId)}';
+
+  /// Maktab bilan bog'lanish: kontaktlar va murojaatlarim (`student` —
+  /// tanlangan o'quvchi; berilmasa birinchisi).
+  static const String schoolContacts = '/school/contacts';
+
+  static String schoolContactsPath({String? student}) =>
+      _withQuery(schoolContacts, {'student': ?student});
+
+  /// Xodim sahifasi — unga mos xabar shablonlari (`student` majburiy).
+  static const String schoolContactPattern = '/school/contacts/:staffId';
+
+  static String schoolContactPath(String staffId, {required String student}) =>
+      _withQuery('/school/contacts/${Uri.encodeComponent(staffId)}', {
+        'student': student,
+      });
+
+  /// Xodim bilan yozishma (push `SCHOOL_PARENT_MESSAGE`).
+  static const String schoolThreadPattern = '/school/threads/:threadId';
+
+  static String schoolThreadPath(String threadId) =>
+      '/school/threads/${Uri.encodeComponent(threadId)}';
+
+  /// "Farzandim maktabda" — o'quvchi statistikasi.
+  static const String schoolStudentPattern = '/school/students/:studentId';
+
+  static String schoolStudentPath(String studentId) =>
+      '/school/students/${Uri.encodeComponent(studentId)}';
+
+  /// Bolaning Growth (kunlik testlar) natijalari.
+  static const String growthPattern = '/growth/:childId';
+
+  static String growthPath(String childId) => '/growth/$childId';
+
+  /// Bolaning Kelajak xulosasi (qiziqishlar, kuchli tomonlar, Career Lab).
+  static const String kelajakPattern = '/kelajak/:childId';
+
+  static String kelajakPath(String childId) => '/kelajak/$childId';
+
+  /// Bo'sh qiymatlarsiz so'rov qatori; hech narsa qolmasa — yo'lning o'zi.
+  static String _withQuery(String path, Map<String, String> query) {
+    final params = {
+      for (final entry in query.entries)
+        if (entry.value.trim().isNotEmpty) entry.key: entry.value,
+    };
+    if (params.isEmpty) return path;
+    return Uri(path: path, queryParameters: params).toString();
+  }
 }

@@ -101,6 +101,7 @@ Future<PlaceSuggestion?> showAddressSearch(
   required double centerLng,
 }) {
   return showModalBottomSheet<PlaceSuggestion>(
+    useRootNavigator: true,
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

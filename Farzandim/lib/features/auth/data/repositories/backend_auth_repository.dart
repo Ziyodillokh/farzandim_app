@@ -123,34 +123,6 @@ class BackendAuthRepository {
     return saveSession(session);
   }
 
-  /// Manual refresh — odatda DioClient interceptor'i avtomatik qiladi,
-  /// faqat splash/startup'da explicit kerak bo'lsa.
-  Future<bool> refresh() async {
-    final refreshToken = await _tokenStorage.readRefreshToken();
-    if (refreshToken == null) return false;
-
-    try {
-      final response = await _dio.post<Map<String, dynamic>>(
-        '/auth/refresh',
-        data: {'refreshToken': refreshToken},
-      );
-      final data = response.data;
-      if (data == null) return false;
-
-      final newAccess = data['accessToken'] as String?;
-      final newRefresh = data['refreshToken'] as String?;
-      if (newAccess == null) return false;
-
-      await _tokenStorage.updateAccessToken(newAccess);
-      if (newRefresh != null) {
-        await _tokenStorage.updateRefreshToken(newRefresh);
-      }
-      return true;
-    } on DioException {
-      return false;
-    }
-  }
-
   /// Joriy user profilini Backend'dan oladi va lokal cache'ga yozadi.
   ///
   /// Xatoni ataylab yutmaydi — bootstrap tarmoq xatosi bilan auth xatosini
@@ -200,6 +172,11 @@ class BackendAuthRepository {
       // Offline / token expired — local tozalash baribir davom etadi.
     }
     await _tokenStorage.clear();
+    await clearCachedUser();
+  }
+
+  /// Saqlangan user profilini o'chiradi (logout / sessiya bekor qilinganda).
+  Future<void> clearCachedUser() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_cachedUserKey);

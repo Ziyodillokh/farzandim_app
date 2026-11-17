@@ -85,6 +85,7 @@ class NotificationPermissionPrimer {
 
   static Future<bool?> _showPrimerSheet(BuildContext context) {
     return showModalBottomSheet<bool>(
+      useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       // Fon/radius `_PrimerSheet` ichida — Parvoz varaqlari shu tartibda.

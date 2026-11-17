@@ -273,10 +273,18 @@ class _PermissionsCard extends StatelessWidget {
             label: 'deviceSettings.permissions.background'.tr(),
             status: info?.backgroundAllowed,
           ),
+          // Cheklovlar va School Mode shu ikkisi bilan ishlaydi («Maxsus
+          // imkoniyatlar» 2026-08 dan ishlatilmaydi — u doim o'chiq ko'rinib
+          // ota-onani chalg'itardi).
           _PermRow(
-            icon: SolarIconsBold.accessibility,
-            label: 'deviceSettings.permissions.accessibility'.tr(),
-            status: info?.accessibilityEnabled,
+            icon: SolarIconsBold.chartSquare,
+            label: 'deviceSettings.permissions.usage'.tr(),
+            status: info?.usagePermission,
+          ),
+          _PermRow(
+            icon: SolarIconsBold.layers,
+            label: 'deviceSettings.permissions.overlay'.tr(),
+            status: info?.overlayPermission,
           ),
         ],
       ),

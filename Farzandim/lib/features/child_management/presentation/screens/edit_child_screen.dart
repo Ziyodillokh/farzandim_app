@@ -185,6 +185,7 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
 
   Future<void> _pickGender() async {
     final picked = await showModalBottomSheet<Gender>(
+      useRootNavigator: true,
       context: context,
       backgroundColor: _surface,
       shape: const RoundedRectangleBorder(
@@ -224,6 +225,7 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
 
   Future<void> _pickPhoto() async {
     final source = await showModalBottomSheet<ImageSource>(
+      useRootNavigator: true,
       context: context,
       backgroundColor: _surface,
       shape: const RoundedRectangleBorder(
