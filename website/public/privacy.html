@@ -37,7 +37,7 @@
   </nav>
   <main class="doc">
     <h1>Maxfiylik siyosati</h1>
-    <p class="updated">So'nggi yangilanish: 2026-08-07</p>
+    <p class="updated">So'nggi yangilanish: 2026-11-17</p>
     <nav class="toc" aria-label="Mundarija"><b>Mundarija</b>
       <ul>
         <li><a href="#b1">1. Kirish</a></li>
@@ -81,8 +81,15 @@
       <li><strong>Ovozli xabarlar</strong> — mikrofon orqali yoziladi (<code>RECORD_AUDIO</code>), faqat bola o'zi yozganda va faqat oila ichidagi yozishma uchun</li>
       <li><strong>Video xabarlar va suratlar</strong> — kamera orqali yoziladi (<code>CAMERA</code>), faqat bola o'zi yozganda yoki ota-ona so'rovini tasdiqlaganda</li>
       <li><strong>Kunlik qadamlar soni</strong> (sog'liq ma'lumoti — quyidagi 2.1-bandga qarang)</li>
+      <li><strong>Kirish ma'lumotlari</strong> — login va parol (parol serverda faqat xesh ko'rinishida saqlanadi). Barmoq izi yoki yuz bilan kirish ixtiyoriy va qurilmaning o'zida tekshiriladi — biometrik ma'lumot bizga yuborilmaydi</li>
+      <li><strong>Maktab va o'qish ma'lumotlari</strong> — sinf, ta'lim tili, maktabga ulanish (maktab kodi orqali), dars jadvali va davomat, kunlik mashqlar, test va olimpiada javoblari hamda natijalari, DON ballari</li>
+      <li><strong>Uy vazifasi suratlari</strong> — faqat bola o'zi yuborganda; suratdagi metama'lumotlar (joylashuv, qurilma) serverda olib tashlanadi</li>
+      <li><strong>So'rovnoma va psixologik test javoblari, «Bola ovozi» murojaatlari</strong> — ixtiyoriy; murojaat faqat maktabning mas'ul xodimlariga (psixolog, ma'muriyat) ko'rinadi, anonim so'rovnoma javoblari bola shaxsiga bog'lanmagan holda saqlanadi</li>
+      <li><strong>Kasb yo'nalishi va IQ test natijalari</strong> — bolaga va ota-onasiga ko'rsatiladi</li>
+      <li><strong>Nosozlik hisobotlari</strong> — ilova ishdan chiqqanda texnik ma'lumot (Firebase Crashlytics orqali), xatolarni tuzatish uchun</li>
     </ul>
     <p class="note">Ovoz va video yozuvlari MinIO xotirasida shifrlangan kanal orqali saqlanadi, faqat shu oila a'zolariga ko'rinadi va boshqa faollik ma'lumotlari bilan bir xil (90 kun) muddatda avtomatik o'chiriladi.</p>
+    <p><strong>C) Maktab bilan ulanish:</strong> bola yoki ota-ona maktab kodini kiritib ulanganda, bolaning ismi, sinfi, davomati, o'qish natijalari, uy vazifalari va murojaatlari faqat shu maktabning vakolatli xodimlariga (sinf rahbari, o'qituvchilar, psixolog, ma'muriyat) ko'rinadi. Boshqa maktablar va begona shaxslar bu ma'lumotlarni ko'rmaydi.</p>
     <p class="pill">Hech qanday ma'lumot reklama yoki uchinchi tomonlarga sotish uchun ishlatilmaydi.</p>
 
     <h2 id="b3">2.1. Sog'liq ma'lumotlari (Health Data)</h2>
@@ -108,7 +115,7 @@
     </ul>
 
     <h2 id="b5">3. Maqsad va huquqiy asos</h2>
-    <p>Ma'lumotlar quyidagi maqsadlarda qayta ishlanadi: bola xavfsizligini ta'minlash (joylashuv kuzatuvi, geo-zona ogohlantirishlari), ota-ona nazorati (ilova cheklovlari, jadval), ovozli va video xabarlar (oila aloqasi), akkaunt autentifikatsiyasi va xavfsizligi, ilovaning texnik ishlashini ta'minlash.</p>
+    <p>Ma'lumotlar quyidagi maqsadlarda qayta ishlanadi: bola xavfsizligini ta'minlash (joylashuv kuzatuvi, geo-zona ogohlantirishlari), ota-ona nazorati (ilova cheklovlari, jadval), ovozli va video xabarlar (oila aloqasi), o'quv jarayoni (maktab bilan aloqa, mashqlar va natijalar), psixologik qo'llab-quvvatlash, akkaunt autentifikatsiyasi va xavfsizligi, ilovaning texnik ishlashini ta'minlash.</p>
     <p><strong>Huquqiy asos:</strong></p>
     <ul>
       <li>O'zbekiston Respublikasi: ZRU-547 "Shaxsga doir ma'lumotlar to'g'risida"gi qonun (02.07.2019), 19-modda</li>
