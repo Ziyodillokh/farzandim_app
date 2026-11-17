@@ -96,8 +96,11 @@ class ParvozHeader extends StatelessWidget {
                 child: SizedBox(
                   width: 40,
                   height: 40,
-                  child: Icon(Icons.arrow_back_rounded,
-                      color: pv.pvText, size: 24),
+                  child: Icon(
+                    Icons.arrow_back_rounded,
+                    color: pv.pvText,
+                    size: 24,
+                  ),
                 ),
               )
             else

@@ -1,0 +1,260 @@
+{
+  "id": "5e2120d2-13f7-4c35-96e9-ac1e8691d40c",
+  "type": "career_lab",
+  "title": {
+    "uz": "Career Lab",
+    "ru": "Career Lab",
+    "en": "Career Lab"
+  },
+  "ageGroup": "10-12",
+  "day": "2026-10-21",
+  "status": "STARTED",
+  "startedAt": "2026-10-21T04:05:51.421Z",
+  "completedAt": null,
+  "total": 5,
+  "answeredCount": 0,
+  "questions": [
+    {
+      "id": "2f91f9d7-b928-55f5-a55a-f40089f06374",
+      "externalId": "PARVOZ-Q200",
+      "category": "career_lab",
+      "categoryName": {
+        "uz": "Career Lab — kasbni amalda sinash",
+        "ru": "Career Lab — пробуем профессии на практике",
+        "en": "Career Lab — trying careers in practice"
+      },
+      "text": {
+        "uz": "Biror mahsulot yoki maket yaratish senga yoqdimi?"
+      },
+      "answerType": "career_lab_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Juda yoqmadi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Yoqmadi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Betarafman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Yoqdi"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "Juda yoqdi"
+          },
+          "value": 5
+        }
+      ],
+      "required": false,
+      "maxLength": null
+    },
+    {
+      "id": "db039fff-8e98-5f1d-82e1-f7c32ff0b6a2",
+      "externalId": "PARVOZ-Q199",
+      "category": "career_lab",
+      "categoryName": {
+        "uz": "Career Lab — kasbni amalda sinash",
+        "ru": "Career Lab — пробуем профессии на практике",
+        "en": "Career Lab — trying careers in practice"
+      },
+      "text": {
+        "uz": "Jamoa bilan loyiha qilish senga yoqdimi?"
+      },
+      "answerType": "career_lab_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Juda yoqmadi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Yoqmadi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Betarafman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Yoqdi"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "Juda yoqdi"
+          },
+          "value": 5
+        }
+      ],
+      "required": false,
+      "maxLength": null
+    },
+    {
+      "id": "33491113-2a1a-59b6-8056-b539c2d30f68",
+      "externalId": "PARVOZ-Q202",
+      "category": "career_lab",
+      "categoryName": {
+        "uz": "Career Lab — kasbni amalda sinash",
+        "ru": "Career Lab — пробуем профессии на практике",
+        "en": "Career Lab — trying careers in practice"
+      },
+      "text": {
+        "uz": "Tartib va reja talab qiladigan topshiriq senga yoqdimi?"
+      },
+      "answerType": "career_lab_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Juda yoqmadi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Yoqmadi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Betarafman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Yoqdi"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "Juda yoqdi"
+          },
+          "value": 5
+        }
+      ],
+      "required": false,
+      "maxLength": null
+    },
+    {
+      "id": "27462159-82f9-53bc-80bb-2f665eb27ad9",
+      "externalId": "PARVOZ-Q201",
+      "category": "career_lab",
+      "categoryName": {
+        "uz": "Career Lab — kasbni amalda sinash",
+        "ru": "Career Lab — пробуем профессии на практике",
+        "en": "Career Lab — trying careers in practice"
+      },
+      "text": {
+        "uz": "Biror kishiga mavzuni tushuntirish vazifasi senga yoqdimi?"
+      },
+      "answerType": "career_lab_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Juda yoqmadi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Yoqmadi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Betarafman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Yoqdi"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "Juda yoqdi"
+          },
+          "value": 5
+        }
+      ],
+      "required": false,
+      "maxLength": null
+    },
+    {
+      "id": "8eceeee5-a25f-58b4-ae3d-fa8692b1be30",
+      "externalId": "PARVOZ-Q198",
+      "category": "career_lab",
+      "categoryName": {
+        "uz": "Career Lab — kasbni amalda sinash",
+        "ru": "Career Lab — пробуем профессии на практике",
+        "en": "Career Lab — trying careers in practice"
+      },
+      "text": {
+        "uz": "Kichik tajriba o‘tkazish topshirig‘i senga yoqdimi?"
+      },
+      "answerType": "career_lab_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Juda yoqmadi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Yoqmadi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Betarafman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Yoqdi"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "Juda yoqdi"
+          },
+          "value": 5
+        }
+      ],
+      "required": false,
+      "maxLength": null
+    }
+  ],
+  "answers": [],
+  "result": null
+}

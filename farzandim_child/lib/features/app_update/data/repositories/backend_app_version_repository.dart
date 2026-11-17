@@ -20,8 +20,8 @@ const String _appName = 'child';
 
 final backendAppVersionRepositoryProvider =
     Provider<BackendAppVersionRepository>((ref) {
-  return BackendAppVersionRepository(dio: ref.watch(dioClientProvider));
-});
+      return BackendAppVersionRepository(dio: ref.watch(dioClientProvider));
+    });
 
 class BackendAppVersionRepository {
   BackendAppVersionRepository({required Dio dio}) : _dio = dio;

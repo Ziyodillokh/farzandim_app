@@ -70,7 +70,10 @@ class AppTheme {
       ),
 
       // Material 3 type scale — Inter (google_fonts) + dark text on white.
-      textTheme: _interTextTheme(AppColors.textPrimary, AppColors.textSecondary),
+      textTheme: _interTextTheme(
+        AppColors.textPrimary,
+        AppColors.textSecondary,
+      ),
 
       // ─── AppBar ───
       appBarTheme: AppBarTheme(
@@ -91,9 +94,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.bgSurface,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: EdgeInsets.zero,
       ),
 
@@ -140,10 +141,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          textStyle: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
       ),
 
@@ -152,10 +150,7 @@ class AppTheme {
           foregroundColor: AppColors.primary,
           minimumSize: const Size(48, _minInteractiveHeight),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          textStyle: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
         ),
       ),
 
@@ -252,9 +247,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: AppColors.bgSurfaceDark,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: EdgeInsets.zero,
       ),
 
@@ -301,10 +294,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          textStyle: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
       ),
 
@@ -313,10 +303,7 @@ class AppTheme {
           foregroundColor: AppColors.primary,
           minimumSize: const Size(48, _minInteractiveHeight),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          textStyle: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
         ),
       ),
 
@@ -351,9 +338,7 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.bgSurfaceDark,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w700,
@@ -384,9 +369,7 @@ class AppTheme {
         ),
         actionTextColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
 
       // ─── Chip ───
@@ -396,9 +379,7 @@ class AppTheme {
         labelStyle: const TextStyle(color: AppColors.textPrimaryDark),
         secondaryLabelStyle: const TextStyle(color: Colors.white),
         side: const BorderSide(color: AppColors.borderDark),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
 
       // ─── Switch / Checkbox ───
@@ -427,10 +408,7 @@ class AppTheme {
         labelColor: AppColors.primary,
         unselectedLabelColor: AppColors.textSecondaryDark,
         indicatorColor: AppColors.primary,
-        labelStyle: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-        ),
+        labelStyle: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         unselectedLabelStyle: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w500,
@@ -460,78 +438,66 @@ class AppTheme {
   static TextTheme _interTextTheme(Color bodyColor, Color subduedColor) {
     // Bazaviy TextTheme (Inter o'rniga system fontwith bir xil o'lcham/og'irlik).
     final base = TextTheme(
-        // Sarlavhalar — bola UX uchun kattalashtirilgan
-        displayLarge: TextStyle(
-          fontSize: 40,
-          fontWeight: FontWeight.bold,
-          color: bodyColor,
-          height: 1.1,
-        ),
-        displayMedium: TextStyle(
-          fontSize: 36,
-          fontWeight: FontWeight.bold,
-          color: bodyColor,
-          height: 1.1,
-        ),
-        headlineLarge: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-          color: bodyColor,
-          height: 1.2,
-        ),
-        headlineMedium: TextStyle(
-          fontSize: 26,
-          fontWeight: FontWeight.bold,
-          color: bodyColor,
-          height: 1.2,
-        ),
-        headlineSmall: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w600,
-          color: bodyColor,
-          height: 1.3,
-        ),
-        titleLarge: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: bodyColor,
-        ),
-        titleMedium: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: bodyColor,
-        ),
-        bodyLarge: TextStyle(
-          fontSize: 18,
-          color: bodyColor,
-          height: 1.4,
-        ),
-        bodyMedium: TextStyle(
-          fontSize: 16,
-          color: bodyColor,
-          height: 1.4,
-        ),
-        bodySmall: TextStyle(
-          fontSize: 14,
-          color: subduedColor,
-          height: 1.4,
-        ),
-        labelLarge: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: bodyColor,
-        ),
-        labelMedium: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: bodyColor,
-        ),
-        labelSmall: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: subduedColor,
-        ),
-      );
+      // Sarlavhalar — bola UX uchun kattalashtirilgan
+      displayLarge: TextStyle(
+        fontSize: 40,
+        fontWeight: FontWeight.bold,
+        color: bodyColor,
+        height: 1.1,
+      ),
+      displayMedium: TextStyle(
+        fontSize: 36,
+        fontWeight: FontWeight.bold,
+        color: bodyColor,
+        height: 1.1,
+      ),
+      headlineLarge: TextStyle(
+        fontSize: 32,
+        fontWeight: FontWeight.bold,
+        color: bodyColor,
+        height: 1.2,
+      ),
+      headlineMedium: TextStyle(
+        fontSize: 26,
+        fontWeight: FontWeight.bold,
+        color: bodyColor,
+        height: 1.2,
+      ),
+      headlineSmall: TextStyle(
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        color: bodyColor,
+        height: 1.3,
+      ),
+      titleLarge: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: bodyColor,
+      ),
+      titleMedium: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: bodyColor,
+      ),
+      bodyLarge: TextStyle(fontSize: 18, color: bodyColor, height: 1.4),
+      bodyMedium: TextStyle(fontSize: 16, color: bodyColor, height: 1.4),
+      bodySmall: TextStyle(fontSize: 14, color: subduedColor, height: 1.4),
+      labelLarge: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        color: bodyColor,
+      ),
+      labelMedium: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: bodyColor,
+      ),
+      labelSmall: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: subduedColor,
+      ),
+    );
 
     // GoogleFonts olib tashlangan — `Inter` shrifti yuklab olishga
     // harakat qiladi va asset/network bo'lmasa throw qiladi. System

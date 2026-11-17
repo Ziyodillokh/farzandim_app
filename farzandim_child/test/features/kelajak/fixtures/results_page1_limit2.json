@@ -1,0 +1,33 @@
+{
+  "items": [
+    {
+      "id": "cf1d09be-f323-4789-8305-e0bf3ec04ab8",
+      "type": "daily",
+      "title": {
+        "uz": "Kunlik savollar",
+        "ru": "Вопросы дня",
+        "en": "Daily questions"
+      },
+      "day": "2026-10-21",
+      "status": "COMPLETED",
+      "completedAt": "2026-10-21T04:05:52.146Z",
+      "answered": 10,
+      "total": 10
+    },
+    {
+      "id": "aa7ee940-15c2-4bfc-b252-fe20c5252ecf",
+      "type": "career",
+      "title": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "day": "2026-10-21",
+      "status": "COMPLETED",
+      "completedAt": "2026-10-21T04:05:52.075Z",
+      "answered": 19,
+      "total": 19
+    }
+  ],
+  "nextBefore": "2026-10-21T04:05:52.075Z"
+}

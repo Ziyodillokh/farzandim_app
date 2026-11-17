@@ -16,9 +16,15 @@ name: Build child AAB (Play Market)
 
 on:
   workflow_dispatch:
+    inputs:
+      build_name:
+        description: "Versiya nomi (masalan 1.0.20). Bo'sh — 1.0.<run raqami>"
+        required: false
+        default: ''
 
 env:
-  FLUTTER_VERSION: '3.44.0'
+  # Growth v5 shu Flutter versiyasida sinalgan (lokal APK'lar 1.0.10–1.0.20).
+  FLUTTER_VERSION: '3.41.9'
   TEST_DOMAIN: farzandimedu.uz
 
 jobs:
@@ -90,14 +96,18 @@ jobs:
           ANDROID_SIGNING_B64: ${{ secrets.ANDROID_SIGNING_B64 }}
         run: echo "$ANDROID_SIGNING_B64" | base64 -d | tar xz
 
+      # versionCode doim run raqami (o'suvchi). Nom ixtiyoriy: sinovdagi APK
+      # nomi bilan bir xil bo'lishi uchun qo'lda berilishi mumkin.
       - name: Build child AAB (release)
         working-directory: farzandim_child
+        env:
+          BUILD_NAME: ${{ inputs.build_name || format('1.0.{0}', github.run_number) }}
         run: |
           flutter pub get
           build() {
             flutter build appbundle --release \
               --build-number=${{ github.run_number }} \
-              --build-name=1.0.${{ github.run_number }} \
+              --build-name="$BUILD_NAME" \
               --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
               --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
           }

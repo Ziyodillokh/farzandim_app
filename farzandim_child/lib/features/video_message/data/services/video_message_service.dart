@@ -77,27 +77,27 @@ class VideoMessageService {
         .limit(1)
         .snapshots()
         .map((snap) {
-      if (snap.docs.isEmpty) return null;
-      final doc = snap.docs.first;
-      final data = doc.data();
-      return VideoMessage(
-        id: doc.id,
-        parentUid: data['parentUid'] as String? ?? '',
-        childId: data['childId'] as String? ?? '',
-        childName: data['childName'] as String? ?? '',
-        videoUrl: data['videoUrl'] as String? ?? '',
-        durationSeconds: data['durationSeconds'] as int? ?? 0,
-        status: VideoMessageStatus.values.firstWhere(
-          (s) => s.name == (data['status'] as String?),
-          orElse: () => VideoMessageStatus.sent,
-        ),
-        createdAt: data['createdAt'] != null
-            ? (data['createdAt'] as Timestamp).toDate()
-            : null,
-        seenAt: data['seenAt'] != null
-            ? (data['seenAt'] as Timestamp).toDate()
-            : null,
-      );
-    });
+          if (snap.docs.isEmpty) return null;
+          final doc = snap.docs.first;
+          final data = doc.data();
+          return VideoMessage(
+            id: doc.id,
+            parentUid: data['parentUid'] as String? ?? '',
+            childId: data['childId'] as String? ?? '',
+            childName: data['childName'] as String? ?? '',
+            videoUrl: data['videoUrl'] as String? ?? '',
+            durationSeconds: data['durationSeconds'] as int? ?? 0,
+            status: VideoMessageStatus.values.firstWhere(
+              (s) => s.name == (data['status'] as String?),
+              orElse: () => VideoMessageStatus.sent,
+            ),
+            createdAt: data['createdAt'] != null
+                ? (data['createdAt'] as Timestamp).toDate()
+                : null,
+            seenAt: data['seenAt'] != null
+                ? (data['seenAt'] as Timestamp).toDate()
+                : null,
+          );
+        });
   }
 }

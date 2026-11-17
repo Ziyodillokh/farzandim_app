@@ -6,12 +6,18 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/routing/app_router.dart';
-import 'package:farzandim_child/features/app_restrictions/presentation/providers/restrictions_sync_provider.dart';
+import 'package:farzandim_child/features/background/data/services/parvoz_messages.dart';
 import 'package:farzandim_child/features/location/presentation/widgets/location_enable_modal.dart';
 import 'package:farzandim_child/features/notifications/data/repositories/backend_fcm_repository.dart';
 import 'package:farzandim_child/features/notifications/data/services/fcm_service.dart';
+import 'package:farzandim_child/features/pairing/presentation/providers/background_owner_provider.dart';
+import 'package:farzandim_child/features/school/presentation/providers/school_providers.dart';
+import 'package:farzandim_child/growth/growth_routes.dart';
+import 'package:farzandim_child/growth/kirish/link_screens.dart';
+import 'package:farzandim_child/growth/ovoz/data/voice_repository.dart';
 import 'package:farzandim_child/shared/widgets/app_snackbar.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:farzandim_child/growth/common/media_visibility.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// FcmService singleton — Backend FCM repository bilan.
@@ -23,11 +29,20 @@ final fcmServiceProvider = Provider<FcmService>((ref) {
   return service;
 });
 
-/// `restrictions_sync` (darhol blok / kategoriya / limit o'zgardi) — fon'da
-/// ham limitни darhol qayta yuklaydi (#15). Jim (UI ko'rsatmaydi).
+/// `restrictions_sync` (darhol blok / kategoriya / limit o'zgardi) — limitni
+/// darhol qayta yuklaydi (#15). Jim (UI ko'rsatmaydi).
 void _handleRestrictionsSync(Ref ref, RemoteMessage message) {
   if (message.data['type'] != 'restrictions_sync') return;
-  unawaited(ref.read(restrictionsSyncServiceProvider).sync());
+  _requestRestrictionsSync(ref);
+}
+
+/// Cheklovlarni qayta yuklash — fon ishlarining yagona egasiga: Android'da
+/// FGS ishlasa unga (`parvoz:restrictions_sync`, native push yo'li bilan
+/// birga 2 s debounce), aks holda UI isolate; iOS — Family Controls sinxroni.
+void _requestRestrictionsSync(Ref ref) {
+  unawaited(
+    ref.read(backgroundOwnerProvider).forward(ParvozMessages.restrictionsSync),
+  );
 }
 
 /// Eslatma (study/health/content) push BOSILGANDA — tegishli ekranga olib
@@ -38,6 +53,7 @@ void _handleNudgeTap(Ref ref, RemoteMessage message) {
   final route = message.data['relatedRoute'] as String?;
   // '/' — router'da route yo'q (dead-end). Bo'sh yoki '/' bo'lsa — jim.
   if (route == null || route.isEmpty || route == '/') return;
+  if (isHiddenMediaRoute(route)) return;
   ref.read(routerProvider).go(route);
 }
 
@@ -48,7 +64,7 @@ void _handleDeepLink(Ref ref, RemoteMessage message) {
   final link = (message.data['deepLink'] as String?)?.trim();
   if (link == null || link.isEmpty) return;
   final route = _deepLinkToRoute(link);
-  if (route == null) return;
+  if (route == null || isHiddenMediaRoute(route)) return;
   ref.read(routerProvider).go(route);
 }
 
@@ -87,6 +103,58 @@ String? _deepLinkToRoute(String link) {
 
 /// Chat xabari (ovozli/video/matn — backend `type:'voice'`) push BOSILGANDA —
 /// ota-ona bilan chat ekraniga kiradi (bola bitta ota-ona bilan chatlashadi).
+/// `CARE_MESSAGE` — psixologdan javob (matnsiz push). Bosilsa o'sha murojaat
+/// yozishmasi ochiladi; ilova ochiq bo'lsa ro'yxat/yozishma yangilanadi.
+void _handleCareMessage(Ref ref, RemoteMessage message, {required bool tap}) {
+  if (message.data['type'] != 'CARE_MESSAGE') return;
+  ref
+    ..invalidate(voiceRequestsProvider)
+    ..invalidate(voiceRequestProvider);
+  if (!tap) return;
+  final id = (message.data['requestId'] as String?)?.trim();
+  final router = ref.read(routerProvider);
+  router.go(GrowthV5Routes.school);
+  if (id != null && id.isNotEmpty) {
+    unawaited(router.push(GrowthV5Routes.voiceRequest(id)));
+  }
+}
+
+/// Maktab push'lari (matnsiz): ertangi topshiriq, maktab e'loni, mutaxassis
+/// yuborgan test va maktab so'rovnomasi — v5 da tegishli ekran ochiladi.
+void _handleSchoolTap(Ref ref, RemoteMessage message) {
+  final location = switch (message.data['type']) {
+    'HOMEWORK_DUE' => GrowthV5Routes.schoolTasks,
+    'SCHOOL_ANNOUNCEMENT' => GrowthV5Routes.notices,
+    'PSYCH_ASSIGNMENT' => GrowthV5Routes.voice,
+    'CARE_SURVEY' => GrowthV5Routes.voiceSurvey,
+    _ => null,
+  };
+  if (location == null) return;
+  final router = ref.read(routerProvider)..go(GrowthV5Routes.school);
+  unawaited(router.push(location));
+}
+
+/// `PSYCH_ASSIGNMENT` / `CARE_SURVEY` keldi — ilova ochiq bo'lsa testlar va
+/// so'rovnoma ro'yxati yangilanadi (bola kutib turmasin).
+void _handlePsychRefresh(Ref ref, RemoteMessage message) {
+  switch (message.data['type']) {
+    case 'PSYCH_ASSIGNMENT':
+      ref.invalidate(psychAssignmentsProvider);
+    case 'CARE_SURVEY':
+      ref.invalidate(voiceSurveyProvider);
+  }
+}
+
+/// `SCHOOL_LINK` — maktab ulanish so'rovini hal qildi (tasdiq / rad / tuzatish
+/// natijasi, matn neytral). Maktab bo'limi holati yangilanadi; bosilsa ochiladi.
+void _handleSchoolLink(Ref ref, RemoteMessage message, {required bool tap}) {
+  if (message.data['type'] != 'SCHOOL_LINK') return;
+  ref
+    ..invalidate(schoolTodayProvider)
+    ..invalidate(linkStatusProvider);
+  if (tap) ref.read(routerProvider).go(GrowthV5Routes.school);
+}
+
 void _handleChatTap(Ref ref, RemoteMessage message) {
   final type = message.data['type'];
   if (type != 'voice' && type != 'video') return;
@@ -98,7 +166,7 @@ void _handleChatTap(Ref ref, RemoteMessage message) {
 void _handleUnlockDecision(Ref ref, RemoteMessage message) {
   if (message.data['type'] != 'unlock_decision') return;
   // Limit darhol yangilansin (server effektiv limitga grantni qo'shgan).
-  unawaited(ref.read(restrictionsSyncServiceProvider).sync());
+  _requestRestrictionsSync(ref);
 
   final ctx = ref
       .read(routerProvider)
@@ -142,6 +210,9 @@ final fcmInitializerProvider = FutureProvider<void>((ref) async {
     _handleUnlockDecision(ref, msg);
     _handleRestrictionsSync(ref, msg);
     _handleLocationRequest(ref, msg);
+    _handleCareMessage(ref, msg, tap: false);
+    _handleSchoolLink(ref, msg, tap: false);
+    _handlePsychRefresh(ref, msg);
   };
   service.onMessageTap = (msg) {
     _handleUnlockDecision(ref, msg);
@@ -150,6 +221,9 @@ final fcmInitializerProvider = FutureProvider<void>((ref) async {
     _handleChatTap(ref, msg);
     _handleDeepLink(ref, msg);
     _handleLocationRequest(ref, msg);
+    _handleCareMessage(ref, msg, tap: true);
+    _handleSchoolTap(ref, msg);
+    _handleSchoolLink(ref, msg, tap: true);
   };
   await service.init();
 });

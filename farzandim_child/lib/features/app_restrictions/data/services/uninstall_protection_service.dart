@@ -110,6 +110,27 @@ class UninstallProtectionService {
   /// Bayroqni tozalaydi — bir martalik signal.
   Future<bool> consumeActivatedFlag() async => _consumeFlag(_activatedKey);
 
+  /// Fon servisi uchun: "admin o'chirildi" bayrog'i bormi (TOZALAMAYDI —
+  /// ota-onaga xabar muvaffaqiyatli ketgach [clearDeactivatedFlag]).
+  Future<bool> hasDeactivatedFlag() async {
+    if (!_isAndroid) return false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.reload();
+      return prefs.get(_deactivatedKey) == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> clearDeactivatedFlag() async {
+    if (!_isAndroid) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_deactivatedKey);
+    } catch (_) {}
+  }
+
   Future<bool> _consumeFlag(String key) async {
     if (!_isAndroid) return false;
     try {

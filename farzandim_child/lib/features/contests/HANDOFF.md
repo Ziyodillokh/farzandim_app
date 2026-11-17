@@ -5,7 +5,7 @@
 > Bu hujjat read-only tahlildan tuzilgan — katta o'zgarishdan oldin fayl:qatorni o'zing tasdiqla.
 
 ## 1. TL;DR — eng muhim 5 nuqta
-1. **Data REAL** (backend `/content/olympiads`), lekin backend yiqilsa **`MockQuestions.all` (10 ta offline savol)** ga tushadi — bu holatda sertifikat yo'q (`attemptId=null`), UI ogohlantirmaydi.
+1. **Data REAL** (backend `/content/olympiads`). Savollarni yuklab bo'lmasa `QuizStatus.error` — UI "Qayta urinish" ko'rsatadi (oldingi `MockQuestions` zaxirasi App Store 2.1 sababli olib tashlandi).
 2. **Styling holati:** feature global `AppColors`dan foydalanadi → `AppColors.primary` allaqachon **AQUA `#16B5C9`** (markaziy o'zgarish). LEKIN **Parvoz night/`_P` redizayniga O'TKAZILMAGAN** — hali Duolingo-uslubidagi **light** layout. Dashboard/notifications/profil kabi redizayn QILINMAGAN.
 3. **G'olib chegarasi = 0.80 (80%)** — yagona manba `QuizState.winnerThreshold`. UI natija + XP + sertifikat — uchalasi shuni o'qiydi. O'zgartirsang, backend sertifikat chegarasi ham mos bo'lishi shart (aks holda "G'olib" ko'rinadi-yu sertifikat 403).
 4. **Anti-cheat:** backend `correctIndex = -1` qaytaradi → har javob `POST .../answer` orqali serverda tekshiriladi (`AnswerFeedback`). Mock savollarda `correctIndex >= 0` → lokal tekshiruv. Aniqlash UUID-heuristika (`qid.length >= 32`).

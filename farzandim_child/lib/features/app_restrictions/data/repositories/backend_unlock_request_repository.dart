@@ -20,8 +20,40 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final backendUnlockRequestRepositoryProvider =
     Provider<BackendUnlockRequestRepository>((ref) {
-  return BackendUnlockRequestRepository(dio: ref.watch(dioClientProvider));
-});
+      return BackendUnlockRequestRepository(dio: ref.watch(dioClientProvider));
+    });
+
+/// Ota-ona tasdiqlagan, hali amal qilayotgan qo'shimcha vaqt.
+@immutable
+class ActiveUnlockGrant {
+  const ActiveUnlockGrant({
+    required this.expiresAt,
+    required this.remaining,
+    this.packageName,
+    this.kind,
+  });
+
+  factory ActiveUnlockGrant.fromJson(Map<String, dynamic> json) {
+    final pkg = json['packageName'];
+    return ActiveUnlockGrant(
+      expiresAt: DateTime.parse(json['expiresAt'] as String),
+      remaining: Duration(
+        seconds: (json['remainingSeconds'] as num?)?.toInt() ?? 0,
+      ),
+      packageName: pkg is String && pkg.isNotEmpty ? pkg : null,
+      kind: json['kind'] as String?,
+    );
+  }
+
+  final DateTime expiresAt;
+  final Duration remaining;
+
+  /// 'APP' grant'ning paketi; 'SCREEN_TIME' uchun `null`.
+  final String? packageName;
+
+  /// 'APP' | 'SCREEN_TIME' (eski server — `null`).
+  final String? kind;
+}
 
 class BackendUnlockRequestRepository {
   BackendUnlockRequestRepository({required Dio dio}) : _dio = dio;
@@ -59,6 +91,30 @@ class BackendUnlockRequestRepository {
         '${e.response?.statusCode} body=${e.response?.data}',
       );
       return false;
+    }
+  }
+
+  /// Hozir amal qilayotgan grantlar. Tarmoq/format xatosida `null` —
+  /// chaqiruvchi oxirgi holatni o'zgartirmaydi.
+  Future<List<ActiveUnlockGrant>?> getActiveGrants() async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/unlock-requests/active',
+      );
+      final grants = response.data?['grants'] as List<dynamic>?;
+      if (grants == null) return null;
+      return grants
+          .map((g) => ActiveUnlockGrant.fromJson(g as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      debugPrint(
+        'BackendUnlockRequestRepository.getActiveGrants xato '
+        '${e.response?.statusCode}',
+      );
+      return null;
+    } on FormatException catch (e) {
+      debugPrint('BackendUnlockRequestRepository.getActiveGrants format: $e');
+      return null;
     }
   }
 }

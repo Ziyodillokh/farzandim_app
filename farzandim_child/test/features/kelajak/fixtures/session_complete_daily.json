@@ -1,0 +1,902 @@
+{
+  "id": "cf1d09be-f323-4789-8305-e0bf3ec04ab8",
+  "type": "daily",
+  "title": {
+    "uz": "Kunlik savollar",
+    "ru": "Вопросы дня",
+    "en": "Daily questions"
+  },
+  "ageGroup": "10-12",
+  "day": "2026-10-21",
+  "status": "COMPLETED",
+  "startedAt": "2026-10-21T04:05:52.089Z",
+  "completedAt": "2026-10-21T04:05:52.146Z",
+  "total": 10,
+  "answeredCount": 10,
+  "questions": [
+    {
+      "id": "a9a41923-7936-5f6d-9ad9-2ac254cc3d16",
+      "externalId": "PARVOZ-Q095",
+      "category": "school_quality",
+      "categoryName": {
+        "uz": "Maktab sifati va darslar",
+        "ru": "Школа и уроки",
+        "en": "School and lessons"
+      },
+      "text": {
+        "uz": "Maktabda o‘quvchilar bilan hurmatli muomala qilinadimi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "6be22088-1170-5134-8c1a-af6b2c3ac1b5",
+      "externalId": "PARVOZ-Q093",
+      "category": "school_quality",
+      "categoryName": {
+        "uz": "Maktab sifati va darslar",
+        "ru": "Школа и уроки",
+        "en": "School and lessons"
+      },
+      "text": {
+        "uz": "Maktabda o‘rgangan narsalaringni amalda ishlatish imkoniyati bormi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "7b1b1451-a90d-520b-80ee-b4116ecd2ae3",
+      "externalId": "PARVOZ-Q116",
+      "category": "teacher_relation",
+      "categoryName": {
+        "uz": "O‘qituvchi bilan munosabat",
+        "ru": "Отношения с учителями",
+        "en": "Relationship with teachers"
+      },
+      "text": {
+        "uz": "O‘qituvchi o‘quvchilar bilan hurmat bilan gaplashadimi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "89cabaa8-a187-5ef7-976c-f5740adaef8a",
+      "externalId": "PARVOZ-Q137",
+      "category": "safety",
+      "categoryName": {
+        "uz": "Xavfsizlik va bullying",
+        "ru": "Безопасность и буллинг",
+        "en": "Safety and bullying"
+      },
+      "text": {
+        "uz": "Notanish havola yoki faylni ochish xavfli bo‘lishi mumkinligini bilasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "34d2e1f3-eb21-5f6b-969e-54156dfaa002",
+      "externalId": "PARVOZ-Q134",
+      "category": "safety",
+      "categoryName": {
+        "uz": "Xavfsizlik va bullying",
+        "ru": "Безопасность и буллинг",
+        "en": "Safety and bullying"
+      },
+      "text": {
+        "uz": "Internetda haqorat yoki tahdid bo‘lsa, uni kattaga ayta olasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "8ebc84c5-12be-5910-9396-54ec3b2d8b1d",
+      "externalId": "PARVOZ-Q179",
+      "category": "social_self",
+      "categoryName": {
+        "uz": "Ijtimoiy ko‘nikmalar va o‘zini anglash",
+        "ru": "Социальные навыки и самопознание",
+        "en": "Social skills and self-awareness"
+      },
+      "text": {
+        "uz": "Fikringni boshqalar fikridan farq qilsa ham ayta olasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "ac0c4c2a-fb21-5f09-8de8-f35f32386f97",
+      "externalId": "PARVOZ-Q181",
+      "category": "social_self",
+      "categoryName": {
+        "uz": "Ijtimoiy ko‘nikmalar va o‘zini anglash",
+        "ru": "Социальные навыки и самопознание",
+        "en": "Social skills and self-awareness"
+      },
+      "text": {
+        "uz": "Do‘sting bilan kelishmovchilik bo‘lsa, gaplashib hal qilishga urinib ko‘rasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "0a3e578d-1e5b-5b29-9d43-b9b75d8782b9",
+      "externalId": "PARVOZ-Q236",
+      "category": "parent_communication",
+      "categoryName": {
+        "uz": "Ota-ona bilan muloqot",
+        "ru": "Общение с родителями",
+        "en": "Communication with parents"
+      },
+      "text": {
+        "uz": "Ota-onang sening qiziqishlaringni tinglaydimi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "04b31675-9cb6-5e25-9580-97fa5a429bd6",
+      "externalId": "PARVOZ-Q235",
+      "category": "parent_communication",
+      "categoryName": {
+        "uz": "Ota-ona bilan muloqot",
+        "ru": "Общение с родителями",
+        "en": "Communication with parents"
+      },
+      "text": {
+        "uz": "Ota-onang bilan maktabdagi qiyinchiliklar haqida gaplasha olasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "9ff4db61-a181-58ca-a01e-8ef29ec773f5",
+      "externalId": "PARVOZ-Q266",
+      "category": "personal_traits",
+      "categoryName": {
+        "uz": "Shaxsiy xususiyatlar",
+        "ru": "Личные качества",
+        "en": "Personal traits"
+      },
+      "text": {
+        "uz": "Boshqa odamning fikrini tinglash senga osonmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    }
+  ],
+  "answers": [
+    {
+      "questionId": "a9a41923-7936-5f6d-9ad9-2ac254cc3d16",
+      "value": 2,
+      "text": null
+    },
+    {
+      "questionId": "6be22088-1170-5134-8c1a-af6b2c3ac1b5",
+      "value": 2,
+      "text": null
+    },
+    {
+      "questionId": "7b1b1451-a90d-520b-80ee-b4116ecd2ae3",
+      "value": 2,
+      "text": null
+    },
+    {
+      "questionId": "89cabaa8-a187-5ef7-976c-f5740adaef8a",
+      "value": null,
+      "text": null
+    },
+    {
+      "questionId": "34d2e1f3-eb21-5f6b-969e-54156dfaa002",
+      "value": null,
+      "text": null
+    },
+    {
+      "questionId": "8ebc84c5-12be-5910-9396-54ec3b2d8b1d",
+      "value": 5,
+      "text": null
+    },
+    {
+      "questionId": "ac0c4c2a-fb21-5f09-8de8-f35f32386f97",
+      "value": 5,
+      "text": null
+    },
+    {
+      "questionId": "0a3e578d-1e5b-5b29-9d43-b9b75d8782b9",
+      "value": 5,
+      "text": null
+    },
+    {
+      "questionId": "04b31675-9cb6-5e25-9580-97fa5a429bd6",
+      "value": 5,
+      "text": null
+    },
+    {
+      "questionId": "9ff4db61-a181-58ca-a01e-8ef29ec773f5",
+      "value": 5,
+      "text": null
+    }
+  ],
+  "result": {
+    "answered": 10,
+    "total": 10,
+    "categories": [
+      {
+        "category": "school_quality",
+        "name": {
+          "uz": "Maktab sifati va darslar",
+          "ru": "Школа и уроки",
+          "en": "School and lessons"
+        },
+        "score": 25,
+        "answered": 2
+      },
+      {
+        "category": "teacher_relation",
+        "name": {
+          "uz": "O‘qituvchi bilan munosabat",
+          "ru": "Отношения с учителями",
+          "en": "Relationship with teachers"
+        },
+        "score": 25,
+        "answered": 1
+      },
+      {
+        "category": "social_self",
+        "name": {
+          "uz": "Ijtimoiy ko‘nikmalar va o‘zini anglash",
+          "ru": "Социальные навыки и самопознание",
+          "en": "Social skills and self-awareness"
+        },
+        "score": 100,
+        "answered": 2
+      },
+      {
+        "category": "parent_communication",
+        "name": {
+          "uz": "Ota-ona bilan muloqot",
+          "ru": "Общение с родителями",
+          "en": "Communication with parents"
+        },
+        "score": 100,
+        "answered": 2
+      },
+      {
+        "category": "personal_traits",
+        "name": {
+          "uz": "Shaxsiy xususiyatlar",
+          "ru": "Личные качества",
+          "en": "Personal traits"
+        },
+        "score": 100,
+        "answered": 1
+      }
+    ],
+    "interests": null,
+    "insights": {
+      "strengths": [
+        {
+          "key": "social_self",
+          "title": {
+            "uz": "Muloqot va o‘zini anglash",
+            "ru": "Общение и самопознание",
+            "en": "Social skills and self-awareness"
+          }
+        },
+        {
+          "key": "career_planning",
+          "title": {
+            "uz": "Kelajakni rejalashtirish",
+            "ru": "Планирование будущего",
+            "en": "Planning for the future"
+          }
+        },
+        {
+          "key": "parent_communication",
+          "title": {
+            "uz": "Ota-ona bilan ochiq muloqot",
+            "ru": "Открытое общение с родителями",
+            "en": "Open communication with parents"
+          }
+        },
+        {
+          "key": "personal_traits",
+          "title": {
+            "uz": "Shaxsiy fazilatlar",
+            "ru": "Личные качества",
+            "en": "Personal strengths"
+          }
+        }
+      ],
+      "interests": [
+        {
+          "code": "A",
+          "title": {
+            "uz": "Ijodiy yo‘nalish",
+            "ru": "Творческое направление",
+            "en": "Creative direction"
+          },
+          "body": {
+            "uz": "Yangi g‘oyalar, tasvir, so‘z va ovoz orqali fikr ifodalashga qiziqish yuqori. Quyidagi yo‘nalishlarni sinab ko‘rish mumkin.",
+            "ru": "Высокий интерес к новым идеям и самовыражению через образы, слова и звук. Можно попробовать такие направления.",
+            "en": "Strong interest in new ideas and expressing thoughts through images, words and sound. These directions are worth trying."
+          },
+          "suggestions": [
+            {
+              "uz": "dizayn",
+              "ru": "дизайн",
+              "en": "design"
+            },
+            {
+              "uz": "san’at va musiqa",
+              "ru": "искусство и музыка",
+              "en": "art and music"
+            },
+            {
+              "uz": "jurnalistika va yozuvchilik",
+              "ru": "журналистика и писательство",
+              "en": "journalism and writing"
+            },
+            {
+              "uz": "media va video",
+              "ru": "медиа и видео",
+              "en": "media and video"
+            }
+          ]
+        },
+        {
+          "code": "I",
+          "title": {
+            "uz": "Tadqiqotchi yo‘nalish",
+            "ru": "Исследовательское направление",
+            "en": "Investigative direction"
+          },
+          "body": {
+            "uz": "Savol berish, tahlil qilish va muammolarni yechishga qiziqish yuqori. Quyidagi yo‘nalishlarni sinab ko‘rish mumkin.",
+            "ru": "Высокий интерес к вопросам, анализу и решению задач. Можно попробовать такие направления.",
+            "en": "Strong interest in asking questions, analysing and solving problems. These directions are worth trying."
+          },
+          "suggestions": [
+            {
+              "uz": "dasturlash",
+              "ru": "программирование",
+              "en": "programming"
+            },
+            {
+              "uz": "tabiiy fanlar va tajribalar",
+              "ru": "естественные науки и эксперименты",
+              "en": "science and experiments"
+            },
+            {
+              "uz": "ma’lumotlar tahlili",
+              "ru": "анализ данных",
+              "en": "data analysis"
+            },
+            {
+              "uz": "tibbiyot va biologiya",
+              "ru": "медицина и биология",
+              "en": "medicine and biology"
+            }
+          ]
+        },
+        {
+          "code": "S",
+          "title": {
+            "uz": "Ijtimoiy yo‘nalish",
+            "ru": "Социальное направление",
+            "en": "Social direction"
+          },
+          "body": {
+            "uz": "Odamlarga yordam berish, tushuntirish va birga ishlashga qiziqish yuqori. Quyidagi yo‘nalishlarni sinab ko‘rish mumkin.",
+            "ru": "Высокий интерес к помощи людям, объяснению и совместной работе. Можно попробовать такие направления.",
+            "en": "Strong interest in helping people, explaining things and working together. These directions are worth trying."
+          },
+          "suggestions": [
+            {
+              "uz": "ta’lim va murabbiylik",
+              "ru": "образование и наставничество",
+              "en": "education and mentoring"
+            },
+            {
+              "uz": "tibbiyot va g‘amxo‘rlik",
+              "ru": "медицина и забота",
+              "en": "healthcare and care"
+            },
+            {
+              "uz": "psixologiya",
+              "ru": "психология",
+              "en": "psychology"
+            },
+            {
+              "uz": "ijtimoiy loyihalar",
+              "ru": "социальные проекты",
+              "en": "social projects"
+            }
+          ]
+        }
+      ],
+      "likedDirections": [
+        {
+          "externalId": "PARVOZ-Q200",
+          "activity": {
+            "uz": "Mahsulot yoki maket yaratish",
+            "ru": "Создание изделия или макета",
+            "en": "Building a product or model"
+          },
+          "code": "R",
+          "rating": 5
+        },
+        {
+          "externalId": "PARVOZ-Q202",
+          "activity": {
+            "uz": "Reja va tartib talab qiladigan ish",
+            "ru": "Задание на порядок и план",
+            "en": "A task that needs order and planning"
+          },
+          "code": "C",
+          "rating": 4
+        }
+      ],
+      "triedDirections": [
+        {
+          "externalId": "PARVOZ-Q199",
+          "activity": {
+            "uz": "Jamoaviy loyiha",
+            "ru": "Командный проект",
+            "en": "Team project"
+          },
+          "code": "S",
+          "rating": 3,
+          "verdict": "neutral"
+        },
+        {
+          "externalId": "PARVOZ-Q200",
+          "activity": {
+            "uz": "Mahsulot yoki maket yaratish",
+            "ru": "Создание изделия или макета",
+            "en": "Building a product or model"
+          },
+          "code": "R",
+          "rating": 5,
+          "verdict": "liked"
+        },
+        {
+          "externalId": "PARVOZ-Q201",
+          "activity": {
+            "uz": "Mavzuni boshqalarga tushuntirish",
+            "ru": "Объяснить тему другим",
+            "en": "Explaining a topic to others"
+          },
+          "code": "S",
+          "rating": 1,
+          "verdict": "disliked"
+        },
+        {
+          "externalId": "PARVOZ-Q202",
+          "activity": {
+            "uz": "Reja va tartib talab qiladigan ish",
+            "ru": "Задание на порядок и план",
+            "en": "A task that needs order and planning"
+          },
+          "code": "C",
+          "rating": 4,
+          "verdict": "liked"
+        }
+      ],
+      "growthAreas": [
+        {
+          "key": "learning",
+          "title": {
+            "uz": "O‘rganish odatlari",
+            "ru": "Учебные привычки",
+            "en": "Learning habits"
+          },
+          "tip": {
+            "uz": "Har kuni ozgina vaqt qiziq mavzuni o‘rganib, tushunganlarini qisqa yozib borish foydali.",
+            "ru": "Полезно каждый день немного изучать интересную тему и коротко записывать понятое.",
+            "en": "A little time each day on an interesting topic, with short notes on what was understood, helps."
+          }
+        },
+        {
+          "key": "school_quality",
+          "title": {
+            "uz": "Maktabdagi tajriba",
+            "ru": "Опыт в школе",
+            "en": "School experience"
+          },
+          "tip": {
+            "uz": "Darslarda nima yoqishi va nima qiyinligi haqida o‘qituvchi yoki ishonchli kattalar bilan gaplashish mumkin.",
+            "ru": "Можно поговорить с учителем или взрослым, которому доверяешь, о том, что на уроках нравится, а что трудно.",
+            "en": "Talking with a teacher or a trusted adult about what feels good and what is hard in class can help."
+          }
+        },
+        {
+          "key": "teacher_relation",
+          "title": {
+            "uz": "O‘qituvchilar bilan muloqot",
+            "ru": "Общение с учителями",
+            "en": "Talking with teachers"
+          },
+          "tip": {
+            "uz": "Tushunmagan narsani o‘qituvchidan so‘rashdan tortinmaslik muloqotni osonlashtiradi.",
+            "ru": "Не стесняться спрашивать учителя о непонятном — так общаться становится легче.",
+            "en": "Asking the teacher about anything unclear makes communication easier."
+          }
+        },
+        {
+          "key": "safety_rules",
+          "title": {
+            "uz": "Xavfsizlik qoidalari",
+            "ru": "Правила безопасности",
+            "en": "Safety rules"
+          },
+          "tip": {
+            "uz": "Xavfli vaziyatda nima qilish, kimga murojaat qilish va internetda shaxsiy ma’lumotni qanday asrashni kattalar bilan birga takrorlab chiqish foydali.",
+            "ru": "Полезно вместе со взрослыми повторить, что делать в опасной ситуации, к кому обращаться и как защищать личные данные в интернете.",
+            "en": "It helps to go over with an adult what to do in a risky situation, whom to turn to, and how to keep personal information safe online."
+          }
+        }
+      ],
+      "support": {
+        "level": "support",
+        "message": {
+          "uz": "Seni nimadir qiynayotganga o‘xshaydi. Sen yolg‘iz emassan. Bugun ishonchli kattalardan biri — ota-onang, o‘qituvching yoki maktab psixologi bilan gaplashib ko‘r: ular yordam berishni xohlaydi. Agar o‘zingni xavf ostida his qilsang, darhol ilovadagi SOS tugmasini bos.",
+          "ru": "Похоже, тебя что-то тревожит. Ты не один. Поговори сегодня со взрослым, которому доверяешь: с родителями, учителем или школьным психологом — они хотят помочь. Если чувствуешь опасность, сразу нажми кнопку SOS в приложении.",
+          "en": "It looks like something is weighing on you. You are not alone. Try talking today to an adult you trust — a parent, a teacher or the school psychologist; they want to help. If you feel in danger, press the SOS button in the app right away."
+        }
+      },
+      "next": [
+        {
+          "kind": "career_lab",
+          "testType": "career_lab",
+          "externalId": "PARVOZ-Q198",
+          "title": {
+            "uz": "Yangi faoliyatni sinab ko‘rish",
+            "ru": "Попробовать новое занятие",
+            "en": "Try a new activity"
+          },
+          "body": {
+            "uz": "Qiziqishlarga mos faoliyat: Kichik tajriba o‘tkazish. Sinab ko‘rgach, taassurotni Career Lab’da baholash mumkin.",
+            "ru": "Занятие по интересам: Небольшой эксперимент. После пробы впечатления можно оценить в Career Lab.",
+            "en": "An activity that matches the interests: Running a small experiment. After trying it, rate the experience in Career Lab."
+          }
+        }
+      ]
+    },
+    "disclaimer": {
+      "uz": "Bu natijalar — yo‘nalish tanlashga yordam beruvchi tavsiya, qat’iy hukm emas. Qiziqishlar vaqt bilan o‘zgaradi, turli faoliyatlarni sinab ko‘rish foydali.",
+      "ru": "Эти результаты — подсказка для выбора направления, а не окончательный вывод. Интересы меняются со временем, полезно пробовать разное.",
+      "en": "These results are a hint for exploring directions, not a final verdict. Interests change over time, so trying different things helps."
+    }
+  }
+}

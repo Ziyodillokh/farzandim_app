@@ -25,12 +25,8 @@ class AppSnackBar {
       _show(context, message, AppColors.secondary, Icons.info_rounded);
 
   /// Ogohlantirish — sariq (warning).
-  static void warning(BuildContext context, String message) => _show(
-        context,
-        message,
-        AppColors.warning,
-        Icons.warning_amber_rounded,
-      );
+  static void warning(BuildContext context, String message) =>
+      _show(context, message, AppColors.warning, Icons.warning_amber_rounded);
 
   /// Xatolik — qizil (danger).
   static void error(BuildContext context, String message) =>

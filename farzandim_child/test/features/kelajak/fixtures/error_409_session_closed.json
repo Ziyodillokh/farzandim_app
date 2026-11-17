@@ -1,0 +1,5 @@
+{
+  "statusCode": 409,
+  "message": "Session is closed",
+  "code": "SESSION_CLOSED"
+}

@@ -7,18 +7,15 @@
 // kerak emas.
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:farzandim_child/features/schedules/data/models/school_mode_meta.dart';
 
 enum ScheduleType { school, sport, sleep, meal, custom }
 
-enum Weekday {
-  monday,
-  tuesday,
-  wednesday,
-  thursday,
-  friday,
-  saturday,
-  sunday,
-}
+/// Server maktab "School Mode" virtual jadvalini shu `source` bilan
+/// yuboradi (faqat bolaning o'z so'rovida, faqat bugun uchun).
+const kSchoolModeSource = 'SCHOOL_MODE';
+
+enum Weekday { monday, tuesday, wednesday, thursday, friday, saturday, sunday }
 
 extension ScheduleTypeX on ScheduleType {
   static ScheduleType fromName(String? name) {
@@ -52,6 +49,14 @@ class Schedule {
   /// "Ilova cheklovlar" — jadval oynasida bloklanadigan paketlar.
   final List<String> blockedApps;
 
+  /// Maktab belgilagan "Maktab rejimi" (ota-ona jadvali emas) — ekranda
+  /// alohida nom bilan ko'rsatiladi; cheklov oddiy jadvaldek qo'llanadi.
+  final bool isSchoolMode;
+
+  /// School Mode tafsiloti (toifalar, ruxsat etilganlar, hudud) — faqat
+  /// maktab jadvalida; eski server yubormasa `null`.
+  final SchoolModeMeta? schoolMode;
+
   const Schedule({
     required this.id,
     required this.title,
@@ -63,6 +68,8 @@ class Schedule {
     required this.weekdays,
     required this.isActive,
     this.blockedApps = const [],
+    this.isSchoolMode = false,
+    this.schoolMode,
   });
 
   /// Backend REST `Routine` JSON'idan parse (Sprint 4.4.9 Day 3).
@@ -104,8 +111,33 @@ class Schedule {
       blockedApps: ((json['blockedApps'] as List?) ?? const [])
           .map((e) => '$e')
           .toList(growable: false),
+      isSchoolMode: json['source'] == kSchoolModeSource,
+      schoolMode: json['schoolMode'] is Map<String, dynamic>
+          ? SchoolModeMeta.fromJson(json['schoolMode'] as Map<String, dynamic>)
+          : null,
     );
   }
+
+  /// Oflayn kesh uchun — `fromBackendJson` qayta o'qiy oladigan shakl.
+  Map<String, dynamic> toBackendJson() => {
+    'id': id,
+    'title': title,
+    'type': switch (type) {
+      ScheduleType.sleep => 'SLEEP',
+      ScheduleType.school => 'SCHOOL',
+      ScheduleType.sport => 'SPORT',
+      ScheduleType.meal || ScheduleType.custom => 'OTHER',
+    },
+    'startHour': startHour,
+    'startMinute': startMinute,
+    'endHour': endHour,
+    'endMinute': endMinute,
+    'weekdays': weekdays.map((w) => w.index + 1).toList(),
+    'isActive': isActive,
+    'blockedApps': blockedApps,
+    if (isSchoolMode) 'source': kSchoolModeSource,
+    if (schoolMode != null) 'schoolMode': schoolMode!.toJson(),
+  };
 
   static ScheduleType _backendTypeToFrontend(String backendType) {
     switch (backendType) {
@@ -127,9 +159,7 @@ class Schedule {
     return Weekday.values[iso - 1];
   }
 
-  factory Schedule.fromFirestore(
-    DocumentSnapshot<Map<String, dynamic>> doc,
-  ) {
+  factory Schedule.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? const <String, dynamic>{};
 
     final rawWeekdays =
@@ -153,8 +183,7 @@ class Schedule {
 
   String get startTimeFormatted => _format(startHour, startMinute);
   String get endTimeFormatted => _format(endHour, endMinute);
-  String get timeRangeFormatted =>
-      '$startTimeFormatted – $endTimeFormatted';
+  String get timeRangeFormatted => '$startTimeFormatted – $endTimeFormatted';
 
   static String _format(int h, int m) {
     final hh = h.toString().padLeft(2, '0');

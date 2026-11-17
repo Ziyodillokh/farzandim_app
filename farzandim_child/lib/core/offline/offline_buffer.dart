@@ -19,6 +19,19 @@
 //
 // Maksimum item: 1000 (taxminan 1 daqiqada 1 location → 24 soat = 1440).
 // Eski itemlar avtomatik tushib ketadi (TTL 24 soat).
+//
+// 1.0.20 (batareya / barqarorlik):
+//   • YAGONA flusher: flush()'ni BackgroundJobs egasi chaqiradi (Android —
+//     FGS isolate; iOS yoki FGS ishlamayotganda — UI isolate). Isolate
+//     ichida bir vaqtda bitta flush.
+//   • Birinchi tarmoq xatosi / timeout / 5xx / 401 / 408 / 429 da to'xtaydi
+//     va eksponensial kutadi: 1 → 2 → 4 → … → 30 daqiqa. Keyingi urinish
+//     vaqti prefs'da (qayta ishga tushganda ham saqlanadi).
+//   • Bir flush'da ko'pi bilan 50 ta item.
+//   • enqueue va flush ro'yxatni reload → o'zgartirish → yozish bilan isolate
+//     ichidagi bitta qulf ostida yangilaydi; tarmoq so'rovlari qulfdan
+//     tashqarida. Flush faqat O'ZI yuborgan/tashlagan id'larni olib tashlaydi —
+//     flush paytida qo'shilgan itemlar yo'qolmaydi.
 
 import 'dart:async';
 import 'dart:convert';
@@ -33,8 +46,13 @@ import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 
 const _prefsKey = 'offline_buffer_v1';
+const _nextAttemptKey = 'offline_buffer.next_attempt_ms';
+const _failuresKey = 'offline_buffer.failures';
 const _maxItems = 1000;
+const _maxItemsPerFlush = 50;
 const Duration _maxAge = Duration(hours: 24);
+const Duration _backoffBase = Duration(minutes: 1);
+const Duration _backoffMax = Duration(minutes: 30);
 
 class _BufferedRequest {
   _BufferedRequest({
@@ -62,17 +80,27 @@ class _BufferedRequest {
   final int createdAt;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'endpoint': endpoint,
-        'method': method,
-        'body': body,
-        'createdAt': createdAt,
-      };
+    'id': id,
+    'endpoint': endpoint,
+    'method': method,
+    'body': body,
+    'createdAt': createdAt,
+  };
 }
 
+/// Bitta item yuborish natijasi.
+enum _Delivery { sent, dropped, retryLater }
+
 class OfflineBuffer {
-  OfflineBuffer({Dio? dio, TokenStorage? tokenStorage})
-      : _tokenStorage = tokenStorage ?? TokenStorage() {
+  /// [clock] va [hasNetwork] — testlar uchun.
+  OfflineBuffer({
+    Dio? dio,
+    TokenStorage? tokenStorage,
+    DateTime Function()? clock,
+    Future<bool> Function()? hasNetwork,
+  }) : _tokenStorage = tokenStorage ?? TokenStorage(),
+       _clock = clock ?? DateTime.now,
+       _hasNetwork = hasNetwork ?? _connectivityHasNetwork {
     // MUHIM: refresh interceptor'li UMUMIY dio (createBackendDio) —
     // avval bu yerda yalang'och dio bor edi (faqat access token header).
     // Access token 15 daqiqada eskiradi: offline'da yig'ilgan butun buffer
@@ -82,18 +110,23 @@ class OfflineBuffer {
 
   late final Dio _dio;
   final TokenStorage _tokenStorage;
+  final DateTime Function() _clock;
+  final Future<bool> Function() _hasNetwork;
   StreamSubscription<List<ConnectivityResult>>? _connSub;
-  bool _flushing = false;
 
-  /// Connectivity listener — internet qaytganda flush boshlanadi.
+  // Isolate ichidagi BARCHA nusxalar uchun umumiy (LocationService va
+  // BackgroundJobs alohida nusxa yaratadi, lekin ro'yxat bitta).
+  static Future<void> _lockTail = Future<void>.value();
+  static Future<void>? _flushInFlight;
+
+  /// Connectivity listener — internet qaytganda flush (kutishsiz).
+  /// Faqat flusher isolate'da chaqiring (BackgroundJobs egasi).
   void start() {
     _connSub?.cancel();
     _connSub = Connectivity().onConnectivityChanged.listen((results) {
-      final hasNet = results.any(
-        (r) => r != ConnectivityResult.none,
-      );
+      final hasNet = results.any((r) => r != ConnectivityResult.none);
       if (hasNet) {
-        unawaited(flush());
+        unawaited(flush(ignoreBackoff: true));
       }
     });
     debugPrint('OfflineBuffer: started, listening connectivity');
@@ -113,135 +146,202 @@ class OfflineBuffer {
     String method = 'POST',
   }) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final items = await _readItems(prefs);
-      final id = _generateId();
-      items.add(_BufferedRequest(
-        id: id,
-        endpoint: endpoint,
-        method: method,
-        body: body,
-        createdAt: DateTime.now().millisecondsSinceEpoch,
-      ));
-      // TTL + max cap
-      final pruned = _prune(items);
-      await prefs.setString(
-        _prefsKey,
-        jsonEncode(pruned.map((r) => r.toJson()).toList()),
-      );
-      debugPrint(
-        'OfflineBuffer: enqueued $method $endpoint (total ${pruned.length})',
-      );
+      final total = await _locked(() async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.reload();
+        final item = _BufferedRequest(
+          id: _generateId(),
+          endpoint: endpoint,
+          method: method,
+          body: body,
+          createdAt: _clock().millisecondsSinceEpoch,
+        );
+        // TTL + max cap
+        final pruned = _prune([..._decode(prefs.getString(_prefsKey)), item]);
+        await _write(prefs, pruned);
+        return pruned.length;
+      });
+      debugPrint('OfflineBuffer: enqueued $method $endpoint (total $total)');
     } catch (e) {
       debugPrint('OfflineBuffer.enqueue xato: $e');
     }
   }
 
-  /// Buffer'dagi barcha itemlarni Backend'ga yuborish.
-  /// Connectivity yoki manual chaqiruv.
-  Future<void> flush() async {
-    if (_flushing) return;
-    _flushing = true;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      var items = await _readItems(prefs);
-      items = _prune(items);
-      if (items.isEmpty) {
-        await prefs.remove(_prefsKey);
-        return;
-      }
-
-      // Connectivity tezkor tekshiruvi
-      final conn = await Connectivity().checkConnectivity();
-      final hasNet =
-          conn.any((r) => r != ConnectivityResult.none);
-      if (!hasNet) {
-        debugPrint('OfflineBuffer.flush: net yo\'q, skip');
-        return;
-      }
-
-      final remaining = <_BufferedRequest>[];
-      for (var i = 0; i < items.length; i++) {
-        final req = items[i];
-        try {
-          await _dio.request<void>(
-            req.endpoint,
-            data: req.body,
-            options: Options(method: req.method),
-          );
-          // OK — discard
-        } on DioException catch (e) {
-          final code = e.response?.statusCode ?? 0;
-          if (code == 401) {
-            // Dio'da refresh interceptor bor — 401 bu yerga yetib kelgani
-            // refresh'ning O'ZI yiqilganini bildiradi (tarmoq/refresh-token).
-            // Bu TRANSIENT: butun qolgan bufferni saqlab, siklni to'xtatamiz
-            // (yuzlab mahkum so'rov otmaslik uchun). Keyingi flush'da qayta.
-            remaining
-              ..add(req)
-              ..addAll(items.skip(i + 1));
-            debugPrint(
-              'OfflineBuffer.flush: 401 (refresh yiqildi) — saqlab to\'xtatildi',
-            );
-            break;
-          }
-          if (code >= 400 && code < 500) {
-            // Haqiqiy validation reject — retry foydasiz → discard.
-            debugPrint(
-              'OfflineBuffer.flush: ${req.endpoint} $code — drop',
-            );
-            continue;
-          }
-          // 5xx/network — keep in buffer for next attempt
-          remaining.add(req);
-        }
-      }
-
-      if (remaining.isEmpty) {
-        await prefs.remove(_prefsKey);
-        debugPrint('OfflineBuffer.flush: all ${items.length} sent');
-      } else {
-        await prefs.setString(
-          _prefsKey,
-          jsonEncode(remaining.map((r) => r.toJson()).toList()),
-        );
-        debugPrint(
-          'OfflineBuffer.flush: ${items.length - remaining.length} sent, '
-          '${remaining.length} kept for retry',
-        );
-      }
-    } catch (e) {
-      debugPrint('OfflineBuffer.flush xato: $e');
-    } finally {
-      _flushing = false;
-    }
+  /// Buffer boshidan ko'pi bilan 50 ta itemni yuboradi. Birinchi vaqtinchalik
+  /// xatoda to'xtaydi va kutish muddatini oshiradi; kutish tugamaguncha
+  /// chaqiruvlar hech narsa yubormaydi ([ignoreBackoff] — internet qaytganda).
+  Future<void> flush({bool ignoreBackoff = false}) {
+    final pending = _flushInFlight;
+    if (pending != null) return pending;
+    final run = _flush(ignoreBackoff: ignoreBackoff);
+    _flushInFlight = run;
+    unawaited(
+      run.whenComplete(() {
+        if (identical(_flushInFlight, run)) _flushInFlight = null;
+      }),
+    );
+    return run;
   }
 
   /// Buffer'dagi item soni (UI uchun).
   Future<int> pendingCount() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final items = await _readItems(prefs);
-      return _prune(items).length;
+      await prefs.reload();
+      return _prune(_decode(prefs.getString(_prefsKey))).length;
     } catch (_) {
       return 0;
     }
   }
 
-  Future<List<_BufferedRequest>> _readItems(SharedPreferences prefs) async {
-    // MUHIM: bg isolate enqueue qiladi, flush boshqa isolate'da bo'lishi
-    // mumkin — har isolate'ning SharedPreferences keshi ALOHIDA. reload'siz
-    // eski (bo'sh) kesh o'qilib, flush'dagi prefs.remove() boshqa isolate
-    // yozgan itemlarni o'chirib yuborardi.
+  Future<void> _flush({required bool ignoreBackoff}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final batch = await _locked(() => _takeBatch(prefs, ignoreBackoff));
+      if (batch.isEmpty) return;
+
+      // Tarmoq yo'q — urinish hisoblanmaydi (kutish oshmaydi).
+      if (!await _hasNetwork()) {
+        debugPrint('OfflineBuffer.flush: net yo\'q, skip');
+        return;
+      }
+
+      final done = <String>{};
+      var stopped = false;
+      for (final req in batch) {
+        final delivery = await _deliver(req);
+        if (delivery == _Delivery.retryLater) {
+          stopped = true;
+          break;
+        }
+        done.add(req.id);
+      }
+
+      await _locked(() async {
+        await prefs.reload();
+        if (done.isNotEmpty) {
+          final current = _decode(prefs.getString(_prefsKey));
+          final remaining = [
+            for (final r in current)
+              if (!done.contains(r.id)) r,
+          ];
+          await _write(prefs, remaining);
+        }
+        await _recordOutcome(prefs, failed: stopped);
+      });
+      debugPrint(
+        'OfflineBuffer.flush: ${done.length} ta tugadi'
+        '${stopped ? ', xato — kutiladi' : ''}',
+      );
+    } catch (e) {
+      debugPrint('OfflineBuffer.flush xato: $e');
+    }
+  }
+
+  /// Kutish tugaganmi tekshiradi, eskirganlarni tozalaydi va navbatdagi
+  /// partiyani qaytaradi (bo'sh — yuboriladigan narsa yo'q).
+  Future<List<_BufferedRequest>> _takeBatch(
+    SharedPreferences prefs,
+    bool ignoreBackoff,
+  ) async {
     await prefs.reload();
-    final raw = prefs.getString(_prefsKey);
+    final nowMs = _clock().millisecondsSinceEpoch;
+    final waitMs = (prefs.getInt(_nextAttemptKey) ?? 0) - nowMs;
+    // Eng uzun kutishdan ham uzoq — soat orqaga surilgan: e'tiborsiz.
+    if (!ignoreBackoff && waitMs > 0 && waitMs <= _backoffMax.inMilliseconds) {
+      return const [];
+    }
+    final items = _decode(prefs.getString(_prefsKey));
+    final fresh = _prune(items);
+    if (fresh.length != items.length) await _write(prefs, fresh);
+    return fresh.take(_maxItemsPerFlush).toList();
+  }
+
+  Future<_Delivery> _deliver(_BufferedRequest req) async {
+    try {
+      await _dio.request<void>(
+        req.endpoint,
+        data: req.body,
+        options: Options(method: req.method),
+      );
+      return _Delivery.sent;
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      // Javob yo'q (tarmoq/timeout), 5xx, 401 (refresh ham yiqildi), 408,
+      // 429 — VAQTINCHA: qolganlari saqlanadi, keyinroq.
+      if (code == null ||
+          code >= 500 ||
+          code == 401 ||
+          code == 408 ||
+          code == 429) {
+        return _Delivery.retryLater;
+      }
+      // Haqiqiy validation reject — retry foydasiz → discard.
+      debugPrint('OfflineBuffer.flush: ${req.endpoint} $code — drop');
+      return _Delivery.dropped;
+    } catch (e) {
+      debugPrint('OfflineBuffer.flush: ${req.endpoint} — $e');
+      return _Delivery.retryLater;
+    }
+  }
+
+  Future<void> _recordOutcome(
+    SharedPreferences prefs, {
+    required bool failed,
+  }) async {
+    if (!failed) {
+      if (prefs.containsKey(_failuresKey)) await prefs.remove(_failuresKey);
+      if (prefs.containsKey(_nextAttemptKey)) {
+        await prefs.remove(_nextAttemptKey);
+      }
+      return;
+    }
+    final failures = (prefs.getInt(_failuresKey) ?? 0) + 1;
+    final next = _clock().add(backoffFor(failures));
+    await prefs.setInt(_failuresKey, failures);
+    await prefs.setInt(_nextAttemptKey, next.millisecondsSinceEpoch);
+  }
+
+  /// [failures] ketma-ket xatodan keyingi kutish: 1, 2, 4, … 30 daqiqa.
+  @visibleForTesting
+  static Duration backoffFor(int failures) {
+    if (failures <= 0) return Duration.zero;
+    final exponent = math.min(failures - 1, 5);
+    final delay = _backoffBase * (1 << exponent);
+    return delay > _backoffMax ? _backoffMax : delay;
+  }
+
+  /// Isolate ichida ro'yxat o'qish-o'zgartirish-yozishni ketma-ket qiladi.
+  static Future<T> _locked<T>(Future<T> Function() action) {
+    final previous = _lockTail;
+    final release = Completer<void>();
+    _lockTail = release.future;
+    return previous.then((_) => action()).whenComplete(release.complete);
+  }
+
+  static Future<void> _write(
+    SharedPreferences prefs,
+    List<_BufferedRequest> items,
+  ) async {
+    if (items.isEmpty) {
+      if (prefs.containsKey(_prefsKey)) await prefs.remove(_prefsKey);
+      return;
+    }
+    await prefs.setString(
+      _prefsKey,
+      jsonEncode(items.map((r) => r.toJson()).toList()),
+    );
+  }
+
+  static List<_BufferedRequest> _decode(String? raw) {
     if (raw == null) return [];
     try {
       final list = jsonDecode(raw) as List<dynamic>;
       return list
-          .map((m) => _BufferedRequest.fromJson(
-                (m as Map).cast<String, dynamic>(),
-              ))
+          .map(
+            (m) =>
+                _BufferedRequest.fromJson((m as Map).cast<String, dynamic>()),
+          )
           .toList();
     } catch (_) {
       return [];
@@ -249,20 +349,34 @@ class OfflineBuffer {
   }
 
   List<_BufferedRequest> _prune(List<_BufferedRequest> items) {
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final now = _clock().millisecondsSinceEpoch;
     final maxAgeMs = _maxAge.inMilliseconds;
-    final fresh = items
-        .where((r) => now - r.createdAt < maxAgeMs)
-        .toList();
+    final fresh = items.where((r) => now - r.createdAt < maxAgeMs).toList();
     if (fresh.length > _maxItems) {
       return fresh.sublist(fresh.length - _maxItems);
     }
     return fresh;
   }
 
+  static Future<bool> _connectivityHasNetwork() async {
+    try {
+      final conn = await Connectivity().checkConnectivity();
+      return conn.any((r) => r != ConnectivityResult.none);
+    } catch (_) {
+      // Noma'lum — urinib ko'ramiz (xato bo'lsa kutish oshadi).
+      return true;
+    }
+  }
+
   String _generateId() {
     final random = math.Random.secure();
     final bytes = List<int>.generate(8, (_) => random.nextInt(256));
     return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  }
+
+  @visibleForTesting
+  static void resetForTest() {
+    _lockTail = Future<void>.value();
+    _flushInFlight = null;
   }
 }

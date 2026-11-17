@@ -108,8 +108,7 @@
 # obfuskatsiyani 3% ga tushirardi. Ilovaning o'z sinflari yuqoridagi
 # `com.farzandim.farzandim_child.**` qoidasi bilan saqlanadi.
 
-# ── Audio (fon audiokitob) — MediaBrowserService reflection ishlatadi ──
--keep class com.ryanheise.audioservice.** { *; }
+# ── Audio (just_audio) — audio_service 1.0.20 da olib tashlandi ──
 -keep class com.ryanheise.just_audio.** { *; }
 -dontwarn com.ryanheise.**
 -keep class androidx.media.** { *; }

@@ -1,0 +1,487 @@
+{
+  "id": "b2de6f8f-48b3-4099-b9b5-f0dc2691965c",
+  "type": "wellbeing",
+  "title": {
+    "uz": "Kayfiyat va farovonlik",
+    "ru": "Настроение и самочувствие",
+    "en": "Mood and wellbeing"
+  },
+  "ageGroup": "10-12",
+  "day": "2026-10-21",
+  "status": "COMPLETED",
+  "startedAt": "2026-10-21T04:05:52.197Z",
+  "completedAt": "2026-10-21T04:05:52.251Z",
+  "total": 8,
+  "answeredCount": 8,
+  "questions": [
+    {
+      "id": "89cabaa8-a187-5ef7-976c-f5740adaef8a",
+      "externalId": "PARVOZ-Q137",
+      "category": "safety",
+      "categoryName": {
+        "uz": "Xavfsizlik va bullying",
+        "ru": "Безопасность и буллинг",
+        "en": "Safety and bullying"
+      },
+      "text": {
+        "uz": "Notanish havola yoki faylni ochish xavfli bo‘lishi mumkinligini bilasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "c4050398-af7c-54d4-a450-f89d3c5e82d8",
+      "externalId": "PARVOZ-Q138",
+      "category": "safety",
+      "categoryName": {
+        "uz": "Xavfsizlik va bullying",
+        "ru": "Безопасность и буллинг",
+        "en": "Safety and bullying"
+      },
+      "text": {
+        "uz": "Shaxsiy ma’lumotlarni internetda bermaslikka e’tibor berasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "1ca947b8-5358-5172-970f-d68b8043a915",
+      "externalId": "PARVOZ-Q133",
+      "category": "safety",
+      "categoryName": {
+        "uz": "Xavfsizlik va bullying",
+        "ru": "Безопасность и буллинг",
+        "en": "Safety and bullying"
+      },
+      "text": {
+        "uz": "Maktabda kimdir seni muntazam mazax qilsa, kimga murojaat qilishni bilasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "e140507d-5972-5091-a69d-a1a9ac269b8a",
+      "externalId": "PARVOZ-Q161",
+      "category": "wellbeing",
+      "categoryName": {
+        "uz": "Ruhiy farovonlik va stress",
+        "ru": "Эмоциональное благополучие и стресс",
+        "en": "Wellbeing and stress"
+      },
+      "text": {
+        "uz": "Uyqu va dam olish uchun yetarli vaqt topa olasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "19b20ca1-0fa0-58ec-a8db-6fa5b1ed3dc0",
+      "externalId": "PARVOZ-Q160",
+      "category": "wellbeing",
+      "categoryName": {
+        "uz": "Ruhiy farovonlik va stress",
+        "ru": "Эмоциональное благополучие и стресс",
+        "en": "Wellbeing and stress"
+      },
+      "text": {
+        "uz": "Maktabdagi vazifalar seni haddan tashqari bosim ostida qoldiradimi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "7bd71ba0-c146-5824-aba4-063b09a20ed6",
+      "externalId": "PARVOZ-Q157",
+      "category": "wellbeing",
+      "categoryName": {
+        "uz": "Ruhiy farovonlik va stress",
+        "ru": "Эмоциональное благополучие и стресс",
+        "en": "Wellbeing and stress"
+      },
+      "text": {
+        "uz": "Oxirgi paytlarda ko‘p narsadan xavotir olayotganingni sezasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "4746cd32-cd75-55bc-bff5-eb59602849a0",
+      "externalId": "PARVOZ-Q159",
+      "category": "wellbeing",
+      "categoryName": {
+        "uz": "Ruhiy farovonlik va stress",
+        "ru": "Эмоциональное благополучие и стресс",
+        "en": "Wellbeing and stress"
+      },
+      "text": {
+        "uz": "Seni tinglaydigan ishonchli odam bormi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "6961c0bf-3744-5dee-acc5-dcb4707a7b7b",
+      "externalId": "PARVOZ-Q158",
+      "category": "wellbeing",
+      "categoryName": {
+        "uz": "Ruhiy farovonlik va stress",
+        "ru": "Эмоциональное благополучие и стресс",
+        "en": "Wellbeing and stress"
+      },
+      "text": {
+        "uz": "Xafa bo‘lganingda o‘zingni tinchlantirish usulini bilasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    }
+  ],
+  "answers": [
+    {
+      "questionId": "89cabaa8-a187-5ef7-976c-f5740adaef8a",
+      "value": null,
+      "text": null
+    },
+    {
+      "questionId": "c4050398-af7c-54d4-a450-f89d3c5e82d8",
+      "value": null,
+      "text": null
+    },
+    {
+      "questionId": "1ca947b8-5358-5172-970f-d68b8043a915",
+      "value": null,
+      "text": null
+    },
+    {
+      "questionId": "e140507d-5972-5091-a69d-a1a9ac269b8a",
+      "value": null,
+      "text": null
+    },
+    {
+      "questionId": "19b20ca1-0fa0-58ec-a8db-6fa5b1ed3dc0",
+      "value": null,
+      "text": null
+    },
+    {
+      "questionId": "7bd71ba0-c146-5824-aba4-063b09a20ed6",
+      "value": null,
+      "text": null
+    },
+    {
+      "questionId": "4746cd32-cd75-55bc-bff5-eb59602849a0",
+      "value": null,
+      "text": null
+    },
+    {
+      "questionId": "6961c0bf-3744-5dee-acc5-dcb4707a7b7b",
+      "value": null,
+      "text": null
+    }
+  ],
+  "result": {
+    "answered": 8,
+    "total": 8,
+    "categories": [],
+    "interests": null,
+    "insights": {
+      "strengths": [],
+      "interests": [],
+      "likedDirections": [],
+      "triedDirections": [],
+      "growthAreas": [],
+      "support": {
+        "level": "watch",
+        "message": {
+          "uz": "Ba’zan hammaga qiyin bo‘ladi — bu tabiiy. Agar biror narsa seni bezovta qilayotgan bo‘lsa, ishonchli kattalardan biri — ota-onang, o‘qituvching yoki maktab psixologi bilan gaplashib ko‘r. Xavf his qilsang, ilovadagi SOS tugmasini bos.",
+          "ru": "Иногда всем бывает трудно — это нормально. Если тебя что-то беспокоит, поговори со взрослым, которому доверяешь: с родителями, учителем или школьным психологом. Если чувствуешь опасность, нажми кнопку SOS в приложении.",
+          "en": "Everyone has hard times sometimes — that is okay. If something is bothering you, talk to an adult you trust: a parent, a teacher or the school psychologist. If you feel in danger, press the SOS button in the app."
+        }
+      },
+      "next": [
+        {
+          "kind": "take_test",
+          "testType": "career",
+          "externalId": null,
+          "title": {
+            "uz": "Kasbiy qiziqishlar testi",
+            "ru": "Тест профессиональных интересов",
+            "en": "Career interests test"
+          },
+          "body": {
+            "uz": "Qiziqishlar profilini to‘ldirish uchun “Kasbiy qiziqishlar” testini yechish tavsiya etiladi.",
+            "ru": "Чтобы дополнить профиль интересов, рекомендуем пройти тест «Профессиональные интересы».",
+            "en": "Take the “Career interests” test to complete the interests profile."
+          }
+        }
+      ]
+    },
+    "disclaimer": {
+      "uz": "Bu natijalar — yo‘nalish tanlashga yordam beruvchi tavsiya, qat’iy hukm emas. Qiziqishlar vaqt bilan o‘zgaradi, turli faoliyatlarni sinab ko‘rish foydali.",
+      "ru": "Эти результаты — подсказка для выбора направления, а не окончательный вывод. Интересы меняются со временем, полезно пробовать разное.",
+      "en": "These results are a hint for exploring directions, not a final verdict. Interests change over time, so trying different things helps."
+    }
+  }
+}

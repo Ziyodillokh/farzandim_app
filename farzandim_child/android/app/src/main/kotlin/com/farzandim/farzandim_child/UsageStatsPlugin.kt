@@ -1,5 +1,6 @@
 package com.farzandim.farzandim_child
 
+import android.Manifest
 import android.app.AppOpsManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
@@ -24,10 +25,19 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.StandardMethodCodec
 import java.io.ByteArrayOutputStream
+import java.util.concurrent.ConcurrentHashMap
 
 class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
+    private companion object {
+        const val FLUTTER_PREFS = "FlutterSharedPreferences"
+    }
+
     private lateinit var channel: MethodChannel
     private lateinit var context: Context
+
+    // Paket → ilova nomi (ilova nomi deyarli o'zgarmaydi; fon sync har safar
+    // PackageManager'ga bormasin).
+    private val labelCache = ConcurrentHashMap<String, String>()
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         context = binding.applicationContext
@@ -69,7 +79,10 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
                 }
                 "getUsageStats" -> {
                     val days = call.argument<Int>("days") ?: 1
-                    result.success(getUsageStats(days))
+                    // includeIcons=false — fon sync (har ~5 daqiqa): ikonka
+                    // chizish/PNG/base64 umuman qilinmaydi. Default true — eski xulq.
+                    val includeIcons = call.argument<Boolean>("includeIcons") ?: true
+                    result.success(getUsageStats(days, includeIcons))
                 }
                 "getInstalledApps" -> {
                     result.success(getInstalledApps())
@@ -227,32 +240,18 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
                     context.packageName,
                 )
             }
-            // MODE_ALLOWED — aniq ruxsat bor. Aks holda (MODE_DEFAULT/IGNORED)
-            // ba'zi OEM'lar (Samsung One UI) ruxsat BERILGANDA ham MODE_ALLOWED
-            // bermaydi — AppOps'ga ishonmay, HAQIQIY usage so'rovi bilan
-            // aniqlaymiz: ma'lumot qaytsa ruxsat amalda bor.
-            if (mode == AppOpsManager.MODE_ALLOWED) true else hasUsageDataAccess()
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    /**
-     * AppOps noaniq (MODE_DEFAULT/IGNORED) bo'lganda ruxsatni QAT'IY aniqlaydi:
-     * oxirgi 24 soat HODISALARINI so'raydi. `queryEvents` — INTERVAL_DAILY
-     * agregatsiyasidan farqli — ruxsat BERILGAN zahoti (yangi grant'da ham)
-     * hodisalarni darhol qaytaradi (agregat bucket bir kungacha bo'sh bo'lishi
-     * mumkin edi → "yig'ilmoqda" darhol grant'dan keyin). Ruxsat yo'q → bo'sh
-     * (istisnosiz). Samsung kabi AppOps MODE_ALLOWED bermaydigan qurilmalarda
-     * ham to'g'ri ishlaydi.
-     */
-    private fun hasUsageDataAccess(): Boolean {
-        return try {
-            val usm =
-                context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-            val now = System.currentTimeMillis()
-            val events = usm.queryEvents(now - 24L * 60L * 60L * 1000L, now)
-            events != null && events.hasNextEvent()
+            // O(1) — tizimning o'z qoidasi (UsageStatsService.hasPermission):
+            // MODE_ALLOWED — ruxsat bor; MODE_DEFAULT — PACKAGE_USAGE_STATS
+            // ruxsati hal qiladi; qolgani (IGNORED/ERRORED) — yo'q. Avvalgi
+            // 24 soatlik hodisa so'rovi har daqiqada qimmat edi
+            // (bat-native-usage-icons-every-minute).
+            when (mode) {
+                AppOpsManager.MODE_ALLOWED -> true
+                AppOpsManager.MODE_DEFAULT ->
+                    context.checkSelfPermission(Manifest.permission.PACKAGE_USAGE_STATS) ==
+                        PackageManager.PERMISSION_GRANTED
+                else -> false
+            }
         } catch (e: Exception) {
             false
         }
@@ -308,21 +307,15 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     /**
-     * Bola foydalanish statistikasi — bugungi (kalendar kun 00:00 → hozir)
-     * yoki oxirgi N kun.
-     *
-     * EVENT-BASED — Android "Raqamli Salomatlik" bilan bir xil. Har paketning
-     * ACTIVITY_RESUMED → ACTIVITY_PAUSED/STOPPED sessiyalari yig'iladi: ya'ni
-     * FAQAT foydalanuvchi ekranni yoqib, ilovani ochib, ekranda ko'rgan vaqt.
-     *
-     * Nega aggregate (totalTimeInForeground) emas:
-     *  - Fon-service ilovalar (Internet Speed Meter, musiqa pleyer, navigator)
-     *    hech qachon activity ochmaydi → 0 (hisoblanmaydi). Avval ular ham
-     *    "ekran vaqti"ga kirib ketardi.
-     *  - Ekran o'chsa, foreground activity PAUSED bo'ladi → sessiya yopiladi,
-     *    ekran o'chiq vaqt qo'shilmaydi.
+     * Bola foydalanish statistikasi — bugungi (Toshkent 00:00 → hozir) yoki
+     * oxirgi N kun. EVENT-BASED ("Raqamli Salomatlik" kabi — faqat ekranda
+     * ko'rilgan vaqt; fon-service ilovalar hisoblanmaydi). Hisob
+     * [UsageAccumulator] — limit (RestrictionService) bilan AYNAN bir xil:
+     * splash/ichki ekran o'tishlari vaqtni yo'qotmaydi (fn-usage-stopped-
+     * event-undercount), yarim tundan oldin ochilgan sessiya ham hisoblanadi.
+     * [includeIcons] false — ikonka umuman chizilmaydi; nomlar keshdan.
      */
-    private fun getUsageStats(days: Int): List<Map<String, Any>> {
+    private fun getUsageStats(days: Int, includeIcons: Boolean): List<Map<String, Any>> {
         if (!hasUsageStatsPermission()) return emptyList()
 
         val usageStatsManager =
@@ -330,125 +323,52 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
 
         val endTime = System.currentTimeMillis()
         val startTime: Long = if (days <= 1) {
-            // Bugun: Toshkent (Asia/Tashkent, UTC+5) kun boshidan (00:00)
-            // hozirgacha. Backend va ota-ona ilovasi "bugun"ni Toshkent
-            // bo'yicha hisoblaydi — bir xil chegara enforcement (Restriction
-            // Service) bilan ham mos kelishi uchun.
-            val cal = java.util.Calendar.getInstance(
-                java.util.TimeZone.getTimeZone("Asia/Tashkent"),
-            ).apply {
-                set(java.util.Calendar.HOUR_OF_DAY, 0)
-                set(java.util.Calendar.MINUTE, 0)
-                set(java.util.Calendar.SECOND, 0)
-                set(java.util.Calendar.MILLISECOND, 0)
-            }
-            cal.timeInMillis
+            // Bugun: Toshkent kun boshi, ishonchli vaqt bo'yicha (backend,
+            // ota-ona ilovasi va enforcement bilan bir xil chegara).
+            val prefs = context.getSharedPreferences(FLUTTER_PREFS, Context.MODE_PRIVATE)
+            val offset = UsageEventsReader.clockOffsetMs(prefs)
+            UsageEventsReader.todayStartWall(endTime + offset, endTime)
         } else {
             endTime - (days * 24L * 60L * 60L * 1000L)
         }
 
-        val totals = HashMap<String, Long>()
-        val lastUsed = HashMap<String, Long>()
-
-        // SINGLE-CURRENT-FOREGROUND state machine. OS foreground'da bir vaqtda
-        // FAQAT bitta ilova bo'ladi. Yangi ACTIVITY_RESUMED kelganda oldingi
-        // ilovaning sessiyasi o'sha vaqtda yopiladi (parallel hisob yo'q).
-        // Ekran o'chsa/qulflansa sessiya yopiladi va ekran o'chiq vaqt
-        // hisoblanmaydi. Bu — orphan RESUMED (PAUSED kelmagan) butun kunni
-        // qo'shib yuborgan "21 soat" xatosini va fon ilovalarni bartaraf etadi.
-        var currentPkg: String? = null
-        var currentStart = 0L
-        var screenInteractive = true // oyna boshida yoniq deb hisoblaymiz
-
-        fun closeCurrent(at: Long) {
-            val pkg = currentPkg ?: return
-            if (at > currentStart) {
-                totals[pkg] = (totals[pkg] ?: 0L) + (at - currentStart)
-                lastUsed[pkg] = at
-            }
-            currentPkg = null
-            currentStart = 0L
-        }
-
-        val events = usageStatsManager.queryEvents(startTime, endTime)
-        val ev = UsageEvents.Event()
-        while (events.hasNextEvent()) {
-            events.getNextEvent(ev)
-            val t = ev.timeStamp
-            when (ev.eventType) {
-                UsageEvents.Event.ACTIVITY_RESUMED -> {
-                    val pkg = ev.packageName ?: continue
-                    // Foreground activity RESUME = ekran ochiq, foydalanuvchi
-                    // ilovaga qarab turibdi (SELF-HEAL). Avval `screenInteractive`
-                    // latch bo'lib qotib qolar edi — Samsung/Xiaomi KEYGUARD_HIDDEN
-                    // yubormasa yoki re-enable timestamp startTime'dan oldin bo'lsa
-                    // flag abadiy false qolib, BUTUN ro'yxat bo'shab ketardi
-                    // ("ma'lumotlar yig'ilmoqda" abadiy). Endi haqiqiy resume
-                    // flag'ni tiklaydi.
-                    screenInteractive = true
-                    if (currentPkg != pkg) {
-                        closeCurrent(t) // oldingi foreground ilovani yopamiz
-                        currentPkg = pkg
-                        currentStart = t
-                    }
-                }
-                UsageEvents.Event.ACTIVITY_PAUSED,
-                UsageEvents.Event.ACTIVITY_STOPPED -> {
-                    if (currentPkg == ev.packageName) {
-                        closeCurrent(t)
-                    }
-                }
-                UsageEvents.Event.SCREEN_NON_INTERACTIVE,
-                UsageEvents.Event.DEVICE_SHUTDOWN -> {
-                    // FAQAT haqiqiy ekran o'chishi sessiyani yopadi. KEYGUARD_SHOWN
-                    // (qulf ekrani) ekran YONIQ bo'lsa ham chiqadi (uyg'otish,
-                    // bildirishnoma peek, AOD) va ba'zi OEM'larda KEYGUARD_HIDDEN
-                    // ishonchsiz — shuning uchun keyguard hisobga OLINMAYDI (aks
-                    // holda flag noto'g'ri false bo'lib ro'yxat bo'shardi).
-                    closeCurrent(t)
-                    screenInteractive = false
-                }
-                UsageEvents.Event.SCREEN_INTERACTIVE -> {
-                    screenInteractive = true
-                    // Bu yerda avtomatik sessiya ochmaymiz — keyingi haqiqiy
-                    // ACTIVITY_RESUMED kutiladi.
-                }
-            }
-        }
-        // Hali ochiq sessiyani FAQAT ekran yoniq bo'lsa hozirgacha yopamiz.
-        // Ekran o'chgan bo'lsa currentPkg allaqachon null — butun kun qo'shilmaydi.
-        if (screenInteractive) {
-            closeCurrent(endTime)
-        }
-
+        val acc = UsageEventsReader.accumulate(usageStatsManager, startTime, endTime)
         val pm = context.packageManager
-        return totals.entries
+        return acc.totals.entries
             .filter { it.value > 0L }
             .map { (pkg, totalMs) ->
-                var appName = pkg
-                var iconBase64: String? = null
-
-                try {
-                    val appInfo = pm.getApplicationInfo(pkg, 0)
-                    appName = pm.getApplicationLabel(appInfo).toString()
-                    iconBase64 = drawableToBase64(pm.getApplicationIcon(appInfo))
-                } catch (_: PackageManager.NameNotFoundException) {
-                    // Package endi yo'q — packageName fallback.
-                }
-
                 val map = mutableMapOf<String, Any>(
                     "packageName" to pkg,
-                    "appName" to appName,
+                    "appName" to appName(pm, pkg),
                     "totalTimeMs" to totalMs,
-                    "lastTimeUsed" to (lastUsed[pkg] ?: endTime),
+                    "lastTimeUsed" to (acc.lastUsed(pkg) ?: endTime),
                 )
-                if (iconBase64 != null) {
-                    map["iconBase64"] = iconBase64
+                if (includeIcons) {
+                    iconBase64(pm, pkg)?.let { map["iconBase64"] = it }
                 }
                 map
             }
             .sortedByDescending { it["totalTimeMs"] as Long }
     }
+
+    /** Ilova nomi — keshdan (har sync'da PackageManager so'ralmasin). */
+    private fun appName(pm: PackageManager, pkg: String): String {
+        labelCache[pkg]?.let { return it }
+        return try {
+            val name = pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
+            labelCache[pkg] = name
+            name
+        } catch (_: PackageManager.NameNotFoundException) {
+            pkg // Paket endi yo'q — packageName fallback (keshlanmaydi).
+        }
+    }
+
+    private fun iconBase64(pm: PackageManager, pkg: String): String? =
+        try {
+            drawableToBase64(pm.getApplicationIcon(pm.getApplicationInfo(pkg, 0)))
+        } catch (_: PackageManager.NameNotFoundException) {
+            null
+        }
 
     /**
      * Ilova O'YIN'mi. Ikkala signalni ham tekshiramiz (kengroq, ishonchli):

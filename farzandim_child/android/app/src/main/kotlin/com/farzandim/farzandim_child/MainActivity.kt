@@ -4,6 +4,7 @@ import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import android.os.SystemClock
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -13,6 +14,19 @@ import io.flutter.plugin.common.MethodChannel
 // so'rovi (`health` paketi) FragmentActivity talab qiladi. Qolgan hamma narsa
 // bir xil ishlaydi (configureFlutterEngine / onNewIntent / startActivity).
 class MainActivity : FlutterFragmentActivity() {
+    companion object {
+        /**
+         * Parvoz ekrani ko'rinib turibdimi (onResume..onPause). FCM xizmati
+         * FGS'ga ketadigan push'larni Flutter handler'iga faqat shunda uzatadi.
+         */
+        @Volatile
+        var isVisible: Boolean = false
+            private set
+
+        private const val UNLOCK_EXTRA = "unlock_request_package"
+        private const val OEM_CHANNEL = "farzandim/oem_background"
+    }
+
     private val unlockChannelName = "farzandim_child/unlock"
     private var unlockChannel: MethodChannel? = null
 
@@ -37,6 +51,25 @@ class MainActivity : FlutterFragmentActivity() {
     // shu Activity'ni `unlock_request_package` extra bilan ochadi. Flutter
     // tayyor bo'lguncha shu yerda saqlanib turadi (consumePendingUnlock).
     private var pendingUnlockPackage: String? = null
+
+    // Activity saqlangan holatdan tiklandi (jarayon o'lib qayta yaratildi) —
+    // boshlang'ich intent'dagi "Ruxsat so'rash" allaqachon eskirgan.
+    private var isRestoredLaunch = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        isRestoredLaunch = savedInstanceState != null
+        super.onCreate(savedInstanceState)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        isVisible = true
+    }
+
+    override fun onPause() {
+        isVisible = false
+        super.onPause()
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -121,8 +154,31 @@ class MainActivity : FlutterFragmentActivity() {
             }
         }
 
+        // OEM "avtomatik ishga tushish" / batareya sozlamalari (Xiaomi, Tecno,
+        // Honor, Oppo, Vivo, Samsung...) — kill-native-no-oem-autostart.
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            OEM_CHANNEL,
+        ).setMethodCallHandler { call, result ->
+            handleOemCall(call.method, result)
+        }
+
         // Cold start — Activity'ni ochgan intent'dagi extra'ni o'qiymiz.
-        readUnlockExtra(intent)
+        readUnlockExtra(intent, isNewIntent = false)
+    }
+
+    private fun handleOemCall(method: String, result: MethodChannel.Result) {
+        try {
+            when (method) {
+                "info" -> result.success(OemBackgroundHelper.info(this))
+                "openAutostart" -> result.success(OemBackgroundHelper.openAutostart(this))
+                "openBatterySettings" ->
+                    result.success(OemBackgroundHelper.openBatterySettings(this))
+                else -> result.notImplemented()
+            }
+        } catch (e: Exception) {
+            result.error("OEM_BACKGROUND", e.message, null)
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -140,18 +196,33 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        readUnlockExtra(intent)
-        // Flutter allaqachon tirik — darhol xabar beramiz.
+        readUnlockExtra(intent, isNewIntent = true)
+        // Flutter allaqachon tirik — darhol xabar beramiz. Engine hali
+        // sozlanmagan bo'lsa (kanal yo'q) — so'rov saqlanib qoladi va Dart uni
+        // consumePendingUnlock orqali oladi (avval bu holatda yo'qolardi).
+        val channel = unlockChannel ?: return
         pendingUnlockPackage?.let { pkg ->
-            unlockChannel?.invokeMethod("onUnlockRequested", pkg)
+            channel.invokeMethod("onUnlockRequested", pkg)
             pendingUnlockPackage = null
         }
     }
 
-    private fun readUnlockExtra(intent: Intent?) {
-        val pkg = intent?.getStringExtra("unlock_request_package")
-        if (!pkg.isNullOrEmpty()) {
-            pendingUnlockPackage = pkg
-        }
+    /**
+     * "Ruxsat so'rash" paketini intent'dan BIR MARTA o'qiydi: o'qilgach extra
+     * olib tashlanadi — Activity qayta yaratilsa eski so'rov takrorlanmaydi.
+     * Tiklangan / recents'dan ochilgan Activity'ning boshlang'ich intent'i
+     * eskirgan deb hisoblanadi (fn-unlock-request-lost-cold-start).
+     */
+    private fun readUnlockExtra(intent: Intent?, isNewIntent: Boolean) {
+        if (intent == null) return
+        val pkg = intent.getStringExtra(UNLOCK_EXTRA)
+        intent.removeExtra(UNLOCK_EXTRA)
+        if (pkg.isNullOrEmpty()) return
+        if (!isNewIntent && isStaleLaunch(intent)) return
+        pendingUnlockPackage = pkg
     }
+
+    private fun isStaleLaunch(intent: Intent): Boolean =
+        isRestoredLaunch ||
+            (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0
 }

@@ -17,19 +17,16 @@ import 'package:farzandim_child/features/schedules/data/models/schedule.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final backendRoutineRepositoryProvider =
-    Provider<BackendRoutineRepository>((ref) {
+final backendRoutineRepositoryProvider = Provider<BackendRoutineRepository>((
+  ref,
+) {
   return BackendRoutineRepository(dio: ref.watch(dioClientProvider));
 });
 
 /// Bugungi kun rejasi — Backend `/today` endpoint qaytaradi.
 @immutable
 class TodayRoutines {
-  const TodayRoutines({
-    required this.today,
-    this.current,
-    this.next,
-  });
+  const TodayRoutines({required this.today, this.current, this.next});
 
   factory TodayRoutines.fromBackendJson(Map<String, dynamic> json) {
     final todayList = (json['today'] as List?) ?? const [];
@@ -75,8 +72,7 @@ class BackendRoutineRepository {
       if (data == null) return null;
       final list = data['routines'] as List<dynamic>? ?? const [];
       return list
-          .map((e) =>
-              Schedule.fromBackendJson(e as Map<String, dynamic>))
+          .map((e) => Schedule.fromBackendJson(e as Map<String, dynamic>))
           .toList();
     } on DioException catch (e) {
       debugPrint('BackendRoutineRepository.getRoutines: $e');

@@ -2,19 +2,34 @@
 // DioClient — Backend REST API uchun HTTP client (Sprint 4.4)
 // ─────────────────────────────────────────────────────────────────────
 //
-// 3 ta interceptor:
-//   1. AuthInterceptor — har request'ga Bearer accessToken header
-//   2. RefreshInterceptor — 401 javobida /api/auth/refresh + retry
-//   3. LoggingInterceptor — debug build'da request/response log
+// Interceptor'lar (tartibda):
+//   1. ClockSyncInterceptor — `Date` sarlavhasidan server vaqti (TrustedClock)
+//   2. AuthHeaderInterceptor — har request'ga Bearer accessToken (xotiradan)
+//   3. SessionRefreshInterceptor — 401 → tiklash/refresh → bir marta retry
+//   4. LoggingInterceptor — debug build'da request/response log
+//
+// 1.0.20: `createBackendDio` har chaqiruvda YANGI Dio qurmaydi — isolate
+// bo'yicha akkaunt (token prefiksi) uchun BITTA umumiy Dio qaytaradi:
+//   • refresh isolate ichida bitta (single-flight) — avval ~10 ta Dio bir
+//     vaqtda bitta refresh token bilan /auth/refresh qilib sessiyani
+//     o'chirardi (fn-refresh-race-logout);
+//   • TLS ulanishlari qayta ishlatiladi (shared_dio_io.dart).
 //
 // Pairing endpoint (`/auth/child-pair`) auth'siz — interceptor skip qiladi.
 
 // ignore_for_file: public_member_api_docs
 
 import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/config/env_config.dart';
+import 'package:farzandim_child/core/network/auth_interceptors.dart';
+import 'package:farzandim_child/core/network/clock_sync_interceptor.dart';
+import 'package:farzandim_child/core/network/shared_dio_stub.dart'
+    if (dart.library.io) 'package:farzandim_child/core/network/shared_dio_io.dart';
+import 'package:farzandim_child/core/network/token_refresher.dart';
+import 'package:farzandim_child/core/time/trusted_clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,13 +37,25 @@ final dioClientProvider = Provider<Dio>((ref) {
   return createBackendDio(ref.watch(tokenStorageProvider));
 });
 
-/// Backend Dio yaratish — auth (Bearer) + refresh (401 → /auth/refresh + retry)
-/// interceptorlari bilan. UI isolate (provider) VA background isolate
-/// (DeviceInfoService/LocationService) shu funksiyani ishlatadi, shunda
-/// 15-daqiqalik access token tugasa avtomatik yangilanadi (heartbeat/location
-/// to'xtab qolmaydi). Riverpod'siz, har joyda ishlaydi.
+/// Isolate bo'yicha umumiy Dio'lar: kalit — baseUrl + akkaunt (token
+/// prefiksi). Mehmon akkaunt o'z tokeni bilan alohida Dio oladi.
+final Map<String, Dio> _sharedDios = {};
+
+/// Backend Dio — auth (Bearer) + refresh (401 → tiklash + retry). UI isolate
+/// (provider) VA background isolate (servislar) shu funksiyani ishlatadi.
+/// Shu isolate va akkaunt uchun HAR DOIM bir xil nusxa qaytadi; uning
+/// `close()` i hech narsa qilmaydi (boshqa servislar ham ishlatadi).
 Dio createBackendDio(TokenStorage tokenStorage) {
-  final dio = Dio(
+  unawaited(TrustedClock.ensureLoaded());
+  final key = '${EnvConfig.apiUrl}|${tokenStorage.keyPrefix}';
+  return _sharedDios.putIfAbsent(key, () => buildBackendDio(tokenStorage));
+}
+
+/// Umumiy ro'yxatga QO'SHILMAYDIGAN yangi backend Dio — testlar ikki
+/// isolate'ni (har biri o'z refresh holati bilan) taqlid qilishi uchun.
+@visibleForTesting
+Dio buildBackendDio(TokenStorage tokenStorage) {
+  final dio = createSharedDio(
     BaseOptions(
       baseUrl: EnvConfig.apiUrl,
       connectTimeout: const Duration(seconds: 10),
@@ -42,156 +69,25 @@ Dio createBackendDio(TokenStorage tokenStorage) {
           status != null && status >= 200 && status < 300,
     ),
   );
-
-  dio.interceptors.add(_AuthInterceptor(tokenStorage));
-  dio.interceptors.add(
-    _RefreshInterceptor(dio: dio, tokenStorage: tokenStorage),
-  );
-  if (kDebugMode) {
-    dio.interceptors.add(_LoggingInterceptor());
-  }
-
+  dio.interceptors.addAll([
+    ClockSyncInterceptor(),
+    AuthHeaderInterceptor(tokenStorage),
+    SessionRefreshInterceptor(
+      dio: dio,
+      refresher: TokenRefresher(storage: tokenStorage, dio: dio),
+    ),
+    if (kDebugMode) _LoggingInterceptor(),
+  ]);
   return dio;
 }
 
-class _AuthInterceptor extends Interceptor {
-  _AuthInterceptor(this._storage);
-  final TokenStorage _storage;
-
-  @override
-  Future<void> onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) async {
-    // Skip: pair (auth'siz) va refresh endpoint'i
-    if (options.path.contains('/auth/refresh') ||
-        options.path.contains('/auth/child-pair')) {
-      handler.next(options);
-      return;
-    }
-    final token = await _storage.readAccessToken();
-    if (token != null && token.isNotEmpty) {
-      options.headers['Authorization'] = 'Bearer $token';
-    }
-    handler.next(options);
-  }
-}
-
-class _RefreshInterceptor extends Interceptor {
-  _RefreshInterceptor({required this.dio, required this.tokenStorage});
-
-  final Dio dio;
-  final TokenStorage tokenStorage;
-  Completer<String?>? _refreshCompleter;
-
-  @override
-  Future<void> onError(
-    DioException err,
-    ErrorInterceptorHandler handler,
-  ) async {
-    if (err.response?.statusCode != 401 ||
-        err.requestOptions.path.contains('/auth/refresh') ||
-        err.requestOptions.path.contains('/auth/child-pair') ||
-        err.requestOptions.extra['_retried'] == true) {
-      handler.next(err);
-      return;
-    }
-
-    try {
-      final newAccess = await _refreshAccessToken();
-      if (newAccess == null) {
-        handler.next(err);
-        return;
-      }
-      final retryOptions = err.requestOptions
-        ..headers['Authorization'] = 'Bearer $newAccess'
-        ..extra['_retried'] = true;
-      final response = await dio.fetch<dynamic>(retryOptions);
-      handler.resolve(response);
-    } catch (_) {
-      handler.next(err);
-    }
-  }
-
-  Future<String?> _refreshAccessToken() async {
-    if (_refreshCompleter != null) return _refreshCompleter!.future;
-
-    final completer = Completer<String?>();
-    _refreshCompleter = completer;
-
-    // Biz yuborgan refresh token — poyga tekshiruvi uchun `catch`da ham
-    // kerak, shuning uchun `try`'dan TASHQARIDA e'lon qilinadi.
-    String? refreshToken;
-    try {
-      refreshToken = await tokenStorage.readRefreshToken();
-      if (refreshToken == null || refreshToken.isEmpty) {
-        completer.complete(null);
-        return null;
-      }
-      final response = await dio.post<Map<String, dynamic>>(
-        '/auth/refresh',
-        data: {'refreshToken': refreshToken},
-      );
-      final data = response.data;
-      if (data == null) {
-        completer.complete(null);
-        return null;
-      }
-      final newAccess = data['accessToken'] as String?;
-      final newRefresh = data['refreshToken'] as String?;
-      if (newAccess == null) {
-        completer.complete(null);
-        return null;
-      }
-      await tokenStorage.updateAccessToken(newAccess);
-      if (newRefresh != null) {
-        await tokenStorage.updateRefreshToken(newRefresh);
-      }
-      completer.complete(newAccess);
-      return newAccess;
-    } on DioException catch (e) {
-      // MUHIM: tokenlarni FAQAT refresh endpoint'i ANIQ 401/403 qaytarganda
-      // o'chiramiz (refresh token haqiqatan bekor/eskirgan). Timeout, DNS,
-      // backend deploy paytidagi 502/503 kabi VAQTINCHA xatolarda clear
-      // qilinsa — 30-kunlik refresh token abadiy yo'qoladi, barcha POST'lar
-      // (lokatsiya/heartbeat) doimiy 401 bo'ladi va ota-onada bola
-      // "Ulanmagan/Aloqa uzildi" bo'lib qoladi. Keyingi 401'da refresh
-      // avtomatik qayta uriniladi (finally _refreshCompleter=null).
-      final code = e.response?.statusCode;
-      if (code == 401 || code == 403) {
-        // ISOLATE POYGASI: UI va background isolate ALOHIDA Dio bilan bir
-        // vaqtda refresh qilishi mumkin. Boshqa isolate allaqachon rotatsiya
-        // qilib storage'ga YANGI token yozgan bo'lsa — bizning token eskirgan,
-        // lekin SESSIYA TIRIK. Storage'dagi token biz yuborgandan farq qilsa,
-        // clear QILMAYMIZ; yangi access token bilan davom etamiz (bola o'zidan
-        // o'zi chiqib ketmasin).
-        final latest = await tokenStorage.readRefreshToken();
-        if (latest != null && latest.isNotEmpty && latest != refreshToken) {
-          final rotatedAccess = await tokenStorage.readAccessToken();
-          completer.complete(rotatedAccess);
-          return rotatedAccess;
-        }
-        // Token o'zgarmagan + backend rad etdi = refresh token haqiqatan bekor
-        // (30-kun tugadi yoki "hamma joydan chiqish"). Endi tozalaymiz.
-        await tokenStorage.clear();
-      }
-      completer.complete(null);
-      return null;
-    } catch (_) {
-      completer.complete(null);
-      return null;
-    } finally {
-      _refreshCompleter = null;
-    }
-  }
-}
+/// Testlar orasida umumiy Dio'larni unutish.
+@visibleForTesting
+void resetSharedBackendDios() => _sharedDios.clear();
 
 class _LoggingInterceptor extends Interceptor {
   @override
-  void onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) {
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     debugPrint(
       '→ ${options.method} ${options.uri}'
       '${options.headers['Authorization'] != null ? ' [auth]' : ''}',

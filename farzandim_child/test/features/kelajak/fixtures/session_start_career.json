@@ -1,0 +1,842 @@
+{
+  "id": "7ba2c2b1-b0c4-4668-96a5-3aca6db66d4d",
+  "type": "career",
+  "title": {
+    "uz": "Kasbiy qiziqishlar",
+    "ru": "Профессиональные интересы",
+    "en": "Career interests"
+  },
+  "ageGroup": "10-12",
+  "day": "2026-10-21",
+  "status": "STARTED",
+  "startedAt": "2026-10-21T04:05:51.379Z",
+  "completedAt": null,
+  "total": 19,
+  "answeredCount": 0,
+  "questions": [
+    {
+      "id": "1fc3216c-efcc-585a-9f22-95b9579e9fd3",
+      "externalId": "PARVOZ-Q054",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Ro‘yxat tuzib, bajarilgan ishlarni belgilashni yoqtirasanmi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "d183abc0-743b-56e0-bd75-1c38b68739a4",
+      "externalId": "PARVOZ-Q026",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Biror mavzuni odatdagidan boshqacha usulda ifodalashni xohlaysanmi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "9acdbc74-e293-5e79-9388-777bb0fe5479",
+      "externalId": "PARVOZ-Q006",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Qurilish yoki mexanizm haqidagi videolarni qiziqib ko‘rasanmi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "d878f32c-f38a-5710-9bc2-4f5c9e433bf3",
+      "externalId": "PARVOZ-Q034",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Kichikroq bolalarga biror ishni o‘rgatish qiziq tuyuladimi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "73cda29b-d3a5-5540-a0f5-19156e949aa2",
+      "externalId": "PARVOZ-Q010",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Haqiqiy buyumlar bilan ishlashni faqat gaplashishdan ko‘ra ko‘proq yoqtirasanmi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "6116ec78-a595-595d-9477-a97a761c36c0",
+      "externalId": "PARVOZ-Q002",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Velosiped, o‘yinchoq yoki qurilma qanday ishlashini tekshirishni yoqtirasanmi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "55becfb9-8594-5c8a-a933-cb410a829893",
+      "externalId": "PARVOZ-Q046",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Kelishuvga erishish yoki fikrlarni bir joyga jamlash senga qiziqmi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "521cbd7a-79e7-57d0-adea-a944758e3ea6",
+      "externalId": "PARVOZ-Q038",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Boshqalarga foydasi tegadigan ishlarni qilish seni xursand qiladimi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "ac70de69-34a2-57bd-b5fa-9a99b6b00c50",
+      "externalId": "PARVOZ-Q022",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Hikoya, she’r yoki kichik matn yozishdan zavqlanasanmi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "48a34f32-f3a4-5156-89ab-bb907a938745",
+      "externalId": "PARVOZ-Q014",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Savol tug‘ilsa, javobini izlab ko‘rishni xohlaysanmi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "5b447d22-ca90-5435-8a54-cbae8528332b",
+      "externalId": "PARVOZ-Q042",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "O‘z g‘oyangni boshqalarga ishonch bilan tushuntirishni yoqtirasanmi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "e047e52d-bbe6-53bd-8917-7696a4446744",
+      "externalId": "PARVOZ-Q058",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Hujjat yoki ma’lumotlarni aniq joylashtirishni yoqtirasanmi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "b325a3f0-7ef1-5aed-891a-c1a9024f8a62",
+      "externalId": "PARVOZ-Q050",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Odamlar oldida fikringni aytishdan ko‘ra undan qochmaslikka moyilmisan?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "19bdccfa-2489-574f-aa44-471e59f7c18f",
+      "externalId": "PARVOZ-Q018",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Kompyuterda muammoning yechimini topishga urinib ko‘rish senga yoqadimi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "e45a8002-99ab-51e7-93c7-f9f580f5a9f7",
+      "externalId": "PARVOZ-Q030",
+      "category": "career_interest",
+      "categoryName": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "text": {
+        "uz": "Odamlar uchun yangi dizayn, hikoya yoki kontent yaratishni tasavvur qilish senga yoqadimi?"
+      },
+      "answerType": "interest_4",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman yoqmaydi"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Unchalik yoqmaydi"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Yoqadi"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Juda yoqadi"
+          },
+          "value": 4
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "a9e60bc9-aa50-52e4-ad6c-8434bc35dcf7",
+      "externalId": "PARVOZ-Q219",
+      "category": "career_planning",
+      "categoryName": {
+        "uz": "Kasbga tayyorgarlik va rejalashtirish",
+        "ru": "Подготовка к профессии и планирование",
+        "en": "Career readiness and planning"
+      },
+      "text": {
+        "uz": "Yangi ko‘nikma o‘rganish uchun kichik maqsad qo‘ya olasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "57edbd07-3eb9-58ec-828b-d9d1fead1aa7",
+      "externalId": "PARVOZ-Q220",
+      "category": "career_planning",
+      "categoryName": {
+        "uz": "Kasbga tayyorgarlik va rejalashtirish",
+        "ru": "Подготовка к профессии и планирование",
+        "en": "Career readiness and planning"
+      },
+      "text": {
+        "uz": "Biror kasbni tanlashdan oldin uni amalda ko‘rib chiqish kerak deb o‘ylaysanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "ac22f290-3458-5eec-b39e-90cf83e237eb",
+      "externalId": "PARVOZ-Q217",
+      "category": "career_planning",
+      "categoryName": {
+        "uz": "Kasbga tayyorgarlik va rejalashtirish",
+        "ru": "Подготовка к профессии и планирование",
+        "en": "Career readiness and planning"
+      },
+      "text": {
+        "uz": "Qiziqqan yo‘nalishing haqida ko‘proq bilish uchun qayerdan ma’lumot izlashni bilasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    },
+    {
+      "id": "6d13b4a9-80de-5bbc-9a24-a5e3e04ead5a",
+      "externalId": "PARVOZ-Q218",
+      "category": "career_planning",
+      "categoryName": {
+        "uz": "Kasbga tayyorgarlik va rejalashtirish",
+        "ru": "Подготовка к профессии и планирование",
+        "en": "Career readiness and planning"
+      },
+      "text": {
+        "uz": "Kelajakdagi qiziqishingga mos to‘garak yoki mashg‘ulot tanlay olasanmi?"
+      },
+      "answerType": "likert_5",
+      "options": [
+        {
+          "label": {
+            "uz": "Umuman to‘g‘ri emas"
+          },
+          "value": 1
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri emas"
+          },
+          "value": 2
+        },
+        {
+          "label": {
+            "uz": "Ba’zan / qisman"
+          },
+          "value": 3
+        },
+        {
+          "label": {
+            "uz": "Ko‘proq to‘g‘ri"
+          },
+          "value": 4
+        },
+        {
+          "label": {
+            "uz": "To‘liq to‘g‘ri"
+          },
+          "value": 5
+        }
+      ],
+      "required": true,
+      "maxLength": null
+    }
+  ],
+  "answers": [],
+  "result": null
+}

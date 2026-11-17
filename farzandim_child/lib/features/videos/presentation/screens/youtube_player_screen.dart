@@ -31,6 +31,7 @@ import 'package:farzandim_child/features/articles/data/models/article_model.dart
 import 'package:farzandim_child/features/articles/presentation/providers/articles_providers.dart';
 import 'package:farzandim_child/features/articles/presentation/widgets/article_card.dart';
 import 'package:farzandim_child/features/videos/presentation/widgets/video_ui.dart';
+import 'package:farzandim_child/growth/growth_routes.dart';
 import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 
 /// Barqaror (deterministik) hash — video id → maqola tanlovi/o'rni uchun.
@@ -220,9 +221,7 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
     final parts = <String>[];
     final cat = v.category.trim();
     if (cat.isNotEmpty && cat != 'Boshqa') parts.add(cat);
-    parts.add(
-      'videos.viewsCount'.tr(namedArgs: {'count': _fmtViews(v.views)}),
-    );
+    parts.add('videos.viewsCount'.tr(namedArgs: {'count': _fmtViews(v.views)}));
     // Davomiylik faqat MA'LUM bo'lsa (0:00 mock ko'rsatmaymiz).
     if (v.durationSeconds > 0 && v.duration.trim().isNotEmpty) {
       parts.add(v.duration.trim());
@@ -379,8 +378,7 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
                           child: ArticleCard(
                             article: injectedArticle,
                             onTap: () => context.push(
-                              '/articles/view',
-                              extra: injectedArticle,
+                              GrowthV5Routes.article(injectedArticle.id),
                             ),
                           ),
                         );

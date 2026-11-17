@@ -57,7 +57,9 @@ class ArticleCard extends StatelessWidget {
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: article.coverColor.withValues(alpha: 0.18),
+                                  color: article.coverColor.withValues(
+                                    alpha: 0.18,
+                                  ),
                                   borderRadius: BorderRadius.circular(999),
                                 ),
                                 child: Text(

@@ -42,8 +42,9 @@ class SosState {
   }
 }
 
-final sosStateProvider =
-    StateNotifierProvider<SosNotifier, SosState>(SosNotifier.new);
+final sosStateProvider = StateNotifierProvider<SosNotifier, SosState>(
+  SosNotifier.new,
+);
 
 class SosNotifier extends StateNotifier<SosState> {
   SosNotifier(this._ref) : super(const SosState());
@@ -73,7 +74,9 @@ class SosNotifier extends StateNotifier<SosState> {
     final pos = await _resolveCurrentPosition();
 
     try {
-      final id = await _ref.read(backendSosRepositoryProvider).triggerAlert(
+      final id = await _ref
+          .read(backendSosRepositoryProvider)
+          .triggerAlert(
             childId: pairing.childId!,
             latitude: pos?.latitude,
             longitude: pos?.longitude,
@@ -86,14 +89,13 @@ class SosNotifier extends StateNotifier<SosState> {
         );
         return;
       }
-      state = state.copyWith(
-        status: SosStatus.sent,
-        lastAlertId: id,
-      );
-    } catch (e) {
+      state = state.copyWith(status: SosStatus.sent, lastAlertId: id);
+    } catch (_) {
+      // Xom exception matni bolaga ko'rsatilmaydi — faqat tushunarli xabar
+      // (UI ostida "112 ga qo'ng'iroq qiling" yo'riqnomasi ham chiqadi).
       state = state.copyWith(
         status: SosStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: 'chats.sosFailed'.tr(),
       );
     }
   }

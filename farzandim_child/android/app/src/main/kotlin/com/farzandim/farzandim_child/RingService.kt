@@ -273,7 +273,7 @@ class RingService : Service() {
         val fullScreenPending =
             PendingIntent.getActivity(this, 2, fullScreenIntent, piFlags)
 
-        return NotificationCompat.Builder(this, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Parvoz")
             .setContentText("Qurilma chaqirilmoqda")
             .setSmallIcon(R.drawable.ic_stat_parvoz)
@@ -282,14 +282,35 @@ class RingService : Service() {
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOngoing(true)
-            .setFullScreenIntent(fullScreenPending, true)
             .setContentIntent(fullScreenPending)
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
                 "To'xtatish",
                 stopPending,
             )
-            .build()
+        // Android 14+: USE_FULL_SCREEN_INTENT faqat qo'ng'iroq/budilnik
+        // ilovalariga avtomatik beriladi (Play boshqalardan qaytarib oladi;
+        // MIUI esa alohida "qulf ekranida ko'rsatish" ruxsatini talab qiladi).
+        // Ruxsat yo'q bo'lsa full-screen'siz oddiy heads-up chiqadi — "To'xtatish"
+        // tugmasi notification'da qoladi, ovoz baribir STREAM_ALARM'da chalinadi.
+        if (canUseFullScreenIntent()) {
+            builder.setFullScreenIntent(fullScreenPending, true)
+        } else {
+            Log.w(TAG, "Full-screen intent ruxsati yo'q — heads-up notification")
+        }
+        return builder.build()
+    }
+
+    /** API 34+ da full-screen intent ruxsati bormi (pastda — har doim bor). */
+    private fun canUseFullScreenIntent(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return true
+        return try {
+            (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+                .canUseFullScreenIntent()
+        } catch (e: Exception) {
+            // Noma'lum — oldingi xulq (tizim o'zi heads-up'ga tushiradi).
+            true
+        }
     }
 
     private fun createChannel() {

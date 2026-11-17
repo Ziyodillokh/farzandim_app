@@ -125,9 +125,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
     if (url == null || url.isEmpty) {
       final id = widget.message.id;
       if (id == null) return;
-      url = ref
-          .read(backendVideoMessageRepositoryProvider)
-          .videoStreamUrl(id);
+      url = ref.read(backendVideoMessageRepositoryProvider).videoStreamUrl(id);
     }
     if (url.isEmpty) {
       if (!mounted) return;

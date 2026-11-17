@@ -9,6 +9,7 @@
 //   • "Barcha tarix": xronologik ro'yxat (har yozuv + sana + "+N DON")
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/core/utils/localized_date.dart';
 import 'package:farzandim_child/features/don_history/data/models/don_history_entry.dart';
 import 'package:farzandim_child/features/don_history/presentation/providers/don_history_provider.dart';
 import 'package:flutter/material.dart';
@@ -53,11 +54,6 @@ String _fmtNum(int v) {
   return b.toString();
 }
 
-const _months = [
-  'yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun',
-  'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr',
-];
-
 String _fmtDate(DateTime d) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
@@ -67,7 +63,7 @@ String _fmtDate(DateTime d) {
       '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
   if (diff == 0) return 'donHistory.today'.tr(namedArgs: {'time': hm});
   if (diff == 1) return 'donHistory.yesterday'.tr(namedArgs: {'time': hm});
-  return '${d.day}-${_months[d.month - 1]}';
+  return localizedDayMonth(d);
 }
 
 class DonHistoryScreen extends ConsumerWidget {
@@ -111,12 +107,11 @@ class DonHistoryScreen extends ConsumerWidget {
             ),
             Expanded(
               child: async.when(
-                data: (entries) => _Body(
-                  entries: entries,
-                  bottomInset: bottomInset,
+                data: (entries) =>
+                    _Body(entries: entries, bottomInset: bottomInset),
+                loading: () => const Center(
+                  child: CircularProgressIndicator(color: _blue),
                 ),
-                loading: () =>
-                    const Center(child: CircularProgressIndicator(color: _blue)),
                 error: (_, __) => Center(
                   child: Padding(
                     padding: const EdgeInsets.all(32),
@@ -207,8 +202,9 @@ class _HeroCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             sourceCount > 0
-                ? 'donHistory.fromSources'
-                    .tr(namedArgs: {'count': '$sourceCount'})
+                ? 'donHistory.fromSources'.tr(
+                    namedArgs: {'count': '$sourceCount'},
+                  )
                 : 'donHistory.emptyTitle'.tr(),
             style: _pop(12, c: const Color(0xB3FFFFFF)),
           ),
@@ -348,7 +344,10 @@ class _HistoryRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          Text('+${_fmtNum(entry.don)}', style: _unb(15, c: const Color(0xFF34C759))),
+          Text(
+            '+${_fmtNum(entry.don)}',
+            style: _unb(15, c: const Color(0xFF34C759)),
+          ),
         ],
       ),
     );

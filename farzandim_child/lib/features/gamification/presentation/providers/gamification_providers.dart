@@ -94,32 +94,32 @@ Future<BackendGamification?> _fetchBackendGamification(
 /// so'raladi — DON/XP har doim aniq va tezkor ko'rinadi.
 final backendGamificationProvider =
     StreamProvider.autoDispose<BackendGamification?>((ref) {
-  final childId = ref.watch(pairingStateProvider).childId;
-  final controller = StreamController<BackendGamification?>();
-  if (childId == null || childId.isEmpty) {
-    controller.add(null);
-    ref.onDispose(controller.close);
-    return controller.stream;
-  }
+      final childId = ref.watch(pairingStateProvider).childId;
+      final controller = StreamController<BackendGamification?>();
+      if (childId == null || childId.isEmpty) {
+        controller.add(null);
+        ref.onDispose(controller.close);
+        return controller.stream;
+      }
 
-  Future<void> refetch() async {
-    if (controller.isClosed) return;
-    controller.add(await _fetchBackendGamification(ref, childId));
-  }
+      Future<void> refetch() async {
+        if (controller.isClosed) return;
+        controller.add(await _fetchBackendGamification(ref, childId));
+      }
 
-  unawaited(refetch());
+      unawaited(refetch());
 
-  final client = ref.watch(socketClientProvider);
-  final sub = client.eventStream('profile:updated').listen((_) {
-    unawaited(refetch());
-  });
+      final client = ref.watch(socketClientProvider);
+      final sub = client.eventStream('profile:updated').listen((_) {
+        unawaited(refetch());
+      });
 
-  ref.onDispose(() {
-    sub.cancel();
-    controller.close();
-  });
-  return controller.stream;
-});
+      ref.onDispose(() {
+        sub.cancel();
+        controller.close();
+      });
+      return controller.stream;
+    });
 
 /// Bola gamifikatsiya profili — real-time stream.
 /// Darhol `empty()` emit qiladi → UI bloklanmaydi. Firestore javobi kelsa

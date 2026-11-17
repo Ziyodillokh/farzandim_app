@@ -1,0 +1,14 @@
+{
+  "statusCode": 400,
+  "message": "Not all required questions are answered",
+  "code": "UNANSWERED",
+  "remaining": [
+    "7797c9c2-6e79-573f-9aa7-c90168db7233",
+    "b7500c22-ab39-5a51-8e94-e2fd9d3b0ca6",
+    "cb6c01e3-a296-5748-8021-66640c6518ea",
+    "34d2e1f3-eb21-5f6b-969e-54156dfaa002",
+    "6961c0bf-3744-5dee-acc5-dcb4707a7b7b",
+    "e1c0815b-191b-50fc-ac35-46d85b8ab824",
+    "bf107726-c74c-5270-a5b2-c0296126aff0"
+  ]
+}

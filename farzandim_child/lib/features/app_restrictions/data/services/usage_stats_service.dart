@@ -67,27 +67,34 @@ class InstalledAppData {
 class UsageStatsService {
   static const _channel = MethodChannel('farzandim/usage_stats');
 
-  /// PACKAGE_USAGE_STATS ruxsati bormi?
-  Future<bool> hasPermission() async {
-    try {
-      return await _channel.invokeMethod<bool>('hasPermission') ?? false;
-    } catch (e) {
-      debugPrint('UsageStats hasPermission xato: $e');
-      return false;
-    }
-  }
+  /// PACKAGE_USAGE_STATS ruxsati bormi? (UI uchun: xato — `false`).
+  Future<bool> hasPermission() async => await tryHasPermission() ?? false;
+
+  /// Fon ishlari uchun: `null` — BILIB BO'LMADI (masalan fon dvigatelida
+  /// plagin ro'yxatdan o'tmagan — MissingPluginException). Bunday holatda
+  /// "ruxsat yo'q" deb yuborilmaydi: ota-onaga soxta "ruxsat o'chirildi"
+  /// xabari ketmasin.
+  Future<bool?> tryHasPermission() => _tryBool('hasPermission');
 
   /// Bloklash accessibility xizmati (`BlockAccessibilityService`) yoqilganmi.
   ///
   /// Yoqilgan bo'lsa bloklangan ilova ochilishi bilanoq (~0.1 soniya) yopiladi;
   /// yoqilmagan bo'lsa faqat UsageStats poll'i ishlaydi (1-3 soniya kechikish).
-  Future<bool> isAccessibilityEnabled() async {
+  Future<bool> isAccessibilityEnabled() async =>
+      await tryIsAccessibilityEnabled() ?? false;
+
+  /// `null` — bilib bo'lmadi (qarang [tryHasPermission]).
+  Future<bool?> tryIsAccessibilityEnabled() =>
+      _tryBool('isAccessibilityEnabled');
+
+  Future<bool?> _tryBool(String method) async {
     try {
-      return await _channel.invokeMethod<bool>('isAccessibilityEnabled') ??
-          false;
+      return await _channel.invokeMethod<bool>(method);
+    } on MissingPluginException {
+      return null;
     } catch (e) {
-      debugPrint('UsageStats isAccessibilityEnabled xato: $e');
-      return false;
+      debugPrint('UsageStats $method xato: $e');
+      return null;
     }
   }
 
@@ -110,12 +117,16 @@ class UsageStatsService {
     }
   }
 
-  /// Foydalanish statistikasi (oxirgi N kun).
-  Future<List<AppUsageData>> getUsageStats({int days = 1}) async {
+  /// Foydalanish statistikasi (oxirgi N kun). [includeIcons] `false` — native
+  /// har ilova ikonini PNG'ga chizmaydi (fon sync'i ikonni ishlatmaydi).
+  Future<List<AppUsageData>> getUsageStats({
+    int days = 1,
+    bool includeIcons = true,
+  }) async {
     try {
       final result = await _channel.invokeMethod<List<dynamic>>(
         'getUsageStats',
-        {'days': days},
+        {'days': days, 'includeIcons': includeIcons},
       );
       if (result == null) return const [];
       return result

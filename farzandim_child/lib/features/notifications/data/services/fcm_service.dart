@@ -17,12 +17,16 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/core/utils/release_logging.dart';
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/location/data/services/location_service.dart';
+import 'package:farzandim_child/features/screen_time/data/ios_restrictions_sync_service.dart';
 import 'package:farzandim_child/features/notifications/data/repositories/backend_fcm_repository.dart';
 import 'package:farzandim_child/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,12 +35,30 @@ const String _defaultChannelId = 'farzandim_child_default';
 String _defaultChannelName = 'notifications.channel.name'.tr();
 String _defaultChannelDesc = 'notifications.channel.desc'.tr();
 
-/// Data-only FCM background handler — app fon/yopiq holatda keladi.
-/// 'location_wake': ota-ona xaritani ochdi, bitta yangi fix yuboriladi.
+/// Data-only FCM background handler — FAQAT iOS (main.dart faqat iOS'da
+/// ro'yxatdan o'tkazadi). 'location_wake': ota-ona xaritani ochdi, bitta
+/// yangi fix yuboriladi. 'restrictions_sync': ota-ona blok/limit/rejimni
+/// o'zgartirdi — Family Controls siyosati darhol yangilanadi.
+///
+/// Android (1.0.20): fon data push'larini native FarzandimMessagingService
+/// FGS isolate'iga uzatadi (`parvoz:restrictions_sync`, `parvoz:location_wake`)
+/// — uchinchi Flutter engine (eskirgan prefs, o'z token yangilovchisi bilan)
+/// ochilmaydi. Eski versiya saqlab qolgan callback handle tufayli baribir
+/// chaqirilsa — darhol chiqadi.
 /// Alohida isolate'da ishlaydi — Firebase init majburiy. Best-effort:
 /// xato bo'lsa jim chiqadi, crash yo'q.
 @pragma('vm:entry-point')
 Future<void> fcmBackgroundHandler(RemoteMessage message) async {
+  silenceDebugPrintInRelease();
+  if (!PlatformCapabilities.isIOS) return;
+  if (message.data['type'] == 'restrictions_sync') {
+    try {
+      await IosRestrictionsSyncService.syncInBackground();
+    } catch (e) {
+      debugPrint('FCM background restrictions_sync xato: $e');
+    }
+    return;
+  }
   if (message.data['type'] != 'location_wake') return;
   try {
     await Firebase.initializeApp(
@@ -76,33 +98,35 @@ class FcmService {
     if (_initialized) return;
     _initialized = true;
 
-    // 1. Permission so'rash (Android 13+, iOS).
-    await _messaging.requestPermission();
+    // 1. Permission so'rash (Android 13+). iOS'da bu yerda SO'RALMAYDI —
+    // ruxsatlar ekranida izoh bilan so'raladi (kontekstsiz tizim oynasi
+    // ilova ochilishi bilan chiqmasin). FCM token iOS'da ruxsatsiz ham
+    // olinadi (APNs ro'yxatdan o'tish ruxsatga bog'liq emas).
+    if (!PlatformCapabilities.isIOS) {
+      await _messaging.requestPermission();
+    }
     await _setupLocalNotifications();
 
-    // 2. Token olish + Backend'ga register (faqat pair'lashgan bo'lsa).
-    final token = await _messaging.getToken();
-    if (token != null) {
-      await _registerToBackend(token);
-    }
-
-    // 3. Token refresh listener.
+    // 2. Listener'lar TOKENDAN OLDIN ulanadi: iOS'da `getToken()` APNs token
+    // hali kelmagan bo'lsa xato beradi — avval shu xato init'ni to'xtatib,
+    // butun sessiya davomida xabarlar (restrictions_sync, unlock_decision,
+    // location_wake) e'tiborsiz qolardi.
     _onTokenRefreshSub = _messaging.onTokenRefresh.listen(_registerToBackend);
 
-    // 4. Foreground listener — UI ko'rsatish uchun manual local notification.
+    // 3. Foreground listener — UI ko'rsatish uchun manual local notification.
     _onMessageSub = FirebaseMessaging.onMessage.listen((message) {
       debugPrint('FCM foreground: ${message.notification?.title}');
       // location_wake — ota-ona xaritani ochdi, yangi fix yuboriladi.
       // Data-only xabar — notification ko'rsatilmaydi.
       if (message.data['type'] == 'location_wake') {
-        unawaited(LocationService.sendWakeFix());
+        unawaited(_handleLocationWake());
         return;
       }
       onForegroundMessage?.call(message);
       unawaited(_showLocalNotification(message));
     });
 
-    // 5. Background tap listener.
+    // 4. Background tap listener.
     _onMessageOpenedAppSub = FirebaseMessaging.onMessageOpenedApp.listen((
       message,
     ) {
@@ -110,20 +134,67 @@ class FcmService {
       onMessageTap?.call(message);
     });
 
+    // 5. Token olish + Backend'ga register (faqat pair'lashgan bo'lsa).
+    unawaited(_registerCurrentToken());
+
     // 6. Cold start (terminated app push bossa).
-    final initial = await _messaging.getInitialMessage();
-    if (initial != null) {
-      onMessageTap?.call(initial);
+    try {
+      final initial = await _messaging.getInitialMessage();
+      if (initial != null) {
+        onMessageTap?.call(initial);
+      }
+    } catch (e) {
+      debugPrint('FCM getInitialMessage xato: $e');
     }
   }
+
+  /// Android'da FGS ishlayotgan bo'lsa fix'ni native → FGS yo'li
+  /// (`parvoz:location_wake`) yuboradi — UI ikkinchi GPS so'rovini ochmaydi.
+  /// FGS yo'q bo'lsa (yoki iOS) — avvalgidek shu yerda.
+  static Future<void> _handleLocationWake() async {
+    try {
+      if (PlatformCapabilities.hasForegroundService &&
+          await FlutterForegroundTask.isRunningService) {
+        return;
+      }
+      await LocationService.sendWakeFix();
+    } catch (e) {
+      debugPrint('FCM location_wake xato: $e');
+    }
+  }
+
+  /// iOS'da APNs token ilova ishga tushgandan bir oz keyin keladi —
+  /// shu paytgacha `getToken()` xato beradi. Bir necha marta qayta uriniladi;
+  /// kech kelgan token baribir `onTokenRefresh` orqali yuboriladi.
+  Future<void> _registerCurrentToken() async {
+    for (var attempt = 1; attempt <= _tokenAttempts; attempt++) {
+      try {
+        final isApnsReady =
+            !PlatformCapabilities.isIOS ||
+            await _messaging.getAPNSToken() != null;
+        if (isApnsReady) {
+          final token = await _messaging.getToken();
+          if (token != null) await _registerToBackend(token);
+          return;
+        }
+      } catch (e) {
+        debugPrint('FCM token olinmadi ($attempt/$_tokenAttempts): $e');
+      }
+      await Future<void>.delayed(_tokenRetryDelay);
+    }
+  }
+
+  static const _tokenAttempts = 6;
+  static const _tokenRetryDelay = Duration(seconds: 5);
 
   /// HIGH-importance Android notification channel + iOS init.
   Future<void> _setupLocalNotifications() async {
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    // iOS ruxsati ruxsatlar ekranida so'raladi (yuqoridagi izohga qarang).
     const iosInit = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
     );
     const initSettings = InitializationSettings(
       android: androidInit,

@@ -17,8 +17,9 @@ import 'package:flutter/services.dart';
 class BootTimeService {
   BootTimeService._();
 
-  static const MethodChannel _channel =
-      MethodChannel('farzandim_child/device_clock');
+  static const MethodChannel _channel = MethodChannel(
+    'farzandim_child/device_clock',
+  );
 
   /// Qurilma oxirgi marta yoqilgan (boot) vaqti. Aniqlab bo'lmasa `null`
   /// (web, kanal yo'q, yoki xato) — chaqiruvchi ehtiyotkor fallback ishlatadi.

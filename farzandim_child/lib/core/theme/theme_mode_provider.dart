@@ -15,8 +15,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 const String _prefsKey = 'settings.theme_mode';
 
 /// App theme mode — light (default), dark, system.
-final themeModeProvider =
-    NotifierProvider<ThemeModeNotifier, ThemeMode>(ThemeModeNotifier.new);
+final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
+  ThemeModeNotifier.new,
+);
 
 class ThemeModeNotifier extends Notifier<ThemeMode> {
   @override
@@ -52,8 +53,7 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
 
   /// Light ↔ Dark tezkor toggle (Settings switch uchun).
   Future<void> toggle() async {
-    final next =
-        state == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+    final next = state == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     await setMode(next);
   }
 

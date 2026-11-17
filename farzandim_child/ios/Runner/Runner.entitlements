@@ -10,5 +10,14 @@
 	-->
 	<key>aps-environment</key>
 	<string>development</string>
+	<!-- Family Controls (Screen Time API) — Apple tomonidan uz.parvoz.growth
+	     uchun tasdiqlangan. ParvozMonitor kengaytmasi bilan App Group orqali
+	     tanlov va siyosat almashiladi. -->
+	<key>com.apple.developer.family-controls</key>
+	<true/>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.uz.parvoz.growth</string>
+	</array>
 </dict>
 </plist>

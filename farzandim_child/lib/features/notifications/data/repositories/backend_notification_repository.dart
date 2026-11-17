@@ -29,7 +29,10 @@ class BackendNotificationRepository {
 
   final Dio _dio;
 
-  Future<({List<AppNotification> items, int unreadCount})> getNotifications({
+  /// `null` — so'rov muvaffaqiyatsiz (tarmoq/server xatosi): ro'yxat
+  /// "bo'sh" EMAS, chaqiruvchi oxirgi ma'lum ro'yxatni saqlaydi (aks holda
+  /// har tarmoq uzilishida ro'yxat va nishon bir zum bo'shab qolardi).
+  Future<({List<AppNotification> items, int unreadCount})?> getNotifications({
     required String childId,
     bool? isRead,
     int limit = 100,
@@ -53,7 +56,7 @@ class BackendNotificationRepository {
       return (items: items, unreadCount: unread);
     } on DioException catch (e) {
       debugPrint('BackendNotificationRepository.getNotifications: $e');
-      return (items: <AppNotification>[], unreadCount: 0);
+      return null;
     }
   }
 

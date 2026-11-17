@@ -16,8 +16,16 @@
           "projectId": "farzandim-mvp",
           "configurations": {
             "android": "1:163835260058:android:bc9bac1f0fc5e301d30323",
-            "ios": "1:163835260058:ios:7b98e6fe27d4840bd30323"
+            "ios": "1:163835260058:ios:a57b38449e513cafd30323"
           }
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "farzandim-mvp",
+          "appId": "1:163835260058:ios:a57b38449e513cafd30323",
+          "uploadDebugSymbols": true,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
         }
       }
     }

@@ -92,3 +92,17 @@ List<AudiobookSeries> groupIntoSeries(List<AudiobookModel> books) {
       }(),
   ];
 }
+
+/// [audiobookId] qismi bo'lgan kitob (barcha qismlari bilan) — ro'yxatda
+/// bunday qism bo'lmasa `null`. Masalan, maktab topshirig'i bitta qism
+/// id'sini beradi, bola esa butun kitob sahifasini ko'radi.
+AudiobookSeries? seriesContaining(
+  List<AudiobookModel> books,
+  String audiobookId,
+) {
+  if (!books.any((b) => b.id == audiobookId)) return null;
+  for (final series in groupIntoSeries(books)) {
+    if (series.parts.any((p) => p.id == audiobookId)) return series;
+  }
+  return null;
+}

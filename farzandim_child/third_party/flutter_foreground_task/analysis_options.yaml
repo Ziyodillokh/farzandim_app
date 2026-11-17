@@ -1,0 +1,6 @@
+# Vendor qilingan uchinchi tomon kodi (pub.dev flutter_foreground_task 8.17.0).
+# Dart qismi o'zgartirilmagan (yamoqlar faqat Android Kotlin'da — PARVOZ_PATCHES.md),
+# shuning uchun ilovaning `flutter analyze` i uni tekshirmaydi.
+analyzer:
+  exclude:
+    - "**"

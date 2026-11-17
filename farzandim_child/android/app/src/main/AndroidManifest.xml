@@ -19,6 +19,7 @@
         android:name="isMonitoringTool"
         android:value="child_monitoring"/>
 
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <!-- ⚠️ READ_EXTERNAL_STORAGE'ni API 32 bilan CHEGARALAYMIZ (2026-08-18).
@@ -52,6 +53,9 @@
          ACCESS_NETWORK_STATE qoladi — u connectivity_plus uchun (internet
          bor/yo'qligini bilish), hech qanday identifikator bermaydi. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- flutter_webrtc talab qiladi (jonli eshitish audio yo'nalishi + ICE). -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
 
     <!-- Reklama identifikatori (AAID) — Families siyosati bo'yicha TAQIQ.
          Biror kutubxona (Firebase/Play Services) uni tranzitiv qo'shib
@@ -62,6 +66,9 @@
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <!-- FOREGROUND_SERVICE_MICROPHONE OLIB TASHLANDI (2026-11-11): "Jonli
+         eshitish" funksiyasi olib tashlandi, mikrofonli FGS yo'q. RECORD_AUDIO —
+         faqat bola o'zi yozadigan ovozli xabarlar uchun. -->
     <!-- FOREGROUND_SERVICE_DATA_SYNC OLIB TASHLANDI (2026-08-18): endi hech
          bir xizmat "dataSync" tipini e'lon qilmaydi (yuqoridagi izohga qarang).
          Ishlatilmaydigan sezgir ruxsatni saqlab qolish Play tekshiruvida
@@ -93,7 +100,9 @@
         android:minSdkVersion="34"
         tools:ignore="UnusedAttribute"/>
 
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+    <!-- FOREGROUND_SERVICE_MEDIA_PLAYBACK OLIB TASHLANDI (1.0.20): mediaPlayback
+         FGS faqat audio_service'da edi (paket o'chirildi); RingService
+         specialUse ishlatadi. -->
 
     <!-- Health Connect — bugungi QADAM jamini telefonning o'z sog'liq
          ma'lumotidan o'qish (Samsung Health ham shu yerga yozadi). Pedometer
@@ -109,7 +118,7 @@
 
     <application
         android:label="Parvoz Growth"
-        android:name="${applicationName}"
+        android:name=".ParvozApplication"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
         android:fullBackupContent="false"
@@ -178,25 +187,35 @@
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="farzandim_child_default"/>
 
-        <!-- ⚠️ "dataSync" ATAYLAB OLIB TASHLANDI (2026-08-18).
-             Android 15+ (API 35) da dataSync tipidagi foreground service
-             24 soat ichida JAMI 6 SOAT ishlashi mumkin; limitdan keyin tizim
-             Service.onTimeout() ni chaqiradi va xizmat bir necha soniyada
-             to'xtamasa "A foreground service of type dataSync did not stop
-             within its timeout" ANR'i bilan ILOVANI YIQITADI.
-             flutter_foreground_task 8.17.0 onTimeout() ni umuman amalga
-             oshirmagan → bola telefonida har kuni kuzatuv uzilib, ilova
-             yopilardi. "location" tipida bunday limit YO'Q va joylashuv
-             uzatish uchun aynan shu tip yetarli (tarmoqqa chiqish FGS tipiga
-             bog'liq emas). Plagin startForeground'ni FOREGROUND_SERVICE_TYPE_
-             MANIFEST bilan chaqiradi — ya'ni shu yerdagi qiymatni oladi,
-             qo'shimcha kod o'zgarishi kerak emas. -->
+        <!-- Fon xizmati (flutter_foreground_task, YAMALGAN vendor nusxa:
+             third_party/flutter_foreground_task, PARVOZ_PATCHES.md).
+             FGS turi ISH VAQTIDA tanlanadi (1.0.20) — bu yerdagi
+             "location|specialUse" faqat RUXSAT ETILGAN turlar to'plami:
+             - Android 14+ (API 34+): har doim specialUse; location faqat
+               joylashuv ruxsati (aniq/taxminiy) bo'lsa qo'shiladi. Tizim location'ni
+               rad etsa (fondan start + faqat "ilova ishlatilayotganda" ruxsati —
+               boot, APK yangilanishi, START_STICKY) darhol faqat specialUse bilan
+               qayta uriniladi. Avval bu holat SecurityException bilan BUTUN
+               jarayonni (RestrictionService ham) yiqitardi.
+             - Android 10-13: location (ruxsat bo'lsa) yoki turisiz chaqiruv.
+             - startForeground hech qachon crash bermaydi: fon start ruxsat
+               etilmasa servis o'zini to'xtatadi.
+             Doimiy WakeLock/WifiLock ham OLINMAYDI (telefon uxlay oladi).
+             ⚠️ "dataSync" ATAYLAB YO'Q (2026-08-18): Android 15+ da dataSync
+             FGS sutkasiga JAMI 6 soat ishlaydi, keyin onTimeout() ANR bilan
+             ilovani yiqitadi. location/specialUse'da bunday limit yo'q. -->
         <service
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
-            android:foregroundServiceType="location"
+            android:foregroundServiceType="location|specialUse"
             android:exported="false"
             android:stopWithTask="false"
-            tools:replace="android:foregroundServiceType" />
+            tools:replace="android:foregroundServiceType"
+            tools:targetApi="34">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Parental control: keeps app-blocking schedules and child safety status in sync"
+                tools:targetApi="34"/>
+        </service>
 
         <service
             android:name=".RestrictionService"
@@ -221,6 +240,12 @@
              o'zidan-o'zi tayyor turibdi) + permission_setup_screen.dart'dagi
              a11y qatorini qaytaring. Qarang: docs/BLOKLASH-QUVVATI-VA-A11Y-QARORI.md
              (2.4-band, "Rollback — aynan 2 joy"). -->
+
+        <!-- 5 daqiqalik watchdog alarm (RestrictionService.scheduleWatchdog) — yopiq:
+             tashqi ilova ACTION_WATCHDOG yuborib wakelock/servis startini chaqira olmasin. -->
+        <receiver
+            android:name=".WatchdogReceiver"
+            android:exported="false"/>
 
         <receiver
             android:name=".BootReceiver"
@@ -266,23 +291,11 @@
                 tools:targetApi="34"/>
         </service>
 
-        <service
-            android:name="com.ryanheise.audioservice.AudioService"
-            android:foregroundServiceType="mediaPlayback"
-            android:exported="true"
-            tools:ignore="Instantiatable">
-            <intent-filter>
-                <action android:name="android.media.browse.MediaBrowserService"/>
-            </intent-filter>
-        </service>
-        <receiver
-            android:name="com.ryanheise.audioservice.MediaButtonReceiver"
-            android:exported="true"
-            tools:ignore="Instantiatable">
-            <intent-filter>
-                <action android:name="android.intent.action.MEDIA_BUTTON"/>
-            </intent-filter>
-        </receiver>
+        <!-- audio_service'ning AudioService (mediaPlayback FGS) va
+             MediaButtonReceiver yozuvlari OLIB TASHLANDI (1.0.20): paket
+             o'chirildi — u har bir fon engine'ida ilovaning main()'ini yashirin
+             ikkinchi nusxada ishga tushirardi. Audiokitob ilova ochiq paytda
+             just_audio bilan ijro etiladi. -->
 
         <!-- Device Admin — "O'chirishni taqiqlash" (ota-ona yoqadi). Admin faol
              bo'lganda bola Farzandim ilovasini o'chira olmaydi (uninstall

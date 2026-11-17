@@ -1,0 +1,119 @@
+{
+  "age": {
+    "status": "AGE_OUT_OF_RANGE",
+    "age": 19,
+    "ageGroup": null
+  },
+  "tests": [],
+  "categories": [
+    {
+      "id": "career_interest",
+      "name": {
+        "uz": "Kasbiy qiziqishlar",
+        "ru": "Профессиональные интересы",
+        "en": "Career interests"
+      },
+      "order": 1
+    },
+    {
+      "id": "learning",
+      "name": {
+        "uz": "Fanlar va o‘rganish tajribasi",
+        "ru": "Предметы и опыт обучения",
+        "en": "Subjects and learning experience"
+      },
+      "order": 2
+    },
+    {
+      "id": "school_quality",
+      "name": {
+        "uz": "Maktab sifati va darslar",
+        "ru": "Школа и уроки",
+        "en": "School and lessons"
+      },
+      "order": 3
+    },
+    {
+      "id": "teacher_relation",
+      "name": {
+        "uz": "O‘qituvchi bilan munosabat",
+        "ru": "Отношения с учителями",
+        "en": "Relationship with teachers"
+      },
+      "order": 4
+    },
+    {
+      "id": "safety",
+      "name": {
+        "uz": "Xavfsizlik va bullying",
+        "ru": "Безопасность и буллинг",
+        "en": "Safety and bullying"
+      },
+      "order": 5
+    },
+    {
+      "id": "wellbeing",
+      "name": {
+        "uz": "Ruhiy farovonlik va stress",
+        "ru": "Эмоциональное благополучие и стресс",
+        "en": "Wellbeing and stress"
+      },
+      "order": 6
+    },
+    {
+      "id": "social_self",
+      "name": {
+        "uz": "Ijtimoiy ko‘nikmalar va o‘zini anglash",
+        "ru": "Социальные навыки и самопознание",
+        "en": "Social skills and self-awareness"
+      },
+      "order": 7
+    },
+    {
+      "id": "career_lab",
+      "name": {
+        "uz": "Career Lab — kasbni amalda sinash",
+        "ru": "Career Lab — пробуем профессии на практике",
+        "en": "Career Lab — trying careers in practice"
+      },
+      "order": 8
+    },
+    {
+      "id": "career_planning",
+      "name": {
+        "uz": "Kasbga tayyorgarlik va rejalashtirish",
+        "ru": "Подготовка к профессии и планирование",
+        "en": "Career readiness and planning"
+      },
+      "order": 9
+    },
+    {
+      "id": "parent_communication",
+      "name": {
+        "uz": "Ota-ona bilan muloqot",
+        "ru": "Общение с родителями",
+        "en": "Communication with parents"
+      },
+      "order": 10
+    },
+    {
+      "id": "child_voice",
+      "name": {
+        "uz": "Bola ovozi — ochiq fikr va murojaat",
+        "ru": "Голос ребёнка — открытое мнение",
+        "en": "Child’s voice — open feedback"
+      },
+      "order": 11
+    },
+    {
+      "id": "personal_traits",
+      "name": {
+        "uz": "Shaxsiy xususiyatlar",
+        "ru": "Личные качества",
+        "en": "Personal traits"
+      },
+      "order": 12
+    }
+  ],
+  "profile": null
+}

@@ -29,13 +29,18 @@
 //
 // Kun chegarasi Toshkent (UTC+5). Holat SharedPreferences'da saqlanadi —
 // ilova qayta ochilganda yo'qolgan qadamlar delta orqali tiklanadi
-// (sensor fon'da ham sanaydi). Kunlik qadam backendga periodik yuboriladi.
+// (sensor fon'da ham sanaydi). Batareya: holat ko'pi bilan 60 s da bir
+// (va to'xtashda) yoziladi, backend'ga ko'pi bilan 5 daqiqada bir va faqat
+// son o'zgarganda yuboriladi; davriy taymer yo'q (BackgroundJobs tick'i
+// `syncIfDue`, ilova ochilishi `syncNow`).
 
 import 'dart:async';
 
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_installed_apps_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/boot_time_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/health_steps_service.dart';
+import 'package:farzandim_child/features/background/data/services/job_timing.dart';
 import 'package:flutter/foundation.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -46,8 +51,8 @@ class StepCounterService {
     required BackendInstalledAppsRepository backendRepo,
     required String childId,
     this.onStepsUpdated,
-  })  : _backendRepo = backendRepo,
-        _childId = childId;
+  }) : _backendRepo = backendRepo,
+       _childId = childId;
 
   final BackendInstalledAppsRepository _backendRepo;
   final String _childId;
@@ -84,8 +89,20 @@ class StepCounterService {
   /// ~50k = juda faol kun; realroq kunlik qadam bundan past bo'ladi.
   static const int _seedFromBootMax = 50000;
 
+  /// Holat prefs'ga ko'pi bilan shu oraliqda (har yozuv — butun fayl + fsync).
+  static const _persistInterval = Duration(seconds: 60);
+
+  /// Backend'ga ko'pi bilan shu oraliqda yuboriladi (kun yakuni bundan mustasno).
+  static const _postInterval = Duration(minutes: 5);
+
   StreamSubscription<StepCount>? _sub;
-  Timer? _syncTimer;
+
+  Timer? _persistTimer; // bir martalik (davriy taymer yo'q)
+  Timer? _postTimer;
+  DateTime? _lastPersistAt;
+  DateTime? _lastHealthAt;
+  bool _isDirty = false;
+  bool _hasSyncedOnce = false;
   int _lastCumulative = -1;
   int _todaySteps = 0;
 
@@ -149,6 +166,7 @@ class StepCounterService {
     _baseSteps = prefs.getInt(_kBaseSteps) ?? 0;
     _todayKey = prefs.getString(_kTodayDate) ?? _tashkentDayKey();
     _lastSyncSteps = _todaySteps;
+    _lastPersistAt = DateTime.now();
 
     // Boot vaqti — cumulative'ni bugungi qadam deb qabul qilish uchun (HC yo'q
     // qurilmada). Bir marta olamiz; xato bo'lsa null (ehtiyotkor fallback).
@@ -167,13 +185,18 @@ class StepCounterService {
     // Bugungi HAQIQIY jamini darhol olamiz — pedometer baseline sababli
     // yo'qolgan (ilovagacha yurilgan) qadamlar shu yerda tiklanadi. Yangi
     // o'rnatishda ham darhol to'g'ri son ko'rinadi.
+    _lastHealthAt = DateTime.now();
     await _syncFromHealth();
     await _sync();
 
     // ─── 2) PEDOMETER (jonli qo'shimcha / HC bo'lmasa fallback) ───
     // Faqat shu qism ACTIVITY_RECOGNITION talab qiladi. Ruxsat bo'lmasa
     // servis TO'XTAMAYDI — Health Connect va davriy sync ishlayveradi.
-    final status = await Permission.activityRecognition.request();
+    // iOS'da activityRecognition yo'q — CoreMotion `sensors` (faqat holat,
+    // so'rov ruxsatlar ekranida).
+    final status = PlatformCapabilities.isIOS
+        ? await Permission.sensors.status
+        : await Permission.activityRecognition.request();
     if (status.isGranted) {
       await _sub?.cancel();
       _sub = Pedometer.stepCountStream.listen(
@@ -187,26 +210,31 @@ class StepCounterService {
       );
     }
 
-    // Stream jim bo'lsa ham (harakatsiz) 5 daqiqada bir: Health Connect'dan
-    // haqiqiy jamini olib, keyin backendga yangilaymiz.
-    _syncTimer?.cancel();
-    _syncTimer = Timer.periodic(const Duration(minutes: 5), (_) async {
-      await _syncFromHealth();
-      await _sync();
-    });
-
+    // Davriy taymer YO'Q: Health Connect'ni BackgroundJobs tick'i
+    // (`syncIfDue`) va ilova ochilishi (`syncNow`) yangilaydi; pedometer
+    // qadamlari bir martalik taymer bilan ko'pi bilan 5 daqiqada yuboriladi.
     debugPrint('=== StepCounterService.start childId=$_childId ===');
   }
 
-  /// Foreground'da (app ochilganda / qaytganda / statistika ekrani ochilganda)
-  /// Health Connect'dagi HAQIQIY jamini DARHOL tortadi — 5 daqiqalik davriy
-  /// sync'ni kutmasdan telefon soniga yaqinlashish uchun. Ekrandagi son
-  /// foydalanuvchi qaraganda eng yangi bo'ladi. HC yo'q/ruxsatsiz bo'lsa
-  /// `_syncFromHealth` jim qaytadi (pedometer jonli sanashda davom etadi).
+  /// Foreground'da (app ochilganda / qaytganda / statistika ekrani) Health
+  /// Connect'dagi HAQIQIY jamini DARHOL tortadi (HC yo'q — jim). Son
+  /// o'zgarmagan bo'lsa backend'ga yuborilmaydi.
   Future<void> syncNow() async {
     if (!_started || kIsWeb) return;
+    _lastHealthAt = DateTime.now();
     await _syncFromHealth();
     await _sync();
+  }
+
+  /// BackgroundJobs tick'i: oxirgi o'qishdan ≥ 5 daqiqa o'tgan bo'lsa Health
+  /// Connect'dan o'qib, son o'zgargan bo'lsa yuboradi.
+  Future<void> syncIfDue() async {
+    if (!_started || kIsWeb) return;
+    final now = DateTime.now();
+    if (!isDue(_lastHealthAt, now, _postInterval)) return;
+    _lastHealthAt = now;
+    await _syncFromHealth();
+    if (isDue(_lastSyncAt, now, _postInterval)) await _sync();
   }
 
   /// Health Connect qadam o'qish ruxsatini ta'minlaydi.
@@ -221,7 +249,11 @@ class StepCounterService {
   /// `start()` ilova ishga tushganda bir marta chaqiriladi, shuning uchun bu
   /// eng ko'pi bilan sessiyaga bitta so'rov. Ruxsat berilgach Health Connect
   /// oynasi umuman chiqmaydi (`hasPermission` darhol `true`).
+  ///
+  /// iOS'da bu yerda SO'RALMAYDI — Motion ruxsati ruxsatlar ekranida (izoh
+  /// bilan) so'raladi; ishga tushishda kontekstsiz tizim oynasi chiqmasin.
   Future<void> _ensureHealthPermission() async {
+    if (PlatformCapabilities.isIOS) return;
     final hc = HealthStepsService.instance;
     try {
       if (!await hc.isAvailable()) return;
@@ -333,8 +365,8 @@ class StepCounterService {
         // HC YO'Q qurilma (HONOR/Huawei): TYPE_STEP_COUNTER "yoqilgandan beri
         // jami". Telefon O'CHIQ paytda qadam sanalmaydi → telefon BUGUN
         // yoqilgan bo'lsa cumulative = AYNAN bugungi qadam → baseline = 0.
-        final bootedToday = _bootTime != null &&
-            _tashkentDayKey(_bootTime) == today;
+        final bootedToday =
+            _bootTime != null && _tashkentDayKey(_bootTime) == today;
         // Ishonchlilik tekshiruvi: boot'dan beri o'tgan soatlarda jismonan
         // mumkin bo'lgan maksimal qadam. Sensor reboot'da nolga tushmagan
         // bo'lsa (ba'zi Samsung/Xiaomi) cumulative bu chegaradan oshadi va
@@ -364,22 +396,56 @@ class StepCounterService {
     }
 
     // ── Bugungi qadam DOIM qayta hisoblanadi (yig'ilmaydi → self-healing). ──
-    _todaySteps =
-        (_baseSteps + (cumulative - _dayBaseline)).clamp(0, _dayStepMax);
+    _todaySteps = (_baseSteps + (cumulative - _dayBaseline)).clamp(
+      0,
+      _dayStepMax,
+    );
     _lastCumulative = cumulative;
-    await _persist();
 
-    // ── Real-time: 5s'da bir YOKI ≥20 qadam o'zgarganda darhol yuboramiz. ──
-    final elapsed = _lastSyncAt == null
-        ? 999
-        : DateTime.now().difference(_lastSyncAt!).inSeconds;
-    final changed = (_todaySteps - _lastSyncSteps).abs();
-    if (elapsed > 5 || changed >= 20) {
-      await _sync();
-    }
+    // ── Har qadamda disk/tarmoq YO'Q (60 s / 5 daq cheklovi). ──
+    _schedulePersist();
+    _schedulePost();
   }
 
-  Future<void> _persist() async {
+  void _schedulePersist() {
+    _isDirty = true;
+    _persistTimer = _throttle(
+      _persistTimer,
+      _lastPersistAt,
+      _persistInterval,
+      _persist,
+    );
+  }
+
+  void _schedulePost() {
+    if (_todaySteps == _lastSyncSteps) return;
+    _postTimer = _throttle(_postTimer, _lastSyncAt, _postInterval, _sync);
+  }
+
+  /// [last] dan [interval] o'tgan bo'lsa darhol, aks holda qolgan vaqtdan
+  /// keyin bir marta (kutayotgan taymer bo'lsa — o'sha).
+  static Timer? _throttle(
+    Timer? pending,
+    DateTime? last,
+    Duration interval,
+    Future<void> Function() run,
+  ) {
+    if (pending != null) return pending;
+    final wait = last == null
+        ? Duration.zero
+        : interval - DateTime.now().difference(last);
+    if (wait <= Duration.zero) {
+      unawaited(run());
+      return null;
+    }
+    return Timer(wait, () => unawaited(run()));
+  }
+
+  Future<void> _persist({bool notify = true}) async {
+    _persistTimer?.cancel();
+    _persistTimer = null;
+    _lastPersistAt = DateTime.now();
+    _isDirty = false;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_kLastCumulative, _lastCumulative);
@@ -389,23 +455,32 @@ class StepCounterService {
       await prefs.setString(_kTodayDate, _todayKey);
       // UI keshini yangilaymiz — aks holda ekranda eski son (yangi
       // o'rnatishda 0) turib qolardi.
-      onStepsUpdated?.call();
+      if (notify) onStepsUpdated?.call();
     } catch (_) {}
   }
 
+  /// Backend'ga yuborish. [dateKey] — o'tgan kun yakuni (doim yuboriladi);
+  /// aks holda son o'zgarmagan bo'lsa (birinchi yuborishdan keyin) POST yo'q.
   Future<void> _sync({String? dateKey, int? steps}) async {
-    _lastSyncAt = DateTime.now();
+    _postTimer?.cancel();
+    _postTimer = null;
     final sent = steps ?? _todaySteps;
+    final isDayFinal = dateKey != null;
+    if (!isDayFinal && _hasSyncedOnce && sent == _lastSyncSteps) return;
+    _lastSyncAt = DateTime.now();
     try {
-      await _backendRepo.upsertSteps(
+      final ok = await _backendRepo.upsertSteps(
         childId: _childId,
         entries: [
           {'date': dateKey ?? _todayKey, 'steps': sent},
         ],
       );
       // Backend real-time push shu POST'da yuboriladi — oxirgi yuborilgan
-      // sonni eslab qolamiz (sezilarli o'zgarishda darhol qayta yuborish uchun).
-      _lastSyncSteps = sent;
+      // sonni eslab qolamiz (o'zgarmagan son qayta yuborilmaydi).
+      if (ok && !isDayFinal) {
+        _lastSyncSteps = sent;
+        _hasSyncedOnce = true;
+      }
     } catch (e) {
       debugPrint('StepCounter sync xato: $e');
     }
@@ -413,9 +488,13 @@ class StepCounterService {
 
   void dispose() {
     _sub?.cancel();
-    _syncTimer?.cancel();
     _sub = null;
-    _syncTimer = null;
+    _persistTimer?.cancel();
+    _persistTimer = null;
+    _postTimer?.cancel();
+    _postTimer = null;
+    // To'xtashda yozilmagan holat saqlanadi (UI keshi yangilanmaydi).
+    if (_isDirty) unawaited(_persist(notify: false));
     _started = false;
   }
 }

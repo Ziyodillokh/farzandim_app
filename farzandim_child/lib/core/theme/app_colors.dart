@@ -215,8 +215,10 @@ class AppColors {
   //    ustidan yaqqol ajralib turadi (blur'siz — uzun ro'yxatlarda jank yo'q).
   /// Glass gradient — yuqori (yorug'roq, sheen).
   static const Color parvozGlassTop = Color(0xD92C415C);
+
   /// Glass gradient — past (surface tusli).
   static const Color parvozGlassBottom = Color(0xD9152840);
+
   /// Glass yorqin chekka (rim) — shisha qirrasi (white ~16%).
   static const Color parvozGlassRim = Color(0x2AFFFFFF);
 
@@ -242,21 +244,17 @@ class AppColors {
 // butun ilova bir tugma bilan dark/light bo'la oladi.
 
 extension AdaptivePaletteX on BuildContext {
-  AdaptivePalette get adaptive => AdaptivePalette._(
-        Theme.of(this).brightness == Brightness.dark,
-      );
+  AdaptivePalette get adaptive =>
+      AdaptivePalette._(Theme.of(this).brightness == Brightness.dark);
 }
 
 class AdaptivePalette {
   const AdaptivePalette._(this.isDark);
   final bool isDark;
 
-  Color get bgPrimary =>
-      isDark ? AppColors.bgPrimaryDark : AppColors.bgPrimary;
-  Color get bgSurface =>
-      isDark ? AppColors.bgSurfaceDark : AppColors.bgSurface;
-  Color get bgCard =>
-      isDark ? AppColors.bgCardDark : AppColors.bgSurface;
+  Color get bgPrimary => isDark ? AppColors.bgPrimaryDark : AppColors.bgPrimary;
+  Color get bgSurface => isDark ? AppColors.bgSurfaceDark : AppColors.bgSurface;
+  Color get bgCard => isDark ? AppColors.bgCardDark : AppColors.bgSurface;
   Color get textPrimary =>
       isDark ? AppColors.textPrimaryDark : AppColors.textPrimary;
   Color get textSecondary =>

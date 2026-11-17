@@ -67,7 +67,9 @@ class ContentCache {
       final ts = (decoded['ts'] as num?)?.toInt() ?? 0;
       final age = DateTime.now().millisecondsSinceEpoch - ts;
       if (age > staleAfter.inMilliseconds) {
-        debugPrint('ContentCache.read($key): stale (${Duration(milliseconds: age).inDays}d)');
+        debugPrint(
+          'ContentCache.read($key): stale (${Duration(milliseconds: age).inDays}d)',
+        );
       }
       return items;
     } catch (e) {
@@ -81,6 +83,8 @@ class ContentCache {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('$_prefix$key');
-    } catch (_) {/* jim */}
+    } catch (_) {
+      /* jim */
+    }
   }
 }

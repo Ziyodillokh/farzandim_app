@@ -4,6 +4,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_installed_apps_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/step_counter_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
@@ -28,7 +29,11 @@ final usagePermissionProvider = FutureProvider<bool>((ref) async {
 /// ishlatamiz — bu provider faqat bir marta yaratilganda pair holatini
 /// o'qiydi, keyingi pair o'zgarishlariga reaktsiya qilmaydi (lekin biz
 /// uni faqat pair tugagandan keyin chaqiramiz, shuning uchun muammo yo'q).
+///
+/// iOS'da har doim null — Apple Family Controls sharti: ilovalardan
+/// foydalanish ma'lumoti qurilmadan chiqmaydi.
 final usageSyncServiceProvider = Provider<UsageSyncService?>((ref) {
+  if (!PlatformCapabilities.canUploadAppUsage) return null;
   final pairing = ref.read(pairingStateProvider);
   if (pairing.childId == null) return null;
 

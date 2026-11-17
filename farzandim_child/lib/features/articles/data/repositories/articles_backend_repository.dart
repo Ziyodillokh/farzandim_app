@@ -16,8 +16,9 @@ import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/articles/data/models/article_model.dart';
 
-final articlesBackendRepositoryProvider =
-    Provider<ArticlesBackendRepository>((ref) {
+final articlesBackendRepositoryProvider = Provider<ArticlesBackendRepository>((
+  ref,
+) {
   return ArticlesBackendRepository(dio: ref.watch(dioClientProvider));
 });
 

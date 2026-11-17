@@ -138,4 +138,23 @@ dependencies {
     // ishlatadigan BoM versiyasi bilan bir xil (33.16.0) — ziddiyat yo'q.
     implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
     implementation("com.google.firebase:firebase-messaging")
+
+    // Native kod (ExitReasonReporter, BootReceiver) Crashlytics'ga non-fatal /
+    // custom key yozadi. firebase_crashlytics plugin SDK'ni `implementation`
+    // qiladi — app modulida ko'rinmaydi. Versiya — yuqoridagi BoM (33.16.0).
+    implementation("com.google.firebase:firebase-crashlytics")
+    // NDK crash'lari (libflutter.so / libapp.so / plaginlar .so — SIGSEGV va h.k.)
+    // ham Crashlytics'ga tushsin (kill-native-crashlytics-blind). Simvol yuklash
+    // (nativeSymbolUploadEnabled) YOQILMAGAN — alohida upload vazifasi kerak.
+    implementation("com.google.firebase:firebase-crashlytics-ndk")
+
+    // BootReceiver flutter_foreground_task'ning `ForegroundService.isRunningServiceState`
+    // (StateFlow) qiymatini o'qiydi. Plugin coroutines'ni `implementation` qiladi,
+    // shuning uchun app modulida ham aniq e'lon qilinadi (versiya grafdagidan
+    // oshirilmaydi — Gradle eng yuqorisini tanlaydi).
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+
+    // JVM unit testlar (android/app/src/test) — pure logika (OEM jadvali, exit
+    // reason siyosati, push/boot marshrutlash).
+    testImplementation("junit:junit:4.13.2")
 }

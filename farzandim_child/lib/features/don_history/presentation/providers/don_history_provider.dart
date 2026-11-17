@@ -6,8 +6,9 @@ import 'package:farzandim_child/features/pairing/presentation/providers/pairing_
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Bolaning O'Z DON tarixi (eng yangi birinchi). Ekran ochilganda so'raladi.
-final donHistoryProvider =
-    FutureProvider.autoDispose<List<DonHistoryEntry>>((ref) async {
+final donHistoryProvider = FutureProvider.autoDispose<List<DonHistoryEntry>>((
+  ref,
+) async {
   final childId = ref.watch(pairingStateProvider).childId;
   if (childId == null || childId.isEmpty) return const <DonHistoryEntry>[];
 

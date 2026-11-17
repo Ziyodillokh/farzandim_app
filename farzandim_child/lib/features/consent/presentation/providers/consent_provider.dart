@@ -38,7 +38,8 @@ class ConsentNotifier extends StateNotifier<ConsentState> {
     state = ConsentState.given;
   }
 
-  /// Faqat test/debug uchun — rozilikni qayta so'rash.
+  /// Rozilikni bekor qilish — "Ulanishni uzish va ma'lumotlarni o'chirish"
+  /// oqimida (va test/debug'da). Router /consent ekraniga qaytaradi.
   Future<void> reset() async {
     await ConsentStorage.resetConsent();
     state = ConsentState.notGiven;

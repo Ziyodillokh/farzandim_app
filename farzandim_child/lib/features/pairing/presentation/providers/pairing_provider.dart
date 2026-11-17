@@ -10,25 +10,39 @@
 //
 // `PairingNotifier` ilova ochilganda SharedPreferences'dan
 // avvalgi pairing ma'lumotini tiklaydi. tryPair() butun pairing
-// flow'ini bajaradi: Auth → Firestore → SharedPreferences → state.
-// Pairing tugagach DeviceInfoService boshlanadi va Firestore'ga
-// telefon ma'lumotlarini har 60 sekundda yuborib turadi.
+// flow'ini bajaradi: Auth → Backend → SharedPreferences → state.
+// Pairing tugagach fon ishlari `BackgroundOwner` orqali boshlanadi:
+// Android'da FGS va native bloklash darhol yoqiladi, FGS ishlasa fon
+// ishlarini faqat uning isolate'i bajaradi (UI nusxa ochmaydi).
+//
+// Uzish siyosati (1.0.20): faqat server TASDIQLAGAN bekor qilish
+// (SESSION_REVOKED / 'Token revoked' / 'User not found or inactive',
+// WS child:unpaired / session:closed) yoki bolaning o'z amali. Lokal
+// tokenni o'qib bo'lmasligi yoki 'Session rotated' juftlashni O'CHIRMAYDI —
+// nazorat keshdagi reja bilan davom etadi.
+
+import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/core/auth/session_events.dart';
+import 'package:farzandim_child/core/auth/token_storage.dart';
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
+import 'package:farzandim_child/features/account/data/language_sync_service.dart';
+import 'package:farzandim_child/features/app_restrictions/data/services/restrictions_sync_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/restrictions_sync_provider.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/usage_providers.dart';
 import 'package:farzandim_child/features/auth/data/repositories/anon_auth_repository.dart';
 import 'package:farzandim_child/features/auth/presentation/providers/child_recovery_provider.dart';
 import 'package:farzandim_child/features/background/presentation/providers/background_service_provider.dart';
-import 'package:farzandim_child/features/device_info/presentation/providers/device_info_provider.dart';
-import 'package:farzandim_child/features/location/presentation/providers/location_provider.dart';
 import 'package:farzandim_child/features/onboarding/data/interests_sync_service.dart';
 import 'package:farzandim_child/features/pairing/data/models/pairing_state.dart';
 import 'package:farzandim_child/features/pairing/data/repositories/pairing_repository.dart';
+import 'package:farzandim_child/features/pairing/data/services/background_owner.dart';
+import 'package:farzandim_child/features/pairing/presentation/providers/background_owner_provider.dart';
+import 'package:farzandim_child/features/screen_time/presentation/providers/screen_time_providers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -56,49 +70,66 @@ final authStateProvider = StreamProvider<User?>((ref) {
 
 final pairingStateProvider =
     StateNotifierProvider<PairingNotifier, AppPairingState>((ref) {
-  return PairingNotifier(
-    ref.read(pairingRepositoryProvider),
-    ref.read(authRepositoryProvider),
-    ref,
-  );
-});
+      return PairingNotifier(
+        ref.read(pairingRepositoryProvider),
+        ref.read(authRepositoryProvider),
+        ref,
+      );
+    });
 
 class PairingNotifier extends StateNotifier<AppPairingState> {
   PairingNotifier(this._repository, this._auth, this._ref)
-      : super(const AppPairingState()) {
-    _loadFromStorage();
+    : super(const AppPairingState()) {
+    // Faqat qurilma egasining (standart token kalitlari) sessiyasi —
+    // mehmon akkauntlarning hodisalari bu yerga tegishli emas.
+    _revokedSub = SessionEvents.revoked.listen((event) {
+      if (event.isOwner) unawaited(handleSessionRevoked());
+    });
+    unawaited(
+      _loadFromStorage().catchError((Object e) {
+        debugPrint('[Pairing] saqlangan juftlashni tiklash xato: $e');
+      }),
+    );
   }
 
   final PairingRepository _repository;
   final AnonAuthRepository _auth;
   final Ref _ref;
+  StreamSubscription<SessionRevoked>? _revokedSub;
+
+  /// Davom etayotgan uzish — parallel chaqiruvlar (socket signali, sessiya
+  /// bekor bo'lishi, hisobni o'chirish) bitta tozalashni bo'lishadi.
+  Future<void>? _unpairing;
+
+  @override
+  void dispose() {
+    unawaited(_revokedSub?.cancel());
+    super.dispose();
+  }
 
   /// Ilova qayta ochilganda SharedPreferences'dan tiklash.
   ///
   /// Bola allaqachon pairing qilgan bo'lsa, qayta kod kiritmasligi
   /// uchun darhol `paired` holatga o'tamiz — routing Dashboard'ga
-  /// yo'naltiradi. Pairing tiklanganidan keyin DeviceInfoService
-  /// avtomatik boshlanadi.
+  /// yo'naltiradi. Fon ishlari (FGS + native bloklash) tarmoq so'rovidan
+  /// OLDIN boshlanadi — OEM o'ldirgandan keyin himoya darhol tiklansin.
   Future<void> _loadFromStorage() async {
     final prefs = await SharedPreferences.getInstance();
     final parentUid = prefs.getString('parentUid');
     final childId = prefs.getString('childId');
     final childName = prefs.getString('childName');
-    var currentUserId = prefs.getString('currentUserId');
-
-    // Sprint 4.4.5 fallback: eski pair'larda `currentUserId` saqlanmagan.
-    // Backend'dan `GET /api/users/me` orqali olib, prefs'ga saqlaymiz.
-    if (currentUserId == null && parentUid != null && childId != null) {
-      try {
-        final me = await _repository.getMeUserId();
-        if (me != null && me.isNotEmpty) {
-          currentUserId = me;
-          await prefs.setString('currentUserId', me);
-        }
-      } catch (_) {/* ignore — keyingi pair'da olinadi */}
-    }
+    final currentUserId = prefs.getString('currentUserId');
 
     if (parentUid != null && childId != null) {
+      // Server sessiyani ANIQ bekor qilgan (masalan fon isolate'i refresh'da
+      // SESSION_REVOKED olgan) — eski ulanish bilan "ulangan, lekin
+      // ishlamaydi" holatda qolmaymiz. Tokenni o'qib bo'lmasligi (Keystore
+      // nosozligi) "noma'lum" — juftlash va bloklash saqlanadi.
+      if (await _isOwnerRevocationConfirmed()) {
+        await _endRevokedSession();
+        return;
+      }
+
       state = state.copyWith(
         status: PairingStatus.paired,
         parentUid: parentUid,
@@ -114,52 +145,21 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
       // ketadi. Web'da skip qilamiz, navigatsiya esa ishlaydi.
       if (kIsWeb) return;
 
-      // Saqlangan pairing'da qurilma ma'lumotini yangilashni boshlash.
-      final deviceInfoService = _ref.read(deviceInfoServiceProvider);
-      await deviceInfoService.start(
-        parentUid: parentUid,
-        childId: childId,
-      );
-
-      // Location stream'ni boshlash (ruxsat berilgan bo'lsa).
-      // Foreground service ishlayotgan bo'lsa bg isolate o'zi yuritadi —
-      // UI isolate'da ikkinchi GPS stream ochmaymiz (dublikat POST).
-      if (!await FlutterForegroundTask.isRunningService) {
-        final locationService = _ref.read(locationServiceProvider);
-        await locationService.start(
-          parentUid: parentUid,
-          childId: childId,
-          childName: childName ?? 'common.fallbackChildName'.tr(),
-        );
-      }
-
       // ESLATMA: SIM'dan telefon raqamini AVTOMATIK o'qish OLIB TASHLANDI
       // (Google Play Families siyosati — bolalar ilovasida shaxsiy
       // identifikator yig'ish cheklangan; READ_PHONE_* ruxsatlari ham
       // manifestdan chiqarildi). Raqamni ota-ona o'z ilovasida qo'lda
       // kiritadi — SOS qo'ng'iroq tugmasi shundan ishlaydi.
+      await _startPairedServices(
+        parentUid: parentUid,
+        childId: childId,
+        childName: childName ?? 'common.fallbackChildName'.tr(),
+      );
 
-      // App usage sync timer'ini ishga tushirish (Sprint 4.1 bugfix).
-      // Avval faqat PermissionSetupScreen'da chaqirilardi → app
-      // restart'da Timer.periodic yo'qolib qolardi. Endi har pair
-      // tiklanishda qaytadan boshlanadi. PACKAGE_USAGE_STATS yo'q
-      // bo'lsa _syncNow ichida jim chiqadi (non-critical).
-      _ref.read(usageSyncServiceProvider)?.start();
-      _ref.read(stepCounterServiceProvider)?.start();
-
-      // Sprint 4.2: Firestore app_restrictions → SharedPreferences sync.
-      // Kotlin RestrictionService SharedPreferences'dan o'qib bloklangan
-      // ilovalar ustiga overlay ko'rsatadi.
-      _ref.read(restrictionsSyncServiceProvider).start(
-            childId: childId,
-          );
-
-      // Foreground Service — app yopilsa ham kuzatuvni davom ettirish.
-      await _ref.read(backgroundServiceProvider).start();
-
-      // App Restrictions Foreground Service — sozlamalardan o'tilgan
-      // bo'lsa, qayta o'rnatishdan keyin avtomatik tiklanadi.
-      await _startRestrictionServiceIfReady();
+      // Sprint 4.4.5 fallback: eski pair'larda `currentUserId` saqlanmagan.
+      // Backend'dan `GET /api/users/me` orqali olib, prefs'ga saqlaymiz
+      // (fon xizmatlari ishga tushgandan KEYIN — tarmoq ularni kechiktirmasin).
+      if (currentUserId == null) await _backfillCurrentUserId(prefs);
       return;
     }
 
@@ -211,71 +211,107 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
     required String parentUid,
     required String childId,
     required String childName,
+    String? currentUserId,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('parentUid', parentUid);
     await prefs.setString('childId', childId);
     await prefs.setString('childName', childName);
+    // Login bilan kirgan ega (v5): yozishmalarda yo'nalish darhol to'g'ri.
+    if (currentUserId != null) {
+      await prefs.setString('currentUserId', currentUserId);
+    }
 
     state = state.copyWith(
       status: PairingStatus.paired,
       parentUid: parentUid,
       childId: childId,
       childName: childName,
+      currentUserId: currentUserId,
     );
 
-    final deviceInfoService = _ref.read(deviceInfoServiceProvider);
-    await deviceInfoService.start(
+    if (kIsWeb) return;
+    await _startPairedServices(
       parentUid: parentUid,
       childId: childId,
+      childName: childName,
     );
-
-    // Bg isolate ishlayotgan bo'lsa location'ni o'zi yuritadi (dublikat yo'q).
-    if (!await FlutterForegroundTask.isRunningService) {
-      final locationService = _ref.read(locationServiceProvider);
-      await locationService.start(
-        parentUid: parentUid,
-        childId: childId,
-        childName: childName,
-      );
-    }
-
-    // App usage sync (Sprint 4.1 bugfix — restart'da yo'qolardi).
-    _ref.read(usageSyncServiceProvider)?.start();
-      _ref.read(stepCounterServiceProvider)?.start();
-
-    await _ref.read(backgroundServiceProvider).start();
-    await _startRestrictionServiceIfReady();
   }
 
-  /// PACKAGE_USAGE_STATS va SYSTEM_ALERT_WINDOW yoqilgan bo'lsa
-  /// RestrictionService'ni avtomatik ishga tushiradi va Firestore
-  /// sync timer'ini yoqadi (app_usage + installed_apps). Aks holda
-  /// jim qaytadi — foydalanuvchi PermissionSetupScreen'da yoqishi
-  /// kerak (u yer Service'ni o'zi ham boshlaydi).
-  Future<void> _startRestrictionServiceIfReady() async {
-    final usage = UsageStatsService();
-    final hasUsage = await usage.hasPermission();
-    if (hasUsage) {
-      // RestrictionService faqat USAGE ruxsati bilan ham ishga tushadi:
-      // o'yin aniqlash (game queue) overlay talab qilmaydi. Bloklash overlay'i
-      // ruxsat bo'lmasa o'zi no-op qiladi (showOverlay canDrawOverlays'ni
-      // tekshiradi). Shunday qilib overlay rad etilsa ham o'yin push'i ishlaydi.
-      await usage.startRestrictionService();
-      _ref.read(usageSyncServiceProvider)?.start();
-      _ref.read(stepCounterServiceProvider)?.start();
+  /// Ruxsat berilgach (PermissionSetupScreen) yoki ilova qaytganda fon
+  /// xizmatlarini darhol ishga tushiradi: FGS + native RestrictionService,
+  /// so'ng fon ishlarining egasi qayta hal qilinadi. Idempotent — ishlab
+  /// turgan xizmatga bir necha arzon platforma chaqiruvi xolos.
+  ///
+  /// Ilova qaytishi (resume) buni `backgroundOwnerProvider` orqali o'zi
+  /// bajaradi; ruxsat ekrani ham "Davom etish"dan oldin chaqirishi mumkin.
+  Future<void> ensureBackgroundRunning() async {
+    if (kIsWeb || !state.isPaired) return;
+    await _ref.read(backgroundOwnerProvider).ensureRunning();
+  }
 
-      // Sprint 4.2: Firestore app_restrictions → SharedPreferences sync.
-      // Kotlin RestrictionService SharedPreferences'dan o'qib bloklangan
-      // ilovalar ustiga overlay ko'rsatadi. State'dan parentUid/childId
-      // o'qiymiz — pairing tugagan bo'lsa to'ldirilgan.
-      final pParent = state.parentUid;
-      final pChild = state.childId;
-      if (pParent != null && pChild != null) {
-        _ref.read(restrictionsSyncServiceProvider).start(
-              childId: pChild,
-            );
+  /// Juftlangan bola uchun fon ishlari — barcha 4 oqim (saqlangandan
+  /// tiklash, kod, tasdiqlangan juftlash, login/tiklash) shu yerdan o'tadi.
+  ///
+  /// Android: FGS va native RestrictionService DARHOL yoqiladi (keyingi
+  /// sovuq startni kutmasdan). FGS ishlasa — heartbeat, cheklovlar, usage
+  /// va joylashuvni faqat uning isolate'i bajaradi; ishlamasa UI isolate
+  /// bitta BackgroundJobs yuritadi (5 daqiqalik tik + resume).
+  /// iOS: UI isolate BackgroundJobs'ga ega; cheklovlar Family Controls
+  /// sinxroni (IosRestrictionsSyncService) orqali — avvalgidek.
+  Future<void> _startPairedServices({
+    required String parentUid,
+    required String childId,
+    required String childName,
+  }) async {
+    if (PlatformCapabilities.isIOS) {
+      _ref.read(restrictionsSyncServiceProvider).start(childId: childId);
+    }
+    // Qadamlar — UI isolate'da: Health Connect ruxsati va o'qishi ilova
+    // ekranda bo'lishini talab qiladi, FGS isolate qadamlarni yuritmaydi
+    // (dublikat yo'q). Davriy taymer yo'q — tik `syncIfDue`, qaytish
+    // `syncNow`. Idempotent.
+    final steps = _ref.read(stepCounterServiceProvider);
+    if (steps != null) {
+      unawaited(
+        steps.start().catchError((Object e) {
+          debugPrint('[Pairing] qadamlar xizmati: $e');
+        }),
+      );
+    }
+    await _ref
+        .read(backgroundOwnerProvider)
+        .attach(
+          BackgroundSession(
+            childId: childId,
+            parentUid: parentUid,
+            childName: childName,
+          ),
+        );
+  }
+
+  /// Server tasdiqlagan bekor qilish (fon isolate'i ko'rgan bo'lsa ham).
+  /// `TokenStorage` semantikasi: "aniq yo'q" faqat server javobidan keyin;
+  /// o'qish xatosi yoki bo'sh o'qish — "noma'lum" (false).
+  Future<bool> _isOwnerRevocationConfirmed() async {
+    try {
+      return await _ref.read(tokenStorageProvider).isSessionDefinitelyMissing();
+    } catch (e) {
+      debugPrint('[Pairing] sessiya holati noma\'lum: $e');
+      return false;
+    }
+  }
+
+  Future<void> _backfillCurrentUserId(SharedPreferences prefs) async {
+    try {
+      final me = await _repository.getMeUserId();
+      if (me == null || me.isEmpty) return;
+      await prefs.setString('currentUserId', me);
+      if (mounted && state.isPaired) {
+        state = state.copyWith(currentUserId: me);
       }
+    } catch (_) {
+      /* ignore — keyingi ochilishda qayta urinadi */
     }
   }
 
@@ -287,11 +323,14 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
   ///   3. Bola ma'lumotini olish (ism)
   ///   4. SharedPreferences'ga saqlash
   ///   5. State'ni `paired` ga o'tkazish
-  ///   6. DeviceInfoService boshlash
+  ///   6. Fon xizmatlari (FGS + native bloklash, yagona egasi)
   ///
   /// `true` — muvaffaqiyatli, `false` — xato (state.errorMessage'da sabab).
   Future<bool> tryPair(String code) async {
-    state = state.copyWith(status: PairingStatus.pairing);
+    state = state.copyWith(
+      status: PairingStatus.pairing,
+      isSessionEnded: false,
+    );
 
     try {
       // 1. Anonymous Auth — bola UID oladi (Firestore eski xulq;
@@ -322,8 +361,17 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
         case PairingFailureAlreadyUsed():
           state = state.copyWith(
             status: PairingStatus.error,
-            errorMessage: '${'pairing.errorCodeUsed'.tr()} '
+            errorMessage:
+                '${'pairing.errorCodeUsed'.tr()} '
                 '${'pairing.errorAskNewCode'.tr()}',
+          );
+          return false;
+        case PairingFailureRateLimited():
+          // 429 — "tarmoq xatosi" emas: necha daqiqa kutish kerakligini
+          // aniq aytamiz (aks holda "kod/server ishlamayapti" deb o'ylanadi).
+          state = state.copyWith(
+            status: PairingStatus.error,
+            errorMessage: 'pairing.tooManyAttempts'.tr(),
           );
           return false;
         case PairingFailureNetwork():
@@ -332,10 +380,7 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
             errorMessage: 'common.networkError'.tr(),
           );
           return false;
-        case PairingAwaitingParent(
-              :final pairRequestId,
-              :final expiresAt,
-            ):
+        case PairingAwaitingParent(:final pairRequestId, :final expiresAt):
           // Backend 0.6.0: parent tasdiqi kutilmoqda.
           state = state.copyWith(
             status: PairingStatus.awaitingParent,
@@ -368,8 +413,8 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
         status: PairingStatus.paired,
         parentUid: result.parentUid,
         childId: result.childId,
-        childName: childData?['name'] as String? ??
-            'common.fallbackChildName'.tr(),
+        childName:
+            childData?['name'] as String? ?? 'common.fallbackChildName'.tr(),
         currentUserId: result.currentUserId,
       );
 
@@ -386,51 +431,19 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
         }
       }
 
-      // 6. Device Info service'ni boshlash
-      await safe('DeviceInfoService', () async {
-        await _ref.read(deviceInfoServiceProvider).start(
-              parentUid: result.parentUid,
-              childId: result.childId,
-            );
-      });
-
-      // 7. Location stream'ni boshlash (Permission ekrani ruxsat olgach
-      // ishlaydi — yo'q bo'lsa LocationService jim qaytadi).
-      // Bg isolate ishlayotgan bo'lsa o'zi yuritadi (dublikat yo'q).
-      await safe('LocationService', () async {
-        if (await FlutterForegroundTask.isRunningService) return;
-        await _ref.read(locationServiceProvider).start(
-              parentUid: result.parentUid,
-              childId: result.childId,
-              childName: childData?['name'] as String? ??
-                  'common.fallbackChildName'.tr(),
-            );
-      });
-
-      // 7c. App usage sync (Sprint 4.1 bugfix).
-      try {
-        _ref.read(usageSyncServiceProvider)?.start();
-      _ref.read(stepCounterServiceProvider)?.start();
-      } catch (e) {
-        debugPrint('[DEV] UsageSyncService skipped: $e');
+      // 7-9. Fon ishlari: FGS + native bloklash darhol, keyin yagona egasi
+      // (FGS isolate yoki UI isolate) — dublikat heartbeat/GPS/sync yo'q.
+      if (!kIsWeb) {
+        await safe('BackgroundServices', () async {
+          await _startPairedServices(
+            parentUid: result.parentUid,
+            childId: result.childId,
+            childName:
+                childData?['name'] as String? ??
+                'common.fallbackChildName'.tr(),
+          );
+        });
       }
-
-      // Sprint 4.2: Firestore app_restrictions → SharedPreferences sync.
-      try {
-        _ref
-            .read(restrictionsSyncServiceProvider)
-            .start(childId: result.childId);
-      } catch (e) {
-        debugPrint('[DEV] RestrictionsSync skipped: $e');
-      }
-
-      // 8. Foreground Service — app yopilsa ham davom etadi.
-      await safe('BackgroundService', () async {
-        await _ref.read(backgroundServiceProvider).start();
-      });
-
-      // 9. RestrictionService — agar oldin sozlamalarda yoqilgan bo'lsa.
-      await safe('RestrictionService', _startRestrictionServiceIfReady);
 
       // 10. Onboarding'da tanlangan qiziqishlarni backend'ga yuborish
       // (pending bo'lsa). Xato bo'lsa keyingi pair/restart'da qayta urinadi.
@@ -471,34 +484,19 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
         status: PairingStatus.paired,
         parentUid: parentUid,
         childId: childId,
-        childName: childData?['name'] as String? ??
-            'common.fallbackChildName'.tr(),
+        childName:
+            childData?['name'] as String? ?? 'common.fallbackChildName'.tr(),
         currentUserId: currentUserId,
       );
 
-      final deviceInfoService = _ref.read(deviceInfoServiceProvider);
-      await deviceInfoService.start(
-        parentUid: parentUid,
-        childId: childId,
-      );
-
-      // Bg isolate ishlayotgan bo'lsa location'ni o'zi yuritadi (dublikat yo'q).
-      if (!await FlutterForegroundTask.isRunningService) {
-        final locationService = _ref.read(locationServiceProvider);
-        await locationService.start(
+      if (!kIsWeb) {
+        await _startPairedServices(
           parentUid: parentUid,
           childId: childId,
-          childName: childData?['name'] as String? ??
-              'common.fallbackChildName'.tr(),
+          childName:
+              childData?['name'] as String? ?? 'common.fallbackChildName'.tr(),
         );
       }
-
-      _ref.read(usageSyncServiceProvider)?.start();
-      _ref.read(stepCounterServiceProvider)?.start();
-      _ref.read(restrictionsSyncServiceProvider).start(childId: childId);
-
-      await _ref.read(backgroundServiceProvider).start();
-      await _startRestrictionServiceIfReady();
 
       // Onboarding qiziqishlarini backend'ga yuborish (pending bo'lsa).
       try {
@@ -527,32 +525,105 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
   /// Bola qaytadan kod kiritishi uchun (yoki test/debug uchun).
   /// DeviceInfoService oldindan `markOffline` qilinadi — Parent App
   /// real-vaqt online holatini yangilaydi.
-  Future<void> unpair() async {
-    final deviceInfoService = _ref.read(deviceInfoServiceProvider);
-    await deviceInfoService.markOffline();
+  Future<void> unpair() {
+    return _unpairing ??= _doUnpair().whenComplete(() => _unpairing = null);
+  }
 
-    final locationService = _ref.read(locationServiceProvider);
-    locationService.stop();
+  /// Server sessiyani bekor qildi (refresh aniq rad etildi). Ulangan bo'lsak —
+  /// lokal ulanish va cheklovlar tozalanadi, pairing ekrani sababni aytadi.
+  /// Boshqa uzish allaqachon ketayotgan bo'lsa (masalan bola hisobini o'zi
+  /// o'chirmoqda) — e'tiborsiz qoldiramiz.
+  Future<void> handleSessionRevoked() async {
+    if (!state.isPaired || _unpairing != null) return;
+    await _endRevokedSession();
+  }
 
-    await _ref.read(backgroundServiceProvider).stop();
+  /// Pairing ekrani "sessiya tugadi" xabarini ko'rsatgach chaqiradi.
+  void clearSessionEndedNotice() {
+    if (!state.isSessionEnded) return;
+    state = state.copyWith(isSessionEnded: false);
+  }
 
-    // Native ilova-cheklov servisini ATAYIN to'xtatamiz (ACTION_STOP →
-    // watchdog alarmi ham bekor bo'ladi). Aks holda o'z-o'zini tiklovchi
-    // watchdog unpair'dan keyin ham servisni tirik ushlab, eski bloklarni
-    // enforce qilaverardi.
-    await UsageStatsService().stopRestrictionService();
+  Future<void> _endRevokedSession() async {
+    try {
+      await unpair();
+    } catch (e) {
+      debugPrint('[Pairing] bekor qilingan sessiyani tozalash xato: $e');
+    }
+    if (!mounted) return;
+    state = const AppPairingState(isSessionEnded: true);
+  }
+
+  Future<void> _doUnpair() async {
+    // Har qadam alohida himoyalangan — bitta servis xatosi pairing
+    // ma'lumotini (pastda) tozalashga to'sqinlik qilmasin, aks holda ilova
+    // keyingi ochilishda yana "ulangan" bo'lib qolardi.
+
+    // UI isolate'dagi fon ishlari (BackgroundJobs) va 5 daqiqalik tik.
+    await _safeReset(() => _ref.read(backgroundOwnerProvider).detach());
+    // Eski bola uchun yaratilgan UI xizmatlari (qadamlar, usage) yopiladi —
+    // qayta juftlashda yangi bola uchun yangidan yaratiladi.
+    _ref
+      ..invalidate(usageSyncServiceProvider)
+      ..invalidate(stepCounterServiceProvider);
 
     final prefs = await SharedPreferences.getInstance();
+    // Juftlik kalitlari BIRINCHI o'chadi: kech qolgan FGS yozuvi va native
+    // tekshiruv (BootReceiver / RestrictionService `flutter.childId`) uzilganini
+    // darhol ko'rsin — tozalangan cheklov holati qayta tiklanmasin.
     await prefs.remove('parentUid');
     await prefs.remove('childId');
     await prefs.remove('childName');
-    // Eski bloklangan ilovalar/limitlarni ham tozalaymiz — reboot'dan keyin
-    // BootReceiver servisni qayta boshlasa ham enforce qiladigan narsa qolmasin.
-    await prefs.remove('restriction.blocked_packages');
-    await prefs.remove('restriction.limits');
+    if (PlatformCapabilities.hasAndroidControls) {
+      await _releaseAndroidControls(prefs);
+    } else {
+      if (PlatformCapabilities.isIOS) {
+        // Family Controls: tanlov, siyosat, jadvallar va ota-ona PIN'i
+        // tozalanadi — boshqa oilaga ulanganda eski cheklovlar qolmasin.
+        await _safeReset(
+          () async => _ref.read(restrictionsSyncServiceProvider).dispose(),
+        );
+        await _safeReset(() => _ref.read(screenTimeChannelProvider).reset());
+        await _safeReset(() => _ref.read(parentPinStoreProvider).clear());
+      }
+      await prefs.remove('restriction.blocked_packages');
+      await prefs.remove('restriction.limits');
+    }
 
-    await _auth.signOut();
+    // Keyingi ulanishda server yangi bola hisobini yaratadi (tili "uz") —
+    // ilova tili unga qayta yozilsin.
+    await prefs.remove(kSyncedLanguageKey);
 
-    state = const AppPairingState();
+    await _safeReset(_auth.signOut);
+
+    if (mounted) state = const AppPairingState();
+  }
+
+  /// Android'da haqiqiy uzish — telefonda eski bolaning nazoratidan hech
+  /// narsa qolmasin (reboot yoki ilova yangilanishidan keyin ham).
+  Future<void> _releaseAndroidControls(SharedPreferences prefs) async {
+    // 1. UI'dagi cheklov sinxroni (bo'lsa, taymerlari bilan) yopiladi.
+    _ref.invalidate(restrictionsSyncServiceProvider);
+    // 2. FGS (uning isolate'idagi sinxron ham) va native bloklash servisi
+    //    ATAYIN to'xtatiladi (ACTION_STOP → watchdog alarmi ham bekor
+    //    bo'ladi) — aks holda o'z-o'zini tiklovchi watchdog eski bloklarni
+    //    enforce qilaverardi.
+    await _safeReset(() => _ref.read(backgroundServiceProvider).stop());
+    await _safeReset(() => UsageStatsService().stopRestrictionService());
+    // 3. Butun cheklov holati (restriction.*, school_zone.*, game.pending,
+    //    limit_warned) — sinxron to'xtagandan KEYIN, hech kim qayta yozmasin.
+    await _safeReset(
+      () => RestrictionsSyncService.clearEnforcementState(prefs),
+    );
+    // 4. Egasining tokenlari — yangi juftlash/login yangisini yozadi.
+    await _safeReset(() => _ref.read(tokenStorageProvider).clear());
+  }
+
+  Future<void> _safeReset(Future<void> Function() reset) async {
+    try {
+      await reset();
+    } catch (e) {
+      debugPrint('[Pairing] unpair tozalash xato: $e');
+    }
   }
 }

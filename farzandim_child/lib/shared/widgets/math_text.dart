@@ -63,8 +63,8 @@ class MathText extends StatelessWidget {
       if (m.start > cursor) {
         spans.add(TextSpan(text: data.substring(cursor, m.start)));
       }
-      final expr =
-          (m.group(1) ?? m.group(2) ?? m.group(3) ?? m.group(4) ?? '').trim();
+      final expr = (m.group(1) ?? m.group(2) ?? m.group(3) ?? m.group(4) ?? '')
+          .trim();
       spans.add(
         WidgetSpan(
           alignment: PlaceholderAlignment.middle,

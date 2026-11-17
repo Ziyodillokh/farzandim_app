@@ -55,14 +55,17 @@ class BackendDevicePolicyRepository {
   }
 
   /// Bola "O'chirishni taqiqlash" (Device Admin)ni o'chirganini backend'ga
-  /// xabar qiladi → ota-onaga push (Play-mos deterrent). Xato yutiladi.
-  Future<void> reportUninstallGuardDisabled(String childId) async {
+  /// xabar qiladi → ota-onaga push (Play-mos deterrent). Xato yutiladi;
+  /// `true` — server qabul qildi (bayroqni shundagina tozalash mumkin).
+  Future<bool> reportUninstallGuardDisabled(String childId) async {
     try {
       await _dio.post<Map<String, dynamic>>(
         '/children/$childId/uninstall-guard-disabled',
       );
+      return true;
     } on DioException catch (e) {
       debugPrint('reportUninstallGuardDisabled: $e');
+      return false;
     }
   }
 

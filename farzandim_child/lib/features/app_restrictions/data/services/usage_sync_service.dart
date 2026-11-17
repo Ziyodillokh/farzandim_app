@@ -1,197 +1,232 @@
 // ─────────────────────────────────────────────────────────────────────
 // UsageSyncService — Backend installed_apps + app_usage batch sync
-// (Sprint 4.4.10)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Eski Firestore yozish butunlay olib tashlandi. Backend endpoint'lar:
-//   POST /api/children/:childId/installed-apps   batch upsert
-//   POST /api/children/:childId/app-usage        batch upsert (daily)
+// Backend endpoint'lar:
+//   POST /api/children/:childId/app-usage        batch upsert (kunlik agg)
+//   POST /api/children/:childId/installed-apps   batch upsert (ikon bilan)
 //
-// Periodic timer:
-//   - App usage: har 15 daqiqada (kunlik agg, day key)
-//   - Installed apps: har 24 soatda (kichik o'zgarish, lekin
-//     `lastSeenAt` har sync'da yangilanadi).
+// Taymer YO'Q — BackgroundJobs (5 daqiqalik tick, ekran yoqilishi) chaqiradi:
+//   - foydalanish: `syncIfDue()` — oxirgi muvaffaqiyatdan ~5 daq o'tgan
+//     bo'lsa; ikonsiz (`includeIcons: false`); jamlar o'zgarmagan bo'lsa POST
+//     qilinmaydi;
+//   - o'rnatilgan ilovalar (ikonlar — ENG OG'IR ish): kuniga bir marta va
+//     bugungi foydalanishda yangi paket ko'rinsa; bir vaqtda bitta, xatoda
+//     eksponensial kutish (2 → 60 daqiqa). Holat prefs'da (bola bo'yicha) —
+//     har ishga tushishda qayta yuklanmaydi.
+//
+// Ruxsatni bilib bo'lmasa (fon dvigatelida plagin yo'q) — jim o'tkaziladi.
 
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:farzandim_child/core/time/trusted_clock.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_installed_apps_repository.dart';
+import 'package:farzandim_child/features/app_restrictions/data/services/restriction_plan.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
+import 'package:farzandim_child/features/background/data/services/background_telemetry.dart';
+import 'package:farzandim_child/features/background/data/services/job_timing.dart';
 
 class UsageSyncService {
   UsageSyncService({
     required BackendInstalledAppsRepository backendRepo,
     required UsageStatsService statsService,
     required String childId,
+    DateTime Function()? clock,
+    Future<SharedPreferences> Function()? prefs,
   }) : _backendRepo = backendRepo,
        _statsService = statsService,
-       _childId = childId;
+       _childId = childId,
+       // Kun kaliti ishonchli soatda (bola sanani o'zgartirsa ham to'g'ri kun).
+       _clock = clock ?? TrustedClock.now,
+       _prefs = prefs ?? SharedPreferences.getInstance;
+
+  /// Foydalanish yuborish oralig'i (5 daqiqalik tick; tebranishga zaxira).
+  static const syncInterval = Duration(minutes: 4, seconds: 30);
+
+  /// `childId|YYYY-MM-DD` — o'rnatilgan ilovalar oxirgi yuklangan kun.
+  static const installedSyncedKey = 'usage.installed_synced';
+
+  /// `childId|pkg1,pkg2` — oxirgi yuklangan ro'yxatdagi paketlar.
+  static const installedKnownKey = 'usage.installed_known';
 
   final BackendInstalledAppsRepository _backendRepo;
   final UsageStatsService _statsService;
   final String _childId;
+  final DateTime Function() _clock;
+  final Future<SharedPreferences> Function() _prefs;
 
-  Timer? _usageTimer;
-  Timer? _installedTimer;
+  final Backoff _installedBackoff = Backoff(
+    first: const Duration(minutes: 2),
+    max: const Duration(minutes: 60),
+  );
 
-  /// O'rnatilgan ilovalar (nom + ikon) hech bo'lmasa bir marta backendga
-  /// yetib bordimi. `false` bo'lsa sinxron tez-tez qayta urinadi.
-  bool _installedSynced = false;
+  DateTime? _lastUsageOk;
+  String? _lastUsageSignature;
+  Future<void>? _usageInFlight;
+  Future<void>? _installedInFlight;
+  Set<String>? _known;
 
+  /// Bugungi foydalanishda ko'rinib, ro'yxat qayta yuklanishiga sabab bo'lgan
+  /// paketlar (har biri uchun bir marta).
+  final Set<String> _refreshedFor = {};
+
+  /// Moslik (pairing oqimi chaqiradi): taymer yo'q, faqat muddati kelgan
+  /// bo'lsa bitta sync.
   void start() {
-    debugPrint('=== UsageSyncService.start (Backend) childId=$_childId ===');
-
-    // Timer'larni qayta o'rnatamiz — `start()` startup'da bir necha marta
-    // chaqiriladi (pairing loader + restriction-ready). `cancel()` avvalgi
-    // deferred installed-apps timer'ini bekor qiladi → og'ir ikon sync FAQAT
-    // BIR MARTA (oxirgi start'dan ~4s keyin) ishlaydi, takror emas.
-    _usageTimer?.cancel();
-    _installedTimer?.cancel();
-
-    unawaited(_syncUsage());
-
-    // Sync interval 60 sek — Parent UI 30 sek polling bilan birga foydalanish
-    // vaqti ~1 daqiqa ichida yangilanadi. Background isolate'da ham ishlaydi
-    // (ChildBackgroundTaskHandler), shuning uchun ilova fonda bo'lsa ham
-    // faollik kechikmaydi.
-    _usageTimer = Timer.periodic(
-      const Duration(seconds: 60),
-      (_) => unawaited(_syncUsage()),
-    );
-
-    // Installed-apps (har ilova ikoni — ENG OG'IR ish) startup'ni bloklamasin:
-    // birinchi sync ~4s keyin (native background queue bilan main thread
-    // baribir bloklanmaydi, lekin startup paytida behuda ish qilmaymiz).
-    _installedTimer = Timer(const Duration(seconds: 4), () {
-      unawaited(_syncInstalledApps());
-      _scheduleInstalledSync();
-    });
-
-    debugPrint('UsageSync: Backend timer\'lar boshlandi');
+    debugPrint('UsageSyncService.start childId=$_childId');
+    unawaited(syncIfDue());
   }
 
-  /// O'rnatilgan ilovalar sinxroni: birinchi muvaffaqiyatgacha har 2 daqiqada,
-  /// keyin sutkasiga bir marta.
-  ///
-  /// Yangi o'rnatishda `start()` paytida Usage Access ruxsati hali berilmagan
-  /// bo'ladi → `_syncInstalledApps` bo'sh qaytadi. Avval keyingi urinish faqat
-  /// 24 soatdan keyin edi, shuning uchun ota-onada ilova nomi paket nomidan
-  /// yasalgan ("Clockpackage", "Taxi") va ikon o'rniga harf ko'rinardi —
-  /// backendda `installed_apps` bo'sh bo'lgani uchun.
-  void _scheduleInstalledSync() {
-    _installedTimer?.cancel();
-    _installedTimer = Timer.periodic(
-      _installedSynced ? const Duration(hours: 24) : const Duration(minutes: 2),
-      (_) => unawaited(_syncInstalledApps()),
-    );
+  /// Oxirgi muvaffaqiyatli yuborishdan ~5 daqiqa o'tgan bo'lsa — foydalanish
+  /// (va kerak bo'lsa o'rnatilgan ilovalar) yuboriladi.
+  Future<void> syncIfDue() {
+    final running = _usageInFlight;
+    if (running != null) return running;
+    if (!isDue(_lastUsageOk, _clock(), syncInterval)) return Future.value();
+    final run = _syncUsage().whenComplete(() => _usageInFlight = null);
+    _usageInFlight = run;
+    return run;
   }
+
+  /// Hozircha bo'shatiladigan narsa yo'q (taymer yo'q) — API mosligi uchun.
+  void dispose() {}
 
   Future<void> _syncUsage() async {
+    final startedAt = _clock();
     try {
-      final hasPermission = await _statsService.hasPermission();
-      if (!hasPermission) {
-        debugPrint('UsageSync: PACKAGE_USAGE_STATS ruxsati yo\'q');
+      final hasPermission = await _statsService.tryHasPermission();
+      if (hasPermission != true) {
+        debugPrint('UsageSync: ruxsat yo\'q yoki noma\'lum ($hasPermission)');
         return;
       }
-
-      final stats = await _statsService.getUsageStats(days: 1);
-      if (stats.isEmpty) {
-        debugPrint('UsageSync: stats bo\'sh');
-        return;
-      }
-
-      // Toshkent (UTC+5) kun chegarasi — backend agregatsiyasi va haftalik
-      // hisobot bilan mos (qurilma vaqt zonasi boshqa bo'lsa ham to'g'ri sana).
-      final now = DateTime.now().toUtc().add(const Duration(hours: 5));
-      final dayKey =
-          '${now.year}-'
-          '${now.month.toString().padLeft(2, '0')}-'
-          '${now.day.toString().padLeft(2, '0')}';
-
-      // Backend `(childId, packageName, date)` unique key upsert.
-      final entries = stats
-          .map(
-            (s) => <String, dynamic>{
-              'packageName': s.packageName,
-              'date': dayKey,
-              'foregroundMs': s.totalTimeMs,
-              'openCount': 1, // Native plugin'da yo'q hozircha
-              'lastUsedAt': s.lastTimeUsed.toUtc().toIso8601String(),
-            },
-          )
-          .toList(growable: false);
-
-      final ok = await _backendRepo.upsertAppUsage(
-        childId: _childId,
-        entries: entries,
+      final stats = await _statsService.getUsageStats(
+        days: 1,
+        includeIcons: false,
       );
-      debugPrint(
-        'UsageSync: usage ${entries.length} ta entry ($dayKey) — ok=$ok',
-      );
+      if (stats.isEmpty) return;
 
-      // Bu yergacha yetdik = Usage Access ruxsati BOR (hasPermission o'tdi va
-      // stats keldi). Installed-apps (ikonalar) hali sinxronlanmagan bo'lsa —
-      // DARHOL trigger. Aks holda ikonalar 2 daqiqalik retry timer'ini
-      // kutardi. Ota-onada ilova ikonasi ~60s ichida (birinchi usage sync)
-      // chiqadi, 2 daqiqagacha emas.
-      if (!_installedSynced) {
-        unawaited(_syncInstalledApps());
+      // Toshkent kun chegarasi — backend agregatsiyasi bilan mos.
+      final dayKey = tashkentDayKey(startedAt);
+      final entries = [
+        for (final s in stats)
+          <String, dynamic>{
+            'packageName': s.packageName,
+            'date': dayKey,
+            'foregroundMs': s.totalTimeMs,
+            'openCount': 1, // Native plugin'da yo'q hozircha
+            'lastUsedAt': s.lastTimeUsed.toUtc().toIso8601String(),
+          },
+      ];
+      final signature = _signature(dayKey, stats);
+      if (signature != _lastUsageSignature) {
+        final ok = await _backendRepo.upsertAppUsage(
+          childId: _childId,
+          entries: entries,
+        );
+        debugPrint('UsageSync: usage ${entries.length} ta ($dayKey) ok=$ok');
+        if (!ok) return;
+        _lastUsageSignature = signature;
       }
-    } catch (e) {
-      debugPrint('UsageSync usage xato: $e');
+      _lastUsageOk = startedAt;
+      await _maybeSyncInstalled(stats);
+    } catch (e, s) {
+      BackgroundTelemetry.report(e, s, 'usage.sync');
     }
   }
 
-  Future<void> _syncInstalledApps() async {
-    try {
-      final hasPermission = await _statsService.hasPermission();
-      if (!hasPermission) {
-        debugPrint('UsageSync installed: ruxsat yo\'q');
-        return;
-      }
+  /// Jamlar o'zgarmagan bo'lsa POST takrorlanmaydi.
+  static String _signature(String dayKey, List<AppUsageData> stats) {
+    final parts = [for (final s in stats) '${s.packageName}:${s.totalTimeMs}']
+      ..sort();
+    return '$dayKey|${parts.join(',')}';
+  }
 
+  Future<void> _maybeSyncInstalled(List<AppUsageData> stats) async {
+    if (_installedInFlight != null) return;
+    final now = _clock();
+    if (_installedBackoff.isBlocked(now)) return;
+    final prefs = await _prefs();
+    final known = _known ??= _readKnown(prefs);
+    final isDoneToday =
+        prefs.get(installedSyncedKey) == '$_childId|${tashkentDayKey(now)}';
+    final fresh = stats
+        .map((s) => s.packageName)
+        .where((p) => !known.contains(p) && !_refreshedFor.contains(p))
+        .toList(growable: false);
+    if (isDoneToday && fresh.isEmpty) return;
+    if (fresh.isNotEmpty) {
+      debugPrint(
+        'UsageSync: yangi ilova ${fresh.length} ta — ro\'yxat yuklanadi',
+      );
+    }
+    _refreshedFor.addAll(fresh);
+    final run = _syncInstalledApps(prefs)
+        .then((ok) {
+          // Xato bo'lsa — kutishdan keyin shu paketlar uchun qayta urinamiz.
+          if (!ok) _refreshedFor.removeAll(fresh);
+        })
+        .whenComplete(() => _installedInFlight = null);
+    _installedInFlight = run;
+    await run;
+  }
+
+  Future<bool> _syncInstalledApps(SharedPreferences prefs) async {
+    final now = _clock();
+    try {
       final apps = await _statsService.getInstalledApps();
       if (apps.isEmpty) {
-        debugPrint('UsageSync: installed apps bo\'sh');
-        return;
+        _installedBackoff.fail(now);
+        return false;
       }
-
       // Backend `(childId, packageName)` upsert + lastSeenAt avtomatik.
-      // `iconBase64` payload'da yuboriladi — Backend qabul qilsa Parent
-      // App ko'rsatadi. Backend rad etsa, top-level ignore qiladi.
-      final batch = apps
-          .map(
-            (a) => <String, dynamic>{
-              'packageName': a.packageName,
-              'appName': a.appName,
-              'isSystem': false,
-              if (a.iconBase64 != null) 'iconBase64': a.iconBase64,
-              // Qurilma aniqlagan haqiqiy kategoriya (bo'lsa) — backend
-              // kategoriya-bloklashda paket-nomi taxminidan ustun ishlatadi.
-              if (a.category != null) 'category': a.category,
-            },
-          )
-          .toList(growable: false);
-
+      final batch = [
+        for (final a in apps)
+          <String, dynamic>{
+            'packageName': a.packageName,
+            'appName': a.appName,
+            'isSystem': false,
+            if (a.iconBase64 != null) 'iconBase64': a.iconBase64,
+            // Qurilma aniqlagan haqiqiy kategoriya (bo'lsa) — backend
+            // kategoriya-bloklashda paket-nomi taxminidan ustun ishlatadi.
+            if (a.category != null) 'category': a.category,
+          },
+      ];
       final ok = await _backendRepo.upsertInstalledApps(
         childId: _childId,
         apps: batch,
       );
-      debugPrint('UsageSync: installed ${batch.length} ta upsert — ok=$ok');
-      if (ok && !_installedSynced) {
-        _installedSynced = true;
-        _scheduleInstalledSync(); // 2 daqiqa → 24 soat
+      debugPrint('UsageSync: installed ${batch.length} ta — ok=$ok');
+      if (!ok) {
+        _installedBackoff.fail(now);
+        return false;
       }
-    } catch (e) {
-      debugPrint('UsageSync installed xato: $e');
+      _installedBackoff.reset();
+      final known = {for (final a in apps) a.packageName};
+      _known = known;
+      await prefs.setString(
+        installedSyncedKey,
+        '$_childId|${tashkentDayKey(now)}',
+      );
+      await prefs.setString(
+        installedKnownKey,
+        '$_childId|${(known.toList()..sort()).join(',')}',
+      );
+      return true;
+    } catch (e, s) {
+      _installedBackoff.fail(now);
+      BackgroundTelemetry.report(e, s, 'usage.installed');
+      return false;
     }
   }
 
-  void dispose() {
-    _usageTimer?.cancel();
-    _installedTimer?.cancel();
-    _usageTimer = null;
-    _installedTimer = null;
+  Set<String> _readKnown(SharedPreferences prefs) {
+    final raw = prefs.get(installedKnownKey);
+    if (raw is! String) return <String>{};
+    final sep = raw.indexOf('|');
+    if (sep < 0 || raw.substring(0, sep) != _childId) return <String>{};
+    return raw.substring(sep + 1).split(',').where((p) => p.isNotEmpty).toSet();
   }
 }

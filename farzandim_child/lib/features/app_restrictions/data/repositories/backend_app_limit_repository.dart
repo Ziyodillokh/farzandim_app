@@ -17,8 +17,9 @@ import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final backendAppLimitRepositoryProvider =
-    Provider<BackendAppLimitRepository>((ref) {
+final backendAppLimitRepositoryProvider = Provider<BackendAppLimitRepository>((
+  ref,
+) {
   return BackendAppLimitRepository(dio: ref.watch(dioClientProvider));
 });
 

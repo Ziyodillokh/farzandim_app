@@ -16,8 +16,9 @@ import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final backendScheduleRepositoryProvider =
-    Provider<BackendScheduleRepository>((ref) {
+final backendScheduleRepositoryProvider = Provider<BackendScheduleRepository>((
+  ref,
+) {
   return BackendScheduleRepository(dio: ref.watch(dioClientProvider));
 });
 
@@ -75,8 +76,9 @@ class BackendScheduleRepository {
       if (data == null) return null;
       final list = data['schedules'] as List<dynamic>? ?? const [];
       return list
-          .map((e) =>
-              AppSchedulePolicy.fromBackendJson(e as Map<String, dynamic>))
+          .map(
+            (e) => AppSchedulePolicy.fromBackendJson(e as Map<String, dynamic>),
+          )
           .toList();
     } on DioException catch (e) {
       debugPrint('BackendScheduleRepository.getSchedules: $e');

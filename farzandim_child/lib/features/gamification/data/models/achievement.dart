@@ -108,6 +108,15 @@ class Achievements {
     ),
   ];
 
+  /// Ilovada hali mavjud bo'lmagan funksiyalarga bog'liq yutuqlar (post
+  /// yaratish / boshqa bolaga yordam) — UI'da ko'rsatilmaydi, aks holda
+  /// bola hech qachon ocha olmaydigan medal ko'rinardi.
+  static const Set<String> _hiddenIds = {'content_creator', 'helper'};
+
+  /// UI'da ko'rsatiladigan yutuqlar katalogi (`all` dan yashirinlarsiz).
+  static List<Achievement> get visible =>
+      all.where((a) => !_hiddenIds.contains(a.id)).toList(growable: false);
+
   static Achievement? byId(String id) {
     for (final a in all) {
       if (a.id == id) return a;

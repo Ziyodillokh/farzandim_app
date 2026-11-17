@@ -22,8 +22,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final backendInstalledAppsRepositoryProvider =
     Provider<BackendInstalledAppsRepository>((ref) {
-  return BackendInstalledAppsRepository(dio: ref.watch(dioClientProvider));
-});
+      return BackendInstalledAppsRepository(dio: ref.watch(dioClientProvider));
+    });
 
 class BackendInstalledAppsRepository {
   BackendInstalledAppsRepository({required Dio dio}) : _dio = dio;
@@ -49,9 +49,7 @@ class BackendInstalledAppsRepository {
         '/children/$childId/installed-apps',
         data: {'apps': apps},
       );
-      debugPrint(
-        'BackendInstalledApps: ${apps.length} ta app upsert qilindi',
-      );
+      debugPrint('BackendInstalledApps: ${apps.length} ta app upsert qilindi');
       return true;
     } on DioException catch (e) {
       debugPrint(
@@ -78,9 +76,7 @@ class BackendInstalledAppsRepository {
         '/children/$childId/app-usage',
         data: {'entries': entries},
       );
-      debugPrint(
-        'BackendAppUsage: ${entries.length} ta entry upsert qilindi',
-      );
+      debugPrint('BackendAppUsage: ${entries.length} ta entry upsert qilindi');
       return true;
     } on DioException catch (e) {
       debugPrint(

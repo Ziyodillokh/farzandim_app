@@ -50,4 +50,10 @@ class AnonAuthRepository {
   Future<void> signOut() async {
     await _auth.signOut();
   }
+
+  /// Anonim Firebase foydalanuvchisini o'chiradi (hisobni o'chirish oqimi).
+  /// Foydalanuvchi bo'lmasa — hech narsa qilmaydi.
+  Future<void> deleteCurrentUser() async {
+    await _auth.currentUser?.delete();
+  }
 }

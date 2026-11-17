@@ -150,8 +150,9 @@ class _ToastView extends StatelessWidget {
                                 padding: const EdgeInsets.all(9),
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor:
-                                      AlwaysStoppedAnimation<Color>(accent),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    accent,
+                                  ),
                                 ),
                               )
                             : Icon(
