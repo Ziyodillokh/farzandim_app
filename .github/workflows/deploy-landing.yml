@@ -73,7 +73,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
-      - run: npm run build
+      - name: Build (Google Fonts nosozligida qayta urinish)
+        run: bash "$GITHUB_WORKSPACE/.github/scripts/retry.sh" 3 npm run build
       - run: npm run check:export
       - name: Playwright (5 rol × barcha sahifalar)
         run: |
@@ -102,7 +103,7 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf .next out
-          npm run build
+          bash "$GITHUB_WORKSPACE/.github/scripts/retry.sh" 3 npm run build
           npm run check:export
           grep -q '/maktab/_next/' out/index.html || { echo "::error::basePath /maktab emas"; exit 1; }
           if grep -q '/school/_next/' out/index.html; then echo "::error::demo basePath aralashdi"; exit 1; fi
@@ -130,7 +131,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
-      - run: npm run build
+      - name: Build (Google Fonts nosozligida qayta urinish)
+        run: bash "$GITHUB_WORKSPACE/.github/scripts/retry.sh" 3 npm run build
         env:
           NEXT_TELEMETRY_DISABLED: '1'
       - run: npm run check:export

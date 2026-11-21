@@ -135,9 +135,39 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.backend == 'true' || github.event.inputs.component == 'backend' || github.event.inputs.component == 'all' }}
     runs-on: ubuntu-22.04
-    # E2E (73+ to'plam, --runInBand) ~20 daqiqadan oshdi; 20 da bekor bo'lib
-    # deploy o'tkazib yuborilardi. Osilib qolish baribir chegaralangan.
-    timeout-minutes: 45
+    # Tez tekshiruvlar (typecheck + unit). E2E alohida `backend-e2e` da, bo'laklarga bo'lingan.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install + prisma generate + typecheck
+        working-directory: backend
+        run: |
+          npm ci
+          npx prisma generate
+          npx tsc --noEmit -p tsconfig.json
+
+      - name: Unit testlar
+        working-directory: backend
+        run: npx jest --ci
+
+  # E2E: 84+ to'plam ketma-ket (--runInBand) ~38 daqiqa edi. Endi 4 ta parallel bo'lak
+  # (`jest --shard`), har biri o'z Postgres'ida — testlar o'sha-o'sha, vaqt ~4 baravar kam.
+  # Bittasi yiqilsa (fail-fast) qolganlari to'xtaydi va backend deploy ISHGA TUSHMAYDI.
+  backend-e2e:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' || github.event.inputs.component == 'backend' || github.event.inputs.component == 'all' }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: [1, 2, 3, 4]
     services:
       postgres:
         image: postgres:16-alpine
@@ -160,24 +190,19 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
-      - name: Install + prisma generate + typecheck
+      - name: Install + prisma generate
         working-directory: backend
         run: |
           npm ci
           npx prisma generate
-          npx tsc --noEmit -p tsconfig.json
 
-      - name: Unit testlar
+      - name: E2E testlar (Postgres, bo'lak ${{ matrix.shard }}/4)
         working-directory: backend
-        run: npx jest --ci
-
-      - name: E2E testlar (Postgres)
-        working-directory: backend
-        run: npm run test:e2e -- --ci
+        run: npm run test:e2e -- --ci --shard=${{ matrix.shard }}/4
 
   # ─────────────────────────── BACKEND (NestJS) ───────────────────────────
   backend:
-    needs: [changes, backend-quality]
+    needs: [changes, backend-quality, backend-e2e]
     if: ${{ needs.changes.outputs.backend == 'true' || github.event.inputs.component == 'backend' || github.event.inputs.component == 'all' }}
     runs-on: ubuntu-22.04
     # Osilib qolgan ish concurrency navbatini 6 soat (GitHub default) band
