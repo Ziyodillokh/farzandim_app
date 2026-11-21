@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 
 export const CODE_PREFIX = 'P-';
 export const CODE_DIGITS = 4;
+/** 4-raqamdan keyin avtomatik yuborishgacha kutish (USB karta o'qigichi tugatib ulgurishi uchun). */
+export const AUTO_SUBMIT_DELAY_MS = 250;
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const;
 /** Tugma bosilganda fokus kod maydonida qoladi (skaner kiritishi yo'qolmasin). */
 const keepFocus = (e: MouseEvent) => e.preventDefault();
@@ -40,14 +42,26 @@ export function KioskKeypad({
     if (active && !busy) inputRef.current?.focus({ preventScroll: true });
   }, [active, busy]);
 
+  // Avtomatik yuborish oxirgi tugmadan keyin biroz kutadi: USB NFC o'qigich karta raqamini shu
+  // maydonga tez yozsa, u karta deb taniladi va raqamlar tozalanadi — yuborish bekor bo'ladi.
+  const autoSubmit = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => {
+    if (digits.length < CODE_DIGITS) clearTimeout(autoSubmit.current);
+  }, [digits]);
+  useEffect(() => () => clearTimeout(autoSubmit.current), []);
+
   const update = (next: string) => {
     const clean = next.replace(/\D/g, '').slice(0, CODE_DIGITS);
     onDigitsChange(clean);
-    if (clean.length === CODE_DIGITS && !busy) onSubmit(`${CODE_PREFIX}${clean}`);
+    clearTimeout(autoSubmit.current);
+    if (clean.length === CODE_DIGITS && !busy) {
+      autoSubmit.current = setTimeout(() => onSubmit(`${CODE_PREFIX}${clean}`), AUTO_SUBMIT_DELAY_MS);
+    }
   };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    clearTimeout(autoSubmit.current);
     if (digits.length === CODE_DIGITS && !busy) onSubmit(`${CODE_PREFIX}${digits}`);
   };
 
