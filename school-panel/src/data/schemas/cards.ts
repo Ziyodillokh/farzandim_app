@@ -17,6 +17,24 @@ export function normalizeCardUid(raw: string): string | null {
   return compact.toUpperCase();
 }
 
+/** O'nlik ko'rinishdagi UID uzunligi → bayt soni (USB o'qigichlar 4 baytni 10 raqam qilib yozadi). */
+const DECIMAL_UID_BYTES: Readonly<Record<number, number>> = { 10: 4, 15: 7, 16: 7, 17: 7 };
+
+/**
+ * USB o'qigich (klaviatura rejimi) yozgan raqam: hex bo'lsa — o'zi, o'nlik bo'lsa — hex'ga
+ * o'giriladi. Bir xil o'qigich bilan biriktirilgan va tegizilgan karta doim bir xil chiqadi.
+ */
+export function normalizeReaderUid(raw: string): string | null {
+  const hex = normalizeCardUid(raw);
+  if (hex) return hex;
+  const digits = raw.trim();
+  const bytes = /^\d+$/.test(digits) ? DECIMAL_UID_BYTES[digits.length] : undefined;
+  if (!bytes) return null;
+  const value = BigInt(digits);
+  if (value >= BigInt(2) ** BigInt(bytes * 8)) return null;
+  return value.toString(16).toUpperCase().padStart(bytes * 2, '0');
+}
+
 export const cardAssignSchema = z
   .object({
     studentId: z.string().min(1, msg.required),
@@ -24,7 +42,7 @@ export const cardAssignSchema = z
     url: z.string().trim().max(1024, msg.tooLong).optional(),
     number: z.string().trim().min(1, msg.required).max(32, msg.tooLong).optional(),
   })
-  .refine((d) => Boolean(d.url) || (d.uid ? normalizeCardUid(d.uid) !== null : false), { message: msg.cardUid, path: ['uid'] });
+  .refine((d) => Boolean(d.url) || (d.uid ? normalizeReaderUid(d.uid) !== null : false), { message: msg.cardUid, path: ['uid'] });
 
 export const cardBlockSchema = z.object({
   reason: z.enum(CARD_BLOCK_REASONS),

@@ -12,7 +12,7 @@ test('kiosk: demo karta tegishi kirishni qayd etadi va NFC qatori ko\'rinadi', a
   await page.evaluate((clock) => localStorage.setItem('parvoz-school:clock', JSON.stringify({ ...clock, realStartedAt: Date.now() })), SCENARIO);
 
   await page.goto(url('/kiosk'));
-  await expect(page.getByText(/NFC karta|Bu qurilmada NFC yo'q/)).toBeVisible();
+  await expect(page.getByText(/NFC karta|Kartani o'qigichga tegizing/)).toBeVisible();
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/kiosk-nfc.png` });
   await page.getByRole('button', { name: 'Demo: karta tegizish' }).click();
 

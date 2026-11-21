@@ -60,3 +60,38 @@ test('kiosk orqali kirish ikkinchi tabdagi sinf ro\'yxatida darhol ko\'rinadi', 
   await expect(status).toContainText('Keldi', { timeout: 5_000 });
   await expect(row.getByRole('cell').nth(3)).toContainText(/\d{2}:\d{2}/);
 });
+
+test('kiosk: USB o\'qigich (klaviatura rejimi) kartani to\'g\'ridan-to\'g\'ri qayd etadi', async ({ page }) => {
+  const errors = trackErrors(page);
+  await login(page, 'navbatchi', 'Navbatchi2026');
+  const uid = await page.evaluate((clock) => {
+    localStorage.setItem('parvoz-school:clock', JSON.stringify({ ...clock, realStartedAt: Date.now() }));
+    const raw = localStorage.getItem('parvoz-school:db:v1');
+    type Db = { tables: { cards: Array<{ uid: string; kind: string; status: string; studentId: string }>; students: Array<{ id: string; classId: string; archived: boolean }> } };
+    const db = raw ? (JSON.parse(raw) as Db) : null;
+    const inClass = new Set((db?.tables.students ?? []).filter((s) => !s.archived && s.classId === 'cls-9a').map((s) => s.id));
+    return db?.tables.cards.find((c) => c.kind === 'UID' && c.status === 'ACTIVE' && inClass.has(c.studentId))?.uid ?? '';
+  }, SCENARIO);
+  expect(uid).toMatch(/^[0-9A-F]{14}$/);
+
+  await page.goto(url('/kiosk'));
+  await expect(page.getByText('Kartani o\'qigichga tegizing')).toBeVisible();
+  const input = page.getByLabel('P-1234');
+  await expect(input).toBeFocused();
+
+  // O'qigich: belgilar ~5 ms oraliqda va Enter — kod maydoniga yuborilmaydi, karta sifatida o'tadi.
+  await page.keyboard.type(uid, { delay: 5 });
+  await page.keyboard.press('Enter');
+  const result = page.getByRole('alertdialog');
+  await expect(result).toContainText(/Xush kelibsiz|Kechikdingiz|Allaqachon/);
+  await expect(result).not.toContainText('Kod topilmadi');
+  await result.click();
+  await expect(result).toBeHidden();
+  await expect(input).toHaveValue('');
+
+  // Ro'yxatda yo'q karta (o'nlik ko'rinishda) — "Karta tanilmadi".
+  await page.keyboard.type('0012345678', { delay: 5 });
+  await page.keyboard.press('Enter');
+  await expect(result).toContainText('Karta tanilmadi');
+  expect(errors).toEqual([]);
+});

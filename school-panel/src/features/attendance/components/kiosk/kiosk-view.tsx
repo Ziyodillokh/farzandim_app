@@ -10,6 +10,7 @@ import { ServiceError } from '@/data/contracts';
 import { clockNow } from '@/data/mock/clock';
 import { pickDemoCardUid } from '@/data/mock/demo-cards';
 import { isHttpMode } from '@/data/source';
+import { useCardWedge } from '@/features/cards/card-wedge';
 import { useCardTap } from '@/features/cards/hooks';
 import type { CardRead } from '@/features/cards/nfc';
 import { kioskId } from '@/features/cards/tap-queue';
@@ -27,6 +28,7 @@ import { KioskQr } from './kiosk-qr';
 import { KioskResult, type KioskOutcome } from './kiosk-result';
 import { KioskSearch } from './kiosk-search';
 import { KioskStats } from './kiosk-stats';
+import { useScreenWakeLock, useWindowFocused } from './use-kiosk-device';
 import { useKioskEngine } from './use-kiosk-engine';
 
 const KEYFRAMES = '@keyframes kiosk-countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }';
@@ -92,6 +94,19 @@ function KioskScreen() {
     [cardTap, enqueue, t],
   );
 
+  // USB NFC o'qigich (klaviatura rejimi): kartaning raqami to'g'ridan-to'g'ri tegishga ketadi,
+  // kod maydoniga tushib qolgan raqamlar tozalanadi. Ekran o'chmaydi; oyna faol emasligi ko'rinadi.
+  const onUsbCard = useCallback(
+    (uid: string) => {
+      setDigits('');
+      runCard({ uid });
+    },
+    [runCard],
+  );
+  useCardWedge(onUsbCard);
+  useScreenWakeLock();
+  const windowFocused = useWindowFocused();
+
   // Demo: hali kelmagan o'quvchining kartasini "tegizish" (haqiqiy NFC'siz ko'rsatish uchun).
   const demoTap = useCallback(() => {
     const uid = pickDemoCardUid();
@@ -111,7 +126,7 @@ function KioskScreen() {
 
       <div className="relative mx-auto flex min-h-full max-w-[1500px] flex-col gap-4 p-4 md:h-full md:gap-5 md:p-6 xl:gap-6 xl:px-10 xl:py-7">
         <KioskHeader />
-        <KioskNfc onRead={runCard} queued={queue.size} onDemoTap={isHttpMode ? undefined : demoTap} />
+        <KioskNfc onRead={runCard} queued={queue.size} windowFocused={windowFocused} onDemoTap={isHttpMode ? undefined : demoTap} />
         <main className="grid min-h-0 flex-1 items-stretch gap-4 md:grid-cols-2 md:gap-5 xl:gap-6">
           <KioskQr />
           <KioskKeypad

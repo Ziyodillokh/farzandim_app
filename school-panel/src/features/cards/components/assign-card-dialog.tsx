@@ -9,9 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import type { StudentRow } from '@/data/mock/services/students';
-import { cardAssignSchema } from '@/data/schemas/cards';
+import { cardAssignSchema, normalizeReaderUid } from '@/data/schemas/cards';
 import { StudentPicker } from '@/features/attendance/components/student-picker';
 import { useI18n } from '@/i18n';
+import { useCardWedge } from '../card-wedge';
 import { useAssignCard } from '../hooks';
 import { type CardRead, type NfcState, useNfcReader } from '../nfc';
 
@@ -42,6 +43,12 @@ export function AssignCardDialog({ open, onOpenChange }: { open: boolean; onOpen
     setErrors((e) => ({ ...e, uid: undefined }));
   });
   const { stop } = nfc;
+  // USB o'qigich: kursor qayerda bo'lmasin, tegizilgan karta raqami UID maydoniga tushadi.
+  useCardWedge((cardUid) => {
+    setUid(cardUid);
+    setUrl(undefined);
+    setErrors((e) => ({ ...e, uid: undefined }));
+  }, open);
 
   useEffect(() => {
     if (open) return;
@@ -62,7 +69,9 @@ export function AssignCardDialog({ open, onOpenChange }: { open: boolean; onOpen
       setErrors(next);
       return;
     }
-    assign.mutate(parsed.data, { onSuccess: () => onOpenChange(false) });
+    // USB o'qigichning o'nlik raqami server kutadigan hex ko'rinishiga o'giriladi.
+    const cardUid = parsed.data.uid ? (normalizeReaderUid(parsed.data.uid) ?? parsed.data.uid) : undefined;
+    assign.mutate({ ...parsed.data, uid: cardUid }, { onSuccess: () => onOpenChange(false) });
   };
 
   const note = NFC_NOTE[nfc.state];
