@@ -1,7 +1,7 @@
 'use client';
 
 import { AlertTriangle, CheckCircle2, Clock4, Info, LogOut, WifiOff, XCircle, type LucideIcon } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import type { AttendanceStatus } from '@/data/contracts';
 import { useI18n } from '@/i18n';
@@ -13,8 +13,8 @@ export const RESULT_HIDE_MS = 4000;
 export type CardRejection = 'UNKNOWN' | 'BLOCKED' | 'INVALID' | 'OUTSIDE';
 
 export type KioskOutcome =
-  | { kind: 'success'; name: string; className: string; status: AttendanceStatus; time: string; already: boolean; suspicious?: boolean }
-  | { kind: 'left'; name: string; className: string; time: string }
+  | { kind: 'success'; name: string; className: string; status: AttendanceStatus; time: string; already: boolean; suspicious?: boolean; photoUrl?: string | null }
+  | { kind: 'left'; name: string; className: string; time: string; photoUrl?: string | null }
   | { kind: 'card'; result: CardRejection; name: string | null }
   | { kind: 'queued' }
   | { kind: 'notFound'; code: string }
@@ -43,10 +43,22 @@ function lookFor(outcome: KioskOutcome): Look {
   }
 }
 
+/** Bola Parvoz ilovasida qo'ygan rasmi — navbatchi kartani kim tegizganini ko'radi (yuklanmasa — ko'rsatilmaydi). */
+function StudentPhoto({ url, name }: { url?: string | null; name: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!url || failed) return null;
+  return (
+    // Imzolangan qisqa muddatli havola (backend orqali) — Next tasvir optimizatsiyasi kerak emas.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={url} alt={name} onError={() => setFailed(true)} className="mx-auto mt-5 h-32 w-32 rounded-full object-cover ring-4 ring-white/25 md:h-40 md:w-40" />
+  );
+}
+
 function SuccessBody({ outcome, look }: { outcome: Extract<KioskOutcome, { kind: 'success' }>; look: Look }) {
   const { t } = useI18n();
   return (
     <>
+      <StudentPhoto url={outcome.photoUrl} name={outcome.name} />
       <p className="mt-6 text-lg font-semibold text-white/70">
         {outcome.already ? t('attendance.kiosk.alreadyTitle') : outcome.status === 'LATE' ? t('attendance.kiosk.welcomeLate') : t('attendance.kiosk.welcome')}
       </p>
@@ -75,6 +87,7 @@ function Body({ outcome, look }: { outcome: KioskOutcome; look: Look }) {
     case 'left':
       return (
         <>
+          <StudentPhoto url={outcome.photoUrl} name={outcome.name} />
           <p className="mt-6 text-lg font-semibold text-white/70">{t('cards.kiosk.leftTitle')}</p>
           <p className="mt-2 font-display text-4xl font-semibold leading-tight md:text-5xl">{outcome.name}</p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-base">

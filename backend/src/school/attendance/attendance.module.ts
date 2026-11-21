@@ -17,6 +17,7 @@ import { AttendanceKioskController } from './attendance-kiosk.controller';
 import { KioskTokenService } from './attendance-kiosk-token';
 import { AttendanceKioskService } from './attendance-kiosk.service';
 import { AttendanceMarkingService } from './attendance-marking.service';
+import { AttendanceMovementService } from './attendance-movement.service';
 import { AttendanceNotifyService } from './attendance-notify.service';
 import { AttendanceParentService } from './attendance-parent.service';
 import { AttendanceReportsService } from './attendance-reports.service';
@@ -42,6 +43,7 @@ import { CardsService } from './cards.service';
     AttendanceClock,
     KioskTokenService,
     AttendanceNotifyService,
+    AttendanceMovementService,
     AttendanceArrivalService,
     AttendanceBoardService,
     AttendanceMarkingService,

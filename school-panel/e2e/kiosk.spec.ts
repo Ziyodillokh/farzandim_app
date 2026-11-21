@@ -3,7 +3,11 @@ import { expect, type Page, test } from '@playwright/test';
 import { login, trackErrors, url } from './helpers';
 
 /** Ssenariy soati: dushanba 08:00 — 1-smena boshlangan, kiosk ishlaydi. */
+/** 07:05 — 1-smena ochiq, demo simulyatori hali hech kimni «keldi» qilmagan. */
+const EARLY_MINUTE = 7 * 60 + 5;
 const SCENARIO = { mode: 'SCENARIO', speed: 1, scenarioDate: '2026-10-12', scenarioStartMinute: 8 * 60, realStartedAt: 0, epoch: 7 };
+
+const EARLY = { ...SCENARIO, scenarioStartMinute: EARLY_MINUTE };
 
 test('kiosk: navbatchi shaxsiy kod bilan belgilaydi, noma\'lum kod rad etiladi', async ({ page }) => {
   const errors = trackErrors(page);
@@ -67,11 +71,19 @@ test('kiosk: USB o\'qigich (klaviatura rejimi) kartani to\'g\'ridan-to\'g\'ri qa
   const uid = await page.evaluate((clock) => {
     localStorage.setItem('parvoz-school:clock', JSON.stringify({ ...clock, realStartedAt: Date.now() }));
     const raw = localStorage.getItem('parvoz-school:db:v1');
-    type Db = { tables: { cards: Array<{ uid: string; kind: string; status: string; studentId: string }>; students: Array<{ id: string; classId: string; archived: boolean }> } };
+    type Db = {
+      tables: {
+        cards: Array<{ uid: string; kind: string; status: string; studentId: string }>;
+        students: Array<{ id: string; classId: string; archived: boolean }>;
+        attendance: Array<{ studentId: string; date: string; inAt: string | null }>;
+      };
+    };
     const db = raw ? (JSON.parse(raw) as Db) : null;
     const inClass = new Set((db?.tables.students ?? []).filter((s) => !s.archived && s.classId === 'cls-9a').map((s) => s.id));
-    return db?.tables.cards.find((c) => c.kind === 'UID' && c.status === 'ACTIVE' && inClass.has(c.studentId))?.uid ?? '';
-  }, SCENARIO);
+    // Bugun hali kelmagan o'quvchi (kelgan bo'lsa, tegish endi «chiqdi» bo'ladi).
+    const arrived = new Set((db?.tables.attendance ?? []).filter((r) => r.date === clock.scenarioDate && r.inAt).map((r) => r.studentId));
+    return db?.tables.cards.find((c) => c.kind === 'UID' && c.status === 'ACTIVE' && inClass.has(c.studentId) && !arrived.has(c.studentId))?.uid ?? '';
+  }, EARLY);
   expect(uid).toMatch(/^[0-9A-F]{14}$/);
 
   await page.goto(url('/kiosk'));

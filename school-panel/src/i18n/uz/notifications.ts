@@ -27,6 +27,8 @@ export const notifications = {
     LINK_CORRECTION: '{studentName} ({className}) maktab yoki sinf notoʻgʻri ekanini bildirdi',
     GUARDIAN_REVIEW: '{studentName} ({className}) uchun ota-ona kodni kiritdi — vasiylikni tasdiqlash kerak',
     PARENT_MESSAGE: '{name} ({className}) ota-onasidan yangi xabar',
+    STUDENT_STEPPED_OUT: '{studentName} ({className}) dars vaqtida maktabdan chiqdi — {time}',
+    STUDENT_RETURNED: '{studentName} ({className}) maktabga qaytdi — {time}',
   },
   category: {
     SAFETY_SIGNAL: 'Xavfsizlik',
@@ -43,5 +45,7 @@ export const notifications = {
     LINK_CORRECTION: 'Tuzatish',
     GUARDIAN_REVIEW: 'Vasiy',
     PARENT_MESSAGE: 'Ota-ona',
+    STUDENT_STEPPED_OUT: 'Chiqdi',
+    STUDENT_RETURNED: 'Qaytdi',
   },
 };

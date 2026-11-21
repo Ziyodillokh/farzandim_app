@@ -35,7 +35,8 @@ export type CardTapView = {
   time: string;
   suspicious: boolean;
   cardNumber: string | null;
-  student: { id: Id; firstName: string; lastName: string; studentCode: string } | null;
+  /** `photoUrl` — bola Parvoz ilovasida rasm qo'ygan bo'lsa (navbatchi ekranida). */
+  student: { id: Id; firstName: string; lastName: string; studentCode: string; photoUrl?: string | null } | null;
   className: string;
   status: AttendanceStatus | null;
 };
