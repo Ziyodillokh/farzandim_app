@@ -1,6 +1,7 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { formatCardNumber } from '@/lib/card-number';
 import { toast } from 'sonner';
 
 import { api } from '@/data/api';
@@ -51,7 +52,7 @@ export function useAssignCard() {
     (input: CardAssignInput) => api.cards.assign(input),
     (card) =>
       toast.success(
-        card.replacedNumber ? t('cards.assignedReplaced', { number: card.number, old: card.replacedNumber }) : t('cards.assigned', { number: card.number }),
+        card.replacedNumber ? t('cards.assignedReplaced', { number: formatCardNumber(card.number), old: formatCardNumber(card.replacedNumber) }) : t('cards.assigned', { number: formatCardNumber(card.number) }),
       ),
   );
 }

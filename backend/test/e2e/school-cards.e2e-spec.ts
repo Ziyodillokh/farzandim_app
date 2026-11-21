@@ -5,6 +5,7 @@
 import { createCipheriv, randomBytes } from 'node:crypto';
 import { AttendanceClock } from '../../src/school/attendance/attendance-time';
 import { CardKeyService } from '../../src/school/attendance/card-keys.service';
+import { isValidCardNumber } from '../../src/school/attendance/card-number';
 import { deriveMetaKey, deriveTagKey, SUN_FILE_KEY_NO, sunMac } from '../../src/school/attendance/card-sun';
 import { minutesToHhmm, tashkentMinute } from '../../src/school/school-mode/school-mode-time';
 import { resetDb } from './db';
@@ -56,7 +57,7 @@ describe('NFC kartalar', () => {
     const first = await cards(w.director, 'POST', '', { studentId: w.vali, uid: UID_A });
     expect(first.statusCode).toBe(201);
     expect(first.json()).toMatchObject({
-      number: 'K-000001',
+      number: expect.stringMatching(/^[1-9]\d{9}$/),
       uid: '04A1B2C3D4E5F6',
       kind: 'UID',
       status: 'ACTIVE',
@@ -65,21 +66,21 @@ describe('NFC kartalar', () => {
       replacedNumber: null,
     });
 
+    expect(isValidCardNumber(first.json().number)).toBe(true);
     const second = (await cards(w.director, 'POST', '', { studentId: w.vali, uid: UID_B })).json();
-    expect(second).toMatchObject({ number: 'K-000002', replacedNumber: 'K-000001' });
+    expect(isValidCardNumber(second.number)).toBe(true);
+    expect(second).toMatchObject({ replacedNumber: first.json().number });
+    expect(second.number).not.toBe(first.json().number);
     const list = (await cards(w.director, 'GET')).json().items;
     expect(list.map((c: { number: string; status: string; blockedReason: string | null }) => [c.number, c.status, c.blockedReason])).toEqual([
-      ['K-000002', 'ACTIVE', null],
-      ['K-000001', 'BLOCKED', 'REPLACED'],
+      [second.number, 'ACTIVE', null],
+      [first.json().number, 'BLOCKED', 'REPLACED'],
     ]);
 
     const taken = await cards(w.director, 'POST', '', { studentId: w.malika, uid: UID_A });
     expect(taken.statusCode).toBe(409);
     expect(taken.json().code).toBe('CARD_TAKEN');
     expect((await cards(w.director, 'POST', '', { studentId: w.malika, uid: 'salom' })).json().message).toBe('uid: errors.form.invalidCardUid');
-    expect((await cards(w.director, 'POST', '', { studentId: w.malika, uid: '04:99:88:77:66:55:44', number: 'K-000002' })).json().code).toBe(
-      'CARD_NUMBER_TAKEN',
-    );
     expect((await cards(w.duty, 'POST', '', { studentId: w.malika, uid: '04:99:88:77:66:55:44' })).statusCode).toBe(403);
     // Sinf rahbari faqat o'z sinfi kartalarini ko'radi.
     expect((await cards(w.teacher, 'GET')).json().items).toEqual([]);
@@ -99,7 +100,7 @@ describe('NFC kartalar', () => {
       result: 'IN',
       status: 'PRESENT',
       time: '07:52',
-      cardNumber: 'K-000001',
+      cardNumber: expect.stringMatching(/^[1-9]\d{9}$/),
       className: '7-A',
       suspicious: false,
       student: { firstName: 'Vali', lastName: 'Aliyev' },
@@ -134,7 +135,7 @@ describe('NFC kartalar', () => {
     expect(second.json()).toMatchObject({ result: 'IN', suspicious: true });
     const flagged = (await cards(w.admin, 'GET', '/taps?suspicious=true')).json().items;
     expect(flagged).toHaveLength(1);
-    expect(flagged[0]).toMatchObject({ studentName: 'Karimova Malika', cardNumber: 'K-000002', result: 'IN' });
+    expect(flagged[0]).toMatchObject({ studentName: 'Karimova Malika', cardNumber: expect.stringMatching(/^[1-9]\d{9}$/), result: 'IN' });
     // 12 soatdan eski navbat qabul qilinmaydi.
     expect((await tap(w.duty, { uid: UID_A, tappedAt: at('2026-10-19', '18:00').toISOString() })).statusCode).toBe(400);
 

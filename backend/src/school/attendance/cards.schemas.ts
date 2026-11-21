@@ -20,8 +20,7 @@ export const cardAssignSchema = z
     studentId: idSchema,
     uid: uidSchema,
     url: urlSchema,
-    /** Kartaga bosilgan raqam; bo'sh bo'lsa — keyingi `K-000001` ko'rinishidagi raqam. */
-    number: z.string().trim().min(1, msg.required).max(32, msg.tooLong).optional(),
+    // Kartaga bosiladigan raqamni har doim tizim beradi (`card-number.ts`), qo'lda kiritilmaydi.
   })
   .refine(hasCardData, { message: msg.cardUid, path: ['uid'] });
 

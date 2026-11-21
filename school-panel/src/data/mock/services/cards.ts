@@ -11,12 +11,12 @@ import { getTables, transact } from '../db';
 import { studentName } from '../lookups';
 import type { MockCard, MockCardTap, Tables } from '../tables';
 import { recordArrival } from './attendance';
+import { randomCardNumber } from '@/lib/card-number';
 
 /**
  * NFC kartalar (demo): backend `cards.service.ts` / `card-tap.service.ts` bilan bir xil qoidalar.
  * Demo'da kartalar faqat seriya raqami (UID) bilan — NTAG 424 DNA imzosi serverda tekshiriladi.
  */
-const NUMBER_PREFIX = 'K-';
 const MAX_TAPS = 500;
 const SUSPICIOUS_WINDOW_MS = 3_000;
 const OPEN_BEFORE_MINUTES = 120;
@@ -43,9 +43,12 @@ function findCard(t: Tables, actor: Actor, id: string): MockCard {
   return card;
 }
 
+/** Yangi tasodifiy 10 xonali raqam (backend bilan bir xil qoida), takrorlanmaydi. */
 function nextNumber(t: Tables): string {
-  const max = t.cards.reduce((n, c) => (c.number.startsWith(NUMBER_PREFIX) ? Math.max(n, Number(c.number.slice(NUMBER_PREFIX.length)) || 0) : n), 0);
-  return `${NUMBER_PREFIX}${String(max + 1).padStart(6, '0')}`;
+  const used = new Set(t.cards.map((c) => c.number));
+  let number = randomCardNumber();
+  while (used.has(number)) number = randomCardNumber();
+  return number;
 }
 
 function logTap(t: Tables, tap: Omit<MockCardTap, 'id'>): void {
@@ -85,8 +88,7 @@ export const cardsService = {
       if (!student) throw new ServiceError('NOT_FOUND', data.studentId);
       const taken = t.cards.find((c) => c.uid === uid);
       if (taken) throw new ServiceError('CONFLICT', 'card taken', 'CARD_TAKEN');
-      const number = data.number ?? nextNumber(t);
-      if (t.cards.some((c) => c.number === number)) throw new ServiceError('CONFLICT', 'number taken', 'CARD_NUMBER_TAKEN');
+      const number = nextNumber(t);
       const now = clockNow().toISOString();
       const previous = t.cards.find((c) => c.studentId === student.id && c.status === 'ACTIVE');
       if (previous) Object.assign(previous, { status: 'BLOCKED', blockedAt: now, blockedReason: REPLACED_REASON });

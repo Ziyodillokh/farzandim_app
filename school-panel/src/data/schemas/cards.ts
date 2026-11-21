@@ -40,7 +40,6 @@ export const cardAssignSchema = z
     studentId: z.string().min(1, msg.required),
     uid: z.string().trim().max(64, msg.tooLong).optional(),
     url: z.string().trim().max(1024, msg.tooLong).optional(),
-    number: z.string().trim().min(1, msg.required).max(32, msg.tooLong).optional(),
   })
   .refine((d) => Boolean(d.url) || (d.uid ? normalizeReaderUid(d.uid) !== null : false), { message: msg.cardUid, path: ['uid'] });
 

@@ -2692,6 +2692,7 @@ model SchoolCard {
   @@unique([schoolId, uid])
   @@unique([schoolId, number])
   @@index([studentId])
+  @@index([number])
   @@map("school_cards")
 }
 

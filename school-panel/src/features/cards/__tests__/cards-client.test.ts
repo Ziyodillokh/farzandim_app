@@ -39,7 +39,7 @@ describe('Web NFC o\'qish', () => {
 
 describe('kiosk natijasi', () => {
   const student = { id: 's1', firstName: 'Vali', lastName: 'Aliyev', studentCode: 'P-1001' };
-  const base = { time: '07:52', suspicious: false, cardNumber: 'K-000001', student, className: '7-A', status: 'PRESENT' as const };
+  const base = { time: '07:52', suspicious: false, cardNumber: '4821093753', student, className: '7-A', status: 'PRESENT' as const };
 
   it('kirdi, takror, chiqdi va rad etilgan natijalar', () => {
     expect(outcomeFromTap({ ...base, result: 'IN' })).toEqual({ kind: 'success', name: 'Aliyev Vali', className: '7-A', status: 'PRESENT', time: '07:52', already: false, suspicious: false });

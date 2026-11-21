@@ -26,7 +26,7 @@ const NFC_NOTE: Partial<Record<NfcState, 'cards.dialog.unsupported' | 'cards.dia
   scanning: 'cards.dialog.reading',
 };
 
-type FieldErrors = { studentId?: string; uid?: string; number?: string };
+type FieldErrors = { studentId?: string; uid?: string };
 
 /** O'quvchiga karta biriktirish: NFC'li telefonda tegizib yoki USB o'qigich / qo'lda seriya raqami. */
 export function AssignCardDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
@@ -35,7 +35,6 @@ export function AssignCardDialog({ open, onOpenChange }: { open: boolean; onOpen
   const [student, setStudent] = useState<StudentRow | null>(null);
   const [uid, setUid] = useState('');
   const [url, setUrl] = useState<string | undefined>();
-  const [number, setNumber] = useState('');
   const [errors, setErrors] = useState<FieldErrors>({});
   const nfc = useNfcReader((read: CardRead) => {
     setUid(read.uid ?? '');
@@ -56,13 +55,12 @@ export function AssignCardDialog({ open, onOpenChange }: { open: boolean; onOpen
     setStudent(null);
     setUid('');
     setUrl(undefined);
-    setNumber('');
     setErrors({});
   }, [open, stop]);
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
-    const parsed = cardAssignSchema.safeParse({ studentId: student?.id ?? '', uid: uid || undefined, url, number: number || undefined });
+    const parsed = cardAssignSchema.safeParse({ studentId: student?.id ?? '', uid: uid || undefined, url });
     if (!parsed.success) {
       const next: FieldErrors = {};
       for (const issue of parsed.error.issues) next[issue.path[0] as keyof FieldErrors] ??= issue.message;
@@ -120,9 +118,7 @@ export function AssignCardDialog({ open, onOpenChange }: { open: boolean; onOpen
             </Badge>
           )}
 
-          <FormField label={t('cards.dialog.number')} htmlFor="card-number" error={errors.number ? { message: errors.number } : undefined} hint={t('cards.dialog.numberHint')}>
-            <Input id="card-number" value={number} autoComplete="off" placeholder="K-000124" onChange={(e) => setNumber(e.target.value)} />
-          </FormField>
+          <p className="rounded-xl bg-muted/60 px-3 py-2 text-sm text-muted-foreground">{t('cards.dialog.numberAuto')}</p>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
