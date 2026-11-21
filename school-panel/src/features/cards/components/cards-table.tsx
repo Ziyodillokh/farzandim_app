@@ -1,6 +1,7 @@
 'use client';
 
 import { Ban, MoreHorizontal, RotateCcw, ShieldCheck, Trash2 } from 'lucide-react';
+import { formatCardNumber } from '@/lib/card-number';
 import { useMemo } from 'react';
 
 import { DataTable, type Column } from '@/components/common/data-table';
@@ -39,7 +40,7 @@ export function CardsTable({ rows, loading, actions, emptyTitle, emptyDescriptio
         className: 'whitespace-nowrap',
         cell: (c) => (
           <div>
-            <p className="font-display font-semibold tabular-nums">{c.number}</p>
+            <p className="font-display font-semibold tabular-nums">{formatCardNumber(c.number)}</p>
             <p className="font-mono text-2xs text-muted-foreground">{c.uid}</p>
           </div>
         ),

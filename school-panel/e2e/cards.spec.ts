@@ -27,7 +27,7 @@ test('kartalar: ro\'yxat, qo\'lda biriktirish va tegishlar jurnali', async ({ pa
   await login(page, 'direktor', 'Direktor2026');
   await page.goto(url('/cards'));
   await expect(page.getByRole('heading', { name: 'NFC kartalar' })).toBeVisible();
-  await expect(page.getByText('K-000001')).toBeVisible();
+  await expect(page.getByText(/^\d{5} \d{5}$/).first()).toBeVisible();
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/cards-list.png` });
 
   await page.getByRole('button', { name: 'Karta biriktirish' }).click();

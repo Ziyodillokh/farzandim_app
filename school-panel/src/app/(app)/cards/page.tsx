@@ -1,6 +1,7 @@
 'use client';
 
 import { Plus, Search } from 'lucide-react';
+import { formatCardNumber } from '@/lib/card-number';
 import { useMemo, useState } from 'react';
 
 import { Can } from '@/auth/can';
@@ -26,7 +27,7 @@ const STATUS_FILTERS: readonly StatusFilter[] = ['ALL', 'ACTIVE', 'LOST', 'BLOCK
 
 function matches(card: SchoolCard, term: string): boolean {
   if (!term) return true;
-  return [card.studentName, card.studentCode, card.number, card.uid].some((v) => normalizeSearch(v).includes(term));
+  return [card.studentName, card.studentCode, card.number, formatCardNumber(card.number), card.uid].some((v) => normalizeSearch(v).includes(term));
 }
 
 /** NFC kartalar: biriktirish, yo'qolganini bloklash va kiosk tegishlari jurnali. */
@@ -124,7 +125,7 @@ export default function CardsPage() {
         open={Boolean(blocking)}
         onOpenChange={(open) => !open && setBlocking(null)}
         title={t('cards.blockTitle')}
-        description={blocking ? t('cards.blockText', { number: blocking.number, name: blocking.studentName }) : undefined}
+        description={blocking ? t('cards.blockText', { number: formatCardNumber(blocking.number), name: blocking.studentName }) : undefined}
         confirmLabel={t('cards.block')}
         destructive
         loading={block.isPending}
@@ -134,7 +135,7 @@ export default function CardsPage() {
         open={Boolean(removing)}
         onOpenChange={(open) => !open && setRemoving(null)}
         title={t('cards.removeTitle')}
-        description={removing ? t('cards.removeText', { number: removing.number, name: removing.studentName }) : undefined}
+        description={removing ? t('cards.removeText', { number: formatCardNumber(removing.number), name: removing.studentName }) : undefined}
         confirmLabel={t('cards.remove')}
         destructive
         loading={remove.isPending}

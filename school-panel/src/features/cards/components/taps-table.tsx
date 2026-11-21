@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertTriangle } from 'lucide-react';
+import { formatCardNumber } from '@/lib/card-number';
 import { useMemo } from 'react';
 
 import { DataTable, type Column } from '@/components/common/data-table';
@@ -36,7 +37,7 @@ export function TapsTable({ rows, loading }: { rows: CardTapLog[] | undefined; l
         cell: (r) => (
           <div className="min-w-0">
             <p className="whitespace-nowrap font-medium">{r.studentName ?? t('cards.taps.unknownCard')}</p>
-            <p className="font-mono text-2xs text-muted-foreground">{[r.className, r.cardNumber ?? r.uid].filter(Boolean).join(' · ')}</p>
+            <p className="font-mono text-2xs text-muted-foreground">{[r.className, r.cardNumber ? formatCardNumber(r.cardNumber) : r.uid].filter(Boolean).join(' · ')}</p>
           </div>
         ),
       },

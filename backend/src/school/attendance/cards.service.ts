@@ -14,10 +14,11 @@ import { classNames } from './attendance-lookups';
 import { AttendanceClock } from './attendance-time';
 import { studentName } from './attendance-view';
 import { CardKeyService } from './card-keys.service';
+import { randomCardNumber } from './card-number';
 import { cardAssignSchema, cardBlockSchema, cardListQuerySchema, cardTapsQuerySchema } from './cards.schemas';
 
-const NUMBER_PREFIX = 'K-';
-const NUMBER_DIGITS = 6;
+/** Tasodifiy raqam band bo'lsa — qayta urinishlar (1 mlrd ichida to'qnashuv deyarli yo'q). */
+const NUMBER_ATTEMPTS = 5;
 export const REPLACED_REASON = 'REPLACED';
 
 const cardStudentSelect = { id: true, firstName: true, lastName: true, studentCode: true, classId: true } as const;
@@ -92,10 +93,7 @@ export class CardsService {
         include: { student: { select: cardStudentSelect } },
       });
       if (taken) throw cardConflict('CARD_TAKEN', `Card already assigned to ${studentName(taken.student)}`);
-      const number = data.number ?? (await this.nextNumber(tx, actor.schoolId));
-      if (await tx.schoolCard.findUnique({ where: { schoolId_number: { schoolId: actor.schoolId, number } } })) {
-        throw cardConflict('CARD_NUMBER_TAKEN', `Card number ${number} is in use`);
-      }
+      const number = await this.nextNumber(tx);
       const previous = await tx.schoolCard.findFirst({ where: { studentId: student.id, status: 'ACTIVE' } });
       if (previous) {
         await tx.schoolCard.update({ where: { id: previous.id }, data: { status: 'BLOCKED', blockedAt: now, blockedReason: REPLACED_REASON } });
@@ -262,14 +260,12 @@ export class CardsService {
     return toCardView(card, classes);
   }
 
-  /** Keyingi `K-000001` (maktab ichida, biriktirish qulfi ostida). */
-  private async nextNumber(tx: Prisma.TransactionClient, schoolId: string): Promise<string> {
-    const last = await tx.schoolCard.findFirst({
-      where: { schoolId, number: { startsWith: NUMBER_PREFIX } },
-      orderBy: { number: 'desc' },
-      select: { number: true },
-    });
-    const n = last ? Number(last.number.slice(NUMBER_PREFIX.length)) || 0 : 0;
-    return `${NUMBER_PREFIX}${String(n + 1).padStart(NUMBER_DIGITS, '0')}`;
+  /** Yangi tasodifiy 10 xonali raqam, butun platformada takrorlanmaydi (1 mlrd ichidan). */
+  private async nextNumber(tx: Prisma.TransactionClient): Promise<string> {
+    for (let attempt = 0; attempt < NUMBER_ATTEMPTS; attempt += 1) {
+      const number = randomCardNumber();
+      if (!(await tx.schoolCard.findFirst({ where: { number }, select: { id: true } }))) return number;
+    }
+    throw new Error(`no free card number after ${NUMBER_ATTEMPTS} attempts`);
   }
 }
