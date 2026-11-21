@@ -9,8 +9,16 @@ import { AttendanceStatus, ParentNoticeKind, Prisma, SchoolParentNotice } from '
 import { PrismaService } from '../../common/database/prisma.service';
 import { FcmService } from '../../common/fcm/fcm.service';
 import { isUniqueViolation } from './attendance-lookups';
+import { NotifLang } from '../../common/i18n/notification-i18n';
+import { addDays } from '../../common/time/tashkent';
+import { PAYMENT_NOTICE_DAYS, paymentDueLine } from '../comms/payment-due';
 import { tashkentHhmm } from './attendance-time';
 import { AttendancePushKey, attendancePushText } from './attendance.i18n';
+
+interface PaymentDue {
+  id: string;
+  nextDate: string;
+}
 
 interface ParentTarget {
   guardianId: string;
@@ -76,11 +84,22 @@ export class AttendanceNotifyService {
       const name = await this.firstName(notice.studentId);
       if (name === null) return 0;
       const data = { type: 'school_attendance', kind: notice.kind, studentId: notice.studentId, date: notice.date };
+      // «Keldi» xabari ostida — shu ota-onaning to'lov sanasi yaqin yoki o'tib ketgan bo'lsa (ilovada «To'lov qilish»).
+      const dues = notice.kind === 'ARRIVED' ? await this.paymentsDue(notice.studentId, notice.date) : new Map<string, PaymentDue>();
       let sent = 0;
       for (const target of await this.targets(notice.studentId)) {
         const row = await this.claim(notice, notice.kind, target.guardianId);
         if (!row) continue;
-        const delivered = await this.push(target.userId, notice.push, { name, time: notice.time }, data);
+        const due = dues.get(target.guardianId);
+        const delivered = due
+          ? await this.push(
+              target.userId,
+              notice.push,
+              { name, time: notice.time },
+              { ...data, paymentReminderId: due.id, paymentDue: due.nextDate },
+              (lang) => paymentDueLine(lang, notice.date, due.nextDate),
+            )
+          : await this.push(target.userId, notice.push, { name, time: notice.time }, data);
         if (delivered) await this.markDelivered(row.id);
         sent += 1;
       }
@@ -201,15 +220,30 @@ export class AttendanceNotifyService {
     await this.prisma.schoolParentNotice.update({ where: { id }, data: { delivered: true } });
   }
 
+  /** Ota-ona (vasiy) bo'yicha: to'xtatilmagan, sanasiga `PAYMENT_NOTICE_DAYS` yoki kam qolgan / o'tib ketgan to'lov. */
+  private async paymentsDue(studentId: string, today: string): Promise<Map<string, PaymentDue>> {
+    const rows = await this.prisma.schoolPaymentReminder.findMany({
+      where: { studentIds: { has: studentId }, paused: false, nextDate: { lte: addDays(today, PAYMENT_NOTICE_DAYS) } },
+      select: { id: true, guardianId: true, nextDate: true },
+      orderBy: { nextDate: 'asc' },
+    });
+    const byGuardian = new Map<string, PaymentDue>();
+    for (const r of rows) if (!byGuardian.has(r.guardianId)) byGuardian.set(r.guardianId, { id: r.id, nextDate: r.nextDate });
+    return byGuardian;
+  }
+
   private async push(
     userId: string,
     key: AttendancePushKey,
     params: { name: string; time: string },
     data: Record<string, string>,
+    extraLine?: (lang: NotifLang) => string,
   ): Promise<boolean> {
     try {
       const lang = await this.fcm.getUserLang(userId);
-      const result = await this.fcm.sendPushToUser(userId, { ...attendancePushText(lang, key, params), data });
+      const text = attendancePushText(lang, key, params);
+      const body = extraLine ? `${text.body}\n${extraLine(lang)}` : text.body;
+      const result = await this.fcm.sendPushToUser(userId, { ...text, body, data });
       return result.sent > 0;
     } catch (err) {
       this.logger.warn(`davomat push xatosi: ${String(err)}`);

@@ -3,6 +3,7 @@
 // qat'iy qism (maktab, xabar turi). To'lov matni hech qachon "qarz" demaydi:
 // faqat maktab tasdiqlagan keyingi sana.
 
+import { paymentDueLine } from './payment-due';
 import type { PushPayload } from '../../common/fcm/fcm.service';
 import type { NotifLang } from '../../common/i18n/notification-i18n';
 import type { MessagePriority, ReminderKind } from './comms.schemas';
@@ -43,9 +44,9 @@ const T = {
     en: '{school}: payment reminder',
   },
   'payment.body': {
-    uz: "Maktab tasdiqlagan jadvalga ko'ra navbatdagi to'lov sanasi — {date}. To'lagan bo'lsangiz, ilovada \"Tekshirish\" tugmasini bosing.",
-    ru: 'По графику школы следующая дата оплаты — {date}. Если вы уже оплатили, нажмите «Проверить» в приложении.',
-    en: "Per the school's schedule, the next payment date is {date}. If you have already paid, tap “Check” in the app.",
+    uz: "{line} To'lagan bo'lsangiz, ilovada \"Tekshirish\" tugmasini bosing.",
+    ru: '{line} Если вы уже оплатили, нажмите «Проверить» в приложении.',
+    en: '{line} If you have already paid, tap “Check” in the app.',
   },
   'verification.title': {
     uz: "{school}: so'rovingizga javob berildi",
@@ -91,12 +92,12 @@ export function reminderPush(
 
 export function paymentPush(
   lang: NotifLang,
-  p: { id: string; school: string; nextDate: string },
+  p: { id: string; school: string; nextDate: string; today: string },
 ): PushPayload {
   return {
     title: fill(T['payment.title'][lang], { school: p.school }),
-    body: fill(T['payment.body'][lang], { date: p.nextDate }),
-    data: { type: 'SCHOOL_PAYMENT_REMINDER', paymentReminderId: p.id },
+    body: fill(T['payment.body'][lang], { line: paymentDueLine(lang, p.today, p.nextDate) }),
+    data: { type: 'SCHOOL_PAYMENT_REMINDER', paymentReminderId: p.id, paymentDue: p.nextDate },
   };
 }
 
