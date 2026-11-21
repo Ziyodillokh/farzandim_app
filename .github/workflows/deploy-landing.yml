@@ -223,9 +223,10 @@ jobs:
           check /robots.txt                200 "Sitemap:"
           check '/link?code=ABCD2345'      200 "Maktabga ulanish"
           check /parvoz-yoq-sahifa         404 "Bu sahifa topilmadi"
-          check /school/                   200 "Parvoz School"
-          check /school/login/             200 "Parvoz School"
-          check /maktab/                   200 "Parvoz School"
+          # Panel brend yozuvi o'zgarishi mumkin (PRODUCT_SUB) — statik eksport aynan shu yo'lda xizmat qilayotganini tekshiramiz.
+          check /school/                   200 "/school/_next/"
+          check /school/login/             200 "/school/_next/"
+          check /maktab/                   200 "/maktab/_next/"
           check /maktab/login/             200 "/maktab/_next/"
           check /monitoring/               200 "Parvoz Monitoring"
           check /monitoring/login/         200 "/monitoring/_next/"
