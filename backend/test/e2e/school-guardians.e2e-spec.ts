@@ -60,7 +60,8 @@ describe('School guardians and parent links', () => {
     const g1 = await createGuardian(t.prisma, schoolId, [a.id]);
     await createGuardian(t.prisma, schoolId, [a.id], { fullName: 'Karimov Akmal' });
     await createGuardian(t.prisma, schoolId, [b.id], { fullName: 'B ota-ona' });
-    const linked = await createGuardian(t.prisma, schoolId, [b.id], { fullName: 'Ulangan', linkStatus: 'LINKED' });
+    const linkedParent = await createParent(t.prisma, { name: 'Ulangan' });
+    const linked = await createGuardian(t.prisma, schoolId, [b.id], { fullName: 'Ulangan', linkStatus: 'LINKED', userId: linkedParent.userId });
 
     const invited = (await staff(director, 'POST', `/guardians/${g1.id}/invite`)).json();
     expect(invited.linkStatus).toBe('INVITED');

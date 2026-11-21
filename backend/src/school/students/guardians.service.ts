@@ -22,6 +22,7 @@ import { INVITE_TTL_MS, uniqueInviteCode } from './invite-code';
 import { settleUnlinkedChildren } from './link-core';
 import { guardianAlreadyLinked } from './link-errors';
 import { acquireLinkLocks, childLock } from './link-locks';
+import { RELEASED_GUARDIAN } from './link-purge';
 import { bestLink, studentName, toGuardianView } from './student-view';
 import { bulkInviteSchema, GuardianFilter, guardianFilterSchema, guardianInputSchema } from './students.schemas';
 
@@ -89,7 +90,8 @@ export class GuardiansService {
     assertCan(actor, 'guardians.link');
     return this.prisma.$transaction(async (tx) => {
       const guardian = await this.scopedGuardian(tx, actor, guardianId);
-      if (guardian.linkStatus === 'LINKED') throw conflict('linked');
+      // Akkaunti o'chirilgan (userId yo'q) eski «LINKED» yozuvga qayta taklif berish mumkin.
+      if (guardian.linkStatus === 'LINKED' && guardian.userId) throw conflict('linked');
       const updated = await tx.schoolGuardian.update({
         where: { id: guardianId },
         data: {
@@ -227,7 +229,9 @@ export class GuardiansService {
         });
         if (outside > 0) throw forbidden(guardianId);
       }
-      if (guardian.linkStatus !== 'LINKED' || !guardian.userId) throw conflict('not linked');
+      if (guardian.linkStatus !== 'LINKED') throw conflict('not linked');
+      // Ota-ona akkaunti o'chirilgan, yozuv «LINKED» qolib ketgan — faqat holatni tozalash.
+      if (!guardian.userId) return toGuardianView(await tx.schoolGuardian.update({ where: { id: guardianId }, data: RELEASED_GUARDIAN }));
       const userId = guardian.userId;
       const updated = await tx.schoolGuardian.update({
         where: { id: guardianId },
