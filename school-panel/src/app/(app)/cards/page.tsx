@@ -15,13 +15,15 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { CardStatus, SchoolCard } from '@/data/contracts';
 import { AssignCardDialog } from '@/features/cards/components/assign-card-dialog';
+import { CardBatchView } from '@/features/cards/components/card-batch-view';
 import { CardsTable, type CardActions } from '@/features/cards/components/cards-table';
 import { TapsTable } from '@/features/cards/components/taps-table';
 import { useBlockCard, useCards, useCardTaps, useRemoveCard, useUnblockCard } from '@/features/cards/hooks';
 import { useI18n } from '@/i18n';
 import { normalizeSearch } from '@/lib/normalize-search';
 
-type View = 'cards' | 'taps';
+type View = 'cards' | 'taps' | 'batch';
+const VIEWS: readonly View[] = ['cards', 'taps', 'batch'];
 type StatusFilter = CardStatus | 'ALL';
 const STATUS_FILTERS: readonly StatusFilter[] = ['ALL', 'ACTIVE', 'LOST', 'BLOCKED'];
 
@@ -76,14 +78,17 @@ export default function CardsPage() {
         }
       />
 
-      <Tabs value={view} onValueChange={(v) => setView(v === 'taps' ? 'taps' : 'cards')} className="mb-4">
+      <Tabs value={view} onValueChange={(v) => setView(VIEWS.find((x) => x === v) ?? 'cards')} className="mb-4">
         <TabsList>
           <TabsTrigger value="cards">{t('cards.tabCards')}</TabsTrigger>
           <TabsTrigger value="taps">{t('cards.tabTaps')}</TabsTrigger>
+          {can('students.manage') && <TabsTrigger value="batch">{t('cards.tabBatch')}</TabsTrigger>}
         </TabsList>
       </Tabs>
 
-      {view === 'cards' ? (
+      {view === 'batch' && can('students.manage') ? (
+        <CardBatchView />
+      ) : view === 'cards' ? (
         <>
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <div className="relative w-full max-w-sm">

@@ -185,6 +185,12 @@ function withCards(db: DbSnapshot): DbSnapshot {
   return { ...db, tables: { ...db.tables, cards: buildCards(db.tables.students), cardTaps: [] } };
 }
 
+/** Karta partiyasi: avval saqlangan bazada bo'sh navbat. */
+function withCardReservations(db: DbSnapshot): DbSnapshot {
+  if (db.tables.cardReservations) return db;
+  return { ...db, tables: { ...db.tables, cardReservations: [] } };
+}
+
 /** Ota-onalar xabarlari: avval saqlangan bazada demo yozishmalar yaratiladi. */
 function withParentThreads(db: DbSnapshot): DbSnapshot {
   if (db.tables.parentThreads) return db;
@@ -204,6 +210,7 @@ const MIGRATIONS: readonly Migration[] = [
   withAccess,
   withParentThreads,
   withCards,
+  withCardReservations,
 ];
 
 export function migrate(db: DbSnapshot): DbSnapshot {

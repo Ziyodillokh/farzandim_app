@@ -58,6 +58,9 @@ export type MockCard = {
   blockedReason: string | null;
 };
 
+/** Karta partiyasi (mock): raqam ajratilgan, chip hali bog'lanmagan o'quvchi. */
+export type MockCardReservation = { id: string; number: string; studentId: string; createdAt: string };
+
 export type MockCardTap = {
   id: string;
   tappedAt: string;
@@ -125,6 +128,8 @@ export type Tables = {
   /** NFC kartalar va kiosk tegishlari jurnali (max 500). */
   cards: MockCard[];
   cardTaps: MockCardTap[];
+  /** Karta partiyasi: bosmaxonaga yuboriladigan, chipi hali bog'lanmagan raqamlar. */
+  cardReservations: MockCardReservation[];
   /** Simulyator holati: qaysi sana va qaysi daqiqagacha qayta ishlangan. */
   sim: { date: string; processedUntilMinute: number };
 };

@@ -43,3 +43,36 @@ test('kartalar: ro\'yxat, qo\'lda biriktirish va tegishlar jurnali', async ({ pa
   await expect(page.getByText(/Tegishlar hali yo'q|Kirdi|Takroriy/).first()).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('karta partiyasi: raqam berish va ketma-ket biriktirish (USB o\'qigich)', async ({ page }) => {
+  const errors = trackErrors(page);
+  await login(page, 'direktor', 'Direktor2026');
+  await page.goto(url('/cards'));
+  await page.getByRole('tab', { name: 'Partiya (chop etish)' }).click();
+
+  // Demo'da kartasi yo'qolgan o'quvchilar bor — ularga raqam beriladi.
+  await page.getByRole('button', { name: 'Raqam berish' }).click();
+  const reserve = page.getByRole('dialog');
+  await reserve.getByText('Hammasini tanlash').click();
+  await reserve.getByRole('button', { name: 'Raqam berish' }).click();
+  await expect(reserve).toBeHidden();
+  await expect(page.getByText(/Chop etish navbatida: \d+ ta/)).toBeVisible();
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/cards-batch.png` });
+
+  await page.getByRole('button', { name: 'Ketma-ket biriktirish' }).click();
+  const station = page.getByRole('dialog');
+  const current = station.getByTestId('station-current');
+  const number = (await current.locator('p.font-mono').innerText()).trim();
+  expect(number).toMatch(/^\d{5} \d{5}$/);
+  await expect(station.getByText(/0 \/ \d+ bog'landi/)).toBeVisible();
+
+  await page.evaluate(() => {
+    const fire = (key: string, code: string) => window.dispatchEvent(new KeyboardEvent('keydown', { key, code, bubbles: true, cancelable: true }));
+    for (const ch of 'A1B2C3D4') fire(ch, /\d/.test(ch) ? `Digit${ch}` : `Key${ch}`);
+    fire('Enter', 'Enter');
+  });
+  await expect(station.getByRole('status')).toContainText(`karta ${number} bog'landi`);
+  await expect(station.getByText(/1 \/ \d+ bog'landi/)).toBeVisible();
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/cards-batch-station.png` });
+  expect(errors).toEqual([]);
+});

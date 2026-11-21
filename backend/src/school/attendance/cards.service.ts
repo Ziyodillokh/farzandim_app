@@ -13,7 +13,7 @@ import { parseOrThrow } from '../common/school-zod';
 import { classNames } from './attendance-lookups';
 import { AttendanceClock } from './attendance-time';
 import { studentName } from './attendance-view';
-import { CardKeyService } from './card-keys.service';
+import { CardIdentity, CardKeyService } from './card-keys.service';
 import { randomCardNumber } from './card-number';
 import { cardAssignSchema, cardBlockSchema, cardListQuerySchema, cardTapsQuerySchema } from './cards.schemas';
 
@@ -21,10 +21,11 @@ import { cardAssignSchema, cardBlockSchema, cardListQuerySchema, cardTapsQuerySc
 const NUMBER_ATTEMPTS = 5;
 export const REPLACED_REASON = 'REPLACED';
 
-const cardStudentSelect = { id: true, firstName: true, lastName: true, studentCode: true, classId: true } as const;
+export const cardStudentSelect = { id: true, firstName: true, lastName: true, studentCode: true, classId: true } as const;
+export type CardStudent = Prisma.SchoolStudentGetPayload<{ select: typeof cardStudentSelect }>;
 type CardWithStudent = SchoolCard & { student: Prisma.SchoolStudentGetPayload<{ select: typeof cardStudentSelect }> };
 
-const cardConflict = (code: string, message: string) => new ConflictException({ code, message });
+export const cardConflict = (code: string, message: string) => new ConflictException({ code, message });
 
 export function toCardView(card: CardWithStudent, classes: Map<string, string>) {
   return {
@@ -84,6 +85,15 @@ export class CardsService {
       select: cardStudentSelect,
     });
     if (!student) throw notFound(data.studentId);
+    return this.issue(actor, student, identity);
+  }
+
+  /**
+   * Kartani berish (oddiy biriktirish va partiyadan bog'lash uchun umumiy): karta band bo'lsa — rad;
+   * o'quvchining faol kartasi «almashtirildi» deb bloklanadi. Partiyadan bo'lsa — o'sha oldindan
+   * berilgan raqam ishlatiladi va partiya yozuvi o'chiriladi (bitta tranzaksiyada).
+   */
+  async issue(actor: SchoolActor, student: CardStudent, identity: CardIdentity, reservation?: { id: string; number: string }) {
     const now = this.clock.now();
     const name = studentName(student);
     const { card, replaced } = await this.prisma.$transaction(async (tx) => {
@@ -93,7 +103,8 @@ export class CardsService {
         include: { student: { select: cardStudentSelect } },
       });
       if (taken) throw cardConflict('CARD_TAKEN', `Card already assigned to ${studentName(taken.student)}`);
-      const number = await this.nextNumber(tx);
+      if (reservation) await tx.schoolCardReservation.delete({ where: { id: reservation.id } });
+      const number = reservation?.number ?? (await nextCardNumber(tx));
       const previous = await tx.schoolCard.findFirst({ where: { studentId: student.id, status: 'ACTIVE' } });
       if (previous) {
         await tx.schoolCard.update({ where: { id: previous.id }, data: { status: 'BLOCKED', blockedAt: now, blockedReason: REPLACED_REASON } });
@@ -259,13 +270,28 @@ export class CardsService {
     const classes = await classNames(this.prisma, actor.schoolId, [card.student.classId]);
     return toCardView(card, classes);
   }
+}
 
-  /** Yangi tasodifiy 10 xonali raqam, butun platformada takrorlanmaydi (1 mlrd ichidan). */
-  private async nextNumber(tx: Prisma.TransactionClient): Promise<string> {
-    for (let attempt = 0; attempt < NUMBER_ATTEMPTS; attempt += 1) {
-      const number = randomCardNumber();
-      if (!(await tx.schoolCard.findFirst({ where: { number }, select: { id: true } }))) return number;
-    }
-    throw new Error(`no free card number after ${NUMBER_ATTEMPTS} attempts`);
+/**
+ * `count` ta yangi tasodifiy 10 xonali raqam: butun platformada — kartalar va partiyadagi raqamlar
+ * bilan takrorlanmaydi (1 mlrd ichidan; band chiqqanlari qayta tanlanadi, bir so'rovda tekshiriladi).
+ */
+export async function freshCardNumbers(tx: Prisma.TransactionClient, count: number): Promise<string[]> {
+  const fresh = new Set<string>();
+  for (let round = 0; fresh.size < count && round < NUMBER_ATTEMPTS; round += 1) {
+    const candidates = [...new Set(Array.from({ length: count - fresh.size }, () => randomCardNumber()))].filter((n) => !fresh.has(n));
+    const [cards, reserved] = await Promise.all([
+      tx.schoolCard.findMany({ where: { number: { in: candidates } }, select: { number: true } }),
+      tx.schoolCardReservation.findMany({ where: { number: { in: candidates } }, select: { number: true } }),
+    ]);
+    const used = new Set([...cards, ...reserved].map((r) => r.number));
+    for (const number of candidates) if (!used.has(number)) fresh.add(number);
   }
+  if (fresh.size < count) throw new Error(`no free card numbers after ${NUMBER_ATTEMPTS} rounds`);
+  return [...fresh];
+}
+
+async function nextCardNumber(tx: Prisma.TransactionClient): Promise<string> {
+  const [number] = await freshCardNumbers(tx, 1);
+  return number;
 }
