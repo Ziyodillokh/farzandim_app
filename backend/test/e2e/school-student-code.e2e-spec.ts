@@ -348,7 +348,8 @@ describe('School student code (K2)', () => {
 
   describe('confirmation by the child\'s own parent', () => {
     it('trusted parent first (school-entered guardian with the same phone), then the child: CONFIRMED at once, code closed, no review notification', async () => {
-      const family = await newFamily(t, 'Aziz', 'Karimova');
+      // Ilovadagi ism o'quvchinikiga mos emas — ota-ona ulanganda avtomatik moslanmaydi (bu yo'l `child-auto-match`).
+      const family = await newFamily(t, 'Toychi', 'Karimova');
       const known = await trustParent(t, w.aziz, family);
       const code = await issueCode(t, w.homeroomA, w.aziz.id);
 

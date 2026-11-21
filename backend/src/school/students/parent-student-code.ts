@@ -15,6 +15,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { Prisma, SchoolGuardian } from '@prisma/client';
 import { SchoolAuditService } from '../common/school-audit.service';
+import { matchOwnChildByName } from './child-auto-match';
 import { phoneTail, realPhone } from './guardian-phone';
 import { settleConfirmedLink, tryLinkChildToStudent } from './link-core';
 import { acquireLinkLocks, childLock, studentLock } from './link-locks';
@@ -194,7 +195,8 @@ async function requestGuardianReview(
  * Shu o'quvchida UNDER_REVIEW da kutayotgan bola SHU ota-onaning farzandi bo'lsa — bog'lanish tasdiqlanadi
  * (qaysi kod bilan kiritgani muhim emas: xodim kodni qayta yaratgan bo'lsa ham). Ota-ona vasiy bo'lgandan keyin
  * chaqiriladi. To'siq (o'quvchi boshqa oilaga ulangan, bola boshqa o'quvchida) — bog'lanish UNDER_REVIEW da qoladi,
- * xodim hal qiladi. Ulangan bo'lsa — tasdiqlangan bola id'si, aks holda `null`.
+ * xodim hal qiladi. Kutayotgan bola yo'q va o'quvchi bo'sh bo'lsa — ota-onaning ismi mos keladigan yagona bo'sh
+ * farzandi avtomatik bog'lanadi (`child-auto-match`). Ulangan bo'lsa — bola id'si, aks holda `null`.
  */
 export async function confirmOwnPendingChild(
   tx: Tx,
@@ -208,7 +210,7 @@ export async function confirmOwnPendingChild(
     select: { studentChildId: true },
   });
   const child = children.find((c) => c.id === pending?.studentChildId);
-  if (!child) return null;
+  if (!child) return matchOwnChildByName(tx, { student, childIds: children.map((c) => c.id), now });
   const outcome = await tryLinkChildToStudent(tx, student, child);
   if (outcome === 'STUDENT_LINKED_ELSEWHERE' || outcome === 'ALREADY_ENROLLED') return null;
   await settleConfirmedLink(tx, student.id, child.id, now);

@@ -153,19 +153,40 @@ describe('School guardians and parent links', () => {
     expect(await t.prisma.schoolStudent.count()).toBe(0);
   });
 
+  it('ota-ona ulanganda ismi mos yagona farzandi o\'quvchiga avtomatik bog\'lanadi; shubhali holatda — yo\'q', async () => {
+    const aziza = await createStudent(t.prisma, schoolId, classA, { firstName: 'Aziza' });
+    const bobur = await createStudent(t.prisma, schoolId, classA, { firstName: 'Bobur' });
+    const twinsA = await createStudent(t.prisma, schoolId, classA, { firstName: 'Ali' });
+    const guardian = await createGuardian(t.prisma, schoolId, [aziza.id, bobur.id, twinsA.id]);
+    const code = (await staff(director, 'POST', `/guardians/${guardian.id}/invite`)).json().inviteCode as string;
+    const mom = await createParent(t.prisma, { name: 'Malika' });
+    const azizaKid = await createChild(t.prisma, mom, { name: 'Азиза' }); // kirillda
+    const boburKid = await createChild(t.prisma, mom, { name: 'Boburjon Karimov' }); // «-jon» va familiya bilan
+    await createChild(t.prisma, mom, { name: 'Ali' });
+    await createChild(t.prisma, mom, { name: 'Alijon' }); // ikkita «Ali» — shubhali, moslanmaydi
+
+    const links = (await parent(mom.token, 'POST', '/link', { code })).json().links;
+    const byId = new Map(links[0].students.map((s: { id: string; childId: string | null; linkedBy: string }) => [s.id, s]));
+    expect(byId.get(aziza.id)).toMatchObject({ childId: azizaKid.childId, linkedBy: 'ME' });
+    expect(byId.get(bobur.id)).toMatchObject({ childId: boburKid.childId, linkedBy: 'ME' });
+    expect(byId.get(twinsA.id)).toMatchObject({ childId: null, linkedBy: 'NONE' });
+    expect(await t.prisma.schoolAuditLog.count({ where: { action: 'student.childLinked' } })).toBe(2);
+  });
+
   it('Parvoz Parents: kod → bog\'lanish → farzand bilan moslash → qurilma holati → uzish', async () => {
     const student = await createStudent(t.prisma, schoolId, classA);
     const guardian = await createGuardian(t.prisma, schoolId, [student.id]);
     const code = (await staff(director, 'POST', `/guardians/${guardian.id}/invite`)).json().inviteCode as string;
     const mom = await createParent(t.prisma, { name: 'Malika' });
-    const kid = await createChild(t.prisma, mom, { name: 'Aziz' });
+    // Ismi o'quvchiga mos emas («Aziz» ≠ «Toychi») — avtomatik moslanmaydi, ota-ona qo'lda moslaydi.
+    const kid = await createChild(t.prisma, mom, { name: 'Toychi' });
 
     expect((await parent(mom.token, 'POST', '/link', { code: 'AB' })).statusCode).toBe(400);
     const redeemed = await parent(mom.token, 'POST', '/link', { code: code.toLowerCase() });
     expect(redeemed.statusCode).toBe(200);
     expect(redeemed.json()).toMatchObject({
       links: [{ guardianId: guardian.id, school: { name: 'Test maktab' }, students: [{ id: student.id, className: '7-A', childId: null, linkedBy: 'NONE' }] }],
-      children: [{ id: kid.childId, name: 'Aziz' }],
+      children: [{ id: kid.childId, name: 'Toychi' }],
     });
     const row = await t.prisma.schoolGuardian.findUniqueOrThrow({ where: { id: guardian.id } });
     expect(row).toMatchObject({ linkStatus: 'LINKED', userId: mom.userId, inviteCode: null });
