@@ -217,4 +217,55 @@ describe('NFC kartalar', () => {
       expect(await schoolRoutines()).toEqual([]);
     });
   });
+  it('partiya: raqam ajratish, ketma-ket bog\'lash, ta\'minotchi fayli va ruxsat', async () => {
+    // Faqat 7-A: Vali va Malika — ikkalasiga raqam; qayta chaqirilsa yangi raqam berilmaydi.
+    const reserved = await cards(w.director, 'POST', '/reservations', { classIds: [w.classA] });
+    expect(reserved.statusCode).toBe(200);
+    const { created, items } = reserved.json() as { created: number; items: Array<{ id: string; number: string; studentId: string; className: string }> };
+    expect(created).toBe(2);
+    expect(items.map((i) => i.studentId).sort()).toEqual([w.vali, w.malika].sort());
+    expect(items.every((i) => isValidCardNumber(i.number) && i.className === '7-A')).toBe(true);
+    expect((await cards(w.director, 'POST', '/reservations', { classIds: [w.classA] })).json().created).toBe(0);
+    expect((await cards(w.duty, 'GET', '/reservations')).statusCode).toBe(403);
+    expect((await cards(w.teacher, 'POST', '/reservations', { classIds: [w.classA] })).statusCode).toBe(403);
+
+    // Ketma-ket: Valining kartasi oldindan berilgan raqam bilan; partiyadan chiqadi.
+    const vali = items.find((i) => i.studentId === w.vali)!;
+    const bound = await cards(w.director, 'POST', `/reservations/${vali.id}/bind`, { uid: UID_A });
+    expect(bound.statusCode).toBe(201);
+    expect(bound.json()).toMatchObject({ number: vali.number, uid: '04A1B2C3D4E5F6', status: 'ACTIVE', studentName: 'Aliyev Vali' });
+
+    // Band karta Malikaga — rad, uning raqami partiyada qoladi (tranzaksiya qaytadi).
+    const malika = items.find((i) => i.studentId === w.malika)!;
+    expect((await cards(w.director, 'POST', `/reservations/${malika.id}/bind`, { uid: UID_A })).json().code).toBe('CARD_TAKEN');
+    expect((await cards(w.director, 'GET', '/reservations')).json().items.map((i: { id: string }) => i.id)).toEqual([malika.id]);
+
+    // Fayl: to'g'ri qator, noma'lum raqam, noto'g'ri UID.
+    const imported = await cards(w.director, 'POST', '/import', {
+      rows: [
+        { number: `${malika.number.slice(0, 5)} ${malika.number.slice(5)}`, uid: '04:99:88:77:66:55:44' },
+        { number: '1000000000', uid: '04:11:22:33:44:55:66' },
+        { number: vali.number, uid: 'salom' },
+      ],
+    });
+    expect(imported.statusCode).toBe(200);
+    expect(imported.json()).toEqual({
+      bound: 1,
+      results: [
+        { number: malika.number, ok: true, code: null },
+        { number: '1000000000', ok: false, code: 'RESERVATION_NOT_FOUND' },
+        { number: vali.number, ok: false, code: 'INVALID_UID' },
+      ],
+    });
+    const list = (await cards(w.director, 'GET')).json().items as Array<{ number: string; studentId: string }>;
+    expect(list.find((c) => c.studentId === w.malika)?.number).toBe(malika.number);
+    expect((await cards(w.director, 'GET', '/reservations')).json().items).toEqual([]);
+
+    // Faol kartasi bor o'quvchiga qayta raqam berilmaydi; bekor qilish.
+    expect((await cards(w.director, 'POST', '/reservations', { classIds: [w.classA, w.classB] })).json().created).toBe(1);
+    const bek = (await cards(w.director, 'GET', '/reservations')).json().items[0] as { id: string; studentId: string };
+    expect(bek.studentId).toBe(w.bek);
+    expect((await cards(w.director, 'DELETE', `/reservations/${bek.id}`)).statusCode).toBe(204);
+    expect((await cards(w.director, 'DELETE', `/reservations/${bek.id}`)).statusCode).toBe(404);
+  });
 });

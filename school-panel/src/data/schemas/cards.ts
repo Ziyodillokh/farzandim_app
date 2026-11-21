@@ -57,6 +57,26 @@ export const cardTapSchema = z
   })
   .refine((d) => Boolean(d.uid || d.url), { message: msg.cardUid, path: ['uid'] });
 
+/** Karta partiyasi: tanlangan sinflardagi kartasiz o'quvchilarga raqam ajratish. */
+export const cardReserveSchema = z.object({ classIds: z.array(z.string().min(1)).min(1, msg.required).max(500, msg.tooLong) });
+
+/** Partiyadagi raqamga chipni bog'lash. */
+export const cardBindSchema = z
+  .object({ uid: z.string().trim().max(64, msg.tooLong).optional(), url: z.string().trim().max(1024, msg.tooLong).optional() })
+  .refine((d) => Boolean(d.url) || (d.uid ? normalizeReaderUid(d.uid) !== null : false), { message: msg.cardUid, path: ['uid'] });
+
+/** Ta'minotchi fayli: bir yo'la ko'pi bilan shuncha qator. */
+export const MAX_IMPORT_ROWS = 2_000;
+export const cardImportSchema = z.object({
+  rows: z
+    .array(z.object({ number: z.string().trim().min(1, msg.required).max(32, msg.tooLong), uid: z.string().trim().min(1, msg.required).max(64, msg.tooLong) }))
+    .min(1, msg.required)
+    .max(MAX_IMPORT_ROWS, msg.tooLong),
+});
+
 export type CardAssignInput = z.infer<typeof cardAssignSchema>;
+export type CardReserveInput = z.infer<typeof cardReserveSchema>;
+export type CardBindInput = z.infer<typeof cardBindSchema>;
+export type CardImportInput = z.infer<typeof cardImportSchema>;
 export type CardBlockInput = z.infer<typeof cardBlockSchema>;
 export type CardTapInput = z.infer<typeof cardTapSchema>;

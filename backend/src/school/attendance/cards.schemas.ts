@@ -48,3 +48,27 @@ export const cardTapsQuerySchema = z.object({
   suspicious: z.enum(['true', 'false']).optional(),
   limit: z.coerce.number().int().min(1).max(200).default(50),
 });
+
+/** Karta partiyasi: tanlangan sinflardagi kartasiz o'quvchilarga raqam ajratish. */
+export const cardReserveSchema = z.object({
+  classIds: z.array(idSchema).min(1, msg.required).max(500, msg.tooLong),
+});
+
+/** Partiyadagi raqamga chipni bog'lash (ketma-ket biriktirish). */
+export const cardBindSchema = z
+  .object({ uid: uidSchema, url: urlSchema })
+  .refine(hasCardData, { message: msg.cardUid, path: ['uid'] });
+
+/** Ta'minotchi fayli: kartaga bosilgan raqam ↔ chip UID (bir yo'la ko'p karta). */
+export const MAX_IMPORT_ROWS = 2_000;
+export const cardImportSchema = z.object({
+  rows: z
+    .array(
+      z.object({
+        number: z.string().trim().min(1, msg.required).max(32, msg.tooLong),
+        uid: z.string().trim().min(1, msg.required).max(64, msg.tooLong),
+      }),
+    )
+    .min(1, msg.required)
+    .max(MAX_IMPORT_ROWS, msg.tooLong),
+});

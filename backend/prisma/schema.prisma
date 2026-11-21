@@ -1519,28 +1519,28 @@ model OtpCode {
 // token rotation `jti` orqali bog'lanadi. Foydalanuvchi boshqa
 // qurilmalarni uzoqdan tugata oladi (revokedAt set → refresh rad etiladi).
 model UserSession {
-  id          String    @id @default(uuid())
-  userId      String    @map("user_id")
+  id            String    @id @default(uuid())
+  userId        String    @map("user_id")
   // Refresh token JTI (rotation'da yangilanadi) — reuse detection.
-  jti         String    @unique
-  deviceModel String?   @map("device_model") // "Redmi Note 12S", "iPhone 14 Pro Max"
-  platform    String? // "android" | "ios" | "web"
-  ipAddress   String?   @map("ip_address")
-  city        String?
-  country     String?
-  userAgent   String?   @map("user_agent")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  lastSeenAt  DateTime  @default(now()) @map("last_seen_at")
-  revokedAt   DateTime? @map("revoked_at")
+  jti           String    @unique
+  deviceModel   String?   @map("device_model") // "Redmi Note 12S", "iPhone 14 Pro Max"
+  platform      String? // "android" | "ios" | "web"
+  ipAddress     String?   @map("ip_address")
+  city          String?
+  country       String?
+  userAgent     String?   @map("user_agent")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  lastSeenAt    DateTime  @default(now()) @map("last_seen_at")
+  revokedAt     DateTime? @map("revoked_at")
   // Kirish (K1): ilova o'rnatish identifikatori (qurilma), sessiya turi ('LOGIN' — login/parol bilan
   // kirish; NULL — eski kirishlar) va yopilish sababi (RECOVERED | SIGNED_IN_ELSEWHERE | SIGNED_OUT |
   // PERMISSIONS_CHANGED).
-  deviceId      String? @map("device_id")
+  deviceId      String?   @map("device_id")
   kind          String?
-  revokedReason String? @map("revoked_reason")
+  revokedReason String?   @map("revoked_reason")
   // ASOSIY qurilma belgisi (faqat 'LOGIN' sessiyalar): bolada hozirgi asosiy qurilma bo'lmasa, yangi sessiya
   // ASOSIY bo'ladi. Sessiya yopilganda belgi tozalanadi.
-  isMain        Boolean @default(false) @map("is_main")
+  isMain        Boolean   @default(false) @map("is_main")
   // Rotatsiya imtiyozi: bir qurilmadagi ikki jarayon bir vaqtda refresh qilsa, yutqazgani oldingi
   // jti bilan qisqa vaqt ichida joriy juftni oladi (sessiya o'zidan yopilmaydi).
   prevJti       String?   @map("prev_jti")
@@ -2203,6 +2203,7 @@ model School {
   parentThreads       SchoolParentThread[]
   cards               SchoolCard[]
   cardTaps            SchoolCardTap[]
+  cardReservations    SchoolCardReservation[]
 
   @@map("schools")
 }
@@ -2396,6 +2397,7 @@ model SchoolStudent {
   guardianReviews     SchoolGuardianReview[]
   parentThreads       SchoolParentThread[]
   cards               SchoolCard[]
+  cardReservation     SchoolCardReservation?
 
   @@unique([schoolId, studentCode])
   @@index([schoolId, classId])
@@ -2694,6 +2696,23 @@ model SchoolCard {
   @@index([studentId])
   @@index([number])
   @@map("school_cards")
+}
+
+/// Oldindan berilgan karta raqami (bosmaxona partiyasi): karta chop etilguncha o'quvchiga
+/// raqam ajratiladi; chip bog'langanda `SchoolCard` yaratiladi va bu yozuv o'chiriladi.
+model SchoolCardReservation {
+  id        String   @id @default(uuid())
+  schoolId  String   @map("school_id")
+  studentId String   @unique @map("student_id")
+  /// 10 xonali raqam (`card-number.ts`) — kartalar va boshqa partiyalar bilan takrorlanmaydi.
+  number    String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  school  School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student SchoolStudent @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+  @@map("school_card_reservations")
 }
 
 /// Kioskdagi har bir karta tegishi (natija, shubhali belgisi) — jurnal va firibgarlik nazorati.

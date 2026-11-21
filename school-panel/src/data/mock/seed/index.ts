@@ -76,6 +76,7 @@ export function generateSeed(seed: number, now: Date): Tables {
     parentThreads: buildParentThreads({ students: people.students, guardians: people.guardians, baseIso }),
     cards: buildCards(people.students),
     cardTaps: [],
+    cardReservations: [],
     sim: { date: '', processedUntilMinute: -1 },
   };
 }

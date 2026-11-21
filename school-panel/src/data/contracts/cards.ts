@@ -8,7 +8,7 @@ export type CardTapResult = 'IN' | 'OUT' | 'NONE' | 'UNKNOWN' | 'BLOCKED' | 'INV
 
 export type SchoolCard = {
   id: Id;
-  /** Kartaga bosilgan raqam (K-000124). */
+  /** Kartaga bosilgan raqam: 10 xona (eski kartalarda K-000124). */
   number: string;
   /** Chip seriya raqami — 14 ta katta hex belgi. */
   uid: string;
@@ -51,3 +51,24 @@ export type CardTapLog = {
   studentName: string | null;
   className: string;
 };
+
+/** Karta partiyasi: raqam ajratilgan, chip hali bog'lanmagan o'quvchi (bosmaxona ro'yxati). */
+export type CardReservation = {
+  id: Id;
+  /** Kartaga bosiladigan 10 xonali raqam. */
+  number: string;
+  studentId: Id;
+  studentName: string;
+  studentCode: string;
+  classId: Id | null;
+  className: string;
+  createdAt: IsoDateTime;
+};
+
+export type CardReserveResult = { created: number; items: CardReservation[] };
+
+/** Ta'minotchi fayli qatori: kartaga bosilgan raqam ↔ chip UID. */
+export type CardImportRow = { number: string; uid: string };
+/** `code`: CARD_TAKEN, RESERVATION_NOT_FOUND, INVALID_UID, STUDENT_ARCHIVED, ERROR. */
+export type CardImportResult = { number: string; ok: boolean; code: string | null };
+export type CardImportSummary = { bound: number; results: CardImportResult[] };

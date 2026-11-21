@@ -25,6 +25,7 @@ import { AttendanceController } from './attendance.controller';
 import { CardKeyService } from './card-keys.service';
 import { CardTapService } from './card-tap.service';
 import { CardsController } from './cards.controller';
+import { CardReservationsService } from './card-reservations.service';
 import { CardsService } from './cards.service';
 
 @Module({
@@ -53,6 +54,7 @@ import { CardsService } from './cards.service';
     AttendanceAbsenceCron,
     CardKeyService,
     CardsService,
+    CardReservationsService,
     CardTapService,
   ],
   exports: [AttendanceBoardService],

@@ -1,5 +1,5 @@
 import { roleHas } from '@/auth/permissions';
-import type { AssignedCard, CardStatus, CardTapLog, CardTapResult, CardTapView, SchoolCard } from '@/data/contracts';
+import type { AssignedCard, CardStatus, CardTapLog, CardTapResult, CardTapView, SchoolCard, Student } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
 import { cardAssignSchema, cardBlockSchema, cardTapSchema, normalizeCardUid, type CardAssignInput, type CardBlockInput, type CardTapInput } from '@/data/schemas/cards';
 import { parseOrThrow } from '@/data/schemas/validate';
@@ -9,7 +9,7 @@ import { clockMinute, clockNow, clockToday } from '../clock';
 import { type Actor, allowedClassIds, assertCan, assertClassInScope, currentActor, latency, newId, writeAudit } from '../context';
 import { getTables, transact } from '../db';
 import { studentName } from '../lookups';
-import type { MockCard, MockCardTap, Tables } from '../tables';
+import type { MockCard, MockCardReservation, MockCardTap, Tables } from '../tables';
 import { recordArrival } from './attendance';
 import { randomCardNumber } from '@/lib/card-number';
 
@@ -43,12 +43,30 @@ function findCard(t: Tables, actor: Actor, id: string): MockCard {
   return card;
 }
 
-/** Yangi tasodifiy 10 xonali raqam (backend bilan bir xil qoida), takrorlanmaydi. */
-function nextNumber(t: Tables): string {
-  const used = new Set(t.cards.map((c) => c.number));
+/** Yangi tasodifiy 10 xonali raqam (backend bilan bir xil qoida): kartalar va partiya bilan takrorlanmaydi. */
+export function nextNumber(t: Tables): string {
+  const used = new Set([...t.cards, ...t.cardReservations].map((c) => c.number));
   let number = randomCardNumber();
   while (used.has(number)) number = randomCardNumber();
   return number;
+}
+
+/**
+ * Kartani berish (biriktirish va partiyadan bog'lash uchun umumiy, backend `CardsService.issue`):
+ * karta band bo'lsa — rad; o'quvchining faol kartasi «almashtirildi» deb bloklanadi.
+ */
+export function issueCard(t: Tables, actor: Actor, student: Student, uid: string, reservation?: MockCardReservation): AssignedCard {
+  if (t.cards.some((c) => c.uid === uid)) throw new ServiceError('CONFLICT', 'card taken', 'CARD_TAKEN');
+  if (reservation) t.cardReservations = t.cardReservations.filter((r) => r.id !== reservation.id);
+  const number = reservation?.number ?? nextNumber(t);
+  const now = clockNow().toISOString();
+  const previous = t.cards.find((c) => c.studentId === student.id && c.status === 'ACTIVE');
+  if (previous) Object.assign(previous, { status: 'BLOCKED', blockedAt: now, blockedReason: REPLACED_REASON });
+  const card: MockCard = { id: newId('card'), number, uid, kind: 'UID', status: 'ACTIVE', studentId: student.id, issuedAt: now, lastTapAt: null, blockedAt: null, blockedReason: null };
+  t.cards.push(card);
+  const name = studentName(student);
+  writeAudit(t, actor, 'STUDENTS', 'card.assign', `Karta ${number} biriktirildi: ${name}`, card.id, null, card, { number, name });
+  return { ...toView(t, card), replacedNumber: previous?.number ?? null };
 }
 
 function logTap(t: Tables, tap: Omit<MockCardTap, 'id'>): void {
@@ -86,17 +104,7 @@ export const cardsService = {
     return transact((t) => {
       const student = t.students.find((s) => s.id === data.studentId && !s.archived);
       if (!student) throw new ServiceError('NOT_FOUND', data.studentId);
-      const taken = t.cards.find((c) => c.uid === uid);
-      if (taken) throw new ServiceError('CONFLICT', 'card taken', 'CARD_TAKEN');
-      const number = nextNumber(t);
-      const now = clockNow().toISOString();
-      const previous = t.cards.find((c) => c.studentId === student.id && c.status === 'ACTIVE');
-      if (previous) Object.assign(previous, { status: 'BLOCKED', blockedAt: now, blockedReason: REPLACED_REASON });
-      const card: MockCard = { id: newId('card'), number, uid, kind: 'UID', status: 'ACTIVE', studentId: student.id, issuedAt: now, lastTapAt: null, blockedAt: null, blockedReason: null };
-      t.cards.push(card);
-      const name = studentName(student);
-      writeAudit(t, actor, 'STUDENTS', 'card.assign', `Karta ${number} biriktirildi: ${name}`, card.id, null, card, { number, name });
-      return { ...toView(t, card), replacedNumber: previous?.number ?? null };
+      return issueCard(t, actor, student, uid);
     });
   },
 
