@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 
 import { login, trackErrors, url } from './helpers';
 
@@ -79,9 +79,8 @@ test('kiosk: USB o\'qigich (klaviatura rejimi) kartani to\'g\'ridan-to\'g\'ri qa
   const input = page.getByLabel('P-1234');
   await expect(input).toBeFocused();
 
-  // O'qigich: belgilar ~5 ms oraliqda va Enter — kod maydoniga yuborilmaydi, karta sifatida o'tadi.
-  await page.keyboard.type(uid, { delay: 5 });
-  await page.keyboard.press('Enter');
+  // O'qigich: belgilar bir zumda va Enter — kod maydoniga yuborilmaydi, karta sifatida o'tadi.
+  await readerTap(page, uid);
   const result = page.getByRole('alertdialog');
   await expect(result).toContainText(/Xush kelibsiz|Kechikdingiz|Allaqachon/);
   await expect(result).not.toContainText('Kod topilmadi');
@@ -90,8 +89,30 @@ test('kiosk: USB o\'qigich (klaviatura rejimi) kartani to\'g\'ridan-to\'g\'ri qa
   await expect(input).toHaveValue('');
 
   // Ro'yxatda yo'q karta (o'nlik ko'rinishda) — "Karta tanilmadi".
-  await page.keyboard.type('0012345678', { delay: 5 });
-  await page.keyboard.press('Enter');
+  await readerTap(page, '0012345678');
   await expect(result).toContainText('Karta tanilmadi');
+  await result.click();
+  await expect(result).toBeHidden();
+
+  // Sekin o'qigich (karta sifatida tanilmagan): kod maydoni raqamni kod deb yubormaydi.
+  await input.focus();
+  await page.keyboard.type('0012345678', { delay: 120 });
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(600);
+  await expect(result).toBeHidden();
+  await expect(input).toHaveValue('');
   expect(errors).toEqual([]);
 });
+
+/**
+ * USB o'qigichni taqlid qiladi: tugmalar bir zumda (CI sekin bo'lsa ham) va oxirida Enter.
+ * Sintetik hodisalar maydonga yozilmaydi — faqat sahifadagi o'qigich ushlagichi ko'radi.
+ */
+async function readerTap(page: Page, text: string): Promise<void> {
+  await page.evaluate((chars) => {
+    const target = document.activeElement ?? document.body;
+    const fire = (key: string, code: string) => target.dispatchEvent(new KeyboardEvent('keydown', { key, code, bubbles: true, cancelable: true }));
+    for (const ch of chars) fire(ch, /\d/.test(ch) ? `Digit${ch}` : `Key${ch.toUpperCase()}`);
+    fire('Enter', 'Enter');
+  }, text);
+}

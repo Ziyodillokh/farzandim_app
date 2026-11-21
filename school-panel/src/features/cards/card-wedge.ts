@@ -11,10 +11,10 @@ import { normalizeReaderUid } from '@/data/schemas/cards';
  * Odam bunchalik tez yoza olmaydi; shtrix-kod skaneri esa "P-1234" yozadi — u karta emas.
  */
 
-/** Belgilar orasidagi eng katta oraliq (o'qigich ~5–30 ms; odam 80 ms dan sekin). */
-export const WEDGE_MAX_GAP_MS = 50;
+/** Belgilar orasidagi eng katta oraliq (o'qigich ~5–30 ms; odam ketma-ket 8+ tugmani bunchalik tez bosa olmaydi). */
+export const WEDGE_MAX_GAP_MS = 80;
 /** Enter bo'lmasa — oxirgi belgidan keyin shuncha kutib, o'qish yakunlanadi. */
-export const WEDGE_IDLE_MS = 100;
+export const WEDGE_IDLE_MS = 150;
 
 export type WedgeToken = { kind: 'char'; ch: string } | { kind: 'end' } | { kind: 'ignore' } | { kind: 'reset' };
 
