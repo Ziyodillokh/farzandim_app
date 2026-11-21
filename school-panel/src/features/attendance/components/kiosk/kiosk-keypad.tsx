@@ -10,6 +10,10 @@ export const CODE_PREFIX = 'P-';
 export const CODE_DIGITS = 4;
 /** 4-raqamdan keyin avtomatik yuborishgacha kutish (USB karta o'qigichi tugatib ulgurishi uchun). */
 export const AUTO_SUBMIT_DELAY_MS = 250;
+/** Kod bo'lmagan kiritishdan keyin maydon shuncha jim turguncha qulflanadi (karta raqami tugashi uchun). */
+export const INPUT_LOCK_MS = 400;
+/** Shtrix-kod skaneri "P-" yozadi (rus klaviaturasida "З-") — bu kod qismi emas. */
+const SCANNER_PREFIX = /^[PpЗз]?-?/;
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const;
 /** Tugma bosilganda fokus kod maydonida qoladi (skaner kiritishi yo'qolmasin). */
 const keepFocus = (e: MouseEvent) => e.preventDefault();
@@ -50,6 +54,21 @@ export function KioskKeypad({
   }, [digits]);
   useEffect(() => () => clearTimeout(autoSubmit.current), []);
 
+  // Maydonga kod bo'la olmaydigan narsa yozilsa (4 dan ko'p raqam yoki harf) — bu karta o'qigichi
+  // (karta sekin "yozilib", karta sifatida tanilmagan bo'lsa ham): tozalanadi, Enter ham ishlamaydi.
+  const lockedUntil = useRef(0);
+  const typedFromInput = (next: string) => {
+    const now = performance.now();
+    const rest = next.replace(SCANNER_PREFIX, '');
+    if (now >= lockedUntil.current && !/\D/.test(rest) && rest.length <= CODE_DIGITS) {
+      update(next);
+      return;
+    }
+    lockedUntil.current = now + INPUT_LOCK_MS;
+    clearTimeout(autoSubmit.current);
+    onDigitsChange('');
+  };
+
   const update = (next: string) => {
     const clean = next.replace(/\D/g, '').slice(0, CODE_DIGITS);
     onDigitsChange(clean);
@@ -62,6 +81,7 @@ export function KioskKeypad({
   const submit = (e: FormEvent) => {
     e.preventDefault();
     clearTimeout(autoSubmit.current);
+    if (performance.now() < lockedUntil.current) return;
     if (digits.length === CODE_DIGITS && !busy) onSubmit(`${CODE_PREFIX}${digits}`);
   };
 
@@ -83,7 +103,7 @@ export function KioskKeypad({
         <input
           ref={inputRef}
           value={digits}
-          onChange={(e) => update(e.target.value)}
+          onChange={(e) => typedFromInput(e.target.value)}
           inputMode="none"
           autoComplete="off"
           aria-label={t('attendance.kiosk.codePlaceholder')}
