@@ -4,21 +4,30 @@
 // Natija har doim 200 + `result`: kiosk uni rang va ovoz bilan ko'rsatadi.
 
 import { Injectable } from '@nestjs/common';
-import { SchoolCardTapResult } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
+import { SchoolAttendance, SchoolCardTapResult } from '@prisma/client';
+import { EnvConfig } from '../../common/config/env.schema';
 import { PrismaService } from '../../common/database/prisma.service';
+import { buildSignedChildAvatarUrl } from '../../common/helpers/child-avatar-signature';
 import { tashkentDay } from '../../common/time/tashkent';
 import { assertCan, SchoolActor } from '../auth/school-actor';
 import { invalid } from '../common/school-errors';
 import { msg, parseOrThrow } from '../common/school-zod';
 import { AttendanceArrivalService } from './attendance-arrival.service';
+import { AttendanceMovementService, MovementContext } from './attendance-movement.service';
 import { QR_CLOSE_AFTER_MINUTES, QR_OPEN_BEFORE_MINUTES } from './attendance-child.service';
 import { classNames } from './attendance-lookups';
+import { studentName } from './attendance-view';
 import { AttendanceClock, hhmmToMinutes, isSchoolDay, minutesToHhmm, tashkentMinute } from './attendance-time';
 import { CardKeyService } from './card-keys.service';
 import { cardTapSchema } from './cards.schemas';
 
 /** Bir o'qigichda shu oraliqda ikki xil karta — "shubhali". */
 export const SUSPICIOUS_WINDOW_MS = 3_000;
+/** Kirish yoki chiqish qayd etilgach shu o'quvchining kartasi shuncha vaqt qayta hisoblanmaydi (NONE). */
+export const TAP_COOLDOWN_MS = 60_000;
+/** Navbatchi ekranidagi rasm havolasi shuncha vaqt amal qiladi. */
+const PHOTO_URL_TTL_SEC = 10 * 60;
 /** Oflayn navbatdagi tegish shundan eski bo'lsa — qabul qilinmaydi. */
 export const MAX_QUEUED_TAP_AGE_MS = 12 * 3_600_000;
 /** Kiosk soati server soatidan shuncha oldinda bo'lishi mumkin. */
@@ -29,7 +38,8 @@ export interface CardTapView {
   time: string;
   suspicious: boolean;
   cardNumber: string | null;
-  student: { id: string; firstName: string; lastName: string; studentCode: string } | null;
+  /** `photoUrl` — bola Parvoz ilovasida rasm qo'ygan bo'lsa (navbatchi ekranida, imzolangan qisqa muddatli havola). */
+  student: { id: string; firstName: string; lastName: string; studentCode: string; photoUrl: string | null } | null;
   className: string;
   status: string | null;
 }
@@ -41,6 +51,8 @@ export class CardTapService {
     private readonly clock: AttendanceClock,
     private readonly keys: CardKeyService,
     private readonly arrival: AttendanceArrivalService,
+    private readonly movement: AttendanceMovementService,
+    private readonly config: ConfigService<EnvConfig, true>,
   ) {}
 
   async tap(actor: SchoolActor, input: unknown): Promise<CardTapView> {
@@ -56,7 +68,9 @@ export class CardTapService {
 
     const card = await this.prisma.schoolCard.findUnique({
       where: { schoolId_uid: { schoolId: actor.schoolId, uid: identity.uid } },
-      include: { student: { include: { class: { include: { shift: true } }, school: { select: { lateAfterMinutes: true } } } } },
+      include: {
+        student: { include: { class: { include: { shift: true } }, school: { select: { lateAfterMinutes: true } }, child: { select: { id: true, photoPath: true } } } },
+      },
     });
     const meta = { tappedAt, kioskId, uid: identity.uid };
     if (!card) return this.log(actor, { ...base, result: 'UNKNOWN' }, meta);
@@ -67,7 +81,13 @@ export class CardTapService {
     const known = {
       ...base,
       cardNumber: card.number,
-      student: { id: student.id, firstName: student.firstName, lastName: student.lastName, studentCode: student.studentCode },
+      student: {
+        id: student.id,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        studentCode: student.studentCode,
+        photoUrl: student.child?.photoPath ? this.photoUrl(student.child.id) : null,
+      },
       className: (student.classId && classes.get(student.classId)) || '',
     };
     const cardMeta = { ...meta, cardId: card.id, studentId: student.id };
@@ -89,6 +109,8 @@ export class CardTapService {
     });
     let result: SchoolCardTapResult = 'NONE';
     let status = existing?.status ?? null;
+    // Kirish/chiqishdan keyin 1 daqiqa: qayta tegish hech narsa o'zgartirmaydi (ikki marta o'qish, adashib tegish).
+    if (await this.inCooldown(student.id, tappedAt)) return this.log(actor, { ...known, suspicious, result, status }, cardMeta);
     if (!existing?.inAt) {
       const arrived = await this.arrival.arrive({
         ...ctx,
@@ -99,9 +121,8 @@ export class CardTapService {
       result = arrived.alreadyIn ? 'NONE' : 'IN';
       status = arrived.record.status;
     } else {
-      const leaving =
-        !existing.outAt && (existing.status === 'PRESENT' || existing.status === 'LATE') && tashkentMinute(tappedAt) >= hhmmToMinutes(cls.shift.end);
-      if (leaving && (await this.arrival.depart(ctx, existing.id))) result = 'OUT';
+      const duringShift = tashkentMinute(tappedAt) < hhmmToMinutes(cls.shift.end);
+      result = await this.moveInOrOut(existing, { ...ctx, duringShift, studentName: studentName(student), className: known.className });
     }
     await this.prisma.schoolCard.update({ where: { id: card.id }, data: { lastTapAt: tappedAt } });
     return this.log(actor, { ...known, suspicious, result, status }, cardMeta);
@@ -122,6 +143,37 @@ export class CardTapService {
       data: { lastCounter: counter },
     });
     return count > 0;
+  }
+
+  /**
+   * Kelgan o'quvchining navbatdagi tegishi: ichkarida bo'lsa — chiqish, tashqarida bo'lsa — qaytish (kunda necha marta
+   * bo'lsa ham). Kunning birinchi chiqishi smenadan keyin bo'lsa — odatdagi «ketdi» (`depart`, LEFT xabari bir marta).
+   * Faqat kelgan (PRESENT / LATE) o'quvchi uchun; sababli / erta ketgan holatlarga tegilmaydi.
+   */
+  private async moveInOrOut(record: SchoolAttendance, ctx: MovementContext): Promise<SchoolCardTapResult> {
+    if (record.status !== 'PRESENT' && record.status !== 'LATE') return 'NONE';
+    if (record.outAt) return (await this.movement.move(ctx, record.id, 'IN')) ? 'IN' : 'NONE';
+    const firstExit = (await this.prisma.schoolAttendanceEvent.count({ where: { studentId: ctx.studentId, date: record.date, kind: 'OUT' } })) === 0;
+    if (!ctx.duringShift && firstExit) return (await this.arrival.depart(ctx, record.id)) ? 'OUT' : 'NONE';
+    return (await this.movement.move(ctx, record.id, 'OUT')) ? 'OUT' : 'NONE';
+  }
+
+  private photoUrl(childId: string): string {
+    return buildSignedChildAvatarUrl(
+      this.config.get('PUBLIC_BASE_URL', { infer: true }),
+      childId,
+      this.config.get('JWT_ACCESS_SECRET', { infer: true }),
+      PHOTO_URL_TTL_SEC,
+    );
+  }
+
+  /** Shu o'quvchining kartasi bilan oxirgi `TAP_COOLDOWN_MS` ichida kirish yoki chiqish qayd etilganmi. */
+  private async inCooldown(studentId: string, tappedAt: Date): Promise<boolean> {
+    const recent = await this.prisma.schoolCardTap.findFirst({
+      where: { studentId, result: { in: ['IN', 'OUT'] }, tappedAt: { gt: new Date(tappedAt.getTime() - TAP_COOLDOWN_MS), lte: tappedAt } },
+      select: { id: true },
+    });
+    return recent !== null;
   }
 
   /** Shu o'qigichda 3 soniya ichida boshqa karta tegizilganmi. */

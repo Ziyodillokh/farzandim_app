@@ -42,7 +42,10 @@ export type NotificationKind =
   | 'CARE_URGENT'
   | 'MESSAGE_SENT'
   | 'EMERGENCY'
-  | 'PARENT_MESSAGE';
+  | 'PARENT_MESSAGE'
+  /** Dars vaqtida karta bilan maktabdan chiqdi / qaytdi (params: studentName, className, time). */
+  | 'STUDENT_STEPPED_OUT'
+  | 'STUDENT_RETURNED';
 export type NotificationTone = 'destructive' | 'warning' | 'info' | 'success';
 export type NotificationItem = {
   id: string;

@@ -45,6 +45,8 @@ export const NOTIFICATION_TONES: Record<NotificationKind, NotificationTone> = {
   LINK_CORRECTION: 'warning',
   GUARDIAN_REVIEW: 'warning',
   PARENT_MESSAGE: 'info',
+  STUDENT_STEPPED_OUT: 'warning',
+  STUDENT_RETURNED: 'success',
 };
 
 /** Erkin matn (sabab, xabar) — ikkala tilda bir xil, qisqartirilgan. */

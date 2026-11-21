@@ -30,6 +30,8 @@ export const notifications: DeepString<typeof uz> = {
     LINK_CORRECTION: 'Запрос на исправление: {studentName} ({className}) — неверная школа или класс',
     GUARDIAN_REVIEW: 'Родитель ввёл код для {studentName} ({className}) — нужно подтвердить опекуна',
     PARENT_MESSAGE: 'Новое сообщение от родителя: {name} ({className})',
+    STUDENT_STEPPED_OUT: '{studentName} ({className}) вышел(ла) из школы во время уроков — {time}',
+    STUDENT_RETURNED: '{studentName} ({className}) вернулся(лась) в школу — {time}',
   },
   category: {
     SAFETY_SIGNAL: 'Безопасность',
@@ -46,5 +48,7 @@ export const notifications: DeepString<typeof uz> = {
     LINK_CORRECTION: 'Исправление',
     GUARDIAN_REVIEW: 'Опекун',
     PARENT_MESSAGE: 'Родитель',
+    STUDENT_STEPPED_OUT: 'Вышел',
+    STUDENT_RETURNED: 'Вернулся',
   },
 };

@@ -7,6 +7,8 @@ export type AttendancePushKey =
   | 'arrived'
   | 'late'
   | 'left'
+  | 'steppedOut'
+  | 'returned'
   | 'absent'
   | 'leftEarly'
   | 'earlyExitApproved'
@@ -37,6 +39,22 @@ const TEXTS: Record<AttendancePushKey, { title: Text; body: Text }> = {
       uz: '{name} maktabdan {time} da chiqdi.',
       ru: '{name} покинул(а) школу в {time}.',
       en: '{name} left school at {time}.',
+    },
+  },
+  steppedOut: {
+    title: { uz: 'Dars vaqtida chiqdi', ru: 'Вышел(ла) во время уроков', en: 'Stepped out during school' },
+    body: {
+      uz: '{name} dars vaqtida maktabdan {time} da chiqdi.',
+      ru: '{name} вышел(ла) из школы во время уроков в {time}.',
+      en: '{name} stepped out of school at {time} during school hours.',
+    },
+  },
+  returned: {
+    title: { uz: 'Maktabga qaytdi', ru: 'Вернулся(лась) в школу', en: 'Back at school' },
+    body: {
+      uz: '{name} maktabga {time} da qaytdi.',
+      ru: '{name} вернулся(лась) в школу в {time}.',
+      en: '{name} came back to school at {time}.',
     },
   },
   absent: {

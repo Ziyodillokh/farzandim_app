@@ -5,15 +5,16 @@ import type { KioskOutcome } from './kiosk-result';
 /** Karta tegishi natijasi → kiosk kartochkasi (kirdi / takror / chiqdi / rad etildi). */
 export function outcomeFromTap(view: CardTapView): KioskOutcome {
   const name = view.student ? `${view.student.lastName} ${view.student.firstName}` : null;
+  const photoUrl = view.student?.photoUrl ?? null;
   switch (view.result) {
     case 'IN':
     case 'NONE':
       if (name && view.status) {
-        return { kind: 'success', name, className: view.className, status: view.status, time: view.time, already: view.result === 'NONE', suspicious: view.suspicious };
+        return { kind: 'success', name, className: view.className, status: view.status, time: view.time, already: view.result === 'NONE', suspicious: view.suspicious, photoUrl };
       }
       return { kind: 'card', result: 'UNKNOWN', name };
     case 'OUT':
-      return { kind: 'left', name: name ?? '', className: view.className, time: view.time };
+      return { kind: 'left', name: name ?? '', className: view.className, time: view.time, photoUrl };
     default:
       return { kind: 'card', result: view.result, name };
   }

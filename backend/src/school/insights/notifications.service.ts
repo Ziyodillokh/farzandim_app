@@ -13,6 +13,7 @@ import { CHILD_RECOVERY_NOTIFICATION_KIND } from '../../modules/child-auth/child
 import { CARE_TOPIC_LABELS } from '../care/care-labels';
 import { topicLabel } from '../parent-connect/parent-connect.labels';
 import { audienceTouchesScope, loadRoster, toAudience } from '../comms/comms-roster';
+import { RETURNED_KIND, STEPPED_OUT_KIND } from '../attendance/attendance-movement.service';
 import { GUARDIAN_REVIEW_KIND, LINK_CORRECTION_KIND, LINK_REQUESTS_HREF, LINK_REVIEW_KIND } from '../students/link-notification-ids';
 import { emergencyLive } from '../school-mode/school-mode-store';
 
@@ -23,6 +24,8 @@ export const FEED_LIMIT = 30;
  */
 export const LINK_FEED_PER_KIND = 10;
 const LINK_KINDS: ReadonlySet<string> = new Set([LINK_REVIEW_KIND, LINK_CORRECTION_KIND, GUARDIAN_REVIEW_KIND]);
+/** Harakat bildirishnomasi bosilganda — bugungi davomat. */
+const ATTENDANCE_HREF = '/attendance';
 const MESSAGE_WINDOW_MS = 3 * 24 * 3_600_000;
 const SUBJECT_MAX = 90;
 const STORED_LIMIT = 200;
@@ -41,7 +44,9 @@ export type NotificationKind =
   | 'EMERGENCY'
   | 'DATA_DELETION_REQUEST'
   | 'CHILD_RECOVERY_REQUEST'
-  | 'PARENT_MESSAGE';
+  | 'PARENT_MESSAGE'
+  | 'STUDENT_STEPPED_OUT'
+  | 'STUDENT_RETURNED';
 type Localized = { uz: string; ru: string };
 
 export interface NotificationItem {
@@ -69,6 +74,8 @@ export const NOTIFICATION_TONES: Record<NotificationKind, NotificationItem['tone
   DATA_DELETION_REQUEST: 'warning',
   CHILD_RECOVERY_REQUEST: 'warning',
   PARENT_MESSAGE: 'info',
+  STUDENT_STEPPED_OUT: 'warning',
+  STUDENT_RETURNED: 'success',
 };
 
 /** Erkin matn (sabab, xabar) — ikkala tilda bir xil, qisqartirilgan. */
@@ -165,6 +172,12 @@ export class NotificationsService {
         const stored = (n.params ?? {}) as Record<string, unknown>;
         const params = { studentName: String(stored.studentName ?? ''), className: String(stored.className ?? '') };
         return item('CHILD_RECOVERY_REQUEST', n.id, n.at, { params, href: n.href });
+      }
+      // Dars vaqtida maktabdan chiqdi / qaytdi (karta) — o'quvchi ismi, sinf va vaqt.
+      if (n.kind === STEPPED_OUT_KIND || n.kind === RETURNED_KIND) {
+        const stored = (n.params ?? {}) as Record<string, unknown>;
+        const params = { studentName: String(stored.studentName ?? ''), className: String(stored.className ?? ''), time: String(stored.time ?? '') };
+        return item(n.kind, n.id, n.at, { params, href: ATTENDANCE_HREF });
       }
       const kind = n.kind === 'SAFETY_SIGNAL' ? 'SAFETY_SIGNAL' : 'TEST_COMPLETED';
       // Xavfsizlik signalida ism / matn HECH QACHON yo'q.

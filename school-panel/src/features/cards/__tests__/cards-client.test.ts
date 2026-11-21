@@ -42,11 +42,15 @@ describe('kiosk natijasi', () => {
   const base = { time: '07:52', suspicious: false, cardNumber: '4821093753', student, className: '7-A', status: 'PRESENT' as const };
 
   it('kirdi, takror, chiqdi va rad etilgan natijalar', () => {
-    expect(outcomeFromTap({ ...base, result: 'IN' })).toEqual({ kind: 'success', name: 'Aliyev Vali', className: '7-A', status: 'PRESENT', time: '07:52', already: false, suspicious: false });
+    expect(outcomeFromTap({ ...base, result: 'IN' })).toEqual({ kind: 'success', name: 'Aliyev Vali', className: '7-A', status: 'PRESENT', time: '07:52', already: false, suspicious: false, photoUrl: null });
     expect(outcomeFromTap({ ...base, result: 'NONE' })).toMatchObject({ kind: 'success', already: true });
-    expect(outcomeFromTap({ ...base, result: 'OUT' })).toEqual({ kind: 'left', name: 'Aliyev Vali', className: '7-A', time: '07:52' });
+    expect(outcomeFromTap({ ...base, result: 'OUT' })).toEqual({ kind: 'left', name: 'Aliyev Vali', className: '7-A', time: '07:52', photoUrl: null });
     expect(outcomeFromTap({ ...base, result: 'BLOCKED' })).toEqual({ kind: 'card', result: 'BLOCKED', name: 'Aliyev Vali' });
     expect(outcomeFromTap({ ...base, student: null, status: null, result: 'UNKNOWN' })).toEqual({ kind: 'card', result: 'UNKNOWN', name: null });
+    // Bola rasm qo'ygan bo'lsa — navbatchi ekranida.
+    const photoUrl = 'https://farzandimedu.uz/api/children/c1/avatar/image?exp=1&sig=x';
+    expect(outcomeFromTap({ ...base, student: { ...student, photoUrl }, result: 'IN' })).toMatchObject({ kind: 'success', photoUrl });
+    expect(outcomeFromTap({ ...base, student: { ...student, photoUrl }, result: 'OUT' })).toMatchObject({ kind: 'left', photoUrl });
   });
 
   it('ovoz: kirdi — ok, shubhali yoki navbatda — ogohlantirish, rad — xato', () => {

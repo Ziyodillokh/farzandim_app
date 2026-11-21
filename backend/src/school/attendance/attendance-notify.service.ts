@@ -91,6 +91,27 @@ export class AttendanceNotifyService {
     }
   }
 
+  /**
+   * Kun davomidagi chiqish / qaytish (karta): har harakat bitta tegishdan bir marta keladi, shuning uchun kunlik
+   * «bir marta» cheklovi (`SchoolParentNotice`) qo'llanmaydi — har ota-onaga to'g'ridan-to'g'ri push.
+   */
+  async notifyMovement(notice: { studentId: string; date: string; time: string; push: Extract<AttendancePushKey, 'steppedOut' | 'returned' | 'left'> }): Promise<number> {
+    try {
+      const name = await this.firstName(notice.studentId);
+      if (name === null) return 0;
+      const kind = notice.push === 'returned' ? 'ARRIVED' : 'LEFT';
+      const data = { type: 'school_attendance', kind, movement: notice.push, studentId: notice.studentId, date: notice.date };
+      let sent = 0;
+      for (const target of await this.targets(notice.studentId)) {
+        if (await this.push(target.userId, notice.push, { name, time: notice.time }, data)) sent += 1;
+      }
+      return sent;
+    } catch (err) {
+      this.logger.warn(`harakat xabari yuborilmadi: ${String(err)}`);
+      return 0;
+    }
+  }
+
   /** Erta ketish qarori — so'rov PENDING holatidan faqat bir marta chiqadi, shuning uchun bir push. */
   async notifyDecision(notice: DecisionNotice): Promise<number> {
     try {

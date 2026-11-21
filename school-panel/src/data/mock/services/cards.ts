@@ -19,6 +19,8 @@ import { randomCardNumber } from '@/lib/card-number';
  */
 const MAX_TAPS = 500;
 const SUSPICIOUS_WINDOW_MS = 3_000;
+/** Kirish/chiqishdan keyin shu o'quvchining kartasi 1 daqiqa qayta hisoblanmaydi (backend `TAP_COOLDOWN_MS`). */
+const TAP_COOLDOWN_MS = 60_000;
 const OPEN_BEFORE_MINUTES = 120;
 const CLOSE_AFTER_MINUTES = 180;
 const REPLACED_REASON = 'REPLACED';
@@ -224,15 +226,23 @@ export const cardsService = {
       const record = t.attendance.find((r) => r.date === today && r.studentId === student.id);
       let result: CardTapResult = 'NONE';
       let status = record?.status ?? null;
+      const cooling = t.cardTaps.some(
+        (tap) => tap.studentId === student.id && (tap.result === 'IN' || tap.result === 'OUT') && now.getTime() - Date.parse(tap.tappedAt) < TAP_COOLDOWN_MS,
+      );
+      if (cooling) return done({ ...known, suspicious, result, status }, card);
       if (!record?.inAt) {
         status = recordArrival(t, actor.staffId, student, shift, 'CARD', today, minute);
         result = 'IN';
-      } else if (!record.outAt && (record.status === 'PRESENT' || record.status === 'LATE') && minute >= hhmmToMinutes(shift.end)) {
-        record.outAt = minutesToHhmm(Math.floor(minute));
-        t.attendanceEvents.push({ id: `${today}:${student.id}:OUT`, at: now.toISOString(), studentId: student.id, classId: student.classId, kind: 'OUT', source: 'CARD', late: false });
-        const guardian = student.guardianIds.map((id) => t.guardians.find((g) => g.id === id)).find((g) => g?.linkStatus === 'LINKED');
-        if (guardian) t.parentNotifications.push({ id: newId('ntf'), at: now.toISOString(), studentId: student.id, guardianId: guardian.id, kind: 'LEFT', delivered: true });
-        result = 'OUT';
+      } else if (record.status === 'PRESENT' || record.status === 'LATE') {
+        // Kun davomida qayta chiqish-kirish (backend `moveInOrOut`): ichkarida — chiqdi, tashqarida — qaytdi.
+        const direction = record.outAt ? 'IN' : 'OUT';
+        record.outAt = direction === 'OUT' ? minutesToHhmm(Math.floor(minute)) : null;
+        t.attendanceEvents.push({ id: `${today}:${student.id}:${direction}:${now.getTime()}`, at: now.toISOString(), studentId: student.id, classId: student.classId, kind: direction, source: 'CARD', late: false });
+        if (direction === 'OUT' && minute >= hhmmToMinutes(shift.end)) {
+          const guardian = student.guardianIds.map((id) => t.guardians.find((g) => g.id === id)).find((g) => g?.linkStatus === 'LINKED');
+          if (guardian) t.parentNotifications.push({ id: newId('ntf'), at: now.toISOString(), studentId: student.id, guardianId: guardian.id, kind: 'LEFT', delivered: true });
+        }
+        result = direction;
       }
       return done({ ...known, suspicious, result, status }, card);
     });

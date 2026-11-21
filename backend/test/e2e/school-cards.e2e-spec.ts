@@ -146,6 +146,45 @@ describe('NFC kartalar', () => {
     expect((await tap(w.duty, { uid: UID_B })).json().result).toBe('OUTSIDE');
   });
 
+  it('kun davomida qayta chiqish-kirish: 1 daqiqa to\'siq, ota-onaga push, dars vaqtida xodimlarga bildirishnoma, rasm', async () => {
+    await cards(w.director, 'POST', '', { studentId: w.vali, uid: UID_A });
+    await t.prisma.child.update({ where: { id: w.child.childId }, data: { photoPath: 'avatars/vali.jpg' } });
+    const tapAt = async (time: string, seconds = 0) => {
+      setNow(t, new Date(at(DAY, time).getTime() + seconds * 1_000));
+      return (await tap(w.duty, { uid: UID_A })).json();
+    };
+
+    const first = await tapAt('07:52');
+    expect(first).toMatchObject({ result: 'IN' });
+    expect(first.student.photoUrl).toMatch(/\/api\/children\/[\w-]+\/avatar\/image\?exp=\d+&sig=/);
+    expect((await tapAt('07:52', 40)).result).toBe('NONE'); // 1 daqiqa ichida — hech narsa
+    expect((await tapAt('10:15')).result).toBe('OUT'); // dars vaqtida ko'chaga chiqdi
+    expect((await tapAt('10:15', 30)).result).toBe('NONE');
+    expect((await tapAt('10:40')).result).toBe('IN'); // qaytdi
+    expect((await tapAt('11:05')).result).toBe('OUT'); // yana chiqdi
+    expect((await tapAt('11:20')).result).toBe('IN');
+    expect((await tapAt('13:30')).result).toBe('OUT'); // smenadan keyin ketdi
+
+    const record = await t.prisma.schoolAttendance.findUniqueOrThrow({ where: { studentId_date: { studentId: w.vali, date: DAY } } });
+    expect(record).toMatchObject({ status: 'PRESENT', inAt: '07:52', outAt: '13:30' });
+    const events = await t.prisma.schoolAttendanceEvent.findMany({ where: { studentId: w.vali, date: DAY }, orderBy: { at: 'asc' } });
+    expect(events.map((e) => e.kind)).toEqual(['IN', 'OUT', 'IN', 'OUT', 'IN', 'OUT']);
+    await settle();
+    const pushes = t.fcm.pushesTo(w.parent.userId).filter((p) => p.data?.type === 'school_attendance');
+    expect(pushes.map((p) => p.data?.movement ?? p.data?.kind)).toEqual(['ARRIVED', 'steppedOut', 'returned', 'steppedOut', 'returned', 'left']);
+    const staff = await t.prisma.schoolStaffNotification.findMany({ where: { schoolId: w.schoolId, kind: { startsWith: 'STUDENT_' } }, orderBy: { at: 'asc' } });
+    expect(staff.map((n) => [n.kind, (n.params as { time: string }).time])).toEqual([
+      ['STUDENT_STEPPED_OUT', '10:15'],
+      ['STUDENT_RETURNED', '10:40'],
+      ['STUDENT_STEPPED_OUT', '11:05'],
+      ['STUDENT_RETURNED', '11:20'],
+    ]);
+    // Sinf rahbari lentasida ko'rinadi.
+    const feed = (await t.app.inject({ method: 'GET', url: '/api/school/notifications/feed', headers: { authorization: `Bearer ${w.homeroom.token}` } })).json();
+    const items = (Array.isArray(feed) ? feed : feed.items) as Array<{ kind: string; params: Record<string, string> }>;
+    expect(items.some((i) => i.kind === 'STUDENT_STEPPED_OUT' && i.params.studentName === 'Aliyev Vali')).toBe(true);
+  });
+
   it("NTAG 424 DNA: imzolangan kod qabul; qayta yuborilgan, imzosiz, o'zgartirilgan va begona kod — INVALID", async () => {
     const master = await t.app.get(CardKeyService).ensure(w.schoolId);
     const uid = '04A1B2C3D4E5F6';
