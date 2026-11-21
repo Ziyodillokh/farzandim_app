@@ -20,7 +20,7 @@ import { deleteCareOfChildren } from '../../school/care/care-purge';
 import { deleteDeletionRequestsOfChildren } from '../data-deletion/data-deletion-purge';
 import { deleteChildAuthOfChildren } from '../child-auth/child-auth-purge';
 import { deleteHomeworkOfChildren, homeworkMediaOfChildren } from '../../school/homework/homework-purge';
-import { deleteGuardianReviewsOfUsers, deleteLinkDataOfChildren } from '../../school/students/link-purge';
+import { deleteGuardianReviewsOfUsers, releaseGuardiansOfUsers, deleteLinkDataOfChildren } from '../../school/students/link-purge';
 import {
   hashPassword,
   verifyPassword,
@@ -172,6 +172,8 @@ export class UsersService {
       await deleteLinkDataOfChildren(tx, children.map((c) => c.id));
       // Ota-onaning vasiylik so'rovlari (6 raqamli kod, xodim ko'rigida) va ularning xodim bildirishnomalari.
       await deleteGuardianReviewsOfUsers(tx, [userId]);
+      // Maktabdagi vasiy yozuvlari «ulangan» holatda qolib ketmasin (qayta taklif / uzish ishlasin).
+      await releaseGuardiansOfUsers(tx, [userId]);
       // Ma'lumot o'chirish so'rovlari va ularga bog'liq xodim bildirishnomalari (o'quvchi ismi shu yerda).
       await deleteDeletionRequestsOfChildren(tx, children.map((c) => c.id));
       // Bola kirish maʼlumotlari va tiklash so'rovlari (xodim bildirishnomalari ham).

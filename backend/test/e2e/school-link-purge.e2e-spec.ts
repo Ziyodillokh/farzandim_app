@@ -114,6 +114,34 @@ describe('School student code — data purge (K2)', () => {
     expect(notes).toHaveLength(1);
   });
 
+  it('deleted parent frees the school guardian record: re-invite works, a legacy orphan can be unlinked', async () => {
+    const guardianOf = (userId: string) => t.prisma.schoolGuardian.findFirstOrThrow({ where: { userId } });
+    const linked = await guardianOf(gone.parent.userId);
+    expect(linked.linkStatus).toBe('LINKED');
+    const moderator = await createModerator(t.prisma, ['manage_users']);
+    const del = await t.app.inject({ method: 'DELETE', url: `/api/admin/users/${gone.parent.userId}`, headers: { authorization: `Bearer ${moderator.token}` } });
+    expect(del.statusCode).toBe(200);
+
+    // Admin o'chirgach vasiy «taklif qilinmagan» holatga qaytadi va qayta taklif qilinadi.
+    expect(await t.prisma.schoolGuardian.findUniqueOrThrow({ where: { id: linked.id } })).toMatchObject({ userId: null, linkStatus: 'NOT_INVITED', linkedAt: null });
+    const invite = await appReq(t, w.director.token, 'POST', `/school/guardians/${linked.id}/invite`);
+    expect(invite.statusCode).toBeLessThan(300);
+    expect(invite.json()).toMatchObject({ linkStatus: 'INVITED' });
+
+    // Eski xato qoldig'i: akkauntsiz «LINKED» yozuv — aloqani uzish xatosiz holatni tozalaydi.
+    const legacy = await guardianOf(kept.parent.userId);
+    await t.prisma.schoolGuardian.update({ where: { id: legacy.id }, data: { userId: null } });
+    const unlink = await appReq(t, w.director.token, 'POST', `/school/guardians/${legacy.id}/unlink`);
+    expect(unlink.statusCode).toBeLessThan(300);
+    expect(await t.prisma.schoolGuardian.findUniqueOrThrow({ where: { id: legacy.id } })).toMatchObject({ userId: null, linkStatus: 'NOT_INVITED' });
+  });
+
+  it('parent deleting own account also frees the school guardian record', async () => {
+    const linked = await t.prisma.schoolGuardian.findFirstOrThrow({ where: { userId: kept.parent.userId } });
+    expect((await appReq(t, kept.parent.token, 'DELETE', '/users/me')).statusCode).toBe(200);
+    expect(await t.prisma.schoolGuardian.findUniqueOrThrow({ where: { id: linked.id } })).toMatchObject({ userId: null, linkStatus: 'NOT_INVITED' });
+  });
+
   it.each(['PARENT', 'CHILD'] as const)('admin deletes the user (%s)', async (kind) => {
     const moderator = await createModerator(t.prisma, ['manage_users']);
     const id = kind === 'PARENT' ? gone.parent.userId : gone.child.userId;

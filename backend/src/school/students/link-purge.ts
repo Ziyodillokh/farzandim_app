@@ -33,3 +33,16 @@ export async function deleteGuardianReviewsOfUsers(tx: Prisma.TransactionClient,
   await tx.schoolStaffNotification.deleteMany({ where: { id: { in: reviews.map((r) => guardianReviewNotificationId(r.id)) } } });
   await tx.schoolGuardianReview.deleteMany({ where: { userId: { in: ids } } });
 }
+
+/** Akkaunti yo'q vasiy yozuvi uchun holat: taklif qilinmagan, bog'lanish izlari tozalangan. */
+export const RELEASED_GUARDIAN = { userId: null, linkStatus: 'NOT_INVITED', linkedAt: null, inviteCode: null, inviteExpiresAt: null } as const;
+
+/**
+ * Ota-ona akkaunti o'chirilganda maktabdagi vasiy yozuvlari (`SchoolGuardian`) bo'shatiladi. Begona kalit
+ * `userId` ni o'zi NULL qiladi, lekin `linkStatus = LINKED` qolib ketardi — panel «ulangan» ko'rsatar, qayta
+ * taklif ham, aloqani uzish ham rad etilardi. Chaqiruv foydalanuvchi o'chirilishidan OLDIN bo'lishi shart.
+ */
+export async function releaseGuardiansOfUsers(tx: Prisma.TransactionClient, userIds: readonly string[]): Promise<void> {
+  if (userIds.length === 0) return;
+  await tx.schoolGuardian.updateMany({ where: { userId: { in: [...userIds] } }, data: RELEASED_GUARDIAN });
+}
