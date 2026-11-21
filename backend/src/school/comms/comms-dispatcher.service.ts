@@ -10,6 +10,7 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { addDays, TASHKENT_TZ, tashkentDay, tashkentDayStart } from '../../common/time/tashkent';
 import { AnnouncementDeliveryService } from './announcement-delivery.service';
 import { paymentPush, reminderPush } from './comms.i18n';
+import { PAYMENT_NOTICE_DAYS } from './payment-due';
 import { CommsPushService, mapLimit } from './comms-push.service';
 import { audienceGuardians, loadRoster, toAudience } from './comms-roster';
 import { latestOccurrence, tashkentHour } from './comms-time';
@@ -19,8 +20,6 @@ import { toReminderKind, toRepeat } from './reminder-views';
 const ANNOUNCEMENT_BATCH = 50;
 /** Eslatma shuncha kechiksa (server o'chiq bo'lgan) — eskirgan, yuborilmaydi. */
 const MAX_REMINDER_LATENESS_MS = 30 * 60 * 1000;
-/** To'lov eslatmasi keyingi sanadan necha kun oldin keladi. */
-export const PAYMENT_NOTICE_DAYS = 3;
 /** To'lov eslatmalari Toshkent vaqti bilan shu soatdan keyin (tunda emas). */
 export const PAYMENT_SEND_HOUR = 9;
 const PAYMENT_CONCURRENCY = 8;
@@ -134,14 +133,17 @@ export class CommsDispatcherService {
     }
   }
 
-  /** Keyingi sanadan PAYMENT_NOTICE_DAYS kun oldin (09:00 dan keyin) — har davrda bir marta. */
+  /**
+   * To'lov eslatmasi: sanadan PAYMENT_NOTICE_DAYS kun oldin boshlab, to'lov tasdiqlanmaguncha (sana o'tib ketgan bo'lsa
+   * ham) — har kuni 09:00 dan keyin bir marta. Maktab sanani keyingi davrga surishi yoki to'xtatishi bilan tugaydi.
+   */
   private async dispatchPayments(now: Date): Promise<number> {
     if (tashkentHour(now) < PAYMENT_SEND_HOUR) return 0;
     const today = tashkentDay(now);
     const candidates = await this.prisma.schoolPaymentReminder.findMany({
       where: {
         paused: false,
-        nextDate: { gte: today, lte: addDays(today, PAYMENT_NOTICE_DAYS) },
+        nextDate: { lte: addDays(today, PAYMENT_NOTICE_DAYS) },
         school: { status: 'ACTIVE' },
       },
     });
@@ -152,14 +154,15 @@ export class CommsDispatcherService {
     });
     const users = new Map(guardians.map((g) => [`${g.schoolId}:${g.id}`, g.userId]));
     const sent = await mapLimit(candidates, PAYMENT_CONCURRENCY, (p) =>
-      this.sendPayment(p, users.get(`${p.schoolId}:${p.guardianId}`) ?? null, now),
+      this.sendPayment(p, users.get(`${p.schoolId}:${p.guardianId}`) ?? null, now, today),
     );
     return sent.filter(Boolean).length;
   }
 
-  private async sendPayment(p: SchoolPaymentReminder, userId: string | null, now: Date): Promise<boolean> {
+  private async sendPayment(p: SchoolPaymentReminder, userId: string | null, now: Date, today: string): Promise<boolean> {
     if (!userId) return false;
-    const cycleStart = tashkentDayStart(addDays(p.nextDate, -PAYMENT_NOTICE_DAYS));
+    // Kuniga bir marta: bugun allaqachon yuborilgan bo'lsa — yo'q.
+    const cycleStart = tashkentDayStart(today);
     if (p.lastSentAt && p.lastSentAt.getTime() >= cycleStart.getTime()) return false;
     try {
       const claimed = await this.prisma.schoolPaymentReminder.updateMany({
@@ -173,7 +176,7 @@ export class CommsDispatcherService {
       });
       if (claimed.count !== 1) return false;
       const school = await this.push.schoolLabel(p.schoolId);
-      return this.push.sendOne(userId, (lang) => paymentPush(lang, { id: p.id, school, nextDate: p.nextDate }));
+      return this.push.sendOne(userId, (lang) => paymentPush(lang, { id: p.id, school, nextDate: p.nextDate, today }));
     } catch (err) {
       this.logger.error(`to'lov eslatmasi yuborilmadi (${p.id}): ${String(err)}`);
       return false;

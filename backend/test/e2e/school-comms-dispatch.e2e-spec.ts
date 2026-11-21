@@ -125,26 +125,31 @@ describe('School comms: yuborish rejasi (S4 cron)', () => {
     expect((await dispatcher.dispatchDue(tk('2099-03-31T09:10'))).reminders).toBe(1);
   });
 
-  it('to\'lov eslatmasi: sanadan 3 kun oldin, 09:00 dan keyin, davr uchun bir marta; ilovasiz / to\'xtatilgan — yo\'q', async () => {
+  it('to\'lov eslatmasi: 5 kun qolganidan boshlab har kuni (09:00 dan keyin, kuniga bir marta), muddat o\'tsa ham to\'lanmaguncha; ilovasiz / to\'xtatilgan — yo\'q', async () => {
     const payment = await addPayment(t.prisma, schoolId, fam7a, '2099-04-10');
     await addPayment(t.prisma, schoolId, fam8b, '2099-04-10', { paused: true });
     const unlinked = await addFamily(t.prisma, schoolId, cls7a, { guardianName: 'Ilovasiz' });
     await addPayment(t.prisma, schoolId, unlinked, '2099-04-09');
 
-    expect((await dispatcher.dispatchDue(tk('2099-04-06T10:00'))).payments).toBe(0);
-    expect((await dispatcher.dispatchDue(tk('2099-04-07T08:59'))).payments).toBe(0);
-    const runs = await Promise.all([dispatcher.dispatchDue(tk('2099-04-07T09:00')), dispatcher.dispatchDue(tk('2099-04-07T09:00'))]);
+    expect((await dispatcher.dispatchDue(tk('2099-04-04T10:00'))).payments).toBe(0); // 6 kun qoldi
+    expect((await dispatcher.dispatchDue(tk('2099-04-05T08:59'))).payments).toBe(0); // 09:00 gacha
+    const runs = await Promise.all([dispatcher.dispatchDue(tk('2099-04-05T09:00')), dispatcher.dispatchDue(tk('2099-04-05T09:00'))]);
     expect(runs.reduce((n, r) => n + r.payments, 0)).toBe(1);
-    expect((await dispatcher.dispatchDue(tk('2099-04-09T12:00'))).payments).toBe(0);
+    expect((await dispatcher.dispatchDue(tk('2099-04-05T15:00'))).payments).toBe(0); // shu kuni qayta — yo'q
+    expect((await dispatcher.dispatchDue(tk('2099-04-06T09:30'))).payments).toBe(1); // ertasi kuni — yana
+    expect((await dispatcher.dispatchDue(tk('2099-04-13T09:30'))).payments).toBe(1); // muddat o'tgan — to'lanmaguncha davom
     const pushes = t.fcm.pushesTo(parentUz.userId);
-    expect(pushes).toHaveLength(1);
-    expect(pushes[0]).toMatchObject({ title: "Test maktab: to'lov eslatmasi", data: { type: 'SCHOOL_PAYMENT_REMINDER', paymentReminderId: payment.id } });
-    expect(pushes[0]!.body).toContain('2099-04-10');
-    expect(pushes[0]!.body).not.toMatch(/qarz/i);
+    expect(pushes).toHaveLength(3);
+    expect(pushes[0]).toMatchObject({ title: "Test maktab: to'lov eslatmasi", data: { type: 'SCHOOL_PAYMENT_REMINDER', paymentReminderId: payment.id, paymentDue: '2099-04-10' } });
+    expect(pushes[0]!.body).toContain("To'lovga 5 kun qoldi (10.04.2099)");
+    expect(pushes[2]!.body).toContain("To'lov sanasi 10.04.2099 da o'tib ketgan");
+    expect(pushes.map((p) => p.body).join(' ')).not.toMatch(/qarz/i);
     expect(t.fcm.pushesTo(parentRu.userId)).toHaveLength(0);
 
+    // Maktab to'lovni tasdiqlab sanani surdi — eslatma to'xtaydi, keyingi davrda yana boshlanadi.
     await call(admin, 'POST', `/comms/payments/${payment.id}/shift`, { nextDate: '2099-05-10', note: 'Keyingi oy' });
-    expect((await dispatcher.dispatchDue(tk('2099-05-07T09:30'))).payments).toBe(1);
+    expect((await dispatcher.dispatchDue(tk('2099-04-14T09:30'))).payments).toBe(0);
+    expect((await dispatcher.dispatchDue(tk('2099-05-05T09:30'))).payments).toBe(1);
   });
 
   it('vaqt hisobi: oylik qadam siljimaydi, haftalik — 7 kun, o\'tgan bir martalik — null', () => {

@@ -185,6 +185,29 @@ describe('NFC kartalar', () => {
     expect(items.some((i) => i.kind === 'STUDENT_STEPPED_OUT' && i.params.studentName === 'Aliyev Vali')).toBe(true);
   });
 
+  it("«keldi» xabari ostida to'lov: 5 kun qolganda — qolgan kunlar, o'tgan bo'lsa — sana; ilovada to'lovga havola", async () => {
+    await cards(w.director, 'POST', '', { studentId: w.vali, uid: UID_A });
+    const payment = await t.prisma.schoolPaymentReminder.create({
+      data: { schoolId: w.schoolId, guardianId: w.guardianId, studentIds: [w.vali], nextDate: '2026-10-22' },
+    });
+    expect((await tap(w.duty, { uid: UID_A })).json().result).toBe('IN');
+    await settle();
+    const arrived = t.fcm.pushesTo(w.parent.userId).find((p) => p.data?.type === 'school_attendance' && p.data?.kind === 'ARRIVED');
+    expect(arrived?.body).toContain("To'lovga 2 kun qoldi (22.10.2026)");
+    expect(arrived?.data).toMatchObject({ paymentReminderId: payment.id, paymentDue: '2026-10-22' });
+
+    // Sana uzoq (6+ kun) — qator yo'q; o'tib ketgan — sana bilan.
+    await t.prisma.schoolPaymentReminder.update({ where: { id: payment.id }, data: { nextDate: '2026-10-15' } });
+    await t.prisma.schoolAttendance.deleteMany({ where: { studentId: w.vali } });
+    await t.prisma.schoolParentNotice.deleteMany({});
+    await t.prisma.schoolCardTap.deleteMany({});
+    t.fcm.reset();
+    expect((await tap(w.duty, { uid: UID_A })).json().result).toBe('IN');
+    await settle();
+    const overdue = t.fcm.pushesTo(w.parent.userId).find((p) => p.data?.kind === 'ARRIVED');
+    expect(overdue?.body).toContain("To'lov sanasi 15.10.2026 da o'tib ketgan");
+  });
+
   it("NTAG 424 DNA: imzolangan kod qabul; qayta yuborilgan, imzosiz, o'zgartirilgan va begona kod — INVALID", async () => {
     const master = await t.app.get(CardKeyService).ensure(w.schoolId);
     const uid = '04A1B2C3D4E5F6';
