@@ -66,8 +66,12 @@ post_install do |installer|
     # (lib/ bo'ylab `Permission.*` qidiruvi): camera, microphone,
     # notification. Yangi ruxsat qo'shilsa — bu yerga ham qo'shilsin.
     target.build_configurations.each do |config|
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
-        '$(inherited)',
+      # Xcode 27 iOS 15.0 dan past deployment target'ni qabul qilmaydi (eski pod'lar 9.0–13.0
+      # deb yozadi) — hammasi ilovaning o'zi bilan bir xil (15.5).
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
+      # `||=` + `+=`: pod'da allaqachon makrolar bo'lsa ham ruxsatlar qo'shiladi.
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] += [
         'PERMISSION_CAMERA=1',
         'PERMISSION_MICROPHONE=1',
         'PERMISSION_NOTIFICATIONS=1',
