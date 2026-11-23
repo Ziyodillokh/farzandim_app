@@ -1,9 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import admin from 'firebase-admin';
-import { PrismaService } from '../database/prisma.service';
-import { EnvConfig } from '../config/env.schema';
-import { NotifLang, toNotifLang } from '../i18n/notification-i18n';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import admin from "firebase-admin";
+import { PrismaService } from "../database/prisma.service";
+import { EnvConfig } from "../config/env.schema";
+import { NotifLang, toNotifLang } from "../i18n/notification-i18n";
 
 export interface PushPayload {
   title: string;
@@ -40,7 +40,7 @@ export class FcmService {
     if (this.initialized) return true;
     if (this.initFailed) return false;
 
-    const b64 = this.config.get('FIREBASE_SERVICE_ACCOUNT_BASE64', {
+    const b64 = this.config.get("FIREBASE_SERVICE_ACCOUNT_BASE64", {
       infer: true,
     });
     if (!b64) {
@@ -49,7 +49,7 @@ export class FcmService {
     }
 
     try {
-      const json = JSON.parse(Buffer.from(b64, 'base64').toString('utf8'));
+      const json = JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
       admin.initializeApp({
         credential: admin.credential.cert(json),
       });
@@ -57,7 +57,7 @@ export class FcmService {
       return true;
     } catch (err) {
       this.initFailed = true;
-      this.logger.error('Failed to initialize firebase-admin', err);
+      this.logger.error("Failed to initialize firebase-admin", err);
       return false;
     }
   }
@@ -73,7 +73,7 @@ export class FcmService {
 
     if (!this.tryInit()) {
       this.logger.warn(
-        'Push not sent - FIREBASE_SERVICE_ACCOUNT_BASE64 missing or invalid',
+        "Push not sent - FIREBASE_SERVICE_ACCOUNT_BASE64 missing or invalid",
       );
       return { sent: 0, failed: tokens.length, invalidTokens: [] };
     }
@@ -85,17 +85,17 @@ export class FcmService {
           // ttl 60s — "ring/find device" real-time buyruq. Qurilma offline/Doze
           // bo'lsa FCM uni 60s'dan keyin tashlaydi (soatlardan keyin kutilmaganda
           // jiringlamasin). priority 'high' — Doze'dan uyg'otadi (load-bearing).
-          android: { priority: 'high', ttl: 60_000 },
+          android: { priority: "high", ttl: 60_000 },
           // Apple: faqat `content-available` li (fon) push — push-type
           // `background` va priority 5 bo'lishi SHART; priority 10 bunday
           // push uchun xato hisoblanadi va iOS uni yetkazmasligi mumkin.
           apns: {
             headers: {
-              'apns-push-type': 'background',
-              'apns-priority': '5',
-              'apns-expiration': '0',
+              "apns-push-type": "background",
+              "apns-priority": "5",
+              "apns-expiration": "0",
             },
-            payload: { aps: { 'content-available': 1 } },
+            payload: { aps: { "content-available": 1 } },
           },
         }
       : {
@@ -108,13 +108,13 @@ export class FcmService {
           },
           data: payload.data,
           android: {
-            priority: 'high',
+            priority: "high",
             ...(payload.image
               ? { notification: { imageUrl: payload.image } }
               : {}),
           },
           apns: {
-            payload: { aps: { sound: 'default', 'mutable-content': 1 } },
+            payload: { aps: { sound: "default", "mutable-content": 1 } },
             ...(payload.image
               ? { fcmOptions: { imageUrl: payload.image } }
               : {}),
@@ -124,18 +124,33 @@ export class FcmService {
     const response = await admin.messaging().sendEachForMulticast(message);
 
     const invalidTokens: string[] = [];
+    const otherErrors = new Set<string>();
     response.responses.forEach((r, idx) => {
       if (!r.success && r.error) {
         const code = r.error.code;
         if (
-          code === 'messaging/registration-token-not-registered' ||
-          code === 'messaging/invalid-registration-token' ||
-          code === 'messaging/invalid-argument'
+          code !== "messaging/registration-token-not-registered" &&
+          code !== "messaging/invalid-registration-token"
+        ) {
+          otherErrors.add(code);
+        }
+        // Faqat TOKENNING o'zi yaroqsiz bo'lsa o'chiriladi. `messaging/invalid-argument` —
+        // XABAR darajasidagi xato (masalan, payload): u har bir tokenda qaytadi va avval
+        // foydalanuvchining BARCHA tokenlarini o'chirib yuborardi — keyingi push'lar
+        // (SOS ham) jim yo'qolardi. Bunday xato log qilinadi, tokenlar saqlanadi.
+        if (
+          code === "messaging/registration-token-not-registered" ||
+          code === "messaging/invalid-registration-token"
         ) {
           invalidTokens.push(tokens[idx]);
         }
       }
     });
+    if (otherErrors.size > 0) {
+      this.logger.warn(
+        `push xatosi (tokenlar saqlandi): ${[...otherErrors].join(", ")}`,
+      );
+    }
 
     return {
       sent: response.successCount,
@@ -157,10 +172,10 @@ export class FcmService {
     if (!childUserId) return;
     try {
       await this.sendPushToUser(childUserId, {
-        title: '',
-        body: '',
+        title: "",
+        body: "",
         dataOnly: true,
-        data: { type: 'restrictions_sync' },
+        data: { type: "restrictions_sync" },
       });
     } catch (err) {
       this.logger.warn(`restrictions_sync push yuborilmadi: ${String(err)}`);
@@ -184,7 +199,7 @@ export class FcmService {
     // `sent=0,failed>0` → Firebase yubora olmadi (init xato yoki token yaroqsiz).
     // `sent>0`    → FCM'ga yetkazildi (telefon tomonda ko'rsatish/permission muammosi).
     this.logger.log(
-      `push type=${payload.data?.type ?? (payload.dataOnly ? 'data' : 'notif')} ` +
+      `push type=${payload.data?.type ?? (payload.dataOnly ? "data" : "notif")} ` +
         `tokens=${tokens.length} sent=${result.sent} ` +
         `failed=${result.failed} invalid=${result.invalidTokens.length}`,
     );
